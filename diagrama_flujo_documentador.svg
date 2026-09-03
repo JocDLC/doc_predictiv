@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1220" viewBox="0 0 1600 1220" role="img" aria-labelledby="title desc">
+  <title id="title">Flujo del Documentador de Predictivo</title>
+  <desc id="desc">Diagrama del procesamiento local del CSV, creación de textos, acciones del usuario, almacenamiento local y apertura de Salesforce.</desc>
+  <defs>
+    <style>
+      .title { font: 700 32px 'Segoe UI', Arial, sans-serif; fill: #12304a; }
+      .subtitle { font: 400 16px 'Segoe UI', Arial, sans-serif; fill: #536576; }
+      .section { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #12304a; }
+      .box-title { font: 700 17px 'Segoe UI', Arial, sans-serif; fill: #17384e; }
+      .box-text { font: 400 14px 'Segoe UI', Arial, sans-serif; fill: #25445a; }
+      .small { font: 400 12px 'Segoe UI', Arial, sans-serif; fill: #536576; }
+      .arrow-label { font: 600 13px 'Segoe UI', Arial, sans-serif; fill: #39556a; }
+      .box { stroke-width: 2; rx: 14; ry: 14; }
+      .line { fill: none; stroke: #607d92; stroke-width: 2.5; marker-end: url(#arrow); }
+      .dashed { fill: none; stroke: #607d92; stroke-width: 2.5; stroke-dasharray: 8 6; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto">
+      <path d="M0,0 L10,5.5 L0,11 Z" fill="#607d92"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1220" fill="#f4f7fa"/>
+  <text x="70" y="60" class="title">Documentador de Predictivo — flujo y lógica</text>
+  <text x="70" y="88" class="subtitle">Aplicación HTML local: procesa los datos en el navegador. No usa API ni servidor externo.</text>
+
+  <!-- Input -->
+  <text x="70" y="145" class="section">1. Entrada y transformación del predictivo</text>
+  <rect x="70" y="175" width="270" height="142" class="box" fill="#e4f1ff" stroke="#2875b9"/>
+  <text x="95" y="210" class="box-title">CSV crudo del predictivo</text>
+  <text x="95" y="238" class="box-text">Archivo descargado</text>
+  <text x="95" y="260" class="box-text">con leads e HISTORY_TEL</text>
+  <text x="95" y="290" class="small">Entrada manual: arrastrar o seleccionar</text>
+
+  <rect x="425" y="175" width="300" height="142" class="box" fill="#e9f8f0" stroke="#268554"/>
+  <text x="450" y="210" class="box-title">loadFile() / FileReader</text>
+  <text x="450" y="238" class="box-text">Lee el CSV en el navegador</text>
+  <text x="450" y="260" class="box-text">con codificación Windows-1252</text>
+  <text x="450" y="290" class="small">No se carga a internet</text>
+
+  <rect x="810" y="175" width="300" height="142" class="box" fill="#e9f8f0" stroke="#268554"/>
+  <text x="835" y="210" class="box-title">parseCSV()</text>
+  <text x="835" y="238" class="box-text">Separa encabezados y filas</text>
+  <text x="835" y="260" class="box-text">del CSV por punto y coma</text>
+  <text x="835" y="290" class="small">Resultado: objetos por lead</text>
+
+  <rect x="1195" y="175" width="335" height="142" class="box" fill="#e9f8f0" stroke="#268554"/>
+  <text x="1220" y="210" class="box-title">buildLeads() + parseHistory()</text>
+  <text x="1220" y="238" class="box-text">Lee HISTORY_TEL con una expresión</text>
+  <text x="1220" y="260" class="box-text">regular y extrae fecha, resultado,</text>
+  <text x="1220" y="282" class="box-text">teléfono e ID de cada llamada</text>
+
+  <path d="M340 246 L425 246" class="line"/>
+  <path d="M725 246 L810 246" class="line"/>
+  <path d="M1110 246 L1195 246" class="line"/>
+
+  <!-- Build documentation -->
+  <text x="70" y="385" class="section">2. Construcción del texto de documentación</text>
+  <rect x="190" y="420" width="340" height="165" class="box" fill="#fff4dc" stroke="#cd8e21"/>
+  <text x="215" y="455" class="box-title">Configuración de resultado</text>
+  <text x="215" y="483" class="box-text">resultMap: traduce códigos</text>
+  <text x="215" y="505" class="box-text">ANSWER-MACHINE → Buzón directo</text>
+  <text x="215" y="527" class="box-text">NO-ANSWER → No contesta</text>
+  <text x="215" y="555" class="small">Editable por el usuario</text>
+
+  <rect x="630" y="420" width="340" height="165" class="box" fill="#fff4dc" stroke="#cd8e21"/>
+  <text x="655" y="455" class="box-title">getOffset(lead)</text>
+  <text x="655" y="483" class="box-text">Define desde qué INT numerar</text>
+  <text x="655" y="508" class="box-text">1. Ajuste puntual del lead</text>
+  <text x="655" y="530" class="box-text">2. Último N° global en SF</text>
+  <text x="655" y="555" class="small">El global aplica a todos los pendientes</text>
+
+  <rect x="1070" y="420" width="340" height="165" class="box" fill="#fff4dc" stroke="#cd8e21"/>
+  <text x="1095" y="455" class="box-title">docText(lead)</text>
+  <text x="1095" y="483" class="box-text">Genera una línea por intento:</text>
+  <text x="1095" y="508" class="box-text">“3 INT 11/08/2026 Buzón directo”</text>
+  <text x="1095" y="530" class="box-text">“1786465640.343498*”</text>
+  <text x="1095" y="555" class="small">Texto listo para copiar y pegar</text>
+
+  <path d="M1360 317 L1240 420" class="line"/>
+  <path d="M530 502 L630 502" class="line"/>
+  <path d="M970 502 L1070 502" class="line"/>
+
+  <!-- UI -->
+  <text x="70" y="660" class="section">3. Interfaz y acciones de trabajo</text>
+  <rect x="70" y="695" width="305" height="185" class="box" fill="#efeaff" stroke="#7357ad"/>
+  <text x="95" y="730" class="box-title">render()</text>
+  <text x="95" y="758" class="box-text">Muestra los leads pendientes</text>
+  <text x="95" y="780" class="box-text">con texto, filtros y progreso</text>
+  <text x="95" y="810" class="box-text">Busca por nombre, ID o teléfono</text>
+  <text x="95" y="842" class="small">El primer pendiente es el foco del flujo</text>
+
+  <rect x="450" y="695" width="305" height="185" class="box" fill="#efeaff" stroke="#7357ad"/>
+  <text x="475" y="730" class="box-title">Copiar / Abrir Salesforce</text>
+  <text x="475" y="758" class="box-text">navigator.clipboard.writeText()</text>
+  <text x="475" y="780" class="box-text">copia el texto generado</text>
+  <text x="475" y="810" class="box-text">window.open() abre:</text>
+  <text x="475" y="832" class="small">lightning.force.com/{ID del lead}</text>
+
+  <rect x="830" y="695" width="305" height="185" class="box" fill="#efeaff" stroke="#7357ad"/>
+  <text x="855" y="730" class="box-title">Ajustar este lead</text>
+  <text x="855" y="758" class="box-text">setOffset(lead, número)</text>
+  <text x="855" y="780" class="box-text">Guarda una excepción solo</text>
+  <text x="855" y="802" class="box-text">para ese lead</text>
+  <text x="855" y="842" class="small">El resto continúa usando el global</text>
+
+  <rect x="1210" y="695" width="320" height="185" class="box" fill="#efeaff" stroke="#7357ad"/>
+  <text x="1235" y="730" class="box-title">Documentado</text>
+  <text x="1235" y="758" class="box-text">setDone(lead, true)</text>
+  <text x="1235" y="780" class="box-text">Registra texto, número y fecha</text>
+  <text x="1235" y="802" class="box-text">y elimina el lead de Pendientes</text>
+  <text x="1235" y="842" class="small">El siguiente lead queda primero</text>
+
+  <path d="M1240 585 L220 695" class="line"/>
+  <path d="M375 787 L450 787" class="line"/>
+  <path d="M755 787 L830 787" class="line"/>
+  <path d="M1135 787 L1210 787" class="line"/>
+
+  <!-- Persistence -->
+  <text x="70" y="960" class="section">4. Guardado local y recuperación</text>
+  <rect x="240" y="995" width="430" height="155" class="box" fill="#e0f5f4" stroke="#257c7c"/>
+  <text x="265" y="1030" class="box-title">localStorage del navegador</text>
+  <text x="265" y="1058" class="box-text">Guarda: progreso, configuraciones,</text>
+  <text x="265" y="1080" class="box-text">número global, ajustes y último CSV</text>
+  <text x="265" y="1110" class="small">Permite recuperar la sesión luego de F5</text>
+
+  <rect x="900" y="995" width="430" height="155" class="box" fill="#e0f5f4" stroke="#257c7c"/>
+  <text x="925" y="1030" class="box-title">Atajos de teclado</text>
+  <text x="925" y="1058" class="box-text">Enter, C, O, D, A, F, + y -</text>
+  <text x="925" y="1080" class="box-text">Ejecutan acciones sobre el primer</text>
+  <text x="925" y="1102" class="box-text">lead pendiente visible</text>
+  <text x="925" y="1128" class="small">D solicita confirmación si no se copió el texto</text>
+
+  <path d="M1370 880 L1120 995" class="line"/>
+  <path d="M1370 880 L550 995" class="dashed"/>
+  <text x="740" y="930" class="arrow-label">guardar estado y texto documentado</text>
+
+  <!-- safety footer -->
+  <rect x="70" y="1175" width="1460" height="1" fill="#cbd8e2"/>
+  <text x="70" y="1205" class="small">Límite de datos: el CSV y el estado permanecen en el navegador local. Salesforce se abre por URL usando el ID del lead; el pegado y guardado final lo realiza el usuario.</text>
+</svg>

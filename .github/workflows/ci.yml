@@ -1,0 +1,40 @@
+name: Harness CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install tools
+        run: |
+          npm install -g @fission-ai/openspec@1.6.0
+          pip install pipx
+          pipx install graphifyy==0.10.0
+          pipx install uv
+
+      - name: Verify harness
+        run: |
+          echo 'PATH=$HOME/.local/bin:$PATH' >> $GITHUB_ENV
+          scripts/verify-setup.sh
+
+      - name: Update graph
+        run: |
+          export PATH=$HOME/.local/bin:$PATH
+          graphify update .

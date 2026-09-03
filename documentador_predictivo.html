@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestión de Campañas Predictivas</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 132'%3E%3Cpath fill='%230b5cab' d='M100 66 65 0H55L20 66l23 43 5-9-18-34L60 9l30 57-35 66h10zM80 66 58 23l-5 9 17 34-30 57L10 66 45 0H35L0 66l35 66h10z'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f4f6f9; --card: #ffffff; --border: #dde3ea; --text: #1f2937;
+    --muted: #6b7280; --accent: #0b5cab; --accent2: #0e7a3d; --done: #e8f5ee;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  header { background: var(--accent); color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .brand-mark { width: 22px; height: 30px; flex: 0 0 auto; fill: #fff; }
+  .brand-name { font-size: 13px; font-weight: 700; letter-spacing: .08em; }
+  header h1 { font-size: 18px; margin: 0; border-left: 1px solid rgba(255,255,255,.45); padding-left: 14px; }
+  header .sub { font-size: 12px; opacity: .85; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 16px 24px 60px; }
+  .home { max-width: 900px; margin: 48px auto; text-align: center; }
+  .home h2 { font-size: 30px; margin: 0 0 10px; color: #12304a; }
+  .home > p { margin: 0 auto 32px; max-width: 620px; color: var(--muted); line-height: 1.5; }
+  .module-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; text-align: left; }
+  .module-card { border: 1px solid var(--border); border-radius: 16px; padding: 26px; background: var(--card); cursor: pointer; text-align: left; transition: transform .15s, box-shadow .15s, border-color .15s; color: var(--text); }
+  .module-card:hover, .module-card:focus-visible { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(23,56,78,.14); border-color: var(--accent); outline: none; }
+  .module-icon { width: 42px; height: 42px; fill: var(--accent); margin-bottom: 18px; }
+  .module-card h3 { margin: 0 0 9px; font-size: 20px; color: #12304a; }
+  .module-card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+  .module-card .module-action { display: inline-block; margin-top: 20px; color: var(--accent); font-size: 13px; font-weight: 700; }
+  .prepare-placeholder { max-width: 700px; margin: 48px auto; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 36px; }
+  .prepare-placeholder h2 { margin-top: 0; color: #12304a; }
+  .prepare-placeholder p { color: var(--muted); line-height: 1.5; }
+  @media (max-width: 700px) { .module-grid { grid-template-columns: 1fr; } header .sub { flex-basis: 100%; } }
+
+  #dropzone { border: 2px dashed var(--accent); border-radius: 12px; background: var(--card);
+    padding: 48px 24px; text-align: center; cursor: pointer; transition: background .15s; margin-top: 24px; }
+  #dropzone.drag { background: #e5efff; }
+  #dropzone p { margin: 6px 0; color: var(--muted); }
+  #dropzone .big { font-size: 20px; color: var(--text); font-weight: 600; }
+
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 16px 0; }
+  .toolbar input[type=search] { flex: 1; min-width: 220px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+  .toolbar select { padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; }
+  .btn { border: 1px solid var(--border); background: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text); }
+  .btn:hover { background: #eef2f7; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #0a4f93; }
+  .btn.small { padding: 5px 10px; font-size: 12px; }
+
+  .progressbar { height: 10px; background: #dfe6ee; border-radius: 6px; overflow: hidden; flex-basis: 100%; }
+  .progressbar > div { height: 100%; background: var(--accent2); width: 0; transition: width .3s; }
+  .stats { font-size: 13px; color: var(--muted); }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin-bottom: 12px; }
+  .card.done { background: var(--done); opacity: .75; }
+  .lead-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .lead-head .name { font-weight: 700; font-size: 15px; }
+  .lead-head .meta { font-size: 12px; color: var(--muted); }
+  .lead-head .spacer { flex: 1; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #e5efff; color: var(--accent); font-weight: 600; }
+  .doc-text { margin-top: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; font-family: Consolas, monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; }
+  .actions { display: flex; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+  .check { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; user-select: none; margin-left: auto; }
+  .check input { width: 18px; height: 18px; cursor: pointer; }
+  .copied { color: var(--accent2); font-size: 12px; font-weight: 600; opacity: 0; transition: opacity .2s; }
+  .copied.show { opacity: 1; }
+  .offset-label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-left: auto; }
+  .offset-input { width: 60px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; text-align: center; }
+  .mem-tag { font-size: 10px; background: #fff3cd; color: #8a6d1a; border-radius: 8px; padding: 1px 6px; font-weight: 600; }
+  .actions .check { margin-left: 0; }
+  .adjust-panel { display: none; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .adjust-panel.visible { display: flex; }
+  .adjust-panel input { width: 60px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; text-align: center; }
+  .shortcut-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, .45); display: flex; align-items: center; justify-content: center; z-index: 10; padding: 20px; }
+  .shortcut-modal.hidden { display: none; }
+  .shortcut-dialog { width: min(760px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  .shortcut-dialog h2 { margin: 0 0 10px; font-size: 18px; }
+  .shortcut-dialog p { color: var(--muted); font-size: 13px; margin: 6px 0 14px; }
+  .shortcut-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .shortcut-table td { padding: 8px 5px; border-top: 1px solid var(--border); }
+  .feature-list { margin: 8px 0 16px; padding-left: 20px; color: var(--text); font-size: 13px; }
+  .feature-list li { margin: 6px 0; }
+  .metric-note { margin: 8px 0 16px; padding: 11px 13px; border-left: 4px solid var(--accent2); border-radius: 6px; background: #e8f5ee; color: #24533a; font-size: 13px; line-height: 1.45; }
+  kbd { display: inline-block; min-width: 26px; text-align: center; padding: 2px 6px; border: 1px solid #b8c1cc; border-bottom-width: 2px; border-radius: 5px; background: #f8fafc; font-family: inherit; font-weight: 700; font-size: 12px; }
+
+  details.config { margin: 16px 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 18px; }
+  details.config summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+  .config-section { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .config-section h3 { margin: 0 0 4px; font-size: 14px; }
+  .map-table { margin-top: 10px; border-collapse: collapse; }
+  .map-table td { padding: 4px 8px; font-size: 13px; }
+  .map-table input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; width: 260px; }
+  .map-table code { background: #eef2f7; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .hidden { display: none; }
+  footer.note { text-align:center; font-size: 11px; color: var(--muted); margin-top: 30px; }
+</style>
+</head>
+<body>
+<header>
+  <svg class="brand-mark" viewBox="0 0 954 1255" aria-hidden="true"><path d="M953.5 626.91 618.52 0h-94.51L190.07 626.91l215.27 403.24 47.25-89.26-166.96-313.98L571.26 90.31l286.68 536.6-333.93 627.96h94.51zM762.38 626.91 548.16 224.72l-48.3 89.26 168.02 312.93-286.68 537.65L94.51 626.91 429.49 0h-95.56L0 626.91l333.93 627.96h94.51z"/></svg>
+  <span class="brand-name">RENAULT GROUP</span>
+  <h1>Gesti&oacute;n de Campa&ntilde;as Predictivas</h1>
+  <span class="sub">Procesamiento local &mdash; ning&uacute;n dato se env&iacute;a a servidores externos</span>
+</header>
+
+<div class="container">
+  <section id="viewHome" class="home">
+    <h2>Seleccion&aacute; una tarea</h2>
+    <p>Prepará la base para cargar una campaña en Wolkvox o documentá los resultados del predictivo en Salesforce.</p>
+    <div class="module-grid">
+      <button class="module-card" id="openPrepare">
+        <svg class="module-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zm0 2.5L18.5 10H13zM8 13h8v1.5H8zm0 3h8v1.5H8zm0-6h3v1.5H8z"/></svg>
+        <h3>Preparar campa&ntilde;a predictiva</h3>
+        <p>Transformá una base de leads en un archivo listo para cargar en Wolkvox.</p>
+        <span class="module-action">Preparar archivo &rarr;</span>
+      </button>
+      <button class="module-card" id="openDocument">
+        <svg class="module-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l4 4v16H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V7h3.5zM8 11h7v1.5H8zm0 3h7v1.5H8zm0 3h5v1.5H8z"/></svg>
+        <h3>Documentar predictivo</h3>
+        <p>Organizá los resultados de Wolkvox y generá el texto para documentar cada lead.</p>
+        <span class="module-action">Documentar resultados &rarr;</span>
+      </button>
+    </div>
+  </section>
+
+  <section id="viewPrepare" class="hidden">
+    <div class="prepare-placeholder">
+      <h2>Preparar campa&ntilde;a predictiva</h2>
+      <p>Este módulo permitirá cargar una base de leads, normalizar teléfonos según el país y descargar un CSV listo para Wolkvox.</p>
+      <button class="btn primary" id="backFromPrepare">Volver al inicio</button>
+    </div>
+  </section>
+
+  <section id="viewDocumentar" class="hidden">
+  <div id="dropzone">
+    <p class="big">Arrastr&aacute; aqu&iacute; el archivo del predictivo (.csv)</p>
+    <p>o hac&eacute; clic para elegirlo</p>
+    <p style="font-size:12px">El archivo crudo, tal cual se descarga: <i>predictive-Leads_en_curso_...csv</i></p>
+    <input type="file" id="fileInput" accept=".csv,.txt" class="hidden">
+  </div>
+
+  <div id="app" class="hidden">
+
+    <details class="config">
+      <summary>Configuraci&oacute;n</summary>
+      <div class="config-section">
+        <h3>Resultados editables</h3>
+        <div class="hint">Traducciones aplicadas a los resultados autom&aacute;ticos del predictivo.</div>
+        <table class="map-table" id="mapTable"></table>
+      </div>
+      <div class="config-section">
+        <h3>Regla especial: ANSWER</h3>
+        <div class="hint">Cuando el resultado es <code>ANSWER</code>, la app utiliza el valor de la columna <code>DESC1</code>. Si est&aacute; vac&iacute;a, muestra “Cliente contesta”.</div>
+      </div>
+      <div class="config-section">
+        <h3>Salesforce y flujo de trabajo</h3>
+        <table class="map-table">
+          <tr><td>URL base de Salesforce:</td><td><input id="sfBase" style="width:420px"></td></tr>
+        </table>
+        <label class="hint" style="display:block"><input type="checkbox" id="clipboardEnabled"> Mostrar “Leer N&deg; del portapapeles” en los leads</label>
+      </div>
+      <div class="hint">Los cambios se guardan autom&aacute;ticamente en este navegador.</div>
+      <div class="actions" style="margin-top:8px">
+        <button class="btn small" id="resetMap">Restaurar valores por defecto</button>
+        <button class="btn small" id="resetProgress">Reiniciar progreso de este archivo</button>
+        <button class="btn small" id="clearRecovery">Eliminar recuperaci&oacute;n local</button>
+      </div>
+    </details>
+
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Buscar por nombre, ID de lead o tel&eacute;fono...">
+      <select id="filterState">
+        <option value="all">Todos</option>
+        <option value="pending" selected>Pendientes</option>
+        <option value="done">Documentados</option>
+      </select>
+      <select id="filterAgent"><option value="all">Todos los agentes</option></select>
+      <label class="offset-label" title="Número del último INT anotado en Salesforce para los leads pendientes.">Último N&deg; en SF: <input type="number" id="globalOffset" class="offset-input" min="0" value="0"></label>
+      <button class="btn" id="helpButton" title="Ver atajos de teclado (?)">Atajos (?)</button>
+      <button class="btn" id="loadOther">Cargar otro archivo</button>
+      <button class="btn" id="backToHome">Inicio</button>
+      <span class="stats" id="stats"></span>
+      <div class="progressbar"><div id="pbar"></div></div>
+    </div>
+
+    <div id="list"></div>
+  </div>
+  </section>
+
+  <footer class="note">Gesti&oacute;n de Campa&ntilde;as Predictivas &mdash; procesamiento 100% local (los archivos nunca se suben a ning&uacute;n servidor)</footer>
+</div>
+
+<div id="shortcutModal" class="shortcut-modal hidden" role="dialog" aria-modal="true" aria-labelledby="shortcutTitle">
+  <div class="shortcut-dialog">
+    <h2 id="shortcutTitle">Atajos de teclado</h2>
+    <p>Actúan sobre el primer lead pendiente visible. No se activan mientras escribís en un campo.</p>
+    <table class="shortcut-table">
+      <tr><td><kbd>+</kbd></td><td>Subir el último N° global en Salesforce.</td></tr>
+      <tr><td><kbd>-</kbd></td><td>Bajar el último N° global en Salesforce.</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>Copiar el texto y abrir el lead en Salesforce.</td></tr>
+      <tr><td><kbd>C</kbd></td><td>Copiar el texto de documentación.</td></tr>
+      <tr><td><kbd>O</kbd></td><td>Abrir el lead en Salesforce.</td></tr>
+      <tr><td><kbd>D</kbd></td><td>Marcar como documentado. Si no copiaste el texto de ese lead en esta sesión, pide confirmación antes de ocultarlo.</td></tr>
+      <tr><td><kbd>A</kbd></td><td>Mostrar el ajuste puntual del número para ese lead.</td></tr>
+      <tr><td><kbd>F</kbd></td><td>Ir al buscador.</td></tr>
+      <tr><td><kbd>?</kbd> / <kbd>Esc</kbd></td><td>Abrir o cerrar esta ayuda.</td></tr>
+    </table>
+    <h2 style="margin-top:22px">Caracter&iacute;sticas</h2>
+    <ul class="feature-list">
+      <li>Centraliza el ciclo de campa&ntilde;as: preparar la base para Wolkvox y documentar sus resultados.</li>
+      <li>Procesa el CSV del predictivo localmente: ning&uacute;n dato se env&iacute;a a servidores externos.</li>
+      <li>Genera la documentaci&oacute;n por intento, numerada y lista para copiar en Salesforce.</li>
+      <li>Abre directamente el lead mediante su ID de Salesforce y lleva el progreso de documentaci&oacute;n.</li>
+      <li>Permite una numeraci&oacute;n global y correcciones puntuales por lead.</li>
+      <li>Guarda y recupera localmente la sesi&oacute;n si la p&aacute;gina se actualiza.</li>
+      <li>Incluye b&uacute;squeda, filtros, equivalencias de resultados configurables, lectura opcional del portapapeles y uso de DESC1 para ANSWER.</li>
+    </ul>
+    <h2 style="margin-top:22px">M&eacute;trica de referencia</h2>
+    <div class="metric-note">En la prueba inicial, la documentaci&oacute;n se complet&oacute; en un promedio de <strong>23 segundos por lead</strong>. Como referencia operativa, el flujo puede completarse habitualmente en <strong>23 a 30 segundos por lead</strong>. Si los tiempos son superiores, el equipo de desarrollo puede revisar el flujo y ayudarte a aprovechar mejor la herramienta.</div>
+    <div class="actions"><button class="btn primary" id="closeHelp">Cerrar</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const DEFAULT_MAP = {
+  "ANSWER-MACHINE": "Buz\u00f3n directo",
+  "NO-ANSWER": "No contesta",
+  "ABANDON": "Llamada no conecta",
+  "FAILED": "Fallo de l\u00ednea",
+};
+const DEFAULT_SF = "https://renaultarca.lightning.force.com/";
+const SESSION_KEY = "dp_activeSession";
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+let resultMap = loadJSON("dp_resultMap", { ...DEFAULT_MAP });
+let sfBase = localStorage.getItem("dp_sfBase") || DEFAULT_SF;
+let leads = [];
+let fileKey = "";
+let progress = {};
+let globalOffset = 0;
+let clipboardEnabled = localStorage.getItem("dp_clipboardEnabled") !== "false";
+let copiedLeadId = null;
+
+function loadJSON(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v && typeof v === "object" ? v : fallback; }
+  catch { return fallback; }
+}
+function saveProgress() { localStorage.setItem("dp_progress_" + fileKey, JSON.stringify(progress)); }
+
+// ---------- Parsing ----------
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+  if (!lines.length) return [];
+  const headers = lines[0].split(";").map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const cells = line.split(";");
+    const row = {};
+    headers.forEach((h, i) => row[h] = (cells[i] ?? "").trim());
+    return row;
+  });
+}
+
+const ATTEMPT_RE = /(\d{14}):([^:*]+):(\d*):([^*]*)\*/g;
+
+function parseHistory(hist) {
+  const attempts = [];
+  let m;
+  ATTEMPT_RE.lastIndex = 0;
+  while ((m = ATTEMPT_RE.exec(hist)) !== null) {
+    const [, ts, result, tel, callId] = m;
+    attempts.push({
+      ts,
+      date: `${+ts.slice(6,8)}/${ts.slice(4,6)}/${ts.slice(0,4)}`,
+      time: `${ts.slice(8,10)}:${ts.slice(10,12)}`,
+      result: result.trim(),
+      tel,
+      callId: callId.trim(),
+    });
+  }
+  attempts.sort((a, b) => a.ts.localeCompare(b.ts)); // oldest first
+  return attempts;
+}
+
+function clean(v) { return (v || "").replace(/^'/, "").trim(); }
+
+function buildLeads(rows) {
+  return rows.map(r => {
+    const attempts = parseHistory(clean(r["HISTORY_TEL"]));
+    return {
+      id: clean(r["ID"]),
+      nombre: `${clean(r["NOMBRE"])} ${clean(r["APELLIDO"])}`.trim(),
+      agente: clean(r["TIPOID"]) || clean(r["AGENTE"]) || "(sin agente)",
+      tel: clean(r["TEL1"]),
+      llamadas: clean(r["LLAMADAS"]),
+      resultadoReg: clean(r["RESULTADOREG"]),
+      desc1: clean(r["DESC1"]),
+      attempts,
+    };
+  }).filter(l => l.id);
+}
+
+function getOffset(lead) {
+  const p = progress[lead.id];
+  if (p && typeof p === "object" && p.done && typeof p.offset === "number") return p.offset;
+  if (p && typeof p === "object" && typeof p.overrideOffset === "number") return p.overrideOffset;
+  return globalOffset;
+}
+function setOffset(lead, n) {
+  const p = progress[lead.id];
+  progress[lead.id] = { done: p === true || !!p?.done, offset: p?.offset, overrideOffset: n, documentedAt: p?.documentedAt ?? null, text: p?.text ?? null };
+  saveProgress();
+}
+function isDone(lead) {
+  const p = progress[lead.id];
+  return p === true || (p && typeof p === "object" && p.done);
+}
+function setDone(lead, done) {
+  const offset = getOffset(lead);
+  const p = progress[lead.id];
+  progress[lead.id] = { done, offset, overrideOffset: p?.overrideOffset, documentedAt: done ? new Date().toISOString() : null, text: done ? docText(lead) : null };
+  saveProgress();
+}
+
+function displayResult(lead, attempt) {
+  if (attempt.result === "ANSWER") return lead.desc1 || "Cliente contesta";
+  return resultMap[attempt.result] ?? attempt.result;
+}
+
+function docText(lead) {
+  const offset = getOffset(lead);
+  return lead.attempts
+    .map((a, i) => `${offset + i + 1} INT\t${displayResult(lead, a)}\t${a.date}\t${a.time}\t${a.callId}`)
+    .join("\n");
+}
+
+// Detecta el último "# INT" en un texto pegado desde Salesforce
+function detectLastInt(text) {
+  let max = -1;
+  for (const m of text.matchAll(/(\d+)\s*INT\b/gi)) max = Math.max(max, +m[1]);
+  return max >= 0 ? max : null;
+}
+
+// ---------- UI ----------
+const $ = s => document.getElementById(s);
+const VIEW_IDS = ["viewHome", "viewPrepare", "viewDocumentar"];
+
+function showView(id) {
+  VIEW_IDS.forEach(viewId => $(viewId).classList.toggle("hidden", viewId !== id));
+}
+
+$("openPrepare").addEventListener("click", () => showView("viewPrepare"));
+$("openDocument").addEventListener("click", () => showView("viewDocumentar"));
+$("backFromPrepare").addEventListener("click", () => showView("viewHome"));
+$("backToHome").addEventListener("click", () => showView("viewHome"));
+
+$("dropzone").addEventListener("click", () => $("fileInput").click());
+$("dropzone").addEventListener("dragover", e => { e.preventDefault(); $("dropzone").classList.add("drag"); });
+$("dropzone").addEventListener("dragleave", () => $("dropzone").classList.remove("drag"));
+$("dropzone").addEventListener("drop", e => {
+  e.preventDefault(); $("dropzone").classList.remove("drag");
+  if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+});
+$("fileInput").addEventListener("change", e => { if (e.target.files.length) loadFile(e.target.files[0]); });
+$("loadOther").addEventListener("click", () => { showView("viewDocumentar"); $("app").classList.add("hidden"); $("dropzone").classList.remove("hidden"); });
+
+function loadCSVContent(text, name, size, saveRecovery = true) {
+  const rows = parseCSV(text);
+  leads = buildLeads(rows);
+  if (!leads.length) { alert("No se encontraron registros con ID de lead. \u00bfEs el archivo correcto?"); return; }
+  fileKey = name + "_" + size;
+  progress = loadJSON("dp_progress_" + fileKey, {});
+  globalOffset = loadJSON("dp_globalOffset_" + fileKey, 0);
+  $("globalOffset").value = globalOffset;
+  $("clipboardEnabled").checked = clipboardEnabled;
+  showView("viewDocumentar");
+  $("dropzone").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  fillAgentFilter();
+  renderMapTable();
+  render();
+  if (saveRecovery) {
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify({ text, name, size })); }
+    catch { alert("La sesión funciona, pero el navegador no pudo guardar una copia local para recuperarla tras actualizar."); }
+  }
+}
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => loadCSVContent(reader.result, file.name, file.size);
+  reader.readAsText(file, "windows-1252");
+}
+
+function fillAgentFilter() {
+  const sel = $("filterAgent");
+  sel.innerHTML = '<option value="all">Todos los agentes</option>';
+  [...new Set(leads.map(l => l.agente))].sort().forEach(a => {
+    const o = document.createElement("option");
+    o.value = o.textContent = a;
+    sel.appendChild(o);
+  });
+}
+
+function renderMapTable() {
+  const t = $("mapTable");
+  t.innerHTML = "";
+  Object.keys(resultMap).filter(code => code !== "ANSWER").forEach(code => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><code>${code}</code> &rarr;</td><td><input data-code="${code}" value="${resultMap[code]}"></td>`;
+    tr.querySelector("input").addEventListener("input", e => {
+      resultMap[code] = e.target.value;
+      localStorage.setItem("dp_resultMap", JSON.stringify(resultMap));
+      render();
+    });
+    t.appendChild(tr);
+  });
+  $("sfBase").value = sfBase;
+}
+
+$("sfBase").addEventListener("input", e => {
+  sfBase = e.target.value;
+  localStorage.setItem("dp_sfBase", sfBase);
+  render();
+});
+$("resetMap").addEventListener("click", () => {
+  resultMap = { ...DEFAULT_MAP };
+  localStorage.setItem("dp_resultMap", JSON.stringify(resultMap));
+  sfBase = DEFAULT_SF;
+  localStorage.setItem("dp_sfBase", sfBase);
+  renderMapTable(); render();
+});
+$("resetProgress").addEventListener("click", () => {
+  if (confirm("\u00bfBorrar el progreso guardado de este archivo?")) { progress = {}; saveProgress(); render(); }
+});
+$("clearRecovery").addEventListener("click", () => {
+  if (confirm("\u00bfEliminar la copia local del archivo usada para recuperarlo tras actualizar? El progreso guardado no se borra.")) localStorage.removeItem(SESSION_KEY);
+});
+$("search").addEventListener("input", render);
+$("filterState").addEventListener("change", render);
+$("filterAgent").addEventListener("change", render);
+$("globalOffset").addEventListener("input", e => {
+  globalOffset = Math.max(0, +e.target.value || 0);
+  localStorage.setItem("dp_globalOffset_" + fileKey, JSON.stringify(globalOffset));
+  render();
+});
+$("clipboardEnabled").addEventListener("change", e => {
+  clipboardEnabled = e.target.checked;
+  localStorage.setItem("dp_clipboardEnabled", clipboardEnabled);
+  render();
+});
+
+function render() {
+  const q = $("search").value.toLowerCase();
+  const st = $("filterState").value;
+  const ag = $("filterAgent").value;
+  const list = $("list");
+  list.innerHTML = "";
+
+  const doneCount = leads.filter(l => isDone(l)).length;
+  $("stats").textContent = `${doneCount} / ${leads.length} documentados`;
+  $("pbar").style.width = leads.length ? (100 * doneCount / leads.length) + "%" : "0";
+
+  leads.forEach(lead => {
+    const done = isDone(lead);
+    if (st === "pending" && done) return;
+    if (st === "done" && !done) return;
+    if (ag !== "all" && lead.agente !== ag) return;
+    if (q && !(lead.nombre.toLowerCase().includes(q) || lead.id.toLowerCase().includes(q) || lead.tel.includes(q))) return;
+
+    const offset = getOffset(lead);
+    const text = docText(lead);
+    const isAdjusted = progress[lead.id] && typeof progress[lead.id] === "object" && typeof progress[lead.id].overrideOffset === "number";
+    const card = document.createElement("div");
+    card.className = "card" + (done ? " done" : "");
+    card.dataset.leadId = lead.id;
+    card.innerHTML = `
+      <div class="lead-head">
+        <span class="name">${lead.nombre || "(sin nombre)"}</span>
+        <span class="badge">${lead.attempts.length} intento${lead.attempts.length === 1 ? "" : "s"}</span>
+        <span class="meta">Tel: ${lead.tel} &middot; Agente: ${lead.agente} &middot; ${lead.id}</span>
+        <span class="spacer"></span>
+      </div>
+      <div class="doc-text">${text || "(sin intentos registrados)"}</div>
+      <div class="actions">
+        <button class="btn primary small act-open">Abrir en Salesforce</button>
+        <button class="btn small act-copy">Copiar texto</button>
+        <button class="btn small act-both">Copiar y abrir</button>
+        <span class="copied">Copiado \u2713</span>
+        <button class="btn small act-adjust">${isAdjusted ? "Ver ajuste" : "Ajustar este lead"}</button>
+        ${clipboardEnabled ? '<button class="btn small act-detect" title="Copiá el comentario del lead en Salesforce (Ctrl+A, Ctrl+C) y apretá este botón: detecta el último \'# INT\' y numera desde el siguiente">Leer N° del portapapeles</button>' : ""}
+        <label class="check"><input type="checkbox" ${done ? "checked" : ""}> Documentado</label>
+      </div>
+      <div class="adjust-panel">
+        Último N&deg; para este lead: <input type="number" class="offset-input" min="0" value="${offset}">
+        <button class="btn small act-apply-adjust">Aplicar</button>
+        <button class="btn small act-cancel-adjust">Cancelar</button>
+      </div>`;
+
+    const url = sfBase.replace(/\/+$/, "") + "/" + lead.id;
+    const copiedTag = card.querySelector(".copied");
+    const copy = () => navigator.clipboard.writeText(docText(lead)).then(() => {
+      copiedLeadId = lead.id;
+      copiedTag.classList.add("show");
+      setTimeout(() => copiedTag.classList.remove("show"), 1500);
+    });
+    card.querySelector(".act-open").addEventListener("click", () => window.open(url, "_blank"));
+    card.querySelector(".act-copy").addEventListener("click", copy);
+    card.querySelector(".act-both").addEventListener("click", () => { copy(); window.open(url, "_blank"); });
+    const adjustPanel = card.querySelector(".adjust-panel");
+    const adjustInput = adjustPanel.querySelector(".offset-input");
+    card.querySelector(".act-adjust").addEventListener("click", () => {
+      adjustPanel.classList.toggle("visible");
+      if (adjustPanel.classList.contains("visible")) adjustInput.focus();
+    });
+    card.querySelector(".act-apply-adjust").addEventListener("click", () => {
+      setOffset(lead, Math.max(0, +adjustInput.value || 0));
+      render();
+    });
+    card.querySelector(".act-cancel-adjust").addEventListener("click", () => adjustPanel.classList.remove("visible"));
+    card.querySelector(".act-detect")?.addEventListener("click", async () => {
+      let clip = "";
+      try { clip = await navigator.clipboard.readText(); }
+      catch { clip = prompt("No pude leer el portapapeles. Peg\u00e1 aqu\u00ed el comentario de Salesforce:") || ""; }
+      const last = detectLastInt(clip);
+      if (last === null) { alert("No encontr\u00e9 ning\u00fan '# INT' en el texto copiado."); return; }
+      setOffset(lead, last);
+      render();
+    });
+    card.querySelector(".check input").addEventListener("change", e => {
+      setDone(lead, e.target.checked); render();
+    });
+    list.appendChild(card);
+  });
+
+  if (!list.children.length) {
+    list.innerHTML = '<div class="card" style="text-align:center;color:var(--muted)">No hay registros que coincidan con el filtro.</div>';
+  }
+}
+
+function toggleHelp(show) {
+  const modal = $("shortcutModal");
+  const visible = show ?? modal.classList.contains("hidden");
+  modal.classList.toggle("hidden", !visible);
+  if (visible) $("closeHelp").focus();
+}
+$("helpButton").addEventListener("click", () => toggleHelp(true));
+$("closeHelp").addEventListener("click", () => toggleHelp(false));
+$("shortcutModal").addEventListener("click", e => { if (e.target === $("shortcutModal")) toggleHelp(false); });
+
+function firstLeadCard() { return $("list").querySelector(".card:not(.done)"); }
+function triggerFirst(selector) { firstLeadCard()?.querySelector(selector)?.click(); }
+function isTypingTarget(target) { return /^(INPUT|TEXTAREA|SELECT)$/i.test(target.tagName) || target.isContentEditable; }
+
+document.addEventListener("keydown", e => {
+  const modalOpen = !$("shortcutModal").classList.contains("hidden");
+  if (e.key === "Escape" && modalOpen) { e.preventDefault(); toggleHelp(false); return; }
+  if (isTypingTarget(e.target) || modalOpen || !leads.length || e.ctrlKey || e.altKey || e.metaKey) return;
+
+  const key = e.key.toLowerCase();
+  if (key === "?") { e.preventDefault(); toggleHelp(true); return; }
+  if (e.key === "+" || e.key === "-") {
+    e.preventDefault();
+    globalOffset = Math.max(0, globalOffset + (e.key === "+" ? 1 : -1));
+    $("globalOffset").value = globalOffset;
+    localStorage.setItem("dp_globalOffset_" + fileKey, JSON.stringify(globalOffset));
+    render();
+    return;
+  }
+  if (e.key === "Enter") { e.preventDefault(); triggerFirst(".act-both"); return; }
+  if (key === "c") { e.preventDefault(); triggerFirst(".act-copy"); return; }
+  if (key === "o") { e.preventDefault(); triggerFirst(".act-open"); return; }
+  if (key === "a") { e.preventDefault(); triggerFirst(".act-adjust"); return; }
+  if (key === "f") { e.preventDefault(); $("search").focus(); return; }
+  if (key === "d") {
+    e.preventDefault();
+    const card = firstLeadCard();
+    if (!card) return;
+    if (copiedLeadId !== card.dataset.leadId && !confirm("Este lead no fue copiado desde la app en esta sesión. ¿Marcarlo igualmente como documentado?")) return;
+    const check = card.querySelector(".check input");
+    check.checked = true;
+    check.dispatchEvent(new Event("change"));
+  }
+});
+
+const recovery = loadJSON(SESSION_KEY, null);
+if (recovery?.text && recovery?.name && typeof recovery.size === "number") {
+  loadCSVContent(recovery.text, recovery.name, recovery.size, false);
+}
+</script>
+</body>
+</html>

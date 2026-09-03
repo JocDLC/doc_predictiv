@@ -1,0 +1,118 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "_analyze.py",
+      "file_type": "code",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\_analyze.py",
+      "source_location": "L1",
+      "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_analyze_py",
+      "community": 2,
+      "norm_label": "_analyze.py"
+    },
+    {
+      "label": "bootstrap.ps1",
+      "file_type": "code",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\bootstrap.ps1",
+      "source_location": "L1",
+      "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_bootstrap_ps1",
+      "community": 0,
+      "norm_label": "bootstrap.ps1"
+    },
+    {
+      "label": "Assert-Command()",
+      "file_type": "code",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\bootstrap.ps1",
+      "source_location": "L6",
+      "id": "bootstrap_assert_command",
+      "community": 0,
+      "norm_label": "assert-command()"
+    },
+    {
+      "label": "Get-PythonCommand()",
+      "file_type": "code",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\bootstrap.ps1",
+      "source_location": "L13",
+      "id": "bootstrap_get_pythoncommand",
+      "community": 0,
+      "norm_label": "get-pythoncommand()"
+    },
+    {
+      "label": "install.ps1",
+      "file_type": "code",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\install.ps1",
+      "source_location": "L1",
+      "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_install_ps1",
+      "community": 3,
+      "norm_label": "install.ps1"
+    },
+    {
+      "label": "setup-project.ps1",
+      "file_type": "code",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\setup-project.ps1",
+      "source_location": "L1",
+      "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_setup_project_ps1",
+      "community": 4,
+      "norm_label": "setup-project.ps1"
+    },
+    {
+      "label": "verify-setup.ps1",
+      "file_type": "code",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\verify-setup.ps1",
+      "source_location": "L1",
+      "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_verify_setup_ps1",
+      "community": 1,
+      "norm_label": "verify-setup.ps1"
+    },
+    {
+      "label": "Test-Requirement()",
+      "file_type": "code",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\verify-setup.ps1",
+      "source_location": "L7",
+      "id": "verify_setup_test_requirement",
+      "community": 1,
+      "norm_label": "test-requirement()"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\bootstrap.ps1",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_src": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_bootstrap_ps1",
+      "_tgt": "bootstrap_assert_command",
+      "source": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_bootstrap_ps1",
+      "target": "bootstrap_assert_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\bootstrap.ps1",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_src": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_bootstrap_ps1",
+      "_tgt": "bootstrap_get_pythoncommand",
+      "source": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_bootstrap_ps1",
+      "target": "bootstrap_get_pythoncommand",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\verify-setup.ps1",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_src": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_verify_setup_ps1",
+      "_tgt": "verify_setup_test_requirement",
+      "source": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_verify_setup_ps1",
+      "target": "verify_setup_test_requirement",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": []
+}

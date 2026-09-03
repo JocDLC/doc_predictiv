@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+__pycache__/
+.venv/
+
+# Builds
+dist/
+build/
+
+# IDE / SO
+.DS_Store
+Thumbs.db
+
+# Graphify (solo se versiona el reporte y el grafo, no la caché)
+graphify-out/cache/
+graphify-out/converted/
+
+# Datos operativos y archivos de distribución
+PREDICTIVOS/
+*.zip
+
+# Configuración local
+.devin/config.local.json

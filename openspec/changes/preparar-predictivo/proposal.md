@@ -20,7 +20,7 @@ una pantalla de inicio para elegir entre los dos módulos.
    - Módulo 2: "Documentar predictivo" (la app existente, sin cambios funcionales).
 2. Módulo 1: subir la BD de entrada → obtener el CSV listo para Wolkvox.
    - Formatea teléfonos según país: MX `9352`, CO `957`, AR `91549` + 10 dígitos.
-   - Completa el template oficial de Wolkvox (51 columnas, separador `;`, cp1252).
+   - Completa el template oficial de Wolkvox (51 columnas, separador `;`, UTF-8 con BOM, CRLF y sin comillas automáticas).
    - Valida obligatorios y sin duplicados: `ID` (col. D) y `TEL1` (col. X).
    - Genera reporte de registros excluidos/corregidos para revisión.
 3. Mantener la restricción de privacidad: procesamiento 100% local en el navegador,
@@ -49,6 +49,7 @@ una pantalla de inicio para elegir entre los dos módulos.
 | P7 | `predictivo_{PAIS}_{YYYYMMDD}.csv` aprobado. |
 
 | P8 | Nombre definitivo del módulo 1: **"Preparar campaña predictiva"** (confirmado 2026-09-02). |
+| P9 | Formato de salida Wolkvox confirmado con archivo aceptado: `;`, UTF-8 BOM, CRLF y sin comillas. `TIPOID` admite solo letras ASCII y números (sin espacios, acentos ni símbolos). TEL1 solo números sin espacios. Mapeo: TIPOID=campaña, SEXO=vehículo, CIUDAD=vacío, ZONA=concesionario, DIRECCION=e-mail. |
 
 ## Fuera de alcance (non-goals)
 

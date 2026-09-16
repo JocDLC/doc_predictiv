@@ -20,3 +20,22 @@ Este documento registra validaciones operativas de la aplicación para medir el 
 - La aplicación elimina la concatenación manual y prepara el texto de documentación para copiar y pegar.
 - La métrica es una referencia obtenida en esta prueba; puede variar según el rendimiento de Salesforce, la red y las particularidades de cada lead.
 - Pendiente de evaluación: apertura de leads por lotes para reducir el tiempo de espera percibido.
+
+## Piloto Selenium — Lectura de Salesforce
+
+| Validación | Resultado |
+|---|---|
+| Navegador | Microsoft Edge con perfil dedicado |
+| Autenticación | Login y 2FA manuales validados |
+| Reporte Salesforce | 29 filas visibles y 10 Leads con propietario exacto `AR_LEAD_QUALIF`, confirmados manualmente |
+| Campo individual | "Otra información" localizado en un único Lead sin activar edición |
+| Cálculo de intentos | Historial con `1 INT`: próximo intento calculado correctamente como `2` |
+| Pruebas automáticas | 43/43 tests unitarios correctos |
+| Escrituras o guardados | Ninguno |
+| Datos en documentación | No se registraron Lead IDs, comentarios, teléfonos, emails, credenciales ni códigos 2FA |
+
+### Observaciones de seguridad
+
+- El lector de reporte se limita a las filas actualmente visibles; no recorre la grilla virtualizada.
+- Logs, capturas, perfiles, configuración local y colas operativas están excluidos de Git.
+- El piloto queda cerrado como validación de lectura. Cualquier preparación o escritura asistida requiere un cambio OpenSpec separado y aprobación explícita.

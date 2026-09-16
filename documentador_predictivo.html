@@ -28,9 +28,27 @@
   .module-card h3 { margin: 0 0 9px; font-size: 20px; color: #12304a; }
   .module-card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
   .module-card .module-action { display: inline-block; margin-top: 20px; color: var(--accent); font-size: 13px; font-weight: 700; }
-  .prepare-placeholder { max-width: 700px; margin: 48px auto; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 36px; }
-  .prepare-placeholder h2 { margin-top: 0; color: #12304a; }
-  .prepare-placeholder p { color: var(--muted); line-height: 1.5; }
+  .prepare-app { max-width: 1000px; margin: 24px auto; }
+  .prepare-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 18px; }
+  .prepare-header h2 { margin: 0; color: #12304a; font-size: 24px; }
+  .prepare-header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; }
+  .prepare-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+  .prepare-card h3 { margin: 0 0 8px; font-size: 16px; color: #12304a; }
+  .prepare-dropzone { border: 2px dashed var(--accent); border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; background: #fbfdff; }
+  .prepare-dropzone.drag { background: #e5efff; }
+  .prepare-dropzone strong { display: block; font-size: 17px; margin-bottom: 6px; }
+  .prepare-dropzone span { color: var(--muted); font-size: 13px; }
+  .prepare-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: #39556a; margin-bottom: 5px; }
+  .field input, .field select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; font: inherit; font-size: 14px; background: #fff; }
+  .mapping-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .prepare-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+  .summary-item { border-radius: 9px; padding: 12px; background: #eef4fa; font-size: 13px; color: #39556a; }
+  .summary-item strong { display: block; margin-top: 3px; font-size: 22px; color: #12304a; }
+  .excluded-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+  .excluded-table th, .excluded-table td { border: 1px solid var(--border); padding: 7px; text-align: left; vertical-align: top; }
+  .excluded-table th { background: #eef4fa; color: #39556a; }
+  @media (max-width: 700px) { .module-grid, .prepare-fields, .mapping-grid { grid-template-columns: 1fr; } .prepare-summary { grid-template-columns: 1fr; } }
   @media (max-width: 700px) { .module-grid { grid-template-columns: 1fr; } header .sub { flex-basis: 100%; } }
 
   #dropzone { border: 2px dashed var(--accent); border-radius: 12px; background: var(--card);
@@ -127,10 +145,32 @@
   </section>
 
   <section id="viewPrepare" class="hidden">
-    <div class="prepare-placeholder">
-      <h2>Preparar campa&ntilde;a predictiva</h2>
-      <p>Este módulo permitirá cargar una base de leads, normalizar teléfonos según el país y descargar un CSV listo para Wolkvox.</p>
-      <button class="btn primary" id="backFromPrepare">Volver al inicio</button>
+    <div class="prepare-app">
+      <div class="prepare-header">
+        <h2>Preparar campa&ntilde;a predictiva</h2>
+        <button class="btn" id="backFromPrepare">Inicio</button>
+        <p>Cargá el export de Salesforce, revisá el mapeo y descargá el archivo listo para Wolkvox.</p>
+      </div>
+      <div class="prepare-card" id="prepareUploadCard">
+        <h3>1. Cargar base de Salesforce</h3>
+        <div class="prepare-dropzone" id="prepareDropzone"><strong>Arrastrá aquí el archivo CSV</strong><span>o hacé clic para seleccionarlo. Se procesa únicamente en este navegador.</span><input type="file" id="prepareFileInput" accept=".csv,.txt" class="hidden"></div>
+      </div>
+      <div id="prepareSetup" class="hidden">
+        <div class="prepare-card">
+          <h3>2. Configurar la campaña</h3>
+          <div class="prepare-fields">
+            <div class="field"><label for="prepareCountry">País y prefijo Wolkvox</label><select id="prepareCountry"><option value="ARG">Argentina — 91549</option><option value="COL">Colombia — 957</option><option value="MEX">México — 9352</option></select></div>
+            <div class="field"><label for="campaignIdentifier">Identificador de campaña (TIPOID)</label><input id="campaignIdentifier" pattern="[A-Za-z0-9]+" title="Solo letras sin acento y números, sin espacios ni símbolos" placeholder="Ej.: Septiembre2026"><div class="hint">Solo letras sin acento y números; sin espacios ni símbolos.</div></div>
+          </div>
+        </div>
+        <div class="prepare-card">
+          <h3>3. Revisar mapeo de columnas</h3>
+          <div class="hint">La app propone las columnas del reporte; confirmalas antes de generar el archivo.</div>
+          <div class="mapping-grid" id="mappingGrid"></div>
+          <div class="actions"><button class="btn primary" id="prepareGenerate">Generar archivo Wolkvox</button><button class="btn" id="prepareOtherFile">Cargar otro archivo</button></div>
+        </div>
+      </div>
+      <div id="prepareResult" class="hidden"></div>
     </div>
   </section>
 
@@ -211,6 +251,7 @@
     <h2 style="margin-top:22px">Caracter&iacute;sticas</h2>
     <ul class="feature-list">
       <li>Centraliza el ciclo de campa&ntilde;as: preparar la base para Wolkvox y documentar sus resultados.</li>
+      <li>Al exportar, permite elegir la carpeta y el nombre de cada archivo antes de guardarlo.</li>
       <li>Procesa el CSV del predictivo localmente: ning&uacute;n dato se env&iacute;a a servidores externos.</li>
       <li>Genera la documentaci&oacute;n por intento, numerada y lista para copiar en Salesforce.</li>
       <li>Abre directamente el lead mediante su ID de Salesforce y lleva el progreso de documentaci&oacute;n.</li>
@@ -263,6 +304,88 @@ function parseCSV(text) {
     headers.forEach((h, i) => row[h] = (cells[i] ?? "").trim());
     return row;
   });
+}
+
+const WOLKVOX_HEADERS = "NOMBRE;APELLIDO;TIPOID;ID;EDAD;SEXO;PAIS;DEPARTAMENTO;CIUDAD;ZONA;DIRECCION;OPT1;OPT2;OPT3;OPT4;OPT5;OPT6;OPT7;OPT8;OPT9;OPT10;OPT11;OPT12;TEL1;TEL2;TEL3;TEL4;TEL5;TEL6;TEL7;TEL8;TEL9;TEL10;OTROSTEL;EMAIL;RECALL-INFO;AGENTE;RESULTADOREG;FECHAFINREG;LLAMADAS;IDCALL;COD01;DESC1;COD02;DESC2;COMENTARIOSACUMULADOS;DATE_RECALL;COUNT_RECALL;TEL_RECALL;LAST_DIAL_TEL;HISTORY_TEL".split(";");
+const PREPARE_FIELDS = [
+  ["id", "Lead ID", ["lead id", "id"]],
+  ["phone", "Teléfono celular", ["telefono movil", "telefono celular", "celular", "movil", "telefono"]],
+  ["name", "Nombre", ["nombre"]],
+  ["surname", "Apellido", ["apellidos", "apellido"]],
+  ["email", "E-mail", ["correo electronico", "email", "e-mail", "correo"]],
+  ["vehicle", "Vehículo", ["vehiculo de interes", "vehiculo", "vehículo", "modelo"]],
+  ["dealer", "Concesionario", ["nombre corto de la concesion", "concesionario", "concesion", "dealer"]],
+];
+const COUNTRY_PREFIXES = { ARG: "91549", COL: "957", MEX: "9352" };
+let prepareRows = [];
+let prepareHeaders = [];
+let prepareMapping = {};
+
+function normalizeHeader(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function parseDelimited(text, delimiter = ";") {
+  const rows = [];
+  let row = [], cell = "", quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i], next = text[i + 1];
+    if (char === '"' && quoted && next === '"') { cell += '"'; i++; continue; }
+    if (char === '"') { quoted = !quoted; continue; }
+    if (char === delimiter && !quoted) { row.push(cell); cell = ""; continue; }
+    if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") i++;
+      row.push(cell); if (row.some(value => value !== "")) rows.push(row); row = []; cell = ""; continue;
+    }
+    cell += char;
+  }
+  row.push(cell); if (row.some(value => value !== "")) rows.push(row);
+  const headers = rows.shift()?.map(value => value.trim()) || [];
+  return { headers, rows: rows.map(values => Object.fromEntries(headers.map((header, index) => [header, values[index]?.trim() || ""]))) };
+}
+
+function detectColumn(headers, aliases) {
+  const normalized = headers.map(normalizeHeader);
+  for (const alias of aliases) {
+    const index = normalized.indexOf(alias);
+    if (index >= 0) return headers[index];
+  }
+  return "";
+}
+
+function normalizePhone(value, country) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.length < 10) return null;
+  return COUNTRY_PREFIXES[country] + digits.slice(-10);
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
+}
+
+function wolkvoxCell(value) {
+  return String(value ?? "").replace(/[;\r\n"]/g, " ").trim();
+}
+
+async function downloadCSV(filename, rows) {
+  if (!("showSaveFilePicker" in window)) {
+    alert("Este navegador no permite elegir la ubicación de guardado. Abrí la app con una versión actual de Microsoft Edge o Google Chrome.");
+    return;
+  }
+  const text = rows.map(row => row.map(wolkvoxCell).join(";")).join("\r\n") + "\r\n";
+  const blob = new Blob(["\uFEFF" + text], { type: "text/csv;charset=utf-8" });
+  try {
+    const fileHandle = await window.showSaveFilePicker({
+      suggestedName: filename,
+      types: [{ description: "Archivo CSV", accept: { "text/csv": [".csv"] } }],
+    });
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    alert(`Archivo guardado: ${fileHandle.name}`);
+  } catch (error) {
+    if (error.name !== "AbortError") alert("No se pudo guardar el archivo. Verificá los permisos de la carpeta e intentá nuevamente.");
+  }
 }
 
 const ATTEMPT_RE = /(\d{14}):([^:*]+):(\d*):([^*]*)\*/g;
@@ -357,6 +480,83 @@ $("openPrepare").addEventListener("click", () => showView("viewPrepare"));
 $("openDocument").addEventListener("click", () => showView("viewDocumentar"));
 $("backFromPrepare").addEventListener("click", () => showView("viewHome"));
 $("backToHome").addEventListener("click", () => showView("viewHome"));
+
+function renderMappingGrid() {
+  const grid = $("mappingGrid");
+  grid.innerHTML = PREPARE_FIELDS.map(([key, label]) => `<div class="field"><label for="map-${key}">${label}${key === "id" || key === "phone" ? " *" : ""}</label><select id="map-${key}"><option value="">No usar</option>${prepareHeaders.map(header => `<option value="${escapeHTML(header)}" ${prepareMapping[key] === header ? "selected" : ""}>${escapeHTML(header)}</option>`).join("")}</select></div>`).join("");
+  PREPARE_FIELDS.forEach(([key]) => $("map-" + key).addEventListener("change", event => { prepareMapping[key] = event.target.value; }));
+}
+
+function loadPrepareCSV(text) {
+  const firstLine = text.split(/\r?\n/, 1)[0] || "";
+  const delimiter = (firstLine.match(/;/g) || []).length >= (firstLine.match(/,/g) || []).length ? ";" : ",";
+  const parsed = parseDelimited(text.replace(/^\uFEFF/, ""), delimiter);
+  prepareHeaders = parsed.headers;
+  prepareRows = parsed.rows;
+  if (!prepareRows.length) { alert("No encontré filas para preparar en el archivo."); return; }
+  prepareMapping = Object.fromEntries(PREPARE_FIELDS.map(([key, , aliases]) => [key, detectColumn(prepareHeaders, aliases)]));
+  $("prepareSetup").classList.remove("hidden");
+  $("prepareResult").classList.add("hidden");
+  renderMappingGrid();
+}
+
+function loadPrepareFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => loadPrepareCSV(reader.result);
+  reader.readAsText(file, "utf-8");
+}
+
+function mapToWolkvox(source, country, campaign) {
+  const get = key => source[prepareMapping[key]] || "";
+  const row = Object.fromEntries(WOLKVOX_HEADERS.map(header => [header, ""]));
+  row.NOMBRE = get("name");
+  row.APELLIDO = get("surname");
+  row.TIPOID = campaign;
+  row.ID = get("id");
+  row.SEXO = get("vehicle");
+  row.ZONA = get("dealer");
+  row.DIRECCION = get("email");
+  row.TEL1 = normalizePhone(get("phone"), country);
+  return row;
+}
+
+function generatePrepareFile() {
+  const campaign = $("campaignIdentifier").value.trim();
+  if (!prepareMapping.id || !prepareMapping.phone) { alert("Seleccioná las columnas obligatorias: Lead ID y Teléfono celular."); return; }
+  if (!campaign) { alert("Ingresá el identificador de campaña (TIPOID)."); $("campaignIdentifier").focus(); return; }
+  if (!/^[A-Za-z0-9]+$/.test(campaign)) { alert("El identificador de campaña solo puede contener letras sin acento y números, sin espacios ni símbolos."); $("campaignIdentifier").focus(); return; }
+  const country = $("prepareCountry").value;
+  const validRows = [], excluded = [], seenIds = new Map(), seenPhones = new Map();
+  prepareRows.forEach((source, index) => {
+    const rowNumber = index + 2;
+    const mapped = mapToWolkvox(source, country, campaign);
+    if (!mapped.ID) { excluded.push([rowNumber, "", "Sin Lead ID", "", ""]); return; }
+    if (seenIds.has(mapped.ID)) { excluded.push([rowNumber, mapped.ID, "Lead ID duplicado", mapped.ID, seenIds.get(mapped.ID)]); return; }
+    if (!mapped.TEL1) { excluded.push([rowNumber, mapped.ID, "Teléfono inválido: menos de 10 dígitos", source[prepareMapping.phone] || "", ""]); return; }
+    if (seenPhones.has(mapped.TEL1)) { excluded.push([rowNumber, mapped.ID, "Teléfono duplicado", mapped.TEL1, seenPhones.get(mapped.TEL1)]); return; }
+    seenIds.set(mapped.ID, mapped.ID); seenPhones.set(mapped.TEL1, mapped.ID); validRows.push(mapped);
+  });
+  renderPrepareResult(country, validRows, excluded);
+}
+
+function renderPrepareResult(country, validRows, excluded) {
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const filename = `predictivo_${country}_${date}.csv`;
+  const excludedFilename = `excluidos_${country}_${date}.csv`;
+  const table = excluded.length ? `<table class="excluded-table"><thead><tr><th>Fila</th><th>Lead ID</th><th>Motivo</th><th>Dato conflictivo</th><th>Lead conservado</th></tr></thead><tbody>${excluded.map(row => `<tr>${row.map(cell => `<td>${escapeHTML(cell)}</td>`).join("")}</tr>`).join("")}</tbody></table>` : '<p class="hint">No hubo registros excluidos.</p>';
+  $("prepareResult").innerHTML = `<div class="prepare-card"><h3>Archivo preparado</h3><div class="prepare-summary"><div class="summary-item">Filas leídas<strong>${prepareRows.length}</strong></div><div class="summary-item">Listas para Wolkvox<strong>${validRows.length}</strong></div><div class="summary-item">Excluidas<strong>${excluded.length}</strong></div></div><div class="metric-note"><strong>Formato Wolkvox validado</strong><br>51 columnas &middot; Separador <code>;</code> &middot; Sin comillas &middot; UTF-8 con BOM &middot; TEL1 solo num&eacute;rico &middot; TIPOID v&aacute;lido</div><div class="actions"><button class="btn primary" id="downloadWolkvox">Guardar archivo Wolkvox</button>${excluded.length ? '<button class="btn" id="downloadExcluded">Guardar reporte de excluidos</button>' : ""}</div><p class="hint">Elegí la carpeta y el nombre al guardar. Luego subí el archivo directamente a Wolkvox, sin abrirlo ni guardarlo nuevamente desde Excel.</p><h3 style="margin-top:20px">Registros excluidos</h3>${table}</div>`;
+  $("prepareResult").classList.remove("hidden");
+  $("downloadWolkvox").addEventListener("click", () => downloadCSV(filename, [WOLKVOX_HEADERS, ...validRows.map(row => WOLKVOX_HEADERS.map(header => row[header]))]));
+  $("downloadExcluded")?.addEventListener("click", () => downloadCSV(excludedFilename, [["Fila", "Lead ID", "Motivo", "Dato conflictivo", "Lead conservado"], ...excluded]));
+}
+
+$("prepareDropzone").addEventListener("click", () => $("prepareFileInput").click());
+$("prepareDropzone").addEventListener("dragover", event => { event.preventDefault(); $("prepareDropzone").classList.add("drag"); });
+$("prepareDropzone").addEventListener("dragleave", () => $("prepareDropzone").classList.remove("drag"));
+$("prepareDropzone").addEventListener("drop", event => { event.preventDefault(); $("prepareDropzone").classList.remove("drag"); if (event.dataTransfer.files.length) loadPrepareFile(event.dataTransfer.files[0]); });
+$("prepareFileInput").addEventListener("change", event => { if (event.target.files.length) loadPrepareFile(event.target.files[0]); });
+$("prepareOtherFile").addEventListener("click", () => { $("prepareFileInput").value = ""; $("prepareSetup").classList.add("hidden"); $("prepareResult").classList.add("hidden"); });
+$("prepareGenerate").addEventListener("click", generatePrepareFile);
 
 $("dropzone").addEventListener("click", () => $("fileInput").click());
 $("dropzone").addEventListener("dragover", e => { e.preventDefault(); $("dropzone").classList.add("drag"); });

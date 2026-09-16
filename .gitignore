@@ -21,3 +21,8 @@ PREDICTIVOS/
 
 # Configuración local
 .devin/config.local.json
+automation_salesforce/config.json
+automation_salesforce/logs/
+automation_salesforce/screenshots/
+automation_salesforce/profiles/
+automation_salesforce/queues/

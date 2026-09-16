@@ -1,0 +1,14 @@
+{
+  "browser": "edge",
+  "profile_directory": "%LOCALAPPDATA%\\RenaultPredictivo\\edge-profile",
+  "salesforce_url": "https://renaultarca.lightning.force.com",
+  "report_url": "https://renaultarca.lightning.force.com/lightning/r/Report/00O67000006cstjEAA/view?queryScope=userFolders",
+  "record_object_api_name": "Lead",
+  "timeouts": {
+    "page_load_seconds": 30,
+    "authentication_seconds": 300
+  },
+  "screenshot_directory": "screenshots",
+  "log_directory": "logs",
+  "queue_directory": "queues"
+}

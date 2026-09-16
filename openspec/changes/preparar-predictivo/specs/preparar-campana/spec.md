@@ -52,15 +52,28 @@ tomar los últimos 10 dígitos y anteponer el prefijo del país seleccionado
 ### Requirement: REQ-104: Generación del archivo Wolkvox sin duplicados
 
 El módulo MUST generar un CSV con las 51 columnas exactas del template Wolkvox
-(`;`, CRLF, cp1252), con `ID` y `TEL1` obligatorios y únicos, nombre
-`predictivo_{PAIS}_{YYYYMMDD}.csv`, y TIPOID igual al identificador de campaña
-ingresado por el usuario.
+(`;`, sin comillas automáticas, CRLF, UTF-8 BOM), con `ID` y `TEL1` obligatorios
+y únicos, nombre `predictivo_{PAIS}_{YYYYMMDD}.csv`. `TIPOID` MUST contener solo
+letras ASCII y números (sin espacios, acentos ni símbolos) y TEL1 MUST contener
+solo dígitos sin espacios.
 
 #### Scenario: dos leads comparten el mismo teléfono
 
 **Given** dos leads válidos cuyo TEL1 normalizado es idéntico.
 **When** se genera el archivo.
 **Then** solo el primero se incluye y el segundo aparece en el reporte de excluidos indicando con qué lead quedó duplicado.
+
+#### Scenario: formato de archivo compatible con Wolkvox
+
+**Given** una base válida lista para exportar.
+**When** el usuario descarga el archivo Wolkvox.
+**Then** el archivo tiene BOM UTF-8, CRLF, 51 columnas separadas por `;`, no contiene comillas automáticas y todos los valores de TEL1 contienen solo dígitos.
+
+#### Scenario: identificador de campaña inválido
+
+**Given** un TIPOID con espacios, acentos o símbolos.
+**When** el usuario intenta generar el archivo.
+**Then** la aplicación informa el error y no genera una descarga.
 
 ### Requirement: REQ-105: Reporte de excluidos
 

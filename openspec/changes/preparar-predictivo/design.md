@@ -32,7 +32,8 @@ archivo entrada (CSV o XLSX)
   └─ mapeo de columnas      autodetección por nombre de cabecera +
                             selectores manuales para: Nombre, Apellido,
                             Lead ID, E-mail, Vehículo, Concesionario, Teléfono(s)
-  └─ input "Identificador de campaña" (texto libre → TIPOID en todas las filas)
+  └─ input "Identificador de campaña" → TIPOID en todas las filas
+         validar: solo letras ASCII y números, sin espacios, acentos ni símbolos
   └─ normalizePhone(raw, country)
          quitar todo lo no numérico → tomar los ÚLTIMOS 10 dígitos →
          anteponer prefijo país (AR 91549 | CO 957 | MX 9352)
@@ -43,7 +44,7 @@ archivo entrada (CSV o XLSX)
   └─ validateBatch(rows)
          ID obligatorio y único | TEL1 obligatorio y único
          excluidos con motivo + referencia al lead que quedó (duplicados)
-  └─ buildWolkvoxCSV(rows)  separador ';', CRLF, encoding cp1252
+  └─ buildWolkvoxCSV(rows)  separador ';', sin comillas, CRLF, UTF-8 con BOM
   └─ descarga Blob + a[download]  → predictivo_{PAIS}_{YYYYMMDD}.csv
   └─ reporte de excluidos: tabla en pantalla + CSV descargable
 ```
@@ -77,7 +78,7 @@ Obligatorios sin duplicados: `ID` (lead ID de Salesforce) y `TEL1` (con prefijo 
 | ¿Librería XLSX? | Sí: la entrada puede ser XLSX → incrustar SheetJS minificado en el HTML (sin CDN, versión publicada hace más de 7 días) | Restricción sin red |
 | Mapeo de columnas de entrada | Autodetección + selección manual (los exports traen muchas columnas y las cabeceras pueden variar) | Robustez ante cambios del export |
 | Columnas "reutilizadas" del template | Mantener convención actual (SEXO=vehículo, ZONA=concesionario, DIRECCION=email, TIPOID=identificador de campaña) | Compatibilidad con el módulo Documentar y procesos existentes |
-| Encoding salida | cp1252 (windows-1252) | Igual que los CSV reales de Wolkvox |
+| Formato de salida Wolkvox | `;`, sin comillas automáticas, CRLF, UTF-8 BOM | Réplica del archivo validado por Wolkvox (`plantilla leads arg.csv`) |
 | Estado del módulo 1 | Sin persistencia (transformación pura) | No hay progreso que guardar |
 
 ## Testing

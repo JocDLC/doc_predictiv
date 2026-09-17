@@ -58,6 +58,20 @@ class LeadsUiTests(unittest.TestCase):
         self.assertNotIn("Columna 16", rendered)
         self.assertNotIn("Acción sugerida", rendered)
 
+    def test_reports_omitted_columns_and_offers_row_height_toggle(self):
+        lead = VisibleLead(
+            lead_id="00Q000000000002AAA",
+            created_at="",
+            details={"col:Columna 6": "AR_LEAD_QUALIF"},
+        )
+        rendered = render_leads_ui(1, [lead])
+
+        self.assertIn("Las columnas sin datos se omiten", rendered)
+        self.assertIn("Fecha de creación", rendered)
+        self.assertIn('id="wrap"', rendered)
+        self.assertIn("Ajustar alto de fila al texto", rendered)
+        self.assertIn("compact", rendered)
+
     def test_writes_html_in_requested_local_directory(self):
         with TemporaryDirectory() as temporary_directory:
             output = write_leads_ui(1, [self.lead], Path(temporary_directory), datetime(2026, 9, 15, 9, 0))

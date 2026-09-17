@@ -9,7 +9,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\_analyze.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_analyze_py",
-      "community": 10,
+      "community": 8,
       "norm_label": "_analyze.py"
     },
     {
@@ -18,7 +18,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\browser_factory.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_browser_factory_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "browser_factory.py"
     },
     {
@@ -27,7 +27,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\browser_factory.py",
       "source_location": "L25",
       "id": "browser_factory_detect_browser",
-      "community": 2,
+      "community": 0,
       "norm_label": "detect_browser()"
     },
     {
@@ -36,7 +36,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\browser_factory.py",
       "source_location": "L36",
       "id": "browser_factory_create_driver",
-      "community": 2,
+      "community": 0,
       "norm_label": "create_driver()"
     },
     {
@@ -45,7 +45,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_comment_reader_py",
-      "community": 4,
+      "community": 5,
       "norm_label": "comment_reader.py"
     },
     {
@@ -54,7 +54,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L194",
       "id": "comment_reader_normalize_label",
-      "community": 4,
+      "community": 5,
       "norm_label": "normalize_label()"
     },
     {
@@ -63,7 +63,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L200",
       "id": "comment_reader_text_without_field_label",
-      "community": 4,
+      "community": 5,
       "norm_label": "text_without_field_label()"
     },
     {
@@ -72,7 +72,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L207",
       "id": "comment_reader_field_result_if_found",
-      "community": 4,
+      "community": 5,
       "norm_label": "field_result_if_found()"
     },
     {
@@ -90,7 +90,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L241",
       "id": "comment_reader_field_result_with_text",
-      "community": 4,
+      "community": 5,
       "norm_label": "field_result_with_text()"
     },
     {
@@ -99,7 +99,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L246",
       "id": "comment_reader_find_other_information",
-      "community": 4,
+      "community": 5,
       "norm_label": "find_other_information()"
     },
     {
@@ -108,7 +108,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L256",
       "id": "comment_reader_other_information_structure_summary",
-      "community": 4,
+      "community": 5,
       "norm_label": "other_information_structure_summary()"
     },
     {
@@ -117,7 +117,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L261",
       "id": "comment_reader_next_attempt_number",
-      "community": 4,
+      "community": 5,
       "norm_label": "next_attempt_number()"
     },
     {
@@ -126,7 +126,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L266",
       "id": "comment_reader_build_record_url",
-      "community": 2,
+      "community": 5,
       "norm_label": "build_record_url()"
     },
     {
@@ -143,7 +143,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L257",
-      "community": 4,
+      "community": 5,
       "norm_label": "devuelve solo metadatos del dom; nunca texto del comentario.",
       "id": "comment_reader_rationale_257"
     },
@@ -252,7 +252,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\leads_ui.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_leads_ui_py",
-      "community": 5,
+      "community": 4,
       "norm_label": "leads_ui.py"
     },
     {
@@ -261,7 +261,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\leads_ui.py",
       "source_location": "L42",
       "id": "leads_ui_source_value",
-      "community": 5,
+      "community": 4,
       "norm_label": "source_value()"
     },
     {
@@ -270,7 +270,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\leads_ui.py",
       "source_location": "L46",
       "id": "leads_ui_lead_payload",
-      "community": 5,
+      "community": 4,
       "norm_label": "lead_payload()"
     },
     {
@@ -279,7 +279,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\leads_ui.py",
       "source_location": "L56",
       "id": "leads_ui_available_columns",
-      "community": 5,
+      "community": 4,
       "norm_label": "available_columns()"
     },
     {
@@ -288,16 +288,16 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\leads_ui.py",
       "source_location": "L64",
       "id": "leads_ui_render_leads_ui",
-      "community": 5,
+      "community": 4,
       "norm_label": "render_leads_ui()"
     },
     {
       "label": "write_leads_ui()",
       "file_type": "code",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\leads_ui.py",
-      "source_location": "L77",
+      "source_location": "L80",
       "id": "leads_ui_write_leads_ui",
-      "community": 5,
+      "community": 4,
       "norm_label": "write_leads_ui()"
     },
     {
@@ -306,7 +306,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\local_audit.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_local_audit_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "local_audit.py"
     },
     {
@@ -315,7 +315,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\local_audit.py",
       "source_location": "L8",
       "id": "local_audit_mask_lead_id",
-      "community": 2,
+      "community": 0,
       "norm_label": "mask_lead_id()"
     },
     {
@@ -324,7 +324,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\local_audit.py",
       "source_location": "L15",
       "id": "local_audit_create_logger",
-      "community": 2,
+      "community": 0,
       "norm_label": "create_logger()"
     },
     {
@@ -333,7 +333,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\local_audit.py",
       "source_location": "L27",
       "id": "local_audit_capture_failure",
-      "community": 2,
+      "community": 0,
       "norm_label": "capture_failure()"
     },
     {
@@ -342,7 +342,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\local_report.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_local_report_py",
-      "community": 7,
+      "community": 4,
       "norm_label": "local_report.py"
     },
     {
@@ -351,7 +351,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\local_report.py",
       "source_location": "L10",
       "id": "local_report_report_payload",
-      "community": 7,
+      "community": 4,
       "norm_label": "report_payload()"
     },
     {
@@ -360,7 +360,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\local_report.py",
       "source_location": "L26",
       "id": "local_report_available_report_path",
-      "community": 7,
+      "community": 4,
       "norm_label": "available_report_path()"
     },
     {
@@ -369,7 +369,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\local_report.py",
       "source_location": "L36",
       "id": "local_report_write_unassigned_leads_report",
-      "community": 7,
+      "community": 4,
       "norm_label": "write_unassigned_leads_report()"
     },
     {
@@ -378,7 +378,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_report_reader_py",
-      "community": 1,
+      "community": 2,
       "norm_label": "report_reader.py"
     },
     {
@@ -387,7 +387,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L109",
       "id": "report_reader_visiblelead",
-      "community": 0,
+      "community": 4,
       "norm_label": "visiblelead"
     },
     {
@@ -396,7 +396,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L117",
       "id": "report_reader_deduplicate_visible_leads",
-      "community": 1,
+      "community": 4,
       "norm_label": "deduplicate_visible_leads()"
     },
     {
@@ -405,7 +405,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L130",
       "id": "report_reader_merge_visible_leads",
-      "community": 0,
+      "community": 4,
       "norm_label": "merge_visible_leads()"
     },
     {
@@ -414,7 +414,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L142",
       "id": "report_reader_scroll_table_right",
-      "community": 1,
+      "community": 2,
       "norm_label": "scroll_table_right()"
     },
     {
@@ -423,7 +423,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L147",
       "id": "report_reader_scroll_table_down",
-      "community": 1,
+      "community": 2,
       "norm_label": "scroll_table_down()"
     },
     {
@@ -432,7 +432,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L152",
       "id": "report_reader_read_full_report",
-      "community": 1,
+      "community": 2,
       "norm_label": "read_full_report()"
     },
     {
@@ -441,7 +441,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L188",
       "id": "report_reader_normalize_label",
-      "community": 1,
+      "community": 2,
       "norm_label": "normalize_label()"
     },
     {
@@ -450,7 +450,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L194",
       "id": "report_reader_find_header_index",
-      "community": 1,
+      "community": 2,
       "norm_label": "find_header_index()"
     },
     {
@@ -459,7 +459,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L202",
       "id": "report_reader_find_owner_header_index",
-      "community": 1,
+      "community": 2,
       "norm_label": "find_owner_header_index()"
     },
     {
@@ -468,7 +468,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L210",
       "id": "report_reader_resolve_field_indexes",
-      "community": 1,
+      "community": 2,
       "norm_label": "resolve_field_indexes()"
     },
     {
@@ -477,7 +477,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L222",
       "id": "report_reader_extract_row_details",
-      "community": 1,
+      "community": 2,
       "norm_label": "extract_row_details()"
     },
     {
@@ -486,7 +486,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L231",
       "id": "report_reader_unmapped_columns",
-      "community": 1,
+      "community": 2,
       "norm_label": "unmapped_columns()"
     },
     {
@@ -495,7 +495,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L245",
       "id": "report_reader_is_unassigned_owner",
-      "community": 1,
+      "community": 2,
       "norm_label": "is_unassigned_owner()"
     },
     {
@@ -504,7 +504,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L249",
       "id": "report_reader_is_visible_element",
-      "community": 1,
+      "community": 2,
       "norm_label": "is_visible_element()"
     },
     {
@@ -513,7 +513,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L259",
       "id": "report_reader_row_has_unassigned_owner",
-      "community": 1,
+      "community": 2,
       "norm_label": "row_has_unassigned_owner()"
     },
     {
@@ -522,7 +522,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L265",
       "id": "report_reader_find_elements",
-      "community": 1,
+      "community": 2,
       "norm_label": "find_elements()"
     },
     {
@@ -531,7 +531,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L273",
       "id": "report_reader_find_report_rows",
-      "community": 1,
+      "community": 2,
       "norm_label": "find_report_rows()"
     },
     {
@@ -558,7 +558,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L319",
       "id": "report_reader_lead_id_from_values",
-      "community": 1,
+      "community": 2,
       "norm_label": "lead_id_from_values()"
     },
     {
@@ -567,7 +567,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L328",
       "id": "report_reader_row_diagnostics",
-      "community": 1,
+      "community": 2,
       "norm_label": "row_diagnostics()"
     },
     {
@@ -576,7 +576,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L338",
       "id": "report_reader_row_values",
-      "community": 1,
+      "community": 2,
       "norm_label": "row_values()"
     },
     {
@@ -585,7 +585,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L344",
       "id": "report_reader_header_labels",
-      "community": 1,
+      "community": 2,
       "norm_label": "header_labels()"
     },
     {
@@ -594,7 +594,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L350",
       "id": "report_reader_report_header_labels",
-      "community": 1,
+      "community": 2,
       "norm_label": "report_header_labels()"
     },
     {
@@ -603,7 +603,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L358",
       "id": "report_reader_column_offset",
-      "community": 1,
+      "community": 2,
       "norm_label": "column_offset()"
     },
     {
@@ -612,7 +612,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L367",
       "id": "report_reader_aligned_values",
-      "community": 1,
+      "community": 2,
       "norm_label": "aligned_values()"
     },
     {
@@ -621,7 +621,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L372",
       "id": "report_reader_extract_created_at",
-      "community": 1,
+      "community": 2,
       "norm_label": "extract_created_at()"
     },
     {
@@ -630,7 +630,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L382",
       "id": "report_reader_report_structure_summary",
-      "community": 1,
+      "community": 2,
       "norm_label": "report_structure_summary()"
     },
     {
@@ -648,7 +648,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L440",
       "id": "report_reader_select_report_table",
-      "community": 1,
+      "community": 2,
       "norm_label": "select_report_table()"
     },
     {
@@ -657,7 +657,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L455",
       "id": "report_reader_find_report_table",
-      "community": 1,
+      "community": 2,
       "norm_label": "find_report_table()"
     },
     {
@@ -666,7 +666,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L489",
       "id": "report_reader_read_visible_unassigned_leads",
-      "community": 1,
+      "community": 2,
       "norm_label": "read_visible_unassigned_leads()"
     },
     {
@@ -674,7 +674,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L118",
-      "community": 1,
+      "community": 4,
       "norm_label": "devuelve metadatos estructurales sin leer valores de filas ni encabezados.",
       "id": "report_reader_rationale_118"
     },
@@ -683,7 +683,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L161",
-      "community": 1,
+      "community": 2,
       "norm_label": "recorre la bandeja de arriba hacia abajo y de izquierda a derecha, sin abrir lea",
       "id": "report_reader_rationale_161"
     },
@@ -692,7 +692,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L234",
-      "community": 1,
+      "community": 2,
       "norm_label": "conserva toda columna leida de la bandeja aunque no tenga alias configurado.",
       "id": "report_reader_rationale_234"
     },
@@ -701,7 +701,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L266",
-      "community": 1,
+      "community": 2,
       "norm_label": "busca elementos sin mutar el dom, incluyendo shadow dom abierto cuando existe.",
       "id": "report_reader_rationale_266"
     },
@@ -710,7 +710,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L274",
-      "community": 1,
+      "community": 2,
       "norm_label": "prioriza filas html y elimina contenedores aria que duplican registros.",
       "id": "report_reader_rationale_274"
     },
@@ -719,7 +719,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L329",
-      "community": 1,
+      "community": 2,
       "norm_label": "metadatos por fila para diagnostico local; nunca incluye valores de celdas.",
       "id": "report_reader_rationale_329"
     },
@@ -728,7 +728,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L351",
-      "community": 1,
+      "community": 2,
       "norm_label": "usa los encabezados de la grilla o, si lightning los separa, los del reporte vis",
       "id": "report_reader_rationale_351"
     },
@@ -737,7 +737,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L359",
-      "community": 1,
+      "community": 2,
       "norm_label": "alinea celdas con encabezados usando la columna de propietario como referencia.",
       "id": "report_reader_rationale_359"
     },
@@ -746,7 +746,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L383",
-      "community": 1,
+      "community": 2,
       "norm_label": "devuelve metadatos estructurales sin leer valores de filas ni encabezados.",
       "id": "report_reader_rationale_383"
     },
@@ -765,7 +765,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_comment_assisted.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_run_comment_assisted_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "run_comment_assisted.py"
     },
     {
@@ -774,7 +774,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_comment_assisted.py",
       "source_location": "L21",
       "id": "run_comment_assisted_queue_directory_from_config",
-      "community": 2,
+      "community": 0,
       "norm_label": "queue_directory_from_config()"
     },
     {
@@ -783,7 +783,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_comment_assisted.py",
       "source_location": "L25",
       "id": "run_comment_assisted_print_preparation_summary",
-      "community": 2,
+      "community": 0,
       "norm_label": "print_preparation_summary()"
     },
     {
@@ -792,7 +792,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_comment_assisted.py",
       "source_location": "L37",
       "id": "run_comment_assisted_confirm_preparation",
-      "community": 2,
+      "community": 0,
       "norm_label": "confirm_preparation()"
     },
     {
@@ -801,7 +801,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_comment_assisted.py",
       "source_location": "L45",
       "id": "run_comment_assisted_main",
-      "community": 2,
+      "community": 0,
       "norm_label": "main()"
     },
     {
@@ -810,7 +810,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_comment_read_only.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_run_comment_read_only_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "run_comment_read_only.py"
     },
     {
@@ -819,7 +819,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_comment_read_only.py",
       "source_location": "L22",
       "id": "run_comment_read_only_print_comment_summary",
-      "community": 2,
+      "community": 0,
       "norm_label": "print_comment_summary()"
     },
     {
@@ -828,7 +828,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_comment_read_only.py",
       "source_location": "L34",
       "id": "run_comment_read_only_main",
-      "community": 2,
+      "community": 0,
       "norm_label": "main()"
     },
     {
@@ -837,7 +837,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_leads_ui.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_run_leads_ui_py",
-      "community": 6,
+      "community": 0,
       "norm_label": "run_leads_ui.py"
     },
     {
@@ -846,7 +846,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_leads_ui.py",
       "source_location": "L20",
       "id": "run_leads_ui_scan_mode",
-      "community": 6,
+      "community": 0,
       "norm_label": "scan_mode()"
     },
     {
@@ -855,7 +855,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_leads_ui.py",
       "source_location": "L25",
       "id": "run_leads_ui_read_report",
-      "community": 6,
+      "community": 0,
       "norm_label": "read_report()"
     },
     {
@@ -864,7 +864,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_leads_ui.py",
       "source_location": "L53",
       "id": "run_leads_ui_main",
-      "community": 2,
+      "community": 0,
       "norm_label": "main()"
     },
     {
@@ -872,7 +872,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_leads_ui.py",
       "source_location": "L21",
-      "community": 6,
+      "community": 0,
       "norm_label": "`--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.",
       "id": "run_leads_ui_rationale_21"
     },
@@ -881,7 +881,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_leads_ui.py",
       "source_location": "L34",
-      "community": 6,
+      "community": 0,
       "norm_label": "lee la vista actual por defecto; el recorrido ampliado es explicito.",
       "id": "run_leads_ui_rationale_34"
     },
@@ -891,7 +891,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_read_only.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_run_read_only_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "run_read_only.py"
     },
     {
@@ -900,7 +900,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_read_only.py",
       "source_location": "L11",
       "id": "run_read_only_main",
-      "community": 2,
+      "community": 0,
       "norm_label": "main()"
     },
     {
@@ -909,7 +909,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_report_read_only.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_run_report_read_only_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "run_report_read_only.py"
     },
     {
@@ -918,7 +918,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_report_read_only.py",
       "source_location": "L18",
       "id": "run_report_read_only_print_report_summary",
-      "community": 2,
+      "community": 0,
       "norm_label": "print_report_summary()"
     },
     {
@@ -927,7 +927,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_report_read_only.py",
       "source_location": "L27",
       "id": "run_report_read_only_main",
-      "community": 2,
+      "community": 0,
       "norm_label": "main()"
     },
     {
@@ -936,7 +936,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\salesforce_session.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_salesforce_session_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "salesforce_session.py"
     },
     {
@@ -945,7 +945,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\salesforce_session.py",
       "source_location": "L13",
       "id": "salesforce_session_load_config",
-      "community": 2,
+      "community": 0,
       "norm_label": "load_config()"
     },
     {
@@ -954,7 +954,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\salesforce_session.py",
       "source_location": "L18",
       "id": "salesforce_session_local_path",
-      "community": 2,
+      "community": 0,
       "norm_label": "local_path()"
     },
     {
@@ -963,7 +963,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\salesforce_session.py",
       "source_location": "L22",
       "id": "salesforce_session_wait_for_authentication",
-      "community": 2,
+      "community": 0,
       "norm_label": "wait_for_authentication()"
     },
     {
@@ -972,7 +972,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\salesforce_session.py",
       "source_location": "L29",
       "id": "salesforce_session_wait_for_lightning_ready",
-      "community": 2,
+      "community": 0,
       "norm_label": "wait_for_lightning_ready()"
     },
     {
@@ -981,7 +981,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\salesforce_session.py",
       "source_location": "L35",
       "id": "salesforce_session_prompt_for_manual_authentication",
-      "community": 2,
+      "community": 0,
       "norm_label": "prompt_for_manual_authentication()"
     },
     {
@@ -990,7 +990,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_tests_test_comment_reader_py",
-      "community": 4,
+      "community": 5,
       "norm_label": "test_comment_reader.py"
     },
     {
@@ -999,7 +999,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L13",
       "id": "test_comment_reader_fakecommentdriver",
-      "community": 4,
+      "community": 5,
       "norm_label": "fakecommentdriver"
     },
     {
@@ -1008,7 +1008,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L14",
       "id": "test_comment_reader_fakecommentdriver_init",
-      "community": 4,
+      "community": 5,
       "norm_label": ".__init__()"
     },
     {
@@ -1026,7 +1026,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L26",
       "id": "test_comment_reader_commentreadertests",
-      "community": 4,
+      "community": 5,
       "norm_label": "commentreadertests"
     },
     {
@@ -1035,7 +1035,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L27",
       "id": "test_comment_reader_commentreadertests_test_next_attempt_number_returns_one_for_empty_or_unrelated_text",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_next_attempt_number_returns_one_for_empty_or_unrelated_text()"
     },
     {
@@ -1044,7 +1044,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L31",
       "id": "test_comment_reader_commentreadertests_test_next_attempt_number_increments_single_attempt",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_next_attempt_number_increments_single_attempt()"
     },
     {
@@ -1053,7 +1053,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L34",
       "id": "test_comment_reader_commentreadertests_test_next_attempt_number_uses_maximum_from_multiple_attempts",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_next_attempt_number_uses_maximum_from_multiple_attempts()"
     },
     {
@@ -1062,7 +1062,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L39",
       "id": "test_comment_reader_commentreadertests_test_next_attempt_number_ignores_unrelated_text_and_uses_twelve",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_next_attempt_number_ignores_unrelated_text_and_uses_twelve()"
     },
     {
@@ -1071,7 +1071,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L44",
       "id": "test_comment_reader_commentreadertests_test_next_attempt_number_handles_repeated_and_unordered_values",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_next_attempt_number_handles_repeated_and_unordered_values()"
     },
     {
@@ -1080,7 +1080,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L49",
       "id": "test_comment_reader_commentreadertests_test_find_other_information_returns_value_without_its_label",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_find_other_information_returns_value_without_its_label()"
     },
     {
@@ -1089,7 +1089,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L59",
       "id": "test_comment_reader_commentreadertests_test_find_other_information_returns_empty_value_when_field_is_empty",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_find_other_information_returns_empty_value_when_field_is_empty()"
     },
     {
@@ -1098,7 +1098,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L64",
       "id": "test_comment_reader_commentreadertests_test_field_result_wait_condition_rejects_missing_label",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_field_result_wait_condition_rejects_missing_label()"
     },
     {
@@ -1107,7 +1107,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L69",
       "id": "test_comment_reader_commentreadertests_test_frame_reader_prefers_a_nonempty_visible_field",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_frame_reader_prefers_a_nonempty_visible_field()"
     },
     {
@@ -1116,7 +1116,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L96",
       "id": "test_comment_reader_commentreadertests_test_structure_summary_contains_only_dom_metadata",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_structure_summary_contains_only_dom_metadata()"
     },
     {
@@ -1125,7 +1125,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_reader.py",
       "source_location": "L115",
       "id": "test_comment_reader_commentreadertests_test_build_record_url_uses_configured_object_and_validates_id",
-      "community": 4,
+      "community": 5,
       "norm_label": ".test_build_record_url_uses_configured_object_and_validates_id()"
     },
     {
@@ -1161,7 +1161,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_comment_writer.py",
       "source_location": "L21",
       "id": "test_comment_writer_fakeeditor_clear",
-      "community": 3,
+      "community": 0,
       "norm_label": ".clear()"
     },
     {
@@ -1260,7 +1260,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_tests_test_leads_ui_py",
-      "community": 5,
+      "community": 4,
       "norm_label": "test_leads_ui.py"
     },
     {
@@ -1269,7 +1269,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
       "source_location": "L10",
       "id": "test_leads_ui_leadsuitests",
-      "community": 5,
+      "community": 4,
       "norm_label": "leadsuitests"
     },
     {
@@ -1278,7 +1278,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
       "source_location": "L11",
       "id": "test_leads_ui_leadsuitests_setup",
-      "community": 5,
+      "community": 4,
       "norm_label": ".setup()"
     },
     {
@@ -1287,7 +1287,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
       "source_location": "L35",
       "id": "test_leads_ui_leadsuitests_test_renders_confirmed_columns_in_salesforce_order",
-      "community": 5,
+      "community": 4,
       "norm_label": ".test_renders_confirmed_columns_in_salesforce_order()"
     },
     {
@@ -1296,16 +1296,25 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
       "source_location": "L50",
       "id": "test_leads_ui_leadsuitests_test_omits_position_duplicate_context_and_dash_columns",
-      "community": 5,
+      "community": 4,
       "norm_label": ".test_omits_position_duplicate_context_and_dash_columns()"
+    },
+    {
+      "label": ".test_reports_omitted_columns_and_offers_row_height_toggle()",
+      "file_type": "code",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
+      "source_location": "L61",
+      "id": "test_leads_ui_leadsuitests_test_reports_omitted_columns_and_offers_row_height_toggle",
+      "community": 4,
+      "norm_label": ".test_reports_omitted_columns_and_offers_row_height_toggle()"
     },
     {
       "label": ".test_writes_html_in_requested_local_directory()",
       "file_type": "code",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
-      "source_location": "L61",
+      "source_location": "L75",
       "id": "test_leads_ui_leadsuitests_test_writes_html_in_requested_local_directory",
-      "community": 5,
+      "community": 4,
       "norm_label": ".test_writes_html_in_requested_local_directory()"
     },
     {
@@ -1314,7 +1323,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_local_audit.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_tests_test_local_audit_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "test_local_audit.py"
     },
     {
@@ -1323,7 +1332,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_local_audit.py",
       "source_location": "L6",
       "id": "test_local_audit_maskleadidtests",
-      "community": 2,
+      "community": 0,
       "norm_label": "maskleadidtests"
     },
     {
@@ -1332,7 +1341,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_local_audit.py",
       "source_location": "L7",
       "id": "test_local_audit_maskleadidtests_test_masks_middle_of_standard_lead_id",
-      "community": 2,
+      "community": 0,
       "norm_label": ".test_masks_middle_of_standard_lead_id()"
     },
     {
@@ -1341,7 +1350,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_local_audit.py",
       "source_location": "L10",
       "id": "test_local_audit_maskleadidtests_test_masks_short_value",
-      "community": 2,
+      "community": 0,
       "norm_label": ".test_masks_short_value()"
     },
     {
@@ -1350,7 +1359,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_local_report.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_tests_test_local_report_py",
-      "community": 7,
+      "community": 4,
       "norm_label": "test_local_report.py"
     },
     {
@@ -1359,7 +1368,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_local_report.py",
       "source_location": "L11",
       "id": "test_local_report_localreporttests",
-      "community": 7,
+      "community": 4,
       "norm_label": "localreporttests"
     },
     {
@@ -1368,7 +1377,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_local_report.py",
       "source_location": "L12",
       "id": "test_local_report_localreporttests_test_writes_only_the_minimum_local_report_fields",
-      "community": 7,
+      "community": 4,
       "norm_label": ".test_writes_only_the_minimum_local_report_fields()"
     },
     {
@@ -1377,7 +1386,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_tests_test_report_reader_py",
-      "community": 0,
+      "community": 1,
       "norm_label": "test_report_reader.py"
     },
     {
@@ -1386,7 +1395,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L32",
       "id": "test_report_reader_fakecell",
-      "community": 0,
+      "community": 1,
       "norm_label": "fakecell"
     },
     {
@@ -1395,7 +1404,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L33",
       "id": "test_report_reader_fakecell_init",
-      "community": 0,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -1404,7 +1413,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L37",
       "id": "test_report_reader_faketable",
-      "community": 0,
+      "community": 1,
       "norm_label": "faketable"
     },
     {
@@ -1413,7 +1422,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L40",
       "id": "test_report_reader_faketable_init",
-      "community": 0,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -1422,7 +1431,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L46",
       "id": "test_report_reader_faketable_find_elements",
-      "community": 0,
+      "community": 1,
       "norm_label": ".find_elements()"
     },
     {
@@ -1431,7 +1440,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L57",
       "id": "test_report_reader_faketable_get_attribute",
-      "community": 0,
+      "community": 1,
       "norm_label": ".get_attribute()"
     },
     {
@@ -1440,7 +1449,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L61",
       "id": "test_report_reader_fakedriver",
-      "community": 0,
+      "community": 1,
       "norm_label": "fakedriver"
     },
     {
@@ -1449,7 +1458,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L62",
       "id": "test_report_reader_fakedriver_init",
-      "community": 0,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -1458,7 +1467,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L65",
       "id": "test_report_reader_fakedriver_find_elements",
-      "community": 0,
+      "community": 1,
       "norm_label": ".find_elements()"
     },
     {
@@ -1467,7 +1476,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L71",
       "id": "test_report_reader_fakeframe",
-      "community": 0,
+      "community": 1,
       "norm_label": "fakeframe"
     },
     {
@@ -1476,7 +1485,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L72",
       "id": "test_report_reader_fakeframe_init",
-      "community": 0,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -1485,7 +1494,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L76",
       "id": "test_report_reader_fakeswitchto",
-      "community": 0,
+      "community": 3,
       "norm_label": "fakeswitchto"
     },
     {
@@ -1494,7 +1503,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L77",
       "id": "test_report_reader_fakeswitchto_init",
-      "community": 0,
+      "community": 3,
       "norm_label": ".__init__()"
     },
     {
@@ -1521,7 +1530,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L87",
       "id": "test_report_reader_fakeframedriver",
-      "community": 0,
+      "community": 1,
       "norm_label": "fakeframedriver"
     },
     {
@@ -1530,7 +1539,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L88",
       "id": "test_report_reader_fakeframedriver_init",
-      "community": 0,
+      "community": 3,
       "norm_label": ".__init__()"
     },
     {
@@ -1539,7 +1548,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L96",
       "id": "test_report_reader_fakeframedriver_find_elements",
-      "community": 0,
+      "community": 1,
       "norm_label": ".find_elements()"
     },
     {
@@ -1548,7 +1557,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L108",
       "id": "test_report_reader_fakelink",
-      "community": 0,
+      "community": 1,
       "norm_label": "fakelink"
     },
     {
@@ -1557,7 +1566,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L109",
       "id": "test_report_reader_fakelink_init",
-      "community": 0,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -1575,7 +1584,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L118",
       "id": "test_report_reader_fakerow",
-      "community": 0,
+      "community": 1,
       "norm_label": "fakerow"
     },
     {
@@ -1584,7 +1593,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L119",
       "id": "test_report_reader_fakerow_init",
-      "community": 0,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -1593,7 +1602,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L127",
       "id": "test_report_reader_fakerow_is_displayed",
-      "community": 0,
+      "community": 1,
       "norm_label": ".is_displayed()"
     },
     {
@@ -1620,7 +1629,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L142",
       "id": "test_report_reader_reportreadertests",
-      "community": 0,
+      "community": 1,
       "norm_label": "reportreadertests"
     },
     {
@@ -1629,7 +1638,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L143",
       "id": "test_report_reader_reportreadertests_test_find_header_index_normalizes_headers_and_expected_label",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_find_header_index_normalizes_headers_and_expected_label()"
     },
     {
@@ -1638,7 +1647,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L151",
       "id": "test_report_reader_reportreadertests_test_owner_header_accepts_short_lightning_label",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_owner_header_accepts_short_lightning_label()"
     },
     {
@@ -1647,7 +1656,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L154",
       "id": "test_report_reader_reportreadertests_test_is_unassigned_owner_requires_exact_value_after_trimming",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_is_unassigned_owner_requires_exact_value_after_trimming()"
     },
     {
@@ -1656,7 +1665,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L159",
       "id": "test_report_reader_reportreadertests_test_is_unassigned_owner_accepts_lightning_line_wrapping_only",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_is_unassigned_owner_accepts_lightning_line_wrapping_only()"
     },
     {
@@ -1665,7 +1674,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L163",
       "id": "test_report_reader_reportreadertests_test_hidden_dom_row_is_not_considered_visible",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_hidden_dom_row_is_not_considered_visible()"
     },
     {
@@ -1674,7 +1683,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L167",
       "id": "test_report_reader_reportreadertests_test_row_owner_fallback_requires_an_exact_line",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_row_owner_fallback_requires_an_exact_line()"
     },
     {
@@ -1683,7 +1692,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L171",
       "id": "test_report_reader_reportreadertests_test_select_report_table_uses_largest_grid_without_headers",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_select_report_table_uses_largest_grid_without_headers()"
     },
     {
@@ -1692,7 +1701,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L180",
       "id": "test_report_reader_reportreadertests_test_find_report_rows_prefers_html_rows_over_aria_containers",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_find_report_rows_prefers_html_rows_over_aria_containers()"
     },
     {
@@ -1701,7 +1710,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L192",
       "id": "test_report_reader_reportreadertests_test_find_report_table_switches_to_frame_and_selects_largest_grid",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_find_report_table_switches_to_frame_and_selects_largest_grid()"
     },
     {
@@ -1710,7 +1719,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L206",
       "id": "test_report_reader_reportreadertests_test_row_values_reads_td_and_gridcell_selector",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_row_values_reads_td_and_gridcell_selector()"
     },
     {
@@ -1719,7 +1728,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L217",
       "id": "test_report_reader_reportreadertests_test_extract_created_at_uses_header_then_visible_date_value",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_extract_created_at_uses_header_then_visible_date_value()"
     },
     {
@@ -1737,7 +1746,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L242",
       "id": "test_report_reader_reportreadertests_test_extract_lead_id_supports_configurable_salesforce_object",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_extract_lead_id_supports_configurable_salesforce_object()"
     },
     {
@@ -1746,7 +1755,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L255",
       "id": "test_report_reader_reportreadertests_test_deduplicate_visible_leads_uses_salesforce_lead_id",
-      "community": 1,
+      "community": 4,
       "norm_label": ".test_deduplicate_visible_leads_uses_salesforce_lead_id()"
     },
     {
@@ -1755,7 +1764,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L266",
       "id": "test_report_reader_reportreadertests_test_reader_includes_date_position_and_status_in_local_report_data",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_reader_includes_date_position_and_status_in_local_report_data()"
     },
     {
@@ -1764,7 +1773,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L298",
       "id": "test_report_reader_reportreadertests_test_reader_finds_owner_when_lightning_cells_are_not_header_aligned",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_reader_finds_owner_when_lightning_cells_are_not_header_aligned()"
     },
     {
@@ -1773,7 +1782,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L316",
       "id": "test_report_reader_reportreadertests_test_reader_uses_lead_id_column_when_row_has_no_record_link",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_reader_uses_lead_id_column_when_row_has_no_record_link()"
     },
     {
@@ -1782,7 +1791,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L331",
       "id": "test_report_reader_reportreadertests_test_row_diagnostics_contain_only_structural_metadata",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_row_diagnostics_contain_only_structural_metadata()"
     },
     {
@@ -1791,7 +1800,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L342",
       "id": "test_report_reader_reportreadertests_test_column_offset_aligns_values_using_owner_cell_position",
-      "community": 1,
+      "community": 2,
       "norm_label": ".test_column_offset_aligns_values_using_owner_cell_position()"
     },
     {
@@ -1800,7 +1809,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L352",
       "id": "test_report_reader_reportreadertests_test_reader_extracts_details_when_headers_live_outside_the_grid",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_reader_extracts_details_when_headers_live_outside_the_grid()"
     },
     {
@@ -1809,7 +1818,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L387",
       "id": "test_report_reader_reportreadertests_test_merge_visible_leads_combines_columns_from_horizontal_passes",
-      "community": 0,
+      "community": 4,
       "norm_label": ".test_merge_visible_leads_combines_columns_from_horizontal_passes()"
     },
     {
@@ -1818,7 +1827,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L398",
       "id": "test_report_reader_reportreadertests_test_report_structure_summary_excludes_header_text_and_row_values",
-      "community": 0,
+      "community": 1,
       "norm_label": ".test_report_structure_summary_excludes_header_text_and_row_values()"
     },
     {
@@ -1836,7 +1845,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_report_reader.py",
       "source_location": "L429",
       "id": "test_report_reader_reportreadertests_test_resolves_configured_aliases_and_marks_absent_columns_empty",
-      "community": 1,
+      "community": 2,
       "norm_label": ".test_resolves_configured_aliases_and_marks_absent_columns_empty()"
     },
     {
@@ -1845,7 +1854,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_comment_assisted.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_tests_test_run_comment_assisted_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "test_run_comment_assisted.py"
     },
     {
@@ -1854,7 +1863,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_comment_assisted.py",
       "source_location": "L14",
       "id": "test_run_comment_assisted_assistedrunnertests",
-      "community": 2,
+      "community": 0,
       "norm_label": "assistedrunnertests"
     },
     {
@@ -1863,7 +1872,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_comment_assisted.py",
       "source_location": "L15",
       "id": "test_run_comment_assisted_assistedrunnertests_test_summary_includes_only_metrics_not_comment_content",
-      "community": 2,
+      "community": 0,
       "norm_label": ".test_summary_includes_only_metrics_not_comment_content()"
     },
     {
@@ -1872,7 +1881,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_comment_assisted.py",
       "source_location": "L37",
       "id": "test_run_comment_assisted_assistedrunnertests_test_preparation_requires_the_explicit_local_confirmation",
-      "community": 2,
+      "community": 0,
       "norm_label": ".test_preparation_requires_the_explicit_local_confirmation()"
     },
     {
@@ -1881,7 +1890,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_comment_assisted.py",
       "source_location": "L43",
       "id": "test_run_comment_assisted_assistedrunnertests_test_queue_directory_defaults_for_previous_local_configs",
-      "community": 2,
+      "community": 0,
       "norm_label": ".test_queue_directory_defaults_for_previous_local_configs()"
     },
     {
@@ -1890,7 +1899,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_comment_read_only.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_tests_test_run_comment_read_only_py",
-      "community": 2,
+      "community": 0,
       "norm_label": "test_run_comment_read_only.py"
     },
     {
@@ -1899,7 +1908,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_comment_read_only.py",
       "source_location": "L8",
       "id": "test_run_comment_read_only_commentsummarytests",
-      "community": 2,
+      "community": 0,
       "norm_label": "commentsummarytests"
     },
     {
@@ -1908,7 +1917,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_comment_read_only.py",
       "source_location": "L9",
       "id": "test_run_comment_read_only_commentsummarytests_test_summary_excludes_the_comment_content",
-      "community": 2,
+      "community": 0,
       "norm_label": ".test_summary_excludes_the_comment_content()"
     },
     {
@@ -1917,7 +1926,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_leads_ui.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_tests_test_run_leads_ui_py",
-      "community": 6,
+      "community": 0,
       "norm_label": "test_run_leads_ui.py"
     },
     {
@@ -1926,7 +1935,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_leads_ui.py",
       "source_location": "L7",
       "id": "test_run_leads_ui_leadsuirunnertests",
-      "community": 6,
+      "community": 0,
       "norm_label": "leadsuirunnertests"
     },
     {
@@ -1935,7 +1944,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_leads_ui.py",
       "source_location": "L8",
       "id": "test_run_leads_ui_leadsuirunnertests_test_default_mode_reads_only_the_current_visible_grid",
-      "community": 6,
+      "community": 0,
       "norm_label": ".test_default_mode_reads_only_the_current_visible_grid()"
     },
     {
@@ -1944,7 +1953,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_leads_ui.py",
       "source_location": "L20",
       "id": "test_run_leads_ui_leadsuirunnertests_test_complete_mode_uses_explicit_full_grid_scan",
-      "community": 6,
+      "community": 0,
       "norm_label": ".test_complete_mode_uses_explicit_full_grid_scan()"
     },
     {
@@ -1953,7 +1962,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_report_read_only.py",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_tests_test_run_report_read_only_py",
-      "community": 0,
+      "community": 4,
       "norm_label": "test_run_report_read_only.py"
     },
     {
@@ -1962,7 +1971,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_report_read_only.py",
       "source_location": "L9",
       "id": "test_run_report_read_only_reportsummarytests",
-      "community": 0,
+      "community": 4,
       "norm_label": "reportsummarytests"
     },
     {
@@ -1971,7 +1980,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_run_report_read_only.py",
       "source_location": "L10",
       "id": "test_run_report_read_only_reportsummarytests_test_summary_prints_lead_ids_only_to_local_console",
-      "community": 0,
+      "community": 4,
       "norm_label": ".test_summary_prints_lead_ids_only_to_local_console()"
     },
     {
@@ -1980,7 +1989,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\bootstrap.ps1",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_bootstrap_ps1",
-      "community": 8,
+      "community": 6,
       "norm_label": "bootstrap.ps1"
     },
     {
@@ -1989,7 +1998,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\bootstrap.ps1",
       "source_location": "L6",
       "id": "bootstrap_assert_command",
-      "community": 8,
+      "community": 6,
       "norm_label": "assert-command()"
     },
     {
@@ -1998,7 +2007,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\bootstrap.ps1",
       "source_location": "L13",
       "id": "bootstrap_get_pythoncommand",
-      "community": 8,
+      "community": 6,
       "norm_label": "get-pythoncommand()"
     },
     {
@@ -2007,7 +2016,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\install.ps1",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_install_ps1",
-      "community": 11,
+      "community": 9,
       "norm_label": "install.ps1"
     },
     {
@@ -2016,7 +2025,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\setup-project.ps1",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_setup_project_ps1",
-      "community": 12,
+      "community": 10,
       "norm_label": "setup-project.ps1"
     },
     {
@@ -2025,7 +2034,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\verify-setup.ps1",
       "source_location": "L1",
       "id": "c_users_ax24611_downloads_dev_docuentar_predictivo_scripts_verify_setup_ps1",
-      "community": 9,
+      "community": 7,
       "norm_label": "verify-setup.ps1"
     },
     {
@@ -2034,7 +2043,7 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\scripts\\verify-setup.ps1",
       "source_location": "L7",
       "id": "verify_setup_test_requirement",
-      "community": 9,
+      "community": 7,
       "norm_label": "test-requirement()"
     },
     {
@@ -2042,7 +2051,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\run_leads_ui.py",
       "source_location": "L17",
-      "community": 13,
+      "community": 11,
       "norm_label": "`--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.",
       "id": "run_leads_ui_rationale_17"
     },
@@ -2051,7 +2060,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L84",
-      "community": 14,
+      "community": 12,
       "norm_label": "elimina representaciones dom repetidas sin descartar filas sin id.",
       "id": "report_reader_rationale_84"
     },
@@ -2060,7 +2069,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L139",
-      "community": 15,
+      "community": 13,
       "norm_label": "busca elementos sin mutar el dom, incluyendo shadow dom abierto cuando existe.",
       "id": "report_reader_rationale_139"
     },
@@ -2069,7 +2078,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L147",
-      "community": 16,
+      "community": 14,
       "norm_label": "prioriza filas html y elimina contenedores aria que duplican registros.",
       "id": "report_reader_rationale_147"
     },
@@ -2078,7 +2087,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L215",
-      "community": 17,
+      "community": 15,
       "norm_label": "devuelve metadatos estructurales sin leer valores de filas ni encabezados.",
       "id": "report_reader_rationale_215"
     },
@@ -2087,7 +2096,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L236",
-      "community": 18,
+      "community": 16,
       "norm_label": "inspecciona contextos dom sin extraer textos, celdas ni identificadores.",
       "id": "report_reader_rationale_236"
     },
@@ -2096,7 +2105,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_writer.py",
       "source_location": "L184",
-      "community": 19,
+      "community": 17,
       "norm_label": "devuelve un unico control visible y deja el driver en su contexto.",
       "id": "comment_writer_rationale_184"
     },
@@ -2105,7 +2114,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\comment_reader.py",
       "source_location": "L206",
-      "community": 20,
+      "community": 18,
       "norm_label": "devuelve solo metadatos del dom; nunca texto del comentario.",
       "id": "comment_reader_rationale_206"
     },
@@ -2114,7 +2123,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L79",
-      "community": 21,
+      "community": 19,
       "norm_label": "elimina representaciones dom repetidas sin descartar filas sin id.",
       "id": "report_reader_rationale_79"
     },
@@ -2123,7 +2132,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L134",
-      "community": 22,
+      "community": 20,
       "norm_label": "busca elementos sin mutar el dom, incluyendo shadow dom abierto cuando existe.",
       "id": "report_reader_rationale_134"
     },
@@ -2132,7 +2141,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L142",
-      "community": 23,
+      "community": 21,
       "norm_label": "prioriza filas html y elimina contenedores aria que duplican registros.",
       "id": "report_reader_rationale_142"
     },
@@ -2141,7 +2150,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L200",
-      "community": 24,
+      "community": 22,
       "norm_label": "devuelve metadatos estructurales sin leer valores de filas ni encabezados.",
       "id": "report_reader_rationale_200"
     },
@@ -2150,7 +2159,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L221",
-      "community": 25,
+      "community": 23,
       "norm_label": "inspecciona contextos dom sin extraer textos, celdas ni identificadores.",
       "id": "report_reader_rationale_221"
     },
@@ -2159,7 +2168,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L189",
-      "community": 26,
+      "community": 24,
       "norm_label": "devuelve metadatos estructurales sin leer valores de filas ni encabezados.",
       "id": "report_reader_rationale_189"
     },
@@ -2168,7 +2177,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L210",
-      "community": 27,
+      "community": 25,
       "norm_label": "inspecciona contextos dom sin extraer textos, celdas ni identificadores.",
       "id": "report_reader_rationale_210"
     },
@@ -2177,7 +2186,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L65",
-      "community": 28,
+      "community": 26,
       "norm_label": "elimina representaciones dom repetidas sin descartar filas sin id.",
       "id": "report_reader_rationale_65"
     },
@@ -2186,7 +2195,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L120",
-      "community": 29,
+      "community": 27,
       "norm_label": "busca elementos sin mutar el dom, incluyendo shadow dom abierto cuando existe.",
       "id": "report_reader_rationale_120"
     },
@@ -2195,7 +2204,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L149",
-      "community": 30,
+      "community": 28,
       "norm_label": "devuelve metadatos estructurales sin leer valores de filas ni encabezados.",
       "id": "report_reader_rationale_149"
     },
@@ -2204,7 +2213,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L170",
-      "community": 31,
+      "community": 29,
       "norm_label": "inspecciona contextos dom sin extraer textos, celdas ni identificadores.",
       "id": "report_reader_rationale_170"
     },
@@ -2213,7 +2222,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L95",
-      "community": 32,
+      "community": 30,
       "norm_label": "busca elementos sin mutar el dom, incluyendo shadow dom abierto cuando existe.",
       "id": "report_reader_rationale_95"
     },
@@ -2222,7 +2231,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L124",
-      "community": 33,
+      "community": 31,
       "norm_label": "devuelve metadatos estructurales sin leer valores de filas ni encabezados.",
       "id": "report_reader_rationale_124"
     },
@@ -2231,7 +2240,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L145",
-      "community": 34,
+      "community": 32,
       "norm_label": "inspecciona contextos dom sin extraer textos, celdas ni identificadores.",
       "id": "report_reader_rationale_145"
     },
@@ -2240,7 +2249,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L89",
-      "community": 35,
+      "community": 33,
       "norm_label": "busca elementos sin mutar el dom, incluyendo shadow dom abierto cuando existe.",
       "id": "report_reader_rationale_89"
     },
@@ -2249,7 +2258,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L136",
-      "community": 36,
+      "community": 34,
       "norm_label": "inspecciona contextos dom sin extraer textos, celdas ni identificadores.",
       "id": "report_reader_rationale_136"
     },
@@ -2258,7 +2267,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L88",
-      "community": 37,
+      "community": 35,
       "norm_label": "busca elementos sin mutar el dom, incluyendo shadow dom abierto cuando existe.",
       "id": "report_reader_rationale_88"
     },
@@ -2267,7 +2276,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L117",
-      "community": 38,
+      "community": 36,
       "norm_label": "devuelve metadatos estructurales sin leer valores de filas ni encabezados.",
       "id": "report_reader_rationale_117"
     },
@@ -2276,7 +2285,7 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\report_reader.py",
       "source_location": "L73",
-      "community": 39,
+      "community": 37,
       "norm_label": "devuelve metadatos estructurales sin leer valores de filas ni encabezados.",
       "id": "report_reader_rationale_73"
     }
@@ -3414,7 +3423,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\leads_ui.py",
-      "source_location": "L77",
+      "source_location": "L80",
       "weight": 1.0,
       "_src": "c_users_ax24611_downloads_dev_docuentar_predictivo_automation_salesforce_leads_ui_py",
       "_tgt": "leads_ui_write_leads_ui",
@@ -3486,7 +3495,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\leads_ui.py",
-      "source_location": "L81",
+      "source_location": "L84",
       "weight": 1.0,
       "_src": "leads_ui_write_leads_ui",
       "_tgt": "leads_ui_render_leads_ui",
@@ -3517,6 +3526,18 @@
       "_tgt": "test_leads_ui_leadsuitests_test_omits_position_duplicate_context_and_dash_columns",
       "source": "leads_ui_render_leads_ui",
       "target": "test_leads_ui_leadsuitests_test_omits_position_duplicate_context_and_dash_columns"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "_src": "test_leads_ui_leadsuitests_test_reports_omitted_columns_and_offers_row_height_toggle",
+      "_tgt": "leads_ui_render_leads_ui",
+      "source": "leads_ui_render_leads_ui",
+      "target": "test_leads_ui_leadsuitests_test_reports_omitted_columns_and_offers_row_height_toggle"
     },
     {
       "relation": "calls",
@@ -4429,6 +4450,18 @@
       "_tgt": "test_leads_ui_leadsuitests_setup",
       "source": "report_reader_visiblelead",
       "target": "test_leads_ui_leadsuitests_setup"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
+      "source_location": "L62",
+      "weight": 1.0,
+      "_src": "test_leads_ui_leadsuitests_test_reports_omitted_columns_and_offers_row_height_toggle",
+      "_tgt": "report_reader_visiblelead",
+      "source": "report_reader_visiblelead",
+      "target": "test_leads_ui_leadsuitests_test_reports_omitted_columns_and_offers_row_height_toggle"
     },
     {
       "relation": "calls",
@@ -6847,6 +6880,18 @@
       "confidence": "EXTRACTED",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
       "source_location": "L61",
+      "weight": 1.0,
+      "_src": "test_leads_ui_leadsuitests",
+      "_tgt": "test_leads_ui_leadsuitests_test_reports_omitted_columns_and_offers_row_height_toggle",
+      "source": "test_leads_ui_leadsuitests",
+      "target": "test_leads_ui_leadsuitests_test_reports_omitted_columns_and_offers_row_height_toggle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_leads_ui.py",
+      "source_location": "L75",
       "weight": 1.0,
       "_src": "test_leads_ui_leadsuitests",
       "_tgt": "test_leads_ui_leadsuitests_test_writes_html_in_requested_local_directory",

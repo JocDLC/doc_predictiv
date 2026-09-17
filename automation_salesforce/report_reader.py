@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -70,6 +70,39 @@ return rows.filter(candidate => !rows.some(
     other => other !== candidate && candidate.contains(other)
 ));
 """
+HORIZONTAL_SCROLL_SCRIPT = """
+let current = arguments[0];
+const reset = arguments[1];
+while (current) {
+    if (current.scrollWidth > current.clientWidth) {
+        const before = current.scrollLeft;
+        if (reset) {
+            current.scrollLeft = 0;
+            return {moved: before > 0, at_end: false};
+        }
+        current.scrollLeft = Math.min(current.scrollLeft + current.clientWidth, current.scrollWidth - current.clientWidth);
+        return {moved: current.scrollLeft > before, at_end: current.scrollLeft >= current.scrollWidth - current.clientWidth};
+    }
+    const root = current.getRootNode ? current.getRootNode() : null;
+    current = current.parentElement || (root && root.host) || null;
+}
+return {moved: false, at_end: true};
+"""
+VERTICAL_SCROLL_SCRIPT = """
+let current = arguments[0];
+while (current) {
+    if (current.scrollHeight > current.clientHeight + 1) {
+        const before = current.scrollTop;
+        current.scrollTop = Math.min(current.scrollTop + Math.max(current.clientHeight - 80, 100), current.scrollHeight - current.clientHeight);
+        return {moved: current.scrollTop > before};
+    }
+    const root = current.getRootNode ? current.getRootNode() : null;
+    current = current.parentElement || (root && root.host) || null;
+}
+const before = window.scrollY;
+window.scrollBy(0, Math.max(window.innerHeight - 80, 100));
+return {moved: window.scrollY > before};
+"""
 
 
 @dataclass(frozen=True)
@@ -78,6 +111,7 @@ class VisibleLead:
     created_at: str
     grid_position: int = 0
     status: str = "SIN_GESTION"
+    details: dict[str, str] = field(default_factory=dict)
 
 
 def deduplicate_visible_leads(leads: list[VisibleLead]) -> list[VisibleLead]:
@@ -91,6 +125,64 @@ def deduplicate_visible_leads(leads: list[VisibleLead]) -> list[VisibleLead]:
         if lead.lead_id:
             seen_lead_ids.add(lead.lead_id)
     return unique_leads
+
+
+def merge_visible_leads(leads: list[VisibleLead]) -> list[VisibleLead]:
+    merged: dict[str, VisibleLead] = {}
+    for lead in leads:
+        previous = merged.get(lead.lead_id)
+        if previous is None:
+            merged[lead.lead_id] = lead
+            continue
+        details = {**previous.details, **{key: value for key, value in lead.details.items() if value}}
+        merged[lead.lead_id] = VisibleLead(lead.lead_id, previous.created_at or lead.created_at, previous.grid_position, previous.status, details)
+    return list(merged.values())
+
+
+def scroll_table_right(driver, table_element, reset: bool = False) -> bool:
+    result = driver.execute_script(HORIZONTAL_SCROLL_SCRIPT, table_element, reset)
+    return bool(result.get("moved"))
+
+
+def scroll_table_down(driver, table_element) -> bool:
+    result = driver.execute_script(VERTICAL_SCROLL_SCRIPT, table_element)
+    return bool(result.get("moved"))
+
+
+def read_full_report(
+    driver,
+    timeout_seconds: int,
+    record_object_api_name: str,
+    field_aliases: dict[str, list[str]],
+    diagnostics: list[dict[str, object]],
+    max_vertical_passes: int = 80,
+    max_horizontal_passes: int = 20,
+) -> tuple[int, list[VisibleLead]]:
+    """Recorre la bandeja de arriba hacia abajo y de izquierda a derecha, sin abrir Leads.
+
+    Con ``max_vertical_passes=1`` funciona como lectura rápida: solo las filas ya
+    cargadas, recorriendo las columnas horizontalmente.
+    """
+    collected: list[VisibleLead] = []
+    total_rows_seen = 0
+    for _ in range(max_vertical_passes):
+        table = find_report_table(driver, timeout_seconds)
+        scroll_table_right(driver, table, reset=True)
+        known_ids = {lead.lead_id for lead in collected}
+        for _ in range(max_horizontal_passes):
+            visible_rows, leads = read_visible_unassigned_leads(
+                driver, timeout_seconds, record_object_api_name, field_aliases, diagnostics
+            )
+            total_rows_seen = max(total_rows_seen, visible_rows)
+            collected.extend(leads)
+            table = find_report_table(driver, timeout_seconds)
+            if not scroll_table_right(driver, table, reset=False):
+                break
+        new_ids = {lead.lead_id for lead in collected} - known_ids
+        table = find_report_table(driver, timeout_seconds)
+        if not scroll_table_down(driver, table) and not new_ids:
+            break
+    return total_rows_seen, merge_visible_leads(collected)
 
 
 def normalize_label(value: str) -> str:
@@ -115,8 +207,43 @@ def find_owner_header_index(headers: list[str]) -> int | None:
     return None
 
 
+def resolve_field_indexes(
+    headers: list[str], field_aliases: dict[str, list[str]]
+) -> dict[str, int | None]:
+    return {
+        field_name: next(
+            (index for alias in aliases if (index := find_header_index(headers, alias)) is not None),
+            None,
+        )
+        for field_name, aliases in field_aliases.items()
+    }
+
+
+def extract_row_details(
+    values: list[str], field_indexes: dict[str, int | None]
+) -> dict[str, str]:
+    return {
+        field_name: values[index].strip() if index is not None and index < len(values) else ""
+        for field_name, index in field_indexes.items()
+    }
+
+
+def unmapped_columns(
+    headers: list[str], values: list[str], field_indexes: dict[str, int | None]
+) -> dict[str, str]:
+    """Conserva toda columna leída de la bandeja aunque no tenga alias configurado."""
+    mapped = {index for index in field_indexes.values() if index is not None}
+    columns = {}
+    for index, value in enumerate(values):
+        if index in mapped or not str(value or "").strip():
+            continue
+        label = headers[index] if index < len(headers) and headers[index] else f"Columna {index + 1}"
+        columns[f"col:{label}"] = str(value).strip()
+    return columns
+
+
 def is_unassigned_owner(value: str) -> bool:
-    return str(value or "").strip() == UNASSIGNED_OWNER
+    return re.sub(r"\s+", "", str(value or "")) == UNASSIGNED_OWNER
 
 
 def is_visible_element(element) -> bool:
@@ -189,6 +316,25 @@ def extract_lead_id(
     return ""
 
 
+def lead_id_from_values(values: list[str], lead_id_index: int | None) -> str:
+    candidates = [values[lead_id_index]] if lead_id_index is not None and lead_id_index < len(values) else values
+    for value in candidates:
+        compact = re.sub(r"\s+", "", str(value or ""))
+        if re.fullmatch(r"[A-Za-z0-9]{15}(?:[A-Za-z0-9]{3})?", compact):
+            return compact
+    return ""
+
+
+def row_diagnostics(row_element, owner_found: bool, lead_id_found: bool) -> dict[str, object]:
+    """Metadatos por fila para diagnóstico local; nunca incluye valores de celdas."""
+    return {
+        "cell_count": len(row_values(row_element)),
+        "text_length": len(str(row_element.text or "")),
+        "owner_found": owner_found,
+        "lead_id_found": lead_id_found,
+    }
+
+
 def row_values(row_element, driver=None) -> list[str]:
     search_driver = driver or row_element
     cells = find_elements(search_driver, row_element, ROW_CELL_SELECTOR)
@@ -199,6 +345,28 @@ def header_labels(table_element, driver=None) -> list[str]:
     search_driver = driver or table_element
     headers = find_elements(search_driver, table_element, HEADER_SELECTOR)
     return [header.text.strip() for header in headers if header.text.strip()]
+
+
+def report_header_labels(table_element, driver) -> list[str]:
+    """Usa los encabezados de la grilla o, si Lightning los separa, los del reporte visible."""
+    labels = header_labels(table_element, driver)
+    if labels:
+        return labels
+    return header_labels(driver, driver)
+
+
+def column_offset(headers: list[str], values: list[str]) -> int:
+    """Alinea celdas con encabezados usando la columna de propietario como referencia."""
+    owner_header = find_owner_header_index(headers)
+    owner_cell = next((index for index, value in enumerate(values) if is_unassigned_owner(value)), None)
+    if owner_header is None or owner_cell is None:
+        return max(len(values) - len(headers), 0) if headers else 0
+    return owner_cell - owner_header
+
+
+def aligned_values(values: list[str], offset: int, header_count: int) -> list[str]:
+    aligned = values[offset:] if offset > 0 else [""] * (-offset) + values
+    return aligned[:header_count] if header_count else aligned
 
 
 def extract_created_at(values: list[str], date_index: int | None) -> str:
@@ -322,11 +490,16 @@ def read_visible_unassigned_leads(
     driver,
     timeout_seconds: int,
     record_object_api_name: str = DEFAULT_RECORD_OBJECT_API_NAME,
+    field_aliases: dict[str, list[str]] | None = None,
+    diagnostics: list[dict[str, object]] | None = None,
 ) -> tuple[int, list[VisibleLead]]:
     table = find_report_table(driver, timeout_seconds)
-    headers = header_labels(table, driver)
-    owner_index = find_owner_header_index(headers)
+    headers = report_header_labels(table, driver)
     date_index = find_header_index(headers, DATE_HEADER)
+    field_indexes = resolve_field_indexes(headers, field_aliases or {})
+    lead_id_index = field_indexes.get("lead_id")
+    if diagnostics is not None:
+        diagnostics.append({"headers": headers, "resolved_fields": [name for name, index in field_indexes.items() if index is not None]})
     row_elements = find_report_rows(driver, table)
     data_rows = [
         row
@@ -336,21 +509,31 @@ def read_visible_unassigned_leads(
     ]
     visible_rows = []
     for grid_position, row in enumerate(data_rows, start=1):
-        values = row_values(row, driver)
-        if owner_index is not None:
-            if len(values) <= owner_index or not is_unassigned_owner(values[owner_index]):
-                continue
-        elif not row_has_unassigned_owner(values, row.text):
+        raw_values = row_values(row, driver)
+        owner_found = row_has_unassigned_owner(raw_values, row.text)
+        values = aligned_values(raw_values, column_offset(headers, raw_values), len(headers)) if headers else raw_values
+        lead_id = extract_lead_id(row, driver, record_object_api_name) if owner_found else ""
+        if owner_found and not lead_id:
+            lead_id = lead_id_from_values(values, lead_id_index) or lead_id_from_values(raw_values, None)
+        if diagnostics is not None:
+            diagnostics.append(row_diagnostics(row, owner_found, bool(lead_id)))
+        if not owner_found or not lead_id:
             continue
         created_at = extract_created_at(values, date_index)
-        lead_id = extract_lead_id(row, driver, record_object_api_name)
-        if not lead_id:
-            continue
+        details = extract_row_details(values, field_indexes) if field_aliases else {}
+        if details:
+            details["lead_id"] = lead_id
+            if not details.get("fecha_creacion"):
+                details["fecha_creacion"] = created_at
+            if not details.get("propietario_candidato"):
+                details["propietario_candidato"] = UNASSIGNED_OWNER
+            details.update(unmapped_columns(headers, values, field_indexes))
         visible_rows.append(
             VisibleLead(
                 lead_id=lead_id,
                 created_at=created_at,
                 grid_position=grid_position,
+                details=details,
             )
         )
     return len(data_rows), deduplicate_visible_leads(visible_rows)

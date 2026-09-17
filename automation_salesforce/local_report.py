@@ -16,6 +16,7 @@ def report_payload(visible_row_count: int, leads: list[VisibleLead]) -> dict:
                 "created_at": lead.created_at,
                 "grid_position": lead.grid_position,
                 "status": lead.status,
+                **({"details": lead.details} if lead.details else {}),
             }
             for lead in leads
         ],

@@ -5,6 +5,8 @@ from selenium.webdriver.common.by import By
 from report_reader import (
     REPORT_CANDIDATE_SELECTOR,
     VisibleLead,
+    aligned_values,
+    column_offset,
     deduplicate_visible_leads,
     extract_created_at,
     extract_lead_id,
@@ -13,10 +15,14 @@ from report_reader import (
     find_report_table,
     find_report_rows,
     is_unassigned_owner,
+    merge_visible_leads,
     is_visible_element,
     report_accessibility_summary,
     report_structure_summary,
     read_visible_unassigned_leads,
+    resolve_field_indexes,
+    extract_row_details,
+    row_diagnostics,
     row_has_unassigned_owner,
     row_values,
     select_report_table,
@@ -85,6 +91,7 @@ class FakeFrameDriver:
         self.frames = [FakeFrame(index) for index in range(len(frame_tables))]
         self.context = "main"
         self.switch_to = FakeSwitchTo(self)
+        self.document_headers = []
 
     def find_elements(self, by, selector):
         if selector == "iframe, frame":
@@ -93,6 +100,8 @@ class FakeFrameDriver:
             if self.context == "main":
                 return self.main_tables
             return self.frame_tables[self.context]
+        if selector == "thead th, [role='columnheader']":
+            return self.document_headers if self.context != "main" else []
         return []
 
 
@@ -146,6 +155,10 @@ class ReportReaderTests(unittest.TestCase):
         self.assertTrue(is_unassigned_owner("AR_LEAD_QUALIF"))
         self.assertTrue(is_unassigned_owner("  AR_LEAD_QUALIF  "))
         self.assertFalse(is_unassigned_owner("AR_LEAD_QUALIF_2"))
+
+    def test_is_unassigned_owner_accepts_lightning_line_wrapping_only(self):
+        self.assertTrue(is_unassigned_owner("AR_LEAD_QU\nALIF"))
+        self.assertFalse(is_unassigned_owner("AR_LEAD_QU\nALIF_2"))
 
     def test_hidden_dom_row_is_not_considered_visible(self):
         self.assertTrue(is_visible_element(FakeRow(displayed=True)))
@@ -282,6 +295,106 @@ class ReportReaderTests(unittest.TestCase):
             ],
         )
 
+    def test_reader_finds_owner_when_lightning_cells_are_not_header_aligned(self):
+        qualifying_row = FakeRow(
+            cells=[FakeCell("2026-09-02"), FakeCell("AR_LEAD_QUALIF")],
+            links=[
+                FakeLink(
+                    "https://example.invalid/lightning/r/Lead/00Q000000000003AAA/view"
+                )
+            ],
+        )
+        report_table = FakeTable(["Propietario", "Fecha de creación"], row_count=0)
+        report_table.rows = [qualifying_row]
+        report_table.role_rows = report_table.rows
+        driver = FakeFrameDriver(main_tables=[], frame_tables=[[report_table]])
+
+        _, leads = read_visible_unassigned_leads(driver, timeout_seconds=1)
+
+        self.assertEqual([lead.lead_id for lead in leads], ["00Q000000000003AAA"])
+
+    def test_reader_uses_lead_id_column_when_row_has_no_record_link(self):
+        qualifying_row = FakeRow(
+            cells=[FakeCell("AR_LEAD_QU\nALIF"), FakeCell("00QbD00000000004AA")]
+        )
+        report_table = FakeTable(["Propietario del candidato", "Lead ID"], row_count=0)
+        report_table.rows = [qualifying_row]
+        report_table.role_rows = report_table.rows
+        driver = FakeFrameDriver(main_tables=[], frame_tables=[[report_table]])
+
+        _, leads = read_visible_unassigned_leads(
+            driver, timeout_seconds=1, field_aliases={"lead_id": ["Lead ID"]}
+        )
+
+        self.assertEqual([lead.lead_id for lead in leads], ["00QbD00000000004AA"])
+
+    def test_row_diagnostics_contain_only_structural_metadata(self):
+        row = FakeRow(cells=[FakeCell("AR_LEAD_QUALIF"), FakeCell("Dato personal")])
+
+        diagnostics = row_diagnostics(row, owner_found=True, lead_id_found=False)
+
+        self.assertEqual(
+            diagnostics,
+            {"cell_count": 2, "text_length": 28, "owner_found": True, "lead_id_found": False},
+        )
+        self.assertNotIn("Dato personal", str(diagnostics))
+
+    def test_column_offset_aligns_values_using_owner_cell_position(self):
+        headers = ["Fecha de creación", "Campaña", "Propietario del candidato", "Nombre"]
+        values = ["1", "15/09/2026", "Campaña X", "AR_LEAD_QUALIF", "Ana"]
+
+        self.assertEqual(column_offset(headers, values), 1)
+        self.assertEqual(
+            aligned_values(values, column_offset(headers, values), len(headers)),
+            ["15/09/2026", "Campaña X", "AR_LEAD_QUALIF", "Ana"],
+        )
+
+    def test_reader_extracts_details_when_headers_live_outside_the_grid(self):
+        row = FakeRow(
+            cells=[
+                FakeCell("1"),
+                FakeCell("15/09/2026"),
+                FakeCell("Campaña X"),
+                FakeCell("AR_LEAD_QU\nALIF"),
+                FakeCell("Ana"),
+                FakeCell("00QbD00000000004AA"),
+            ]
+        )
+        table = FakeTable([], row_count=0)
+        table.rows = [row]
+        table.role_rows = table.rows
+        driver = FakeFrameDriver(main_tables=[], frame_tables=[[table]])
+        driver.document_headers = [
+            FakeCell("Fecha de creación"),
+            FakeCell("Campaña"),
+            FakeCell("Propietario del candidato"),
+            FakeCell("Nombre"),
+            FakeCell("Lead ID"),
+        ]
+
+        _, leads = read_visible_unassigned_leads(
+            driver,
+            timeout_seconds=1,
+            field_aliases={"campana": ["Campaña"], "nombre": ["Nombre"], "lead_id": ["Lead ID"]},
+        )
+
+        self.assertEqual(leads[0].details["campana"], "Campaña X")
+        self.assertEqual(leads[0].details["nombre"], "Ana")
+        self.assertEqual(leads[0].lead_id, "00QbD00000000004AA")
+        self.assertEqual(leads[0].details["col:Fecha de creación"], "15/09/2026")
+        self.assertNotIn("col:Campaña", leads[0].details)
+
+    def test_merge_visible_leads_combines_columns_from_horizontal_passes(self):
+        leads = merge_visible_leads(
+            [
+                VisibleLead("00Q000000000001AAA", "15/09/2026", details={"campana": "A"}),
+                VisibleLead("00Q000000000001AAA", "15/09/2026", details={"email": "a@example.invalid"}),
+            ]
+        )
+
+        self.assertEqual(len(leads), 1)
+        self.assertEqual(leads[0].details, {"campana": "A", "email": "a@example.invalid"})
+
     def test_report_structure_summary_excludes_header_text_and_row_values(self):
         driver = FakeDriver([FakeTable(["Propietario", "Dato interno"], row_count=4)])
 
@@ -312,6 +425,22 @@ class ReportReaderTests(unittest.TestCase):
         self.assertEqual(summary["frames"], [])
         self.assertEqual(summary["main_structure"][0]["header_count"], 2)
         self.assertNotIn("Dato interno", str(summary))
+
+    def test_resolves_configured_aliases_and_marks_absent_columns_empty(self):
+        indexes = resolve_field_indexes(
+            ["Nombre", "Correo electrónico", "Propietario"],
+            {
+                "nombre": ["First Name", "Nombre"],
+                "email": ["Email", "Correo electrónico"],
+                "vehiculo_interes": ["Vehículo de interés"],
+            },
+        )
+
+        self.assertEqual(indexes, {"nombre": 0, "email": 1, "vehiculo_interes": None})
+        self.assertEqual(
+            extract_row_details(["Ana", "ana@example.invalid", "AR_LEAD_QUALIF"], indexes),
+            {"nombre": "Ana", "email": "ana@example.invalid", "vehiculo_interes": ""},
+        )
 
 
 if __name__ == "__main__":

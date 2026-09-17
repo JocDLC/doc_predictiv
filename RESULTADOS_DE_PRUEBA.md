@@ -39,3 +39,12 @@ Este documento registra validaciones operativas de la aplicación para medir el 
 - El lector de reporte se limita a las filas actualmente visibles; no recorre la grilla virtualizada.
 - Logs, capturas, perfiles, configuración local y colas operativas están excluidos de Git.
 - El piloto queda cerrado como validación de lectura. Cualquier preparación o escritura asistida requiere un cambio OpenSpec separado y aprobación explícita.
+
+## UI local de Leads QUALIF
+
+| Validación | Resultado |
+|---|---|
+| Filtro de propietario | Validado manualmente: la UI vuelve a mostrar los Leads `AR_LEAD_QUALIF`. |
+| Modo de lectura normal | Lee solo la grilla visible; el recorrido con scroll queda limitado a `--completo`. |
+| Pruebas automáticas | 56/56 tests unitarios y Ruff correctos. |
+| Privacidad | El HTML local de prueba permanece ignorado por Git. |

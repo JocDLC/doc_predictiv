@@ -14,8 +14,8 @@ Crear una prueba asistida, visible y de un único Lead que:
 1. Mantenga login y 2FA exclusivamente manuales.
 2. Lea el valor actual de `Otra información` y calcule el próximo `N INT`.
 3. Reciba localmente el cuerpo del nuevo intento, sin un prefijo `N INT`.
-4. Abra el editor del campo, agregue una línea en blanco y el texto con el número
-   calculado.
+4. Abra el editor del campo y agregue el texto con el número calculado en la
+   línea siguiente al historial.
 5. Se detenga sin pulsar `Guardar`; la revisión, guardado o cancelación quedan
    bajo control explícito del usuario en Salesforce.
 

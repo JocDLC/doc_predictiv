@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-
 from selenium.common.exceptions import TimeoutException
 
-from browser_factory import create_driver, detect_browser
+from browser_factory import create_driver, detect_browser, release_driver
 from local_audit import capture_failure, create_logger
-from salesforce_session import ROOT, load_config, local_path, prompt_for_manual_authentication
+from salesforce_session import (
+    ROOT,
+    load_config,
+    local_path,
+    prompt_for_manual_authentication,
+)
 
 
 def main() -> None:
@@ -16,7 +20,12 @@ def main() -> None:
     browser, executable = detect_browser(config["browser"])
     profile_directory = local_path(config["profile_directory"])
     print(f"Abriendo {browser.capitalize()} con perfil dedicado: {profile_directory}")
-    driver = create_driver(browser, executable, profile_directory)
+    driver = create_driver(
+        browser,
+        executable,
+        profile_directory,
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
     try:
         prompt_for_manual_authentication(driver, config)
         logger.info("Autenticación confirmada en %s", browser)
@@ -30,7 +39,7 @@ def main() -> None:
         logger.info("Piloto interrumpido por el usuario")
         print("Piloto interrumpido.")
     finally:
-        driver.quit()
+        release_driver(driver)
 
 
 if __name__ == "__main__":

@@ -3,10 +3,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import WebDriverException
-
 
 OWNER_HEADER = "propietario del candidato"
 OWNER_HEADER_ALIASES = (OWNER_HEADER, "propietario")

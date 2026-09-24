@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from selenium.common.exceptions import TimeoutException
 
-from browser_factory import create_driver, detect_browser
+from browser_factory import create_driver, detect_browser, release_driver
 from comment_reader import (
     build_record_url,
     find_other_information,
@@ -38,7 +38,12 @@ def main() -> None:
     logger = create_logger(log_directory)
     browser, executable = detect_browser(config["browser"])
     profile_directory = local_path(config["profile_directory"])
-    driver = create_driver(browser, executable, profile_directory)
+    driver = create_driver(
+        browser,
+        executable,
+        profile_directory,
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
     timeout_seconds = config["timeouts"]["page_load_seconds"]
     lead_id = ""
 
@@ -87,7 +92,7 @@ def main() -> None:
         logger.info("Lectura de Otra información interrumpida por el usuario")
         print("Lectura de Otra información interrumpida.")
     finally:
-        driver.quit()
+        release_driver(driver)
 
 
 if __name__ == "__main__":

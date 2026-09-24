@@ -10,7 +10,7 @@ Login/2FA manual
   -> cuerpo de intento local
   -> vista previa de métricas (sin contenido)
   -> activar solo el editor de Otra información
-  -> completar: historial + línea vacía + "N INT " + cuerpo
+  -> completar: historial + "\n" + "N INT " + cuerpo
   -> detenerse: usuario revisa y pulsa Guardar o Cancelar manualmente
 ```
 
@@ -33,10 +33,11 @@ Dados `historial`, `next_int` y `cuerpo`:
 
 ```text
 si historial está vacío: "{next_int} INT {cuerpo}"
-si historial existe:    "{historial}\n\n{next_int} INT {cuerpo}"
+si historial existe:    "{historial.rstrip()}\n{next_int} INT {cuerpo}"
 ```
 
-El historial se conserva íntegramente; no se reemplaza ni normaliza. La función
+El historial se conserva íntegro; solo se recortan espacios y saltos finales
+antes de unir. La función
 rechaza cuerpos vacíos, múltiples entradas o prefijos `N INT` para no duplicar ni
 alterar la numeración.
 

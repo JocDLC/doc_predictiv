@@ -12,8 +12,8 @@ El cuerpo proporcionado localmente MUST estar libre de prefijo `N INT`.
 
 **Given** un Lead cuyo campo contiene una entrada que inicia con `1 INT`.
 **When** el usuario proporciona un cuerpo de borrador válido.
-**Then** el valor preparado conserva el historial, agrega una línea vacía y
-termina con una entrada que inicia con `2 INT`.
+**Then** el valor preparado conserva el historial y termina con una entrada que
+inicia con `2 INT` en la línea inmediatamente siguiente, sin línea vacía.
 
 ### Requirement: REQ-302: Edición limitada a Otra información
 

@@ -77,10 +77,32 @@
   .lead-head .meta { font-size: 12px; color: var(--muted); }
   .lead-head .spacer { flex: 1; }
   .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #e5efff; color: var(--accent); font-weight: 600; }
+  .badge.st-bot { background: #e3f3e5; color: #2e7d32; }
+  .badge.st-manual { background: #e5efff; color: #1565c0; }
+  .badge.st-pendiente { background: #f0f0f0; color: #757575; }
+  .badge.st-conflicto { background: #fdecea; color: #c62828; }
+  .badge.st-borrador { background: #fff4de; color: #b26a00; }
+  .badge.st-corregido { background: #e3f2fd; color: #1565c0; }
+  .badge.st-error { background: #fdecea; color: #c62828; }
+  .queue-panel { max-width: 900px; margin: 24px auto; background: var(--card); border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .queue-panel h2 { margin: 0 0 8px; font-size: 20px; }
+  .queue-row { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .queue-doc { flex-basis: 100%; margin-top: 4px; background: #f8fafc; border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-family: Consolas, monospace; font-size: 12px;
+    white-space: pre-wrap; word-break: break-all; }
+  .queue-row .meta { color: var(--muted); font-size: 12px; }
+  .sel-scope { max-width: 140px; }
   .doc-text { margin-top: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
     padding: 10px 12px; font-family: Consolas, monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; }
+  .snapshot-review { margin-top: 10px; }
+  .snapshot-review summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+  .snapshot-editor { width: 100%; box-sizing: border-box; margin-top: 8px; background: #f8fafc;
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+    font-family: Consolas, monospace; font-size: 13px; line-height: 1.45;
+    white-space: pre; overflow: auto; resize: vertical; min-height: 120px; }
   .actions { display: flex; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
   .check { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; user-select: none; margin-left: auto; }
+  .sel-check { margin-left: 0; font-size: 12px; }
   .check input { width: 18px; height: 18px; cursor: pointer; }
   .copied { color: var(--accent2); font-size: 12px; font-weight: 600; opacity: 0; transition: opacity .2s; }
   .copied.show { opacity: 1; }
@@ -216,9 +238,26 @@
         <option value="all">Todos</option>
         <option value="pending" selected>Pendientes</option>
         <option value="done">Documentados</option>
+        <option value="bot">Documentados por bot</option>
+        <option value="manual">Documentados manual</option>
       </select>
       <select id="filterAgent"><option value="all">Todos los agentes</option></select>
       <label class="offset-label" title="Número del último INT anotado en Salesforce para los leads pendientes.">Último N&deg; en SF: <input type="number" id="globalOffset" class="offset-input" min="0" value="0"></label>
+      <button class="btn" id="exportQueue" title="Descarga un JSON con los leads pendientes para el bot de Salesforce. Guardalo en automation_salesforce\queues\.">Exportar cola para bot</button>
+      <select id="selectScope" class="sel-scope" title="Marcar o desmarcar el checkbox 'Cola' de los leads">
+        <option value="">Seleccionar…</option>
+        <option value="pending">Pendientes</option>
+        <option value="all">Todos</option>
+        <option value="none">Ninguno</option>
+      </select>
+      <button class="btn primary" id="selectPending" title="Marca el checkbox 'Cola' en todos los leads pendientes de documentar, de una sola vez.">Seleccionar pendientes</button>
+      <button class="btn" id="exportSelection" title="Exporta una cola solo con los leads marcados en su checkbox 'Cola'.">Exportar selección</button>
+      <button class="btn" id="openQueue" title="Ver la cola viva que el bot documenta automáticamente.">Ir a cola del bot</button>
+      <button class="btn" id="importResults" title="Marca como documentados por bot los leads con estado 'guardado' de un archivo *.resultado.json.">Importar resultado del bot</button>
+      <input id="resultFile" type="file" accept="application/json,.json" class="hidden">
+      <button class="btn" id="importSnapshots">Importar snapshots del bot</button>
+      <input id="snapshotFile" type="file" accept="application/json,.json" class="hidden">
+      <button class="btn" id="exportCorrections" title="Exporta los borradores locales editados (distintos del snapshot confirmado) como cola de corrección. Guardala en automation_salesforce\ui_output\.">Exportar correcciones</button>
       <button class="btn" id="helpButton" title="Ver atajos de teclado (?)">Atajos (?)</button>
       <button class="btn" id="loadOther">Cargar otro archivo</button>
       <button class="btn" id="backToHome">Inicio</button>
@@ -228,6 +267,25 @@
 
     <div id="list"></div>
   </div>
+  </section>
+
+  <section id="viewQueue" class="hidden">
+    <div class="queue-panel">
+      <h2>Cola de documentaci&oacute;n del bot</h2>
+      <p class="hint">Leads marcados con el checkbox <strong>Cola</strong>. La cola se escribe sola en <code>queues\cola_activa.json</code> cada vez que cambia la selecci&oacute;n.</p>
+      <div class="actions">
+        <button class="btn primary" id="linkBotFolder">Vincular carpeta del bot</button>
+        <button class="btn primary" id="runBot">Ejecutar bot</button>
+        <button class="btn" id="clearDocumented" title="Quita de esta lista los leads ya documentados (su registro queda en la lista principal).">Limpiar documentados</button>
+        <span class="stats" id="queueSyncState">Carpeta no vinculada</span>
+      </div>
+      <p class="hint"><strong>Ejecutar bot</strong> lanza la documentaci&oacute;n autom&aacute;tica (requiere <code>python ui_server.py</code> corriendo una sola vez). Alternativa manual: <code>python run_document_queue.py --auto queues\cola_activa.json</code>. Los estados se actualizan solos.</p>
+      <p class="hint"><strong>Reintentos:</strong> los leads con estado <strong>guardado</strong> salen solos de la cola, as&iacute; que <strong>volver a ejecutar el bot reintenta solo los que quedaron en error o pendientes</strong> &mdash; los ya documentados no se repiten. Antes de reintentar, verific&aacute; en Salesforce que el lead con error no haya quedado guardado igual; si se guard&oacute;, marc&aacute; <strong>Documentado</strong> a mano en la lista para que no se dupliquen los intentos.</p>
+      <div id="queueList"></div>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn" id="backFromQueue">Volver a la lista</button>
+      </div>
+    </div>
   </section>
 
   <footer class="note">Gesti&oacute;n de Campa&ntilde;as Predictivas &mdash; procesamiento 100% local (los archivos nunca se suben a ning&uacute;n servidor)</footer>
@@ -258,6 +316,7 @@
       <li>Permite una numeraci&oacute;n global y correcciones puntuales por lead.</li>
       <li>Guarda y recupera localmente la sesi&oacute;n si la p&aacute;gina se actualiza.</li>
       <li>Incluye b&uacute;squeda, filtros, equivalencias de resultados configurables, lectura opcional del portapapeles y uso de DESC1 para ANSWER.</li>
+      <li>Exporta una cola JSON con los leads pendientes para el bot de Salesforce (carpeta <code>automation_salesforce\queues\</code>), que prepara el texto en cada lead sin guardar: la decisi&oacute;n final es siempre manual.</li>
     </ul>
     <h2 style="margin-top:22px">M&eacute;trica de referencia</h2>
     <div class="metric-note">En la prueba inicial, la documentaci&oacute;n se complet&oacute; en un promedio de <strong>23 segundos por lead</strong>. Como referencia operativa, el flujo puede completarse habitualmente en <strong>23 a 30 segundos por lead</strong>. Si los tiempos son superiores, el equipo de desarrollo puede revisar el flujo y ayudarte a aprovechar mejor la herramienta.</div>
@@ -282,10 +341,12 @@ let resultMap = loadJSON("dp_resultMap", { ...DEFAULT_MAP });
 let sfBase = localStorage.getItem("dp_sfBase") || DEFAULT_SF;
 let leads = [];
 let fileKey = "";
+let fileName = "";
 let progress = {};
 let globalOffset = 0;
 let clipboardEnabled = localStorage.getItem("dp_clipboardEnabled") !== "false";
 let copiedLeadId = null;
+const selectedIds = new Set();
 
 function loadJSON(key, fallback) {
   try { const v = JSON.parse(localStorage.getItem(key)); return v && typeof v === "object" ? v : fallback; }
@@ -435,7 +496,12 @@ function getOffset(lead) {
 }
 function setOffset(lead, n) {
   const p = progress[lead.id];
-  progress[lead.id] = { done: p === true || !!p?.done, offset: p?.offset, overrideOffset: n, documentedAt: p?.documentedAt ?? null, text: p?.text ?? null };
+  progress[lead.id] = {
+    ...(p && typeof p === "object" ? p : {}),
+    done: p === true || !!p?.done,
+    offset: p?.offset,
+    overrideOffset: n,
+  };
   saveProgress();
 }
 function isDone(lead) {
@@ -445,7 +511,35 @@ function isDone(lead) {
 function setDone(lead, done) {
   const offset = getOffset(lead);
   const p = progress[lead.id];
-  progress[lead.id] = { done, offset, overrideOffset: p?.overrideOffset, documentedAt: done ? new Date().toISOString() : null, text: done ? docText(lead) : null };
+  progress[lead.id] = {
+    ...(p && typeof p === "object" ? p : {}),
+    done,
+    offset,
+    overrideOffset: p?.overrideOffset,
+    documentedAt: done ? new Date().toISOString() : null,
+    manualPastedAt: done ? new Date().toISOString() : null,
+    preparedComment: p?.preparedComment ?? docText(lead),
+  };
+  saveProgress();
+}
+// Estado de documentación por lead: pendiente | manual | bot.
+// Un snapshot o un resultado "guardado" solo existen tras un guardado verificado
+// del bot; marcar "Documentado" a mano cuenta como documentación manual.
+function docStatus(lead) {
+  const p = progress[lead.id];
+  if (p && typeof p === "object" && (p.botDone || p.fieldSnapshot !== undefined)) return "bot";
+  if (isDone(lead)) return "manual";
+  return "pendiente";
+}
+
+function recordCopiedComment(lead) {
+  const p = progress[lead.id];
+  progress[lead.id] = {
+    ...(p && typeof p === "object" ? p : {}),
+    done: p === true || !!p?.done,
+    copiedAt: new Date().toISOString(),
+    preparedComment: docText(lead),
+  };
   saveProgress();
 }
 
@@ -468,9 +562,385 @@ function detectLastInt(text) {
   return max >= 0 ? max : null;
 }
 
+// Cola para el bot de Salesforce: solo Lead ID e intentos de los pendientes.
+// No incluye número INT (el bot lo calcula leyendo Salesforce), nombre ni teléfono.
+function buildBotQueue(onlyIds) {
+  return {
+    generated_at: new Date().toISOString(),
+    source_file: fileName,
+    leads: leads
+      .filter(lead => !isDone(lead) && (!onlyIds || onlyIds.has(lead.id)))
+      .map(lead => ({
+        lead_id: lead.id,
+        attempts: lead.attempts.map(attempt => ({
+          result: displayResult(lead, attempt),
+          date: attempt.date,
+          time: attempt.time,
+          call_id: attempt.callId,
+        })),
+      })),
+  };
+}
+
+async function downloadBotQueue(onlyIds) {
+  const queue = buildBotQueue(onlyIds);
+  if (!queue.leads.length) {
+    alert(onlyIds ? "No hay leads seleccionados pendientes para exportar." : "No hay leads pendientes para exportar.");
+    return;
+  }
+  if (!("showSaveFilePicker" in window)) {
+    alert("Este navegador no permite elegir la ubicación de guardado. Abrí la app con una versión actual de Microsoft Edge o Google Chrome.");
+    return;
+  }
+  const pad = n => String(n).padStart(2, "0");
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  try {
+    const fileHandle = await window.showSaveFilePicker({
+      suggestedName: `cola_predictivo_${stamp}.json`,
+      types: [{ description: "Cola para el bot", accept: { "application/json": [".json"] } }],
+    });
+    const writable = await fileHandle.createWritable();
+    await writable.write(new Blob([JSON.stringify(queue, null, 2)], { type: "application/json;charset=utf-8" }));
+    await writable.close();
+    alert(`Cola guardada: ${fileHandle.name} (${queue.leads.length} leads pendientes).\nGuardala en la carpeta automation_salesforce\\queues\\ si elegiste otra ubicación.`);
+  } catch (error) {
+    if (error.name !== "AbortError") alert("No se pudo guardar el archivo. Verificá los permisos de la carpeta e intentá nuevamente.");
+  }
+}
+
+// Cola de corrección: solo los borradores locales que difieren del snapshot
+// confirmado. Incluye el hash base para que el bot verifique que Salesforce no
+// cambió antes de escribir.
+async function downloadCorrections() {
+  const entries = leads
+    .filter(lead => {
+      const record = progress[lead.id];
+      return record && typeof record === "object" &&
+        typeof record.fieldSnapshot === "string" &&
+        typeof record.editedSnapshot === "string" &&
+        record.editedSnapshot !== record.fieldSnapshot;
+    })
+    .map(lead => {
+      const record = progress[lead.id];
+      return { lead_id: lead.id, new_value: record.editedSnapshot, base_hash: record.baseHash };
+    });
+  if (!entries.length) { alert("No hay borradores locales editados para corregir."); return; }
+  if (!("showSaveFilePicker" in window)) {
+    alert("Este navegador no permite elegir la ubicación de guardado. Abrí la app con una versión actual de Microsoft Edge o Google Chrome.");
+    return;
+  }
+  const pad = n => String(n).padStart(2, "0");
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  try {
+    const fileHandle = await window.showSaveFilePicker({
+      suggestedName: `correcciones_${stamp}.json`,
+      types: [{ description: "Cola de correcciones", accept: { "application/json": [".json"] } }],
+    });
+    const writable = await fileHandle.createWritable();
+    await writable.write(new Blob([JSON.stringify({
+      generated_at: now.toISOString(),
+      source_file: fileName,
+      corrections: entries,
+    }, null, 2)], { type: "application/json;charset=utf-8" }));
+    await writable.close();
+    alert(`Cola de correcciones guardada: ${fileHandle.name} (${entries.length} leads).\nGuardala en automation_salesforce\\ui_output\\ si elegiste otra ubicación.`);
+  } catch (error) {
+    if (error.name !== "AbortError") alert("No se pudo guardar el archivo. Verificá los permisos de la carpeta e intentá nuevamente.");
+  }
+}
+
+// Aplica un snapshot confirmado del bot al progreso local (sin tocar Salesforce).
+function applySnapshot(snapshot) {
+  if (!snapshot || typeof snapshot.lead_id !== "string" || typeof snapshot.field_value !== "string") return false;
+  const previous = progress[snapshot.lead_id];
+  progress[snapshot.lead_id] = {
+    ...(previous && typeof previous === "object" ? previous : {}),
+    done: true,
+    botDone: true,
+    fieldSnapshot: snapshot.field_value,
+    editedSnapshot: snapshot.field_value,
+    preparedComment: snapshot.field_value,
+    baseHash: String(snapshot.base_hash || ""),
+    snapshotReadAt: String(snapshot.read_at || ""),
+  };
+  return true;
+}
+
+// Aplica un estado del resultado del bot ("guardado"/"corregido"/"conflicto").
+function applyBotResult(item) {
+  if (!item || typeof item.lead_id !== "string") return "pendiente";
+  const previous = progress[item.lead_id];
+  if (item.status === "guardado" || item.status === "corregido") {
+    progress[item.lead_id] = {
+      ...(previous && typeof previous === "object" ? previous : {}),
+      done: true,
+      botDone: true,
+      conflict: false,
+      correctedAt: item.status === "corregido" ? String(item.at || "") : previous?.correctedAt,
+      botSavedAt: String(item.at || ""),
+    };
+    return item.status;
+  }
+  if (item.status === "conflicto") {
+    progress[item.lead_id] = {
+      ...(previous && typeof previous === "object" ? previous : {}),
+      conflict: true,
+    };
+    return "conflicto";
+  }
+  return item.status === "error" ? "error" : "pendiente";
+}
+
+function importSnapshots(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const snapshots = JSON.parse(String(reader.result || ""));
+      if (!Array.isArray(snapshots)) throw new Error("Formato inválido");
+      const imported = snapshots.filter(applySnapshot).length;
+      saveProgress();
+      render();
+      alert(`${imported} snapshots locales cargados para revisión.`);
+    } catch {
+      alert("No se pudo leer el archivo de snapshots.");
+    }
+  };
+  reader.readAsText(file, "utf-8");
+}
+
+// Resultado del bot (*.resultado.json): "guardado"/"corregido" marca el lead como
+// documentado por bot; "conflicto" se señala sin tocar Salesforce; el resto queda pendiente.
+function importBotResults(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const results = JSON.parse(String(reader.result || ""));
+      if (!Array.isArray(results)) throw new Error("Formato inválido");
+      const counts = { guardado: 0, corregido: 0, conflicto: 0, otros: 0 };
+      results.forEach(item => {
+        const status = applyBotResult(item);
+        counts[status in counts ? status : "otros"]++;
+      });
+      saveProgress();
+      render();
+      const saved = counts.guardado + counts.corregido;
+      alert(`Resultado importado: ${saved} documentados por bot` +
+        (counts.conflicto ? `, ${counts.conflicto} con conflicto` : "") +
+        (counts.otros ? `, ${counts.otros} pendientes/errores` : "") + ".");
+    } catch {
+      alert("No se pudo leer el archivo de resultados.");
+    }
+  };
+  reader.readAsText(file, "utf-8");
+}
+
+// ---------- Cola viva del bot ----------
+// La selección "Cola" se escribe sola en queues\cola_activa.json dentro de la
+// carpeta vinculada (automation_salesforce). El bot la procesa y esta vista
+// relee el *.resultado.json cada pocos segundos para mostrar el progreso.
+const ACTIVE_QUEUE_NAME = "cola_activa.json";
+const ACTIVE_QUEUE_RESULT_NAME = "cola_activa.resultado.json";
+const ACTIVE_QUEUE_SNAPSHOTS_NAME = "cola_activa.snapshots.json";
+let botDirHandle = null;
+let queuePollTimer = null;
+let queueSyncInfo = "";
+let lastRunStatus = {};
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("dp_bot", 1);
+    request.onupgradeneeded = () => request.result.createObjectStore("handles");
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+async function idbSet(key, value) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("handles", "readwrite");
+    tx.objectStore("handles").put(value, key);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGet(key) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const req = db.transaction("handles", "readonly").objectStore("handles").get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function saveSelection() {
+  try { localStorage.setItem("dp_selection_" + fileKey, JSON.stringify([...selectedIds])); } catch { /* sin persistencia */ }
+}
+
+async function botDirGranted() {
+  return !!botDirHandle && (await botDirHandle.queryPermission({ mode: "readwrite" })) === "granted";
+}
+
+async function updateQueueSyncState() {
+  const el = $("queueSyncState");
+  if (!botDirHandle) { el.textContent = "Carpeta no vinculada."; return; }
+  if (!(await botDirGranted())) { el.textContent = "Permiso pendiente: tocá 'Vincular carpeta del bot'."; return; }
+  el.textContent = queueSyncInfo || `Carpeta vinculada: ${botDirHandle.name}`;
+}
+
+// Reescribe la cola activa con la selección actual. Sin diálogos: usa el
+// permiso de carpeta concedido una sola vez.
+async function writeActiveQueue() {
+  try {
+    if (!(await botDirGranted())) return;
+    const queuesDir = await botDirHandle.getDirectoryHandle("queues", { create: true });
+    const fileHandle = await queuesDir.getFileHandle(ACTIVE_QUEUE_NAME, { create: true });
+    const queue = buildBotQueue(selectedIds);
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(queue, null, 2));
+    await writable.close();
+    queueSyncInfo = `cola_activa.json actualizada · ${queue.leads.length} leads · ${new Date().toLocaleTimeString()}`;
+  } catch {
+    queueSyncInfo = "No se pudo escribir cola_activa.json.";
+  }
+  updateQueueSyncState();
+}
+
+// Lee el resultado y los snapshots que el bot va dejando en la carpeta.
+async function pollBotResults() {
+  if (!(await botDirGranted())) return;
+  try {
+    const queuesDir = await botDirHandle.getDirectoryHandle("queues");
+    const fileHandle = await queuesDir.getFileHandle(ACTIVE_QUEUE_RESULT_NAME);
+    const file = await fileHandle.getFile();
+    const results = JSON.parse(await file.text());
+    if (Array.isArray(results)) {
+      lastRunStatus = {};
+      results.forEach(item => {
+        if (!item || typeof item.lead_id !== "string") return;
+        lastRunStatus[item.lead_id] = item.status;
+        applyBotResult(item);
+      });
+      saveProgress();
+    }
+  } catch { /* el archivo aún no existe o está siendo escrito */ }
+  try {
+    const uiDir = await botDirHandle.getDirectoryHandle("ui_output");
+    const snapHandle = await uiDir.getFileHandle(ACTIVE_QUEUE_SNAPSHOTS_NAME);
+    const file = await snapHandle.getFile();
+    const snapshots = JSON.parse(await file.text());
+    if (Array.isArray(snapshots)) {
+      // No pisar un borrador local que el usuario esté editando.
+      snapshots.forEach(snapshot => {
+        const record = snapshot && progress[snapshot.lead_id];
+        const editingDraft = record && typeof record === "object"
+          && record.editedSnapshot !== undefined
+          && record.editedSnapshot !== record.fieldSnapshot;
+        if (!editingDraft) applySnapshot(snapshot);
+      });
+      saveProgress();
+    }
+  } catch { /* snapshots opcionales */ }
+  // Los leads documentados salen solos de la cola: la próxima corrida no los repite.
+  await writeActiveQueue();
+  renderQueueList();
+}
+
+const QUEUE_STATUS_LABELS = {
+  pendiente: "en cola", guardado: "guardado", corregido: "corregido",
+  conflicto: "conflicto", error: "error", omitido: "omitido", preparado: "preparado",
+  documentado: "documentado",
+};
+
+function renderQueueList() {
+  const container = $("queueList");
+  const selected = leads.filter(lead => selectedIds.has(lead.id));
+  if (!selected.length) {
+    container.innerHTML = '<p class="hint">No hay leads en la cola. Marcá el checkbox "Cola" en la lista y volvé.</p>';
+    return;
+  }
+  container.innerHTML = "";
+  selected.forEach(lead => {
+    const status = lastRunStatus[lead.id] || (isDone(lead) ? "documentado" : "pendiente");
+    const badgeClass = ["guardado", "corregido", "conflicto", "error", "pendiente", "borrador"].includes(status)
+      ? (status === "guardado" || status === "documentado" ? "bot" : status)
+      : "pendiente";
+    const record = progress[lead.id] && typeof progress[lead.id] === "object" ? progress[lead.id] : {};
+    const row = document.createElement("div");
+    row.className = "queue-row";
+    row.innerHTML =
+      `<span class="name">${lead.nombre || "(sin nombre)"}</span>` +
+      `<span class="meta">${lead.id} &middot; ${lead.attempts.length} intento${lead.attempts.length === 1 ? "" : "s"}</span>` +
+      `<span class="spacer"></span>` +
+      `<button class="btn small queue-open">Abrir en Salesforce</button>` +
+      (isDone(lead) ? `<button class="btn small queue-remove">Quitar</button>` : ``) +
+      `<span class="badge st-${badgeClass}">${QUEUE_STATUS_LABELS[status] || status}</span>`;
+    row.querySelector(".queue-open").addEventListener("click", () => {
+      window.open(sfBase.replace(/\/+$/, "") + "/" + lead.id, "_blank");
+    });
+    const removeBtn = row.querySelector(".queue-remove");
+    if (removeBtn) removeBtn.addEventListener("click", () => {
+      selectedIds.delete(lead.id);
+      saveSelection();
+      writeActiveQueue();
+      renderQueueList();
+    });
+    if (record.fieldSnapshot !== undefined) {
+      const doc = document.createElement("div");
+      doc.className = "queue-doc";
+      doc.textContent = record.fieldSnapshot;
+      row.appendChild(doc);
+    }
+    container.appendChild(row);
+  });
+}
+
+function startQueuePolling() {
+  stopQueuePolling();
+  queuePollTimer = setInterval(pollBotResults, 3000);
+  pollBotResults();
+}
+function stopQueuePolling() {
+  if (queuePollTimer) { clearInterval(queuePollTimer); queuePollTimer = null; }
+}
+
+// Dispara el bot a través del servidor local (ui_server.py). El token de la
+// sesión se lee de ui_output\bot_session.json con el permiso de carpeta.
+async function runBot() {
+  try {
+    if (!(await botDirGranted())) { alert("Primero vinculá la carpeta del bot."); return; }
+    const uiDir = await botDirHandle.getDirectoryHandle("ui_output");
+    const sessionHandle = await uiDir.getFileHandle("bot_session.json");
+    const session = JSON.parse(await (await sessionHandle.getFile()).text());
+    await writeActiveQueue();
+    const response = await fetch(`http://127.0.0.1:${session.port}/run`, {
+      method: "POST",
+      headers: { "X-Bot-Token": session.token },
+    });
+    queueSyncInfo = response.status === 202
+      ? "Bot iniciado — los estados se actualizan solos."
+      : (response.status === 409 ? "El bot ya está corriendo." : `Respuesta inesperada del bot (${response.status}).`);
+    updateQueueSyncState();
+  } catch {
+    alert("No se pudo contactar al servidor local del bot.\nInicialo una sola vez con:\npython ui_server.py");
+  }
+}
+
+async function openQueueView() {
+  showView("viewQueue");
+  if (!botDirHandle) {
+    try { botDirHandle = (await idbGet("botDir")) || null; } catch { botDirHandle = null; }
+  }
+  if (await botDirGranted()) await writeActiveQueue();
+  updateQueueSyncState();
+  renderQueueList();
+  startQueuePolling();
+}
+
 // ---------- UI ----------
 const $ = s => document.getElementById(s);
-const VIEW_IDS = ["viewHome", "viewPrepare", "viewDocumentar"];
+const VIEW_IDS = ["viewHome", "viewPrepare", "viewDocumentar", "viewQueue"];
 
 function showView(id) {
   VIEW_IDS.forEach(viewId => $(viewId).classList.toggle("hidden", viewId !== id));
@@ -480,6 +950,83 @@ $("openPrepare").addEventListener("click", () => showView("viewPrepare"));
 $("openDocument").addEventListener("click", () => showView("viewDocumentar"));
 $("backFromPrepare").addEventListener("click", () => showView("viewHome"));
 $("backToHome").addEventListener("click", () => showView("viewHome"));
+$("exportCorrections").addEventListener("click", downloadCorrections);
+$("importSnapshots").addEventListener("click", () => $("snapshotFile").click());
+$("snapshotFile").addEventListener("change", event => {
+  const [file] = event.target.files;
+  if (file) importSnapshots(file);
+  event.target.value = "";
+});
+$("importResults").addEventListener("click", () => $("resultFile").click());
+$("resultFile").addEventListener("change", event => {
+  const [file] = event.target.files;
+  if (file) importBotResults(file);
+  event.target.value = "";
+});
+$("exportSelection").addEventListener("click", () => {
+  if (!selectedIds.size) {
+    alert("Marcá al menos un lead con el checkbox 'Cola' de su tarjeta, o usá 'Seleccionar…'.");
+    return;
+  }
+  downloadBotQueue(selectedIds);
+});
+$("openQueue").addEventListener("click", openQueueView);
+$("runBot").addEventListener("click", runBot);
+$("backFromQueue").addEventListener("click", async () => {
+  stopQueuePolling();
+  await pollBotResults();
+  showView("viewDocumentar");
+  render();
+});
+$("linkBotFolder").addEventListener("click", async () => {
+  try {
+    if (!botDirHandle) botDirHandle = (await idbGet("botDir")) || null;
+    if (botDirHandle) {
+      const permission = await botDirHandle.requestPermission({ mode: "readwrite" });
+      if (permission === "granted") {
+        queueSyncInfo = "";
+        await writeActiveQueue();
+        return;
+      }
+      botDirHandle = null;
+    }
+    botDirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
+    await idbSet("botDir", botDirHandle);
+    queueSyncInfo = "";
+    await writeActiveQueue();
+  } catch (error) {
+    if (error.name !== "AbortError") alert("No se pudo vincular la carpeta del bot.");
+  }
+});
+$("clearDocumented").addEventListener("click", () => {
+  let removed = 0;
+  leads.forEach(lead => {
+    if (selectedIds.has(lead.id) && isDone(lead)) { selectedIds.delete(lead.id); removed++; }
+  });
+  saveSelection();
+  writeActiveQueue();
+  renderQueueList();
+  queueSyncInfo = removed
+    ? `${removed} lead${removed === 1 ? "" : "s"} documentado${removed === 1 ? "" : "s"} quitado${removed === 1 ? "" : "s"} de la cola.`
+    : "No había leads documentados en la cola.";
+  updateQueueSyncState();
+});
+$("selectPending").addEventListener("click", () => {
+  leads.forEach(lead => { if (!isDone(lead)) selectedIds.add(lead.id); });
+  saveSelection();
+  writeActiveQueue();
+  render();
+});
+$("selectScope").addEventListener("change", event => {
+  const scope = event.target.value;
+  if (scope === "all") leads.forEach(lead => selectedIds.add(lead.id));
+  else if (scope === "pending") leads.forEach(lead => { if (!isDone(lead)) selectedIds.add(lead.id); });
+  else if (scope === "none") selectedIds.clear();
+  event.target.value = "";
+  saveSelection();
+  writeActiveQueue();
+  render();
+});
 
 function renderMappingGrid() {
   const grid = $("mappingGrid");
@@ -567,12 +1114,16 @@ $("dropzone").addEventListener("drop", e => {
 });
 $("fileInput").addEventListener("change", e => { if (e.target.files.length) loadFile(e.target.files[0]); });
 $("loadOther").addEventListener("click", () => { showView("viewDocumentar"); $("app").classList.add("hidden"); $("dropzone").classList.remove("hidden"); });
+$("exportQueue").addEventListener("click", () => downloadBotQueue());
 
 function loadCSVContent(text, name, size, saveRecovery = true) {
   const rows = parseCSV(text);
   leads = buildLeads(rows);
   if (!leads.length) { alert("No se encontraron registros con ID de lead. \u00bfEs el archivo correcto?"); return; }
   fileKey = name + "_" + size;
+  fileName = name;
+  selectedIds.clear();
+  (loadJSON("dp_selection_" + fileKey, []) || []).forEach(id => selectedIds.add(id));
   progress = loadJSON("dp_progress_" + fileKey, {});
   globalOffset = loadJSON("dp_globalOffset_" + fileKey, 0);
   $("globalOffset").value = globalOffset;
@@ -660,27 +1211,37 @@ function render() {
   const list = $("list");
   list.innerHTML = "";
 
-  const doneCount = leads.filter(l => isDone(l)).length;
-  $("stats").textContent = `${doneCount} / ${leads.length} documentados`;
+  const botCount = leads.filter(l => docStatus(l) === "bot").length;
+  const manualCount = leads.filter(l => docStatus(l) === "manual").length;
+  const doneCount = botCount + manualCount;
+  $("stats").textContent =
+    `${doneCount} / ${leads.length} documentados · ${botCount} por bot · ${manualCount} manual`;
   $("pbar").style.width = leads.length ? (100 * doneCount / leads.length) + "%" : "0";
 
   leads.forEach(lead => {
     const done = isDone(lead);
     if (st === "pending" && done) return;
     if (st === "done" && !done) return;
+    if ((st === "bot" || st === "manual") && docStatus(lead) !== st) return;
     if (ag !== "all" && lead.agente !== ag) return;
     if (q && !(lead.nombre.toLowerCase().includes(q) || lead.id.toLowerCase().includes(q) || lead.tel.includes(q))) return;
 
     const offset = getOffset(lead);
-    const text = docText(lead);
+    const record = progress[lead.id] && typeof progress[lead.id] === "object" ? progress[lead.id] : {};
+    const text = record.fieldSnapshot !== undefined ? record.fieldSnapshot : docText(lead);
     const isAdjusted = progress[lead.id] && typeof progress[lead.id] === "object" && typeof progress[lead.id].overrideOffset === "number";
+    const hasDraft = record.fieldSnapshot !== undefined && record.editedSnapshot !== undefined && record.editedSnapshot !== record.fieldSnapshot;
+    const status = record.conflict ? "conflicto" : (record.correctedAt ? "corregido" : (hasDraft ? "borrador" : docStatus(lead)));
+    const statusLabels = { bot: "por bot", manual: "manual", pendiente: "pendiente", conflicto: "conflicto", borrador: "borrador local", corregido: "corregido" };
     const card = document.createElement("div");
     card.className = "card" + (done ? " done" : "");
     card.dataset.leadId = lead.id;
     card.innerHTML = `
       <div class="lead-head">
+        <label class="check sel-check" title="Incluir este lead en 'Exportar selección'"><input type="checkbox" class="sel-input"${selectedIds.has(lead.id) ? " checked" : ""}> Cola</label>
         <span class="name">${lead.nombre || "(sin nombre)"}</span>
         <span class="badge">${lead.attempts.length} intento${lead.attempts.length === 1 ? "" : "s"}</span>
+        <span class="badge st-${status}">${statusLabels[status]}</span>
         <span class="meta">Tel: ${lead.tel} &middot; Agente: ${lead.agente} &middot; ${lead.id}</span>
         <span class="spacer"></span>
       </div>
@@ -690,20 +1251,46 @@ function render() {
         <button class="btn small act-copy">Copiar texto</button>
         <button class="btn small act-both">Copiar y abrir</button>
         <span class="copied">Copiado \u2713</span>
+        <span class="stats copy-state">${record.copiedAt ? "Copiado para pegar" : "Sin copiar"}${record.manualPastedAt ? " · Pegado manualmente" : ""}</span>
         <button class="btn small act-adjust">${isAdjusted ? "Ver ajuste" : "Ajustar este lead"}</button>
         ${clipboardEnabled ? '<button class="btn small act-detect" title="Copiá el comentario del lead en Salesforce (Ctrl+A, Ctrl+C) y apretá este botón: detecta el último \'# INT\' y numera desde el siguiente">Leer N° del portapapeles</button>' : ""}
-        <label class="check"><input type="checkbox" ${done ? "checked" : ""}> Documentado</label>
+        <label class="check done-check"><input type="checkbox" ${done ? "checked" : ""}> Documentado</label>
       </div>
       <div class="adjust-panel">
         Último N&deg; para este lead: <input type="number" class="offset-input" min="0" value="${offset}">
         <button class="btn small act-apply-adjust">Aplicar</button>
         <button class="btn small act-cancel-adjust">Cancelar</button>
       </div>`;
+    if (record.fieldSnapshot !== undefined) {
+      const review = document.createElement("details");
+      review.className = "snapshot-review";
+      const summary = document.createElement("summary");
+      summary.textContent = "Otra información confirmada por bot (local)";
+      const editor = document.createElement("textarea");
+      editor.className = "snapshot-editor";
+      editor.value = record.editedSnapshot ?? record.fieldSnapshot;
+      const fitEditor = () => { editor.style.height = "auto"; editor.style.height = `${editor.scrollHeight + 4}px`; };
+      editor.addEventListener("input", fitEditor);
+      review.addEventListener("toggle", () => { if (review.open) fitEditor(); });
+      const saveDraft = document.createElement("button");
+      saveDraft.className = "btn small";
+      saveDraft.textContent = "Guardar borrador local";
+      saveDraft.addEventListener("click", () => {
+        progress[lead.id] = { ...progress[lead.id], editedSnapshot: editor.value };
+        saveProgress();
+        alert("Borrador local actualizado. Todavía no se modificó Salesforce.");
+      });
+      review.append(summary, editor, saveDraft);
+      card.appendChild(review);
+    }
 
     const url = sfBase.replace(/\/+$/, "") + "/" + lead.id;
     const copiedTag = card.querySelector(".copied");
-    const copy = () => navigator.clipboard.writeText(docText(lead)).then(() => {
+    const copyState = card.querySelector(".copy-state");
+    const copy = () => navigator.clipboard.writeText(text).then(() => {
       copiedLeadId = lead.id;
+      recordCopiedComment(lead);
+      copyState.textContent = "Copiado para pegar";
       copiedTag.classList.add("show");
       setTimeout(() => copiedTag.classList.remove("show"), 1500);
     });
@@ -730,8 +1317,14 @@ function render() {
       setOffset(lead, last);
       render();
     });
-    card.querySelector(".check input").addEventListener("change", e => {
+    card.querySelector(".done-check input").addEventListener("change", e => {
       setDone(lead, e.target.checked); render();
+    });
+    card.querySelector(".sel-input").addEventListener("change", e => {
+      if (e.target.checked) selectedIds.add(lead.id);
+      else selectedIds.delete(lead.id);
+      saveSelection();
+      writeActiveQueue();
     });
     list.appendChild(card);
   });
@@ -780,7 +1373,7 @@ document.addEventListener("keydown", e => {
     const card = firstLeadCard();
     if (!card) return;
     if (copiedLeadId !== card.dataset.leadId && !confirm("Este lead no fue copiado desde la app en esta sesión. ¿Marcarlo igualmente como documentado?")) return;
-    const check = card.querySelector(".check input");
+    const check = card.querySelector(".done-check input");
     check.checked = true;
     check.dispatchEvent(new Event("change"));
   }

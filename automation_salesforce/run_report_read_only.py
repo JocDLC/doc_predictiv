@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from selenium.common.exceptions import TimeoutException
 
-from browser_factory import create_driver, detect_browser
+from browser_factory import create_driver, detect_browser, release_driver
 from local_audit import capture_failure, create_logger
 from local_report import write_unassigned_leads_report
 from report_reader import read_visible_unassigned_leads, report_accessibility_summary
@@ -31,7 +31,12 @@ def main() -> None:
     logger = create_logger(log_directory)
     browser, executable = detect_browser(config["browser"])
     profile_directory = local_path(config["profile_directory"])
-    driver = create_driver(browser, executable, profile_directory)
+    driver = create_driver(
+        browser,
+        executable,
+        profile_directory,
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
     timeout_seconds = config["timeouts"]["page_load_seconds"]
 
     try:
@@ -67,7 +72,7 @@ def main() -> None:
         logger.info("Lectura de reporte interrumpida por el usuario")
         print("Lectura de reporte interrumpida.")
     finally:
-        driver.quit()
+        release_driver(driver)
 
 
 if __name__ == "__main__":

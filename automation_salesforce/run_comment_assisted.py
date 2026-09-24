@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from selenium.common.exceptions import TimeoutException, WebDriverException
 
-from browser_factory import create_driver, detect_browser
+from browser_factory import create_driver, detect_browser, release_driver
 from comment_reader import build_record_url, find_other_information, next_attempt_number
-from comment_writer import compose_other_information, load_draft_body, prepare_other_information
+from comment_writer import (
+    compose_other_information,
+    load_draft_body,
+    prepare_other_information,
+)
 from local_audit import capture_failure, create_logger, mask_lead_id
 from salesforce_session import (
     ROOT,
@@ -13,7 +17,6 @@ from salesforce_session import (
     prompt_for_manual_authentication,
     wait_for_lightning_ready,
 )
-
 
 DEFAULT_QUEUE_DIRECTORY = "queues"
 
@@ -50,7 +53,12 @@ def main() -> None:
     logger = create_logger(log_directory)
     browser, executable = detect_browser(config["browser"])
     profile_directory = local_path(config["profile_directory"])
-    driver = create_driver(browser, executable, profile_directory)
+    driver = create_driver(
+        browser,
+        executable,
+        profile_directory,
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
     timeout_seconds = config["timeouts"]["page_load_seconds"]
     lead_id = ""
 
@@ -113,7 +121,7 @@ def main() -> None:
         )
         print("No se pudo preparar el borrador. Se guardó una captura local de diagnóstico.")
     finally:
-        driver.quit()
+        release_driver(driver)
 
 
 if __name__ == "__main__":

@@ -4,8 +4,8 @@ import json
 import os
 from pathlib import Path
 
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
-
 
 ROOT = Path(__file__).parent
 
@@ -32,7 +32,18 @@ def wait_for_lightning_ready(driver, timeout_seconds: int) -> None:
     )
 
 
+def is_authenticated(driver, timeout_seconds: int = 5) -> bool:
+    try:
+        wait_for_authentication(driver, timeout_seconds)
+        return True
+    except TimeoutException:
+        return False
+
+
 def prompt_for_manual_authentication(driver, config: dict) -> None:
     driver.get(config["salesforce_url"])
+    if is_authenticated(driver):
+        print("Sesión de Salesforce activa detectada; no hace falta autenticarse.")
+        return
     input("Iniciá sesión y completá 2FA manualmente. Cuando veas Salesforce, presioná Enter aquí: ")
     wait_for_authentication(driver, config["timeouts"]["authentication_seconds"])

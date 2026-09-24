@@ -17,8 +17,8 @@
 
 ## Fase 1 — Composición y selectores
 
-- [x] 1.1 Crear `comment_writer.py` y tests para conservar el historial,
-      insertar una línea vacía y agregar el `N INT` calculado.
+- [x] 1.1 Crear `comment_writer.py` y tests para conservar el historial y
+      agregar el `N INT` calculado en la línea siguiente.
 - [x] 1.2 Implementar validación de borrador y ruta local, sin emitir contenido
       sensible en excepciones ni logs.
 - [~] 1.3 Localizar el editor únicamente dentro del campo visible `Otra

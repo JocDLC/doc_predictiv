@@ -5,7 +5,7 @@ import webbrowser
 
 from selenium.common.exceptions import TimeoutException
 
-from browser_factory import create_driver, detect_browser
+from browser_factory import create_driver, detect_browser, release_driver
 from leads_ui import write_leads_ui
 from local_audit import capture_failure, create_logger
 from local_report import write_unassigned_leads_report
@@ -14,7 +14,13 @@ from report_reader import (
     read_visible_unassigned_leads,
     report_accessibility_summary,
 )
-from salesforce_session import ROOT, load_config, local_path, prompt_for_manual_authentication, wait_for_lightning_ready
+from salesforce_session import (
+    ROOT,
+    load_config,
+    local_path,
+    prompt_for_manual_authentication,
+    wait_for_lightning_ready,
+)
 
 
 def scan_mode(arguments: list[str]) -> tuple[str, int]:
@@ -56,7 +62,12 @@ def main() -> None:
     logger = create_logger(ROOT / config["log_directory"])
     screenshot_directory = ROOT / config["screenshot_directory"]
     browser, executable = detect_browser(config["browser"])
-    driver = create_driver(browser, executable, local_path(config["profile_directory"]))
+    driver = create_driver(
+        browser,
+        executable,
+        local_path(config["profile_directory"]),
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
     timeout_seconds = config["timeouts"]["page_load_seconds"]
 
     try:
@@ -124,7 +135,7 @@ def main() -> None:
         logger.info("Generación de UI interrumpida por el usuario")
         print("Generación de UI interrumpida.")
     finally:
-        driver.quit()
+        release_driver(driver)
 
 
 if __name__ == "__main__":

@@ -8,7 +8,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from report_reader import DEFAULT_RECORD_OBJECT_API_NAME
 
-
 OTHER_INFORMATION_LABELS = ("otra información", "otra informacion")
 SALESFORCE_ID_PATTERN = re.compile(r"[A-Za-z0-9]{15}(?:[A-Za-z0-9]{3})?$")
 RECORD_OBJECT_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_]*$")

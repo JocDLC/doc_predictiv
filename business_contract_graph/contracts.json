@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "title": "Contratos de negocio",
+  "subtitle": "Cómo una base de Leads se convierte en documentación verificada y resultados medibles",
+  "revision": "2026-10-01",
+  "technical_artifact": ".archify/architecture-documentador-20260928-090859/documentador-architecture.html",
+  "output": ".archify/architecture-documentador-20260928-090859/documentador-business-contracts.html",
+  "allowed_spec_paths": [
+    "openspec/changes/preparar-predictivo/specs/preparar-campana/spec.md",
+    "openspec/changes/automatizar-lectura-salesforce/specs/lectura-salesforce/spec.md",
+    "openspec/changes/documentar-automatico-guardado/specs/guardado-automatico/spec.md",
+    "openspec/changes/documentar-desde-html-supervisado/specs/documentar-cola-supervisada/spec.md",
+    "openspec/changes/medir-productividad-documentacion/specs/medicion-productividad/spec.md"
+  ],
+  "macrofunctions": [
+    {
+      "id": "load-lead-base",
+      "name": "Cargar base de Leads",
+      "summary": "Recibe la base de trabajo y conserva los datos necesarios para preparar la campaña.",
+      "purpose": "Incorporar una base CSV o XLSX sin perder las columnas necesarias para rastrear su origen.",
+      "inputs": ["Archivo CSV o XLSX con encabezados", "Selección de la hoja cuando el archivo tiene varias"],
+      "outputs": ["Registros disponibles para validación", "Columnas de origen preservadas"],
+      "rules": ["Aceptar CSV y XLSX", "Conservar las columnas originales", "No modificar el archivo recibido"],
+      "failure_behavior": ["Detener la carga si el formato o los encabezados no son utilizables", "Explicar el motivo sin exponer datos personales"],
+      "spec_refs": [{
+        "path": "openspec/changes/preparar-predictivo/specs/preparar-campana/spec.md",
+        "requirement": "REQ-102: Carga de base de entrada en CSV o XLSX",
+        "scenarios": ["carga de un export con muchas columnas"]
+      }],
+      "implementation_refs": [],
+      "test_refs": [],
+      "verification_status": "pending"
+    },
+    {
+      "id": "validate-normalize",
+      "name": "Validar y normalizar datos",
+      "summary": "Unifica teléfonos y separa los registros que requieren revisión.",
+      "purpose": "Obtener datos consistentes para contactar Leads sin ocultar los registros descartados.",
+      "inputs": ["Registros cargados", "País asociado a cada registro"],
+      "outputs": ["Registros utilizables con teléfono normalizado", "Reporte separado de registros excluidos"],
+      "rules": ["Aplicar la regla telefónica correspondiente al país", "Mantener trazabilidad de cada exclusión", "No inventar valores faltantes"],
+      "failure_behavior": ["Excluir únicamente el registro inválido", "Informar el motivo de exclusión para su revisión"],
+      "spec_refs": [
+        {
+          "path": "openspec/changes/preparar-predictivo/specs/preparar-campana/spec.md",
+          "requirement": "REQ-103: Normalización de teléfonos por país",
+          "scenarios": ["teléfono argentino con prefijo internacional y espacios", "teléfono inválido"]
+        },
+        {
+          "path": "openspec/changes/preparar-predictivo/specs/preparar-campana/spec.md",
+          "requirement": "REQ-105: Reporte de excluidos",
+          "scenarios": ["preparación con exclusiones"]
+        }
+      ],
+      "implementation_refs": [],
+      "test_refs": [],
+      "verification_status": "pending"
+    },
+    {
+      "id": "prepare-wolkvox",
+      "name": "Preparar archivo para Wolkvox",
+      "summary": "Produce el archivo de campaña con el formato esperado y sin teléfonos repetidos.",
+      "purpose": "Entregar una base compatible con Wolkvox y lista para su uso operativo.",
+      "inputs": ["Registros validados", "Identificador válido de campaña"],
+      "outputs": ["Archivo CSV compatible con Wolkvox", "Cantidad de registros preparados y excluidos"],
+      "rules": ["Mantener un solo registro por teléfono normalizado", "Usar las columnas y el orden acordados", "Validar el identificador de campaña"],
+      "failure_behavior": ["No generar una campaña con identificador inválido", "Conservar el reporte de duplicados y exclusiones"],
+      "spec_refs": [{
+        "path": "openspec/changes/preparar-predictivo/specs/preparar-campana/spec.md",
+        "requirement": "REQ-104: Generación del archivo Wolkvox sin duplicados",
+        "scenarios": ["dos leads comparten el mismo teléfono", "formato de archivo compatible con Wolkvox", "identificador de campaña inválido"]
+      }],
+      "implementation_refs": [],
+      "test_refs": [],
+      "verification_status": "pending"
+    },
+    {
+      "id": "read-pending-leads",
+      "name": "Leer Leads pendientes",
+      "summary": "Identifica los Leads visibles que aún no tienen una gestión asignada.",
+      "purpose": "Formar una cola de trabajo a partir de información visible, sin alterar los registros.",
+      "inputs": ["Vista de Leads disponible para el operador", "Criterio de Lead sin gestión"],
+      "outputs": ["Lista local de Leads pendientes", "Resumen de lectura sin datos sensibles"],
+      "rules": ["Incluir solo los Leads que cumplen el criterio", "Evitar duplicados en la lista", "Mantener esta etapa en modo de lectura"],
+      "failure_behavior": ["Detener la lectura si no puede verificarse un campo necesario", "Registrar un diagnóstico local sanitizado"],
+      "spec_refs": [
+        {
+          "path": "openspec/changes/automatizar-lectura-salesforce/specs/lectura-salesforce/spec.md",
+          "requirement": "REQ-202: Lectura de bandeja de Leads sin gestión",
+          "scenarios": ["Lead nuevo sin propietario asignado"]
+        },
+        {
+          "path": "openspec/changes/automatizar-lectura-salesforce/specs/lectura-salesforce/spec.md",
+          "requirement": "REQ-204: Piloto estrictamente de solo lectura",
+          "scenarios": ["lectura exitosa"]
+        }
+      ],
+      "implementation_refs": ["automation_salesforce/report_reader.py"],
+      "test_refs": ["automation_salesforce/tests/test_report_reader.py"],
+      "verification_status": "verified"
+    },
+    {
+      "id": "select-confirm-batch",
+      "name": "Seleccionar y confirmar un lote",
+      "summary": "Permite elegir qué Leads entran en la siguiente ejecución y confirmar la decisión.",
+      "purpose": "Mantener al operador en control del alcance antes de iniciar la documentación.",
+      "inputs": ["Lista de Leads pendientes", "Selección explícita del operador"],
+      "outputs": ["Lote confirmado para documentación", "Archivo de intercambio con la selección"],
+      "rules": ["Procesar únicamente los Leads seleccionados", "Excluir los ya documentados", "Solicitar confirmación antes de continuar"],
+      "failure_behavior": ["No iniciar si el lote está vacío o no fue confirmado", "Rechazar registros con identificación inválida"],
+      "spec_refs": [{
+        "path": "openspec/changes/documentar-automatico-guardado/specs/guardado-automatico/spec.md",
+        "requirement": "REQ-604: Selección y exportación desde la UI",
+        "scenarios": ["exportar selección"]
+      }],
+      "implementation_refs": ["automation_salesforce/leads_ui.py", "automation_salesforce/queue_loader.py"],
+      "test_refs": ["automation_salesforce/tests/test_leads_ui.py", "automation_salesforce/tests/test_queue_loader.py"],
+      "verification_status": "verified"
+    },
+    {
+      "id": "prepare-documentation",
+      "name": "Preparar la documentación",
+      "summary": "Construye el siguiente registro de gestión con numeración y formato consistentes.",
+      "purpose": "Preparar un texto claro y ordenado a partir del historial disponible y del nuevo resultado.",
+      "inputs": ["Lead del lote confirmado", "Historial de gestiones", "Resultado nuevo que debe documentarse"],
+      "outputs": ["Texto de documentación preparado", "Número de intento siguiente"],
+      "rules": ["Calcular el siguiente intento desde el historial", "Respetar el formato y separación acordados", "No guardar todavía en modo supervisado"],
+      "failure_behavior": ["No preparar un texto si el historial no puede interpretarse con seguridad", "Permitir omitir el Lead y continuar con el siguiente"],
+      "spec_refs": [
+        {
+          "path": "openspec/changes/documentar-desde-html-supervisado/specs/documentar-cola-supervisada/spec.md",
+          "requirement": "REQ-503: Numeración desde Salesforce",
+          "scenarios": ["historial con tres intentos y dos nuevos", "historial vacío"]
+        },
+        {
+          "path": "openspec/changes/documentar-desde-html-supervisado/specs/documentar-cola-supervisada/spec.md",
+          "requirement": "REQ-504: Formato del texto y separación",
+          "scenarios": ["historial existente"]
+        }
+      ],
+      "implementation_refs": ["automation_salesforce/comment_reader.py", "automation_salesforce/comment_writer.py"],
+      "test_refs": ["automation_salesforce/tests/test_comment_reader.py", "automation_salesforce/tests/test_comment_writer.py"],
+      "verification_status": "verified"
+    },
+    {
+      "id": "save-verify-documentation",
+      "name": "Guardar y verificar la documentación",
+      "summary": "Guarda la documentación y la relee antes de declarar que la operación terminó bien.",
+      "purpose": "Evitar falsos éxitos confirmando que el valor esperado quedó realmente persistido.",
+      "inputs": ["Texto preparado", "Formulario correspondiente al Lead"],
+      "outputs": ["Documentación guardada y confirmada", "Estado claro de éxito, duplicado o fallo"],
+      "rules": ["Usar únicamente la acción de guardar del formulario", "Releer después del guardado", "Registrar como exitoso solo un valor confirmado"],
+      "failure_behavior": ["Marcar el guardado como no confirmado si la relectura difiere", "No sobrescribir un comentario distinto en un Lead duplicado", "Conservar evidencia local sanitizada"],
+      "spec_refs": [
+        {
+          "path": "openspec/changes/documentar-automatico-guardado/specs/guardado-automatico/spec.md",
+          "requirement": "REQ-602: Guardar limitado al botón Guardar del formulario",
+          "scenarios": ["solo Guardar"]
+        },
+        {
+          "path": "openspec/changes/documentar-automatico-guardado/specs/guardado-automatico/spec.md",
+          "requirement": "REQ-603: Verificación post-guardado",
+          "scenarios": ["persistencia confirmada", "guardado no confirmado"]
+        },
+        {
+          "path": "openspec/changes/documentar-automatico-guardado/specs/guardado-automatico/spec.md",
+          "requirement": "REQ-609: Excepción de Lead Duplicado",
+          "scenarios": ["Lead marcado como duplicado", "Comentario distinto"]
+        }
+      ],
+      "implementation_refs": ["automation_salesforce/comment_writer.py", "automation_salesforce/run_document_queue.py", "automation_salesforce/snapshot_store.py"],
+      "test_refs": ["automation_salesforce/tests/test_comment_writer.py", "automation_salesforce/tests/test_run_document_queue.py", "automation_salesforce/tests/test_snapshot_store.py"],
+      "verification_status": "verified"
+    },
+    {
+      "id": "review-results-productivity",
+      "name": "Consultar resultados y productividad",
+      "summary": "Resume qué ocurrió con el lote y cuánto tomó cada etapa sin publicar datos personales.",
+      "purpose": "Facilitar el seguimiento operativo con resultados honestos y métricas locales comparables.",
+      "inputs": ["Resultados sanitizados de la ejecución", "Tiempos medidos por etapa"],
+      "outputs": ["Resumen de éxitos, duplicados y fallos", "Indicadores de duración y productividad"],
+      "rules": ["Calcular productividad solo con resultados confirmados", "Distinguir duplicados de guardados", "No incluir identificadores personales en las métricas"],
+      "failure_behavior": ["Mostrar ausencia de datos en vez de inventar promedios", "Mantener visibles los fallos para revisión"],
+      "spec_refs": [
+        {
+          "path": "openspec/changes/medir-productividad-documentacion/specs/medicion-productividad/spec.md",
+          "requirement": "Métricas agregadas locales",
+          "scenarios": ["Lote con resultados guardados", "Lote sin guardados"]
+        },
+        {
+          "path": "openspec/changes/medir-productividad-documentacion/specs/medicion-productividad/spec.md",
+          "requirement": "Presentación honesta de productividad",
+          "scenarios": ["Mostrar resultados"]
+        }
+      ],
+      "implementation_refs": ["automation_salesforce/productivity_metrics.py"],
+      "test_refs": ["automation_salesforce/tests/test_productivity_metrics.py"],
+      "verification_status": "verified"
+    },
+    {
+      "id": "review-apply-corrections",
+      "name": "Revisar y aplicar correcciones seguras",
+      "summary": "Compara el estado actual con la base conocida antes de aplicar una corrección autorizada.",
+      "purpose": "Corregir un resultado sin borrar cambios externos realizados después de la ejecución original.",
+      "inputs": ["Corrección solicitada", "Valor base confirmado", "Valor actual releído"],
+      "outputs": ["Corrección aplicada y verificada", "Conflicto informado sin sobrescritura"],
+      "rules": ["Releer el valor antes de corregir", "Aplicar solo si el valor actual coincide con la base", "Verificar nuevamente después de guardar"],
+      "failure_behavior": ["No escribir cuando existe un cambio externo", "Informar el conflicto para decisión humana", "Mantener un registro local sanitizado"],
+      "spec_refs": [{
+        "path": "openspec/changes/documentar-automatico-guardado/specs/guardado-automatico/spec.md",
+        "requirement": "REQ-608: Corrección centralizada con detección de conflicto",
+        "scenarios": ["aplicar una corrección sin cambios externos", "conflicto por edición externa"]
+      }],
+      "implementation_refs": ["automation_salesforce/correction_loader.py", "automation_salesforce/run_corrections.py"],
+      "test_refs": ["automation_salesforce/tests/test_corrections.py", "automation_salesforce/tests/test_run_corrections.py"],
+      "verification_status": "verified"
+    }
+  ],
+  "relationships": [
+    {"id": "flow-1", "from": "load-lead-base", "to": "validate-normalize", "label": "Base recibida", "kind": "primary"},
+    {"id": "flow-2", "from": "validate-normalize", "to": "prepare-wolkvox", "label": "Datos utilizables", "kind": "primary"},
+    {"id": "flow-3", "from": "prepare-wolkvox", "to": "read-pending-leads", "label": "Campaña preparada", "kind": "primary"},
+    {"id": "flow-4", "from": "read-pending-leads", "to": "select-confirm-batch", "label": "Pendientes identificados", "kind": "primary"},
+    {"id": "flow-5", "from": "select-confirm-batch", "to": "prepare-documentation", "label": "Lote confirmado", "kind": "primary"},
+    {"id": "flow-6", "from": "prepare-documentation", "to": "save-verify-documentation", "label": "Texto preparado", "kind": "primary"},
+    {"id": "flow-7", "from": "save-verify-documentation", "to": "review-results-productivity", "label": "Resultado confirmado", "kind": "primary"},
+    {"id": "duplicate-route", "from": "prepare-documentation", "to": "review-results-productivity", "label": "Duplicado reconocido", "kind": "duplicate"},
+    {"id": "recovery-route", "from": "save-verify-documentation", "to": "prepare-documentation", "label": "Fallo recuperable", "kind": "recovery"},
+    {"id": "correction-start", "from": "review-results-productivity", "to": "review-apply-corrections", "label": "Corrección solicitada", "kind": "correction"},
+    {"id": "correction-return", "from": "review-apply-corrections", "to": "save-verify-documentation", "label": "Revalidar guardado", "kind": "correction"}
+  ]
+}

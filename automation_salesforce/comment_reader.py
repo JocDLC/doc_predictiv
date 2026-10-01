@@ -9,6 +9,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from report_reader import DEFAULT_RECORD_OBJECT_API_NAME
 
 OTHER_INFORMATION_LABELS = ("otra información", "otra informacion")
+COMMENT_LABELS = ("comentario",)
+DUPLICATE_LEAD_COMMENT = "lead duplicado"
 SALESFORCE_ID_PATTERN = re.compile(r"[A-Za-z0-9]{15}(?:[A-Za-z0-9]{3})?$")
 RECORD_OBJECT_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_]*$")
 INT_PATTERN = re.compile(r"^\s*(\d+)\s+INT\b", re.IGNORECASE | re.MULTILINE)
@@ -191,38 +193,36 @@ return { label_found: false, containers: [] };
 
 
 def normalize_label(value: str) -> str:
-    return " ".join(
-        str(value or "").lower().translate(str.maketrans("áéíóúüñ", "aeiouun")).split()
-    )
+    return " ".join(str(value or "").lower().translate(str.maketrans("áéíóúüñ", "aeiouun")).split())
 
 
-def text_without_field_label(field_text: str) -> str:
+def text_without_field_label(field_text: str, labels: tuple[str, ...] = OTHER_INFORMATION_LABELS) -> str:
     lines = str(field_text or "").splitlines()
-    if lines and normalize_label(lines[0]) in OTHER_INFORMATION_LABELS:
+    if lines and normalize_label(lines[0]) in labels:
         return "\n".join(lines[1:]).strip()
     return str(field_text or "").strip()
 
 
-def field_result_if_found(driver):
-    result = field_result_in_any_frame(driver, FIELD_TEXT_SCRIPT)
+def field_result_if_found(driver, labels: tuple[str, ...] = OTHER_INFORMATION_LABELS):
+    result = field_result_in_any_frame(driver, FIELD_TEXT_SCRIPT, labels)
     return result if result.get("found") else False
 
 
-def field_result_in_any_frame(driver, script: str) -> dict:
+def field_result_in_any_frame(driver, script: str, labels: tuple[str, ...] = OTHER_INFORMATION_LABELS) -> dict:
     """Busca el campo visible en el documento principal y en iframes accesibles."""
     switch_to = getattr(driver, "switch_to", None)
     if switch_to is None:
-        return driver.execute_script(script, OTHER_INFORMATION_LABELS)
+        return driver.execute_script(script, labels)
 
     results = []
     switch_to.default_content()
     try:
-        results.append(driver.execute_script(script, OTHER_INFORMATION_LABELS))
+        results.append(driver.execute_script(script, labels))
         frames = driver.find_elements(By.CSS_SELECTOR, "iframe, frame")
         for frame in frames:
             try:
                 switch_to.frame(frame)
-                results.append(driver.execute_script(script, OTHER_INFORMATION_LABELS))
+                results.append(driver.execute_script(script, labels))
             except WebDriverException:
                 continue
             finally:
@@ -250,6 +250,18 @@ def find_other_information(driver, timeout_seconds: int) -> str:
         if not result:
             raise
     return text_without_field_label(result["text"])
+
+
+def find_comment(driver, timeout_seconds: int) -> str:
+    """Lee Comentario en modo lectura; si no está visible, no bloquea el Lead."""
+    del timeout_seconds
+    result = field_result_if_found(driver, COMMENT_LABELS)
+    return text_without_field_label(result["text"], COMMENT_LABELS) if result else ""
+
+
+def is_duplicate_lead(comment: str) -> bool:
+    """Reconoce únicamente la marca exacta de duplicado, tolerando formato."""
+    return normalize_label(comment) == DUPLICATE_LEAD_COMMENT
 
 
 def other_information_structure_summary(driver) -> dict:

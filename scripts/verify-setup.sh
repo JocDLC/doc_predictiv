@@ -29,7 +29,7 @@ test_requirement "Git" "command -v git >/dev/null" "Instala Git desde https://gi
 test_requirement "OpenSpec CLI 1.6.0" "command -v openspec >/dev/null" "npm install -g @fission-ai/openspec@1.6.0"
 test_requirement "Graphify CLI 0.10.0" "command -v graphify >/dev/null" "pipx install graphifyy==0.10.0"
 test_requirement "Skill de Graphify para agentes" "test -f ~/.agents/skills/graphify/SKILL.md" "graphify install"
-test_requirement "uv" "command -v uv >/dev/null" "pipx install uv"
+test_requirement "uv 0.11.25" "command -v uv >/dev/null && uv --version | grep -Eq '^uv 0\\.11\\.25\\b'" "pipx install uv==0.11.25"
 test_requirement "Servidor MCP graphify en Antigravity" "test -f ~/.gemini/antigravity/mcp_config.json && python3 -c 'import json; print(\"graphify\" in json.load(open(\"~/.gemini/antigravity/mcp_config.json\")).get(\"mcpServers\", {}))'" "./scripts/bootstrap.sh"
 
 echo ""

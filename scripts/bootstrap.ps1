@@ -24,7 +24,7 @@ $python = Get-PythonCommand
 
 $openSpecVersion = "1.6.0"
 $graphifyVersion = "0.10.0"
-$uvVersion = "latest"
+$uvVersion = "0.11.25"
 
 Write-Host "==> Instalando OpenSpec CLI (global) v$openSpecVersion..." -ForegroundColor Cyan
 npm install -g "@fission-ai/openspec@$openSpecVersion"

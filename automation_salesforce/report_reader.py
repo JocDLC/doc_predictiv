@@ -12,15 +12,9 @@ OWNER_HEADER_ALIASES = (OWNER_HEADER, "propietario")
 DATE_HEADER = "fecha de creacion"
 UNASSIGNED_OWNER = "AR_LEAD_QUALIF"
 DEFAULT_RECORD_OBJECT_API_NAME = "Lead"
-SALESFORCE_ID_PATTERN = re.compile(
-    r"(?<![A-Za-z0-9])([A-Za-z0-9]{15}(?:[A-Za-z0-9]{3})?)(?![A-Za-z0-9])"
-)
-DATE_VALUE_PATTERN = re.compile(
-    r"(?<!\d)(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2})(?!\d)"
-)
-REPORT_CANDIDATE_SELECTOR = (
-    "table, [role='grid'], [role='treegrid'], lightning-datatable, lightning-base-datatable"
-)
+SALESFORCE_ID_PATTERN = re.compile(r"(?<![A-Za-z0-9])([A-Za-z0-9]{15}(?:[A-Za-z0-9]{3})?)(?![A-Za-z0-9])")
+DATE_VALUE_PATTERN = re.compile(r"(?<!\d)(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2})(?!\d)")
+REPORT_CANDIDATE_SELECTOR = "table, [role='grid'], [role='treegrid'], lightning-datatable, lightning-base-datatable"
 HEADER_SELECTOR = "thead th, [role='columnheader']"
 HTML_ROW_SELECTOR = "tbody tr"
 ARIA_ROW_SELECTOR = "[role='row']"
@@ -134,7 +128,9 @@ def merge_visible_leads(leads: list[VisibleLead]) -> list[VisibleLead]:
             merged[lead.lead_id] = lead
             continue
         details = {**previous.details, **{key: value for key, value in lead.details.items() if value}}
-        merged[lead.lead_id] = VisibleLead(lead.lead_id, previous.created_at or lead.created_at, previous.grid_position, previous.status, details)
+        merged[lead.lead_id] = VisibleLead(
+            lead.lead_id, previous.created_at or lead.created_at, previous.grid_position, previous.status, details
+        )
     return list(merged.values())
 
 
@@ -185,9 +181,7 @@ def read_full_report(
 
 
 def normalize_label(value: str) -> str:
-    return " ".join(
-        str(value or "").lower().translate(str.maketrans("áéíóúüñ", "aeiouun")).split()
-    )
+    return " ".join(str(value or "").lower().translate(str.maketrans("áéíóúüñ", "aeiouun")).split())
 
 
 def find_header_index(headers: list[str], expected_header: str) -> int | None:
@@ -206,9 +200,7 @@ def find_owner_header_index(headers: list[str]) -> int | None:
     return None
 
 
-def resolve_field_indexes(
-    headers: list[str], field_aliases: dict[str, list[str]]
-) -> dict[str, int | None]:
+def resolve_field_indexes(headers: list[str], field_aliases: dict[str, list[str]]) -> dict[str, int | None]:
     return {
         field_name: next(
             (index for alias in aliases if (index := find_header_index(headers, alias)) is not None),
@@ -218,18 +210,14 @@ def resolve_field_indexes(
     }
 
 
-def extract_row_details(
-    values: list[str], field_indexes: dict[str, int | None]
-) -> dict[str, str]:
+def extract_row_details(values: list[str], field_indexes: dict[str, int | None]) -> dict[str, str]:
     return {
         field_name: values[index].strip() if index is not None and index < len(values) else ""
         for field_name, index in field_indexes.items()
     }
 
 
-def unmapped_columns(
-    headers: list[str], values: list[str], field_indexes: dict[str, int | None]
-) -> dict[str, str]:
+def unmapped_columns(headers: list[str], values: list[str], field_indexes: dict[str, int | None]) -> dict[str, str]:
     """Conserva toda columna leída de la bandeja aunque no tenga alias configurado."""
     mapped = {index for index in field_indexes.values() if index is not None}
     columns = {}
@@ -307,9 +295,7 @@ def extract_lead_id(
 
     for element in [row_element]:
         for attribute_name in LEAD_ID_ATTRIBUTE_NAMES:
-            match = SALESFORCE_ID_PATTERN.search(
-                element.get_attribute(attribute_name) or ""
-            )
+            match = SALESFORCE_ID_PATTERN.search(element.get_attribute(attribute_name) or "")
             if match:
                 return match.group(1)
     return ""
@@ -498,13 +484,17 @@ def read_visible_unassigned_leads(
     field_indexes = resolve_field_indexes(headers, field_aliases or {})
     lead_id_index = field_indexes.get("lead_id")
     if diagnostics is not None:
-        diagnostics.append({"headers": headers, "resolved_fields": [name for name, index in field_indexes.items() if index is not None]})
+        diagnostics.append(
+            {
+                "headers": headers,
+                "resolved_fields": [name for name, index in field_indexes.items() if index is not None],
+            }
+        )
     row_elements = find_report_rows(driver, table)
     data_rows = [
         row
         for row in row_elements
-        if is_visible_element(row)
-        and (row_values(row, driver) or str(row.text or "").strip())
+        if is_visible_element(row) and (row_values(row, driver) or str(row.text or "").strip())
     ]
     visible_rows = []
     for grid_position, row in enumerate(data_rows, start=1):

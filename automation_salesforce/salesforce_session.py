@@ -21,8 +21,9 @@ def local_path(value: str) -> Path:
 
 def wait_for_authentication(driver, timeout_seconds: int) -> None:
     WebDriverWait(driver, timeout_seconds).until(
-        lambda current_driver: "lightning.force.com" in current_driver.current_url
-        and "login" not in current_driver.current_url.lower()
+        lambda current_driver: (
+            "lightning.force.com" in current_driver.current_url and "login" not in current_driver.current_url.lower()
+        )
     )
 
 

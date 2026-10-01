@@ -5,11 +5,6 @@ import socket
 import subprocess
 from pathlib import Path
 
-from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.edge.options import Options as EdgeOptions
-
 BROWSER_PATHS = {
     "edge": [
         Path(os.environ.get("PROGRAMFILES(X86)", "")) / "Microsoft" / "Edge" / "Application" / "msedge.exe",
@@ -44,7 +39,12 @@ def debugger_is_listening(debugger_address: str, timeout_seconds: float = 1.0) -
         return False
 
 
-def launch_persistent_browser(executable: Path, profile_directory: Path, debugger_address: str) -> None:
+def launch_persistent_browser(
+    executable: Path,
+    profile_directory: Path,
+    debugger_address: str,
+    urls: list[str] | None = None,
+) -> None:
     """Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto al salir."""
     profile_directory.mkdir(parents=True, exist_ok=True)
     port = debugger_address.rpartition(":")[2]
@@ -54,12 +54,34 @@ def launch_persistent_browser(executable: Path, profile_directory: Path, debugge
             f"--user-data-dir={profile_directory}",
             f"--remote-debugging-port={port}",
             "--start-maximized",
+            *(urls or []),
+        ],
+        close_fds=True,
+    )
+
+
+def open_url_in_browser(executable: Path, profile_directory: Path, url: str) -> None:
+    """Abre una pestaña en la instancia ya corriendo con el perfil dedicado.
+
+    Chromium delega la URL al proceso existente cuando se invoca con el mismo
+    ``--user-data-dir``, así la pestaña se abre en la ventana del perfil del bot.
+    """
+    subprocess.Popen(
+        [
+            str(executable),
+            f"--user-data-dir={profile_directory}",
+            url,
         ],
         close_fds=True,
     )
 
 
 def create_driver(browser: str, executable: Path, profile_directory: Path, debugger_address: str | None = None):
+    from selenium import webdriver
+    from selenium.common.exceptions import WebDriverException
+    from selenium.webdriver.chrome.options import Options as ChromeOptions
+    from selenium.webdriver.edge.options import Options as EdgeOptions
+
     options = EdgeOptions() if browser == "edge" else ChromeOptions()
     attached = bool(debugger_address) and debugger_is_listening(debugger_address)
     if attached:

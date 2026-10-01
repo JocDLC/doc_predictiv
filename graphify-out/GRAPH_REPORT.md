@@ -1,12 +1,12 @@
-# Graph Report - C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo  (2026-09-23)
+# Graph Report - C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo  (2026-10-01)
 
 ## Corpus Check
-- 41 files · ~241,952 words
+- 61 files · ~318,093 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 412 nodes · 768 edges · 78 communities detected
-- Extraction: 62% EXTRACTED · 38% INFERRED · 0% AMBIGUOUS · INFERRED: 291 edges (avg confidence: 0.79)
+- 717 nodes · 1265 edges · 143 communities detected
+- Extraction: 65% EXTRACTED · 35% INFERRED · 0% AMBIGUOUS · INFERRED: 438 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -88,88 +88,153 @@
 - [[_COMMUNITY_Community 75|Community 75]]
 - [[_COMMUNITY_Community 76|Community 76]]
 - [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Community 78|Community 78]]
+- [[_COMMUNITY_Community 79|Community 79]]
+- [[_COMMUNITY_Community 80|Community 80]]
+- [[_COMMUNITY_Community 81|Community 81]]
+- [[_COMMUNITY_Community 82|Community 82]]
+- [[_COMMUNITY_Community 83|Community 83]]
+- [[_COMMUNITY_Community 84|Community 84]]
+- [[_COMMUNITY_Community 85|Community 85]]
+- [[_COMMUNITY_Community 86|Community 86]]
+- [[_COMMUNITY_Community 87|Community 87]]
+- [[_COMMUNITY_Community 88|Community 88]]
+- [[_COMMUNITY_Community 89|Community 89]]
+- [[_COMMUNITY_Community 90|Community 90]]
+- [[_COMMUNITY_Community 91|Community 91]]
+- [[_COMMUNITY_Community 92|Community 92]]
+- [[_COMMUNITY_Community 93|Community 93]]
+- [[_COMMUNITY_Community 94|Community 94]]
+- [[_COMMUNITY_Community 95|Community 95]]
+- [[_COMMUNITY_Community 96|Community 96]]
+- [[_COMMUNITY_Community 97|Community 97]]
+- [[_COMMUNITY_Community 98|Community 98]]
+- [[_COMMUNITY_Community 99|Community 99]]
+- [[_COMMUNITY_Community 100|Community 100]]
+- [[_COMMUNITY_Community 101|Community 101]]
+- [[_COMMUNITY_Community 102|Community 102]]
+- [[_COMMUNITY_Community 103|Community 103]]
+- [[_COMMUNITY_Community 104|Community 104]]
+- [[_COMMUNITY_Community 105|Community 105]]
+- [[_COMMUNITY_Community 106|Community 106]]
+- [[_COMMUNITY_Community 107|Community 107]]
+- [[_COMMUNITY_Community 108|Community 108]]
+- [[_COMMUNITY_Community 109|Community 109]]
+- [[_COMMUNITY_Community 110|Community 110]]
+- [[_COMMUNITY_Community 111|Community 111]]
+- [[_COMMUNITY_Community 112|Community 112]]
+- [[_COMMUNITY_Community 113|Community 113]]
+- [[_COMMUNITY_Community 114|Community 114]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
+- [[_COMMUNITY_Community 117|Community 117]]
+- [[_COMMUNITY_Community 118|Community 118]]
+- [[_COMMUNITY_Community 119|Community 119]]
+- [[_COMMUNITY_Community 120|Community 120]]
+- [[_COMMUNITY_Community 121|Community 121]]
+- [[_COMMUNITY_Community 122|Community 122]]
+- [[_COMMUNITY_Community 123|Community 123]]
+- [[_COMMUNITY_Community 124|Community 124]]
+- [[_COMMUNITY_Community 125|Community 125]]
+- [[_COMMUNITY_Community 126|Community 126]]
+- [[_COMMUNITY_Community 127|Community 127]]
+- [[_COMMUNITY_Community 128|Community 128]]
+- [[_COMMUNITY_Community 129|Community 129]]
+- [[_COMMUNITY_Community 130|Community 130]]
+- [[_COMMUNITY_Community 131|Community 131]]
+- [[_COMMUNITY_Community 132|Community 132]]
+- [[_COMMUNITY_Community 133|Community 133]]
+- [[_COMMUNITY_Community 134|Community 134]]
+- [[_COMMUNITY_Community 135|Community 135]]
+- [[_COMMUNITY_Community 136|Community 136]]
+- [[_COMMUNITY_Community 137|Community 137]]
+- [[_COMMUNITY_Community 138|Community 138]]
+- [[_COMMUNITY_Community 139|Community 139]]
+- [[_COMMUNITY_Community 140|Community 140]]
+- [[_COMMUNITY_Community 141|Community 141]]
+- [[_COMMUNITY_Community 142|Community 142]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `main()` - 29 edges
+1. `main()` - 41 edges
 2. `read_visible_unassigned_leads()` - 27 edges
-3. `ReportReaderTests` - 26 edges
-4. `main()` - 23 edges
+3. `main()` - 26 edges
+4. `ReportReaderTests` - 26 edges
 5. `VisibleLead` - 22 edges
-6. `main()` - 20 edges
-7. `CommentWriterTests` - 17 edges
-8. `FakeRow` - 17 edges
-9. `main()` - 16 edges
-10. `main()` - 16 edges
+6. `main()` - 22 edges
+7. `validate_contracts()` - 22 edges
+8. `ContractValidationError` - 19 edges
+9. `ContractValidatorTests` - 19 edges
+10. `main()` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `find_other_information()` --calls--> `main()`  [INFERRED]
-  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\comment_reader.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_comment_assisted.py
-- `find_other_information()` --calls--> `main()`  [INFERRED]
-  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\comment_reader.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_comment_read_only.py
-- `main()` --calls--> `find_other_information()`  [INFERRED]
-  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_corrections.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\comment_reader.py
-- `find_other_information()` --calls--> `verify_saved_value()`  [INFERRED]
-  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\comment_reader.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py
-- `find_other_information()` --calls--> `main()`  [INFERRED]
-  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\comment_reader.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py
+- `record_snapshot()` --calls--> `documented_call_ids()`  [INFERRED]
+  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\snapshot_store.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\attempt_identity.py
+- `main()` --calls--> `partition_attempts()`  [INFERRED]
+  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\attempt_identity.py
+- `detect_browser()` --calls--> `main()`  [INFERRED]
+  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py
+- `create_driver()` --calls--> `main()`  [INFERRED]
+  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py
+- `release_driver()` --calls--> `main()`  [INFERRED]
+  C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py → C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py
 
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.09
-Nodes (43): create_driver(), debugger_is_listening(), detect_browser(), launch_persistent_browser(), Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a, Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abie, release_driver(), build_record_url() (+35 more)
+Cohesion: 0.04
+Nodes (59): create_driver(), debugger_is_listening(), detect_browser(), launch_persistent_browser(), open_url_in_browser(), Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abie, Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a, Abre una pestaña en la instancia ya corriendo con el perfil dedicado.      Chrom (+51 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.08
-Nodes (23): field_result_in_any_frame(), Busca el campo visible en el documento principal y en iframes accesibles., compose_attempts(), compose_other_information(), describe_editor_candidates(), find_edit_control(), find_editor_control(), find_element_in_any_frame() (+15 more)
+Cohesion: 0.06
+Nodes (23): available_columns(), lead_payload(), render_leads_ui(), source_value(), write_leads_ui(), deduplicate_visible_leads(), extract_lead_id(), merge_visible_leads() (+15 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.09
-Nodes (11): extract_lead_id(), record_route_pattern(), FakeCell, FakeDriver, FakeFrame, FakeFrameDriver, FakeLink, FakeRow (+3 more)
+Cohesion: 0.07
+Nodes (27): generate_graph(), Generación determinística del HTML autocontenido., render_graph(), Pruebas del gráfico de contratos de negocio., main(), parse_args(), CLI del gráfico de contratos de negocio., Rutas estables del gráfico de contratos de negocio. (+19 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.1
-Nodes (36): aligned_values(), column_offset(), deduplicate_visible_leads(), extract_created_at(), extract_row_details(), find_elements(), find_header_index(), find_owner_header_index() (+28 more)
+Cohesion: 0.08
+Nodes (49): field_result_in_any_frame(), Busca el campo visible en el documento principal y en iframes accesibles., describe_editor_candidates(), find_edit_control(), find_editor_control(), find_element_in_any_frame(), prepare_other_information(), Devuelve un único control visible y deja el driver en su contexto. (+41 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.13
-Nodes (13): available_columns(), lead_payload(), render_leads_ui(), source_value(), write_leads_ui(), available_report_path(), report_payload(), write_unassigned_leads_report() (+5 more)
+Cohesion: 0.07
+Nodes (16): compose_attempts(), compose_other_information(), format_attempt(), load_draft_body(), validate_draft_body(), load_queue(), load_queue_file(), Lee la cola completa: Leads validados más la identidad de la tanda.      ``run_i (+8 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.14
-Nodes (10): field_result_if_found(), field_result_with_text(), find_other_information(), next_attempt_number(), normalize_label(), other_information_structure_summary(), Devuelve solo metadatos del DOM; nunca texto del comentario., text_without_field_label() (+2 more)
+Cohesion: 0.07
+Nodes (26): ask_lead_action(), lead_context(), main(), new_run_id(), normalize_persisted_text(), output_override(), parse_queue_args(), print_lead_summary() (+18 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.14
-Nodes (11): load_corrections(), Carga y valida colas de corrección generadas desde la UI local.  Cada corrección, Devuelve las correcciones válidas o lanza ValueError con el motivo., _valid_correction(), correction_entry(), Aplica correcciones locales de ``Otra información`` de forma segura.  Por cada c, content_hash(), CorrectionDecisionTests (+3 more)
+Cohesion: 0.08
+Nodes (23): coverage_python_files(), main(), parse_args(), production_python_files(), python_module(), Comandos reproducibles del arnés de calidad.  Este módulo solo orquesta herramie, Verifica el artefacto local sin abrir Salesforce ni usar red externa., Ejecuta un comando visible y detiene el arnés ante el primer fallo. (+15 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.11
-Nodes (11): ask_lead_action(), normalize_persisted_text(), print_lead_summary(), Iguala diferencias de solo-forma entre el texto escrito y el mostrado.      En m, Confirma que Otra información quedó persistida tras el guardado.      La primera, Evita navegar al siguiente Lead mientras el editor actual siga abierto., Muestra solo métricas operativas; nunca imprime el comentario preparado., Obliga una elección explícita antes de abrir el editor del Lead. (+3 more)
+Nodes (15): build_record_url(), field_result_if_found(), field_result_with_text(), find_comment(), find_other_information(), is_duplicate_lead(), next_attempt_number(), normalize_label() (+7 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.23
-Nodes (4): load_queue(), _validate_attempt(), _validate_lead(), QueueLoaderTests
+Cohesion: 0.13
+Nodes (10): content_hash(), Almacenamiento local privado de snapshots de ``Otra información``., Ubica los snapshots fuera de la cola y del repositorio., Guarda el último valor confirmado, sin escribirlo en consola o logs.      ``run_, record_snapshot(), snapshot_path_for(), CorrectionDecisionTests, RunCorrectionsTests (+2 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.28
-Nodes (4): confirm_preparation(), print_preparation_summary(), queue_directory_from_config(), AssistedRunnerTests
+Cohesion: 0.17
+Nodes (9): documented_call_ids(), partition_attempts(), Identidad por llamada: qué ``call_id`` ya están en ``Otra información``.  La ide, Extrae los ``call_id`` presentes en líneas ``N INT`` del campo., Divide los intentos de la cola en faltantes, presentes y ambiguos.      Devuelve, attempt(), DocumentedCallIdsTests, PartitionAttemptsTests (+1 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.28
-Nodes (6): UiServerTests, main(), make_handler(), Servidor local mínimo para que la UI dispare el bot sin usar la terminal.  Escuc, Publica puerto y token donde la UI puede leerlos (carpeta ya vinculada)., write_session_file()
+Cohesion: 0.1
+Nodes (7): El servidor sirve la app y expone los archivos operativos por token., UiServerApiTests, UiServerTests, find_listening_pid(), freeze_active_queue(), Copia la cola activa a un archivo inmutable identificado por ``run_id``.      El, Devuelve el PID que escucha en el puerto local indicado, si existe.
 
 ### Community 11 - "Community 11"
-Cohesion: 0.28
-Nodes (2): BrowserFactoryTests, FakeDriver
+Cohesion: 0.15
+Nodes (10): metrics_path_for(), Métricas locales de productividad sin datos de clientes., Redondea una duración a una décima para reportes operativos., Ubica el resumen agregado junto al resultado de la cola., Resume resultados sin preservar identificadores ni contenido de Leads., Persiste el resumen agregado localmente, sin resultados individuales., round_elapsed_seconds(), summarize_results() (+2 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.31
-Nodes (5): `--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla., Lee la vista actual por defecto; el recorrido ampliado es explícito., read_report(), scan_mode(), LeadsUiRunnerTests
+Cohesion: 0.25
+Nodes (18): check_edge(), check_edge_policies(), check_edge_remote_debugging(), check_local_dirs(), check_pip_and_selenium(), check_port(), check_powershell_policy(), check_python() (+10 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.4
-Nodes (2): print_comment_summary(), CommentSummaryTests
+Cohesion: 0.26
+Nodes (7): load_corrections(), Carga y valida colas de corrección generadas desde la UI local.  Cada corrección, Devuelve las correcciones válidas o lanza ValueError con el motivo., _valid_correction(), CorrectionLoaderTests, _valid_correction(), _write_corrections()
 
 ### Community 14 - "Community 14"
 Cohesion: 0.67
@@ -193,71 +258,71 @@ Nodes (0):
 
 ### Community 19 - "Community 19"
 Cohesion: 1.0
-Nodes (1): Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a
+Nodes (1): Persiste el resumen agregado localmente, sin resultados individuales.
 
 ### Community 20 - "Community 20"
 Cohesion: 1.0
-Nodes (1): Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abie
+Nodes (1): Mantiene los resultados junto a la cola, fuera del repositorio.
 
 ### Community 21 - "Community 21"
 Cohesion: 1.0
-Nodes (1): Pulsa Guardar del formulario de edición activo y espera a que se cierre.
+Nodes (1): Persiste el último estado de cada Lead para poder reanudar la revisión.
 
 ### Community 22 - "Community 22"
 Cohesion: 1.0
-Nodes (1): Mantiene los resultados junto a la cola, fuera del repositorio.
+Nodes (1): Muestra solo métricas operativas; nunca imprime el comentario preparado.
 
 ### Community 23 - "Community 23"
 Cohesion: 1.0
-Nodes (1): Persiste el último estado de cada Lead para poder reanudar la revisión.
+Nodes (1): Obliga una elección explícita antes de abrir el editor del Lead.
 
 ### Community 24 - "Community 24"
 Cohesion: 1.0
-Nodes (1): Muestra solo métricas operativas; nunca imprime el comentario preparado.
+Nodes (1): Iguala diferencias de solo-forma entre el texto escrito y el mostrado.      En m
 
 ### Community 25 - "Community 25"
 Cohesion: 1.0
-Nodes (1): Obliga una elección explícita antes de abrir el editor del Lead.
+Nodes (1): Confirma que Otra información quedó persistida tras el guardado.      La primera
 
 ### Community 26 - "Community 26"
 Cohesion: 1.0
-Nodes (1): Reabre el registro y confirma que Otra información quedó persistida.
+Nodes (1): Evita navegar al siguiente Lead mientras el editor actual siga abierto.
 
 ### Community 27 - "Community 27"
 Cohesion: 1.0
-Nodes (1): Evita navegar al siguiente Lead mientras el editor actual siga abierto.
+Nodes (1): Registra un fallo sin exponer el texto ni detener el resto de la cola.
 
 ### Community 28 - "Community 28"
 Cohesion: 1.0
-Nodes (1): Registra un fallo sin exponer el texto ni detener el resto de la cola.
+Nodes (1): Ubica los snapshots fuera de la cola y del repositorio.
 
 ### Community 29 - "Community 29"
 Cohesion: 1.0
-Nodes (1): Mantiene los resultados junto a la cola, fuera del repositorio.
+Nodes (1): Guarda el último valor confirmado, sin escribirlo en consola o logs.
 
 ### Community 30 - "Community 30"
 Cohesion: 1.0
-Nodes (1): Persiste el último estado de cada Lead para poder reanudar la revisión.
+Nodes (1): Devuelve el PID que escucha en el puerto local indicado, si existe.
 
 ### Community 31 - "Community 31"
 Cohesion: 1.0
-Nodes (1): Muestra solo métricas operativas; nunca imprime el comentario preparado.
+Nodes (1): Reinicia el navegador del perfil dedicado: cierra el que escucha en el     puert
 
 ### Community 32 - "Community 32"
 Cohesion: 1.0
-Nodes (1): Obliga una elección explícita antes de abrir el editor del Lead.
+Nodes (1): Publica puerto y token donde la UI puede leerlos (carpeta ya vinculada).
 
 ### Community 33 - "Community 33"
 Cohesion: 1.0
-Nodes (1): Evita navegar al siguiente Lead mientras el editor actual siga abierto.
+Nodes (1): Publica puerto y token donde la UI puede leerlos (carpeta ya vinculada).
 
 ### Community 34 - "Community 34"
 Cohesion: 1.0
-Nodes (1): Registra un fallo sin exponer el texto ni detener el resto de la cola.
+Nodes (1): Ejecuta un comando visible y detiene el arnés ante el primer fallo.
 
 ### Community 35 - "Community 35"
 Cohesion: 1.0
-Nodes (1): Devuelve un único control visible y deja el driver en su contexto.
+Nodes (1): Resuelve shims `.cmd`/`.ps1` y binarios POSIX sin invocar un shell.
 
 ### Community 36 - "Community 36"
 Cohesion: 1.0
@@ -265,170 +330,430 @@ Nodes (1): Busca el campo visible en el documento principal y en iframes accesib
 
 ### Community 37 - "Community 37"
 Cohesion: 1.0
-Nodes (1): Devuelve solo metadatos del DOM; nunca texto del comentario.
+Nodes (1): Lee Comentario en modo lectura; si no está visible, no bloquea el Lead.
 
 ### Community 38 - "Community 38"
 Cohesion: 1.0
-Nodes (1): Devuelve un único control visible y deja el driver en su contexto.
+Nodes (1): Reconoce únicamente la marca exacta de duplicado, tolerando formato.
 
 ### Community 39 - "Community 39"
 Cohesion: 1.0
-Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+Nodes (1): Devuelve solo metadatos del DOM; nunca texto del comentario.
 
 ### Community 40 - "Community 40"
 Cohesion: 1.0
-Nodes (1): Recorre la bandeja de arriba hacia abajo y de izquierda a derecha, sin abrir Lea
+Nodes (1): Pulsa Guardar del formulario de edición activo y espera a que se cierre.
 
 ### Community 41 - "Community 41"
 Cohesion: 1.0
-Nodes (1): Conserva toda columna leída de la bandeja aunque no tenga alias configurado.
+Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
 
 ### Community 42 - "Community 42"
 Cohesion: 1.0
-Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+Nodes (1): Recorre la bandeja de arriba hacia abajo y de izquierda a derecha, sin abrir Lea
 
 ### Community 43 - "Community 43"
 Cohesion: 1.0
-Nodes (1): Prioriza filas HTML y elimina contenedores ARIA que duplican registros.
+Nodes (1): Conserva toda columna leída de la bandeja aunque no tenga alias configurado.
 
 ### Community 44 - "Community 44"
 Cohesion: 1.0
-Nodes (1): Metadatos por fila para diagnóstico local; nunca incluye valores de celdas.
+Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
 
 ### Community 45 - "Community 45"
 Cohesion: 1.0
-Nodes (1): Usa los encabezados de la grilla o, si Lightning los separa, los del reporte vis
+Nodes (1): Prioriza filas HTML y elimina contenedores ARIA que duplican registros.
 
 ### Community 46 - "Community 46"
 Cohesion: 1.0
-Nodes (1): Alinea celdas con encabezados usando la columna de propietario como referencia.
+Nodes (1): Metadatos por fila para diagnóstico local; nunca incluye valores de celdas.
 
 ### Community 47 - "Community 47"
 Cohesion: 1.0
-Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+Nodes (1): Usa los encabezados de la grilla o, si Lightning los separa, los del reporte vis
 
 ### Community 48 - "Community 48"
 Cohesion: 1.0
-Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+Nodes (1): Alinea celdas con encabezados usando la columna de propietario como referencia.
 
 ### Community 49 - "Community 49"
 Cohesion: 1.0
-Nodes (1): `--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.
+Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
 
 ### Community 50 - "Community 50"
 Cohesion: 1.0
-Nodes (1): Lee la vista actual por defecto; el recorrido ampliado es explícito.
+Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
 
 ### Community 51 - "Community 51"
 Cohesion: 1.0
-Nodes (1): Devuelve un único control visible y deja el driver en su contexto.
+Nodes (1): Obliga una elección explícita antes de abrir el editor del Lead.
 
 ### Community 52 - "Community 52"
 Cohesion: 1.0
-Nodes (1): `--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.
+Nodes (1): Obliga una elección explícita antes de abrir el editor del Lead.
 
 ### Community 53 - "Community 53"
 Cohesion: 1.0
-Nodes (1): Elimina representaciones DOM repetidas sin descartar filas sin ID.
+Nodes (1): Obliga una elección explícita antes de abrir el editor del Lead.
 
 ### Community 54 - "Community 54"
 Cohesion: 1.0
-Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+Nodes (1): Iguala diferencias de solo-forma entre el texto escrito y el mostrado.      En m
 
 ### Community 55 - "Community 55"
 Cohesion: 1.0
-Nodes (1): Prioriza filas HTML y elimina contenedores ARIA que duplican registros.
+Nodes (1): Confirma que Otra información quedó persistida tras el guardado.      La primera
 
 ### Community 56 - "Community 56"
 Cohesion: 1.0
-Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+Nodes (1): Registra un fallo sin exponer el texto ni detener el resto de la cola.
 
 ### Community 57 - "Community 57"
 Cohesion: 1.0
-Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+Nodes (1): Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a
 
 ### Community 58 - "Community 58"
 Cohesion: 1.0
-Nodes (1): Devuelve un único control visible y deja el driver en su contexto.
+Nodes (1): Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abie
 
 ### Community 59 - "Community 59"
 Cohesion: 1.0
-Nodes (1): Devuelve solo metadatos del DOM; nunca texto del comentario.
+Nodes (1): Publica puerto y token donde la UI puede leerlos (carpeta ya vinculada).
 
 ### Community 60 - "Community 60"
 Cohesion: 1.0
-Nodes (1): Elimina representaciones DOM repetidas sin descartar filas sin ID.
+Nodes (1): Publica puerto y token donde la UI puede leerlos (carpeta ya vinculada).
 
 ### Community 61 - "Community 61"
 Cohesion: 1.0
-Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+Nodes (1): Redondea una duración a una décima para reportes operativos.
 
 ### Community 62 - "Community 62"
 Cohesion: 1.0
-Nodes (1): Prioriza filas HTML y elimina contenedores ARIA que duplican registros.
+Nodes (1): Ubica el resumen agregado junto al resultado de la cola.
 
 ### Community 63 - "Community 63"
 Cohesion: 1.0
-Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+Nodes (1): Resume resultados sin preservar identificadores ni contenido de Leads.
 
 ### Community 64 - "Community 64"
 Cohesion: 1.0
-Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+Nodes (1): Persiste el resumen agregado localmente, sin resultados individuales.
 
 ### Community 65 - "Community 65"
 Cohesion: 1.0
-Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+Nodes (1): Muestra solo métricas operativas; nunca imprime el comentario preparado.
 
 ### Community 66 - "Community 66"
 Cohesion: 1.0
-Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+Nodes (1): Muestra solo métricas operativas; nunca imprime el comentario preparado.
 
 ### Community 67 - "Community 67"
 Cohesion: 1.0
-Nodes (1): Elimina representaciones DOM repetidas sin descartar filas sin ID.
+Nodes (1): Confirma que Otra información quedó persistida tras el guardado.      La primera
 
 ### Community 68 - "Community 68"
 Cohesion: 1.0
-Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+Nodes (1): Evita navegar al siguiente Lead mientras el editor actual siga abierto.
 
 ### Community 69 - "Community 69"
 Cohesion: 1.0
-Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+Nodes (1): Registra un fallo sin exponer el texto ni detener el resto de la cola.
 
 ### Community 70 - "Community 70"
 Cohesion: 1.0
-Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+Nodes (1): Persiste el resumen agregado localmente, sin resultados individuales.
 
 ### Community 71 - "Community 71"
 Cohesion: 1.0
-Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+Nodes (1): Persiste el resumen agregado localmente, sin resultados individuales.
 
 ### Community 72 - "Community 72"
 Cohesion: 1.0
-Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+Nodes (1): Mantiene los resultados junto a la cola, fuera del repositorio.
 
 ### Community 73 - "Community 73"
 Cohesion: 1.0
-Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+Nodes (1): Persiste el último estado de cada Lead para poder reanudar la revisión.
 
 ### Community 74 - "Community 74"
 Cohesion: 1.0
-Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+Nodes (1): Muestra solo métricas operativas; nunca imprime el comentario preparado.
 
 ### Community 75 - "Community 75"
 Cohesion: 1.0
-Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+Nodes (1): Obliga una elección explícita antes de abrir el editor del Lead.
 
 ### Community 76 - "Community 76"
 Cohesion: 1.0
-Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+Nodes (1): Iguala diferencias de solo-forma entre el texto escrito y el mostrado.      En m
 
 ### Community 77 - "Community 77"
+Cohesion: 1.0
+Nodes (1): Confirma que Otra información quedó persistida tras el guardado.      La primera
+
+### Community 78 - "Community 78"
+Cohesion: 1.0
+Nodes (1): Evita navegar al siguiente Lead mientras el editor actual siga abierto.
+
+### Community 79 - "Community 79"
+Cohesion: 1.0
+Nodes (1): Registra un fallo sin exponer el texto ni detener el resto de la cola.
+
+### Community 80 - "Community 80"
+Cohesion: 1.0
+Nodes (1): Mantiene los resultados junto a la cola, fuera del repositorio.
+
+### Community 81 - "Community 81"
+Cohesion: 1.0
+Nodes (1): Persiste el último estado de cada Lead para poder reanudar la revisión.
+
+### Community 82 - "Community 82"
+Cohesion: 1.0
+Nodes (1): Muestra solo métricas operativas; nunca imprime el comentario preparado.
+
+### Community 83 - "Community 83"
+Cohesion: 1.0
+Nodes (1): Iguala diferencias de solo-forma entre el texto escrito y el mostrado.      En m
+
+### Community 84 - "Community 84"
+Cohesion: 1.0
+Nodes (1): Confirma que Otra información quedó persistida tras el guardado.      La primera
+
+### Community 85 - "Community 85"
+Cohesion: 1.0
+Nodes (1): Evita navegar al siguiente Lead mientras el editor actual siga abierto.
+
+### Community 86 - "Community 86"
+Cohesion: 1.0
+Nodes (1): Registra un fallo sin exponer el texto ni detener el resto de la cola.
+
+### Community 87 - "Community 87"
+Cohesion: 1.0
+Nodes (1): Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a
+
+### Community 88 - "Community 88"
+Cohesion: 1.0
+Nodes (1): Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abie
+
+### Community 89 - "Community 89"
+Cohesion: 1.0
+Nodes (1): Pulsa Guardar del formulario de edición activo y espera a que se cierre.
+
+### Community 90 - "Community 90"
+Cohesion: 1.0
+Nodes (1): Mantiene los resultados junto a la cola, fuera del repositorio.
+
+### Community 91 - "Community 91"
+Cohesion: 1.0
+Nodes (1): Persiste el último estado de cada Lead para poder reanudar la revisión.
+
+### Community 92 - "Community 92"
+Cohesion: 1.0
+Nodes (1): Reabre el registro y confirma que Otra información quedó persistida.
+
+### Community 93 - "Community 93"
+Cohesion: 1.0
+Nodes (1): Evita navegar al siguiente Lead mientras el editor actual siga abierto.
+
+### Community 94 - "Community 94"
+Cohesion: 1.0
+Nodes (1): Registra un fallo sin exponer el texto ni detener el resto de la cola.
+
+### Community 95 - "Community 95"
+Cohesion: 1.0
+Nodes (1): Mantiene los resultados junto a la cola, fuera del repositorio.
+
+### Community 96 - "Community 96"
+Cohesion: 1.0
+Nodes (1): Persiste el último estado de cada Lead para poder reanudar la revisión.
+
+### Community 97 - "Community 97"
+Cohesion: 1.0
+Nodes (1): Muestra solo métricas operativas; nunca imprime el comentario preparado.
+
+### Community 98 - "Community 98"
+Cohesion: 1.0
+Nodes (1): Obliga una elección explícita antes de abrir el editor del Lead.
+
+### Community 99 - "Community 99"
+Cohesion: 1.0
+Nodes (1): Evita navegar al siguiente Lead mientras el editor actual siga abierto.
+
+### Community 100 - "Community 100"
+Cohesion: 1.0
+Nodes (1): Registra un fallo sin exponer el texto ni detener el resto de la cola.
+
+### Community 101 - "Community 101"
+Cohesion: 1.0
+Nodes (1): Devuelve un único control visible y deja el driver en su contexto.
+
+### Community 102 - "Community 102"
+Cohesion: 1.0
+Nodes (1): Busca el campo visible en el documento principal y en iframes accesibles.
+
+### Community 103 - "Community 103"
+Cohesion: 1.0
+Nodes (1): Devuelve solo metadatos del DOM; nunca texto del comentario.
+
+### Community 104 - "Community 104"
+Cohesion: 1.0
+Nodes (1): Devuelve un único control visible y deja el driver en su contexto.
+
+### Community 105 - "Community 105"
+Cohesion: 1.0
+Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+
+### Community 106 - "Community 106"
+Cohesion: 1.0
+Nodes (1): Recorre la bandeja de arriba hacia abajo y de izquierda a derecha, sin abrir Lea
+
+### Community 107 - "Community 107"
+Cohesion: 1.0
+Nodes (1): Conserva toda columna leída de la bandeja aunque no tenga alias configurado.
+
+### Community 108 - "Community 108"
+Cohesion: 1.0
+Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+
+### Community 109 - "Community 109"
+Cohesion: 1.0
+Nodes (1): Prioriza filas HTML y elimina contenedores ARIA que duplican registros.
+
+### Community 110 - "Community 110"
+Cohesion: 1.0
+Nodes (1): Metadatos por fila para diagnóstico local; nunca incluye valores de celdas.
+
+### Community 111 - "Community 111"
+Cohesion: 1.0
+Nodes (1): Usa los encabezados de la grilla o, si Lightning los separa, los del reporte vis
+
+### Community 112 - "Community 112"
+Cohesion: 1.0
+Nodes (1): Alinea celdas con encabezados usando la columna de propietario como referencia.
+
+### Community 113 - "Community 113"
+Cohesion: 1.0
+Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+
+### Community 114 - "Community 114"
+Cohesion: 1.0
+Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+
+### Community 115 - "Community 115"
+Cohesion: 1.0
+Nodes (1): `--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.
+
+### Community 116 - "Community 116"
+Cohesion: 1.0
+Nodes (1): Lee la vista actual por defecto; el recorrido ampliado es explícito.
+
+### Community 117 - "Community 117"
+Cohesion: 1.0
+Nodes (1): Devuelve un único control visible y deja el driver en su contexto.
+
+### Community 118 - "Community 118"
+Cohesion: 1.0
+Nodes (1): `--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.
+
+### Community 119 - "Community 119"
+Cohesion: 1.0
+Nodes (1): Elimina representaciones DOM repetidas sin descartar filas sin ID.
+
+### Community 120 - "Community 120"
+Cohesion: 1.0
+Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+
+### Community 121 - "Community 121"
+Cohesion: 1.0
+Nodes (1): Prioriza filas HTML y elimina contenedores ARIA que duplican registros.
+
+### Community 122 - "Community 122"
+Cohesion: 1.0
+Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+
+### Community 123 - "Community 123"
+Cohesion: 1.0
+Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+
+### Community 124 - "Community 124"
+Cohesion: 1.0
+Nodes (1): Devuelve un único control visible y deja el driver en su contexto.
+
+### Community 125 - "Community 125"
+Cohesion: 1.0
+Nodes (1): Devuelve solo metadatos del DOM; nunca texto del comentario.
+
+### Community 126 - "Community 126"
+Cohesion: 1.0
+Nodes (1): Elimina representaciones DOM repetidas sin descartar filas sin ID.
+
+### Community 127 - "Community 127"
+Cohesion: 1.0
+Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+
+### Community 128 - "Community 128"
+Cohesion: 1.0
+Nodes (1): Prioriza filas HTML y elimina contenedores ARIA que duplican registros.
+
+### Community 129 - "Community 129"
+Cohesion: 1.0
+Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+
+### Community 130 - "Community 130"
+Cohesion: 1.0
+Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+
+### Community 131 - "Community 131"
+Cohesion: 1.0
+Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+
+### Community 132 - "Community 132"
+Cohesion: 1.0
+Nodes (1): Elimina representaciones DOM repetidas sin descartar filas sin ID.
+
+### Community 133 - "Community 133"
+Cohesion: 1.0
+Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+
+### Community 134 - "Community 134"
+Cohesion: 1.0
+Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+
+### Community 135 - "Community 135"
+Cohesion: 1.0
+Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+
+### Community 136 - "Community 136"
+Cohesion: 1.0
+Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+
+### Community 137 - "Community 137"
+Cohesion: 1.0
+Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
+
+### Community 138 - "Community 138"
+Cohesion: 1.0
+Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+
+### Community 139 - "Community 139"
+Cohesion: 1.0
+Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+
+### Community 140 - "Community 140"
+Cohesion: 1.0
+Nodes (1): Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.
+
+### Community 141 - "Community 141"
+Cohesion: 1.0
+Nodes (1): Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.
+
+### Community 142 - "Community 142"
 Cohesion: 1.0
 Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabezados.
 
 ## Knowledge Gaps
-- **94 isolated node(s):** `Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a`, `Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abie`, `Busca el campo visible en el documento principal y en iframes accesibles.`, `Devuelve solo metadatos del DOM; nunca texto del comentario.`, `Devuelve un único control visible y deja el driver en su contexto.` (+89 more)
+- **192 isolated node(s):** `Identidad por llamada: qué ``call_id`` ya están en ``Otra información``.  La ide`, `Extrae los ``call_id`` presentes en líneas ``N INT`` del campo.`, `Divide los intentos de la cola en faltantes, presentes y ambiguos.      Devuelve`, `Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a`, `Abre una pestaña en la instancia ya corriendo con el perfil dedicado.      Chrom` (+187 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **Thin community `Community 15`** (2 nodes): `verify-setup.ps1`, `Test-Requirement()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -438,139 +763,269 @@ Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabez
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 18`** (1 nodes): `setup-project.ps1`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 19`** (1 nodes): `Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a`
+- **Thin community `Community 19`** (1 nodes): `Persiste el resumen agregado localmente, sin resultados individuales.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 20`** (1 nodes): `Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abie`
+- **Thin community `Community 20`** (1 nodes): `Mantiene los resultados junto a la cola, fuera del repositorio.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 21`** (1 nodes): `Pulsa Guardar del formulario de edición activo y espera a que se cierre.`
+- **Thin community `Community 21`** (1 nodes): `Persiste el último estado de cada Lead para poder reanudar la revisión.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 22`** (1 nodes): `Mantiene los resultados junto a la cola, fuera del repositorio.`
+- **Thin community `Community 22`** (1 nodes): `Muestra solo métricas operativas; nunca imprime el comentario preparado.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 23`** (1 nodes): `Persiste el último estado de cada Lead para poder reanudar la revisión.`
+- **Thin community `Community 23`** (1 nodes): `Obliga una elección explícita antes de abrir el editor del Lead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 24`** (1 nodes): `Muestra solo métricas operativas; nunca imprime el comentario preparado.`
+- **Thin community `Community 24`** (1 nodes): `Iguala diferencias de solo-forma entre el texto escrito y el mostrado.      En m`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 25`** (1 nodes): `Obliga una elección explícita antes de abrir el editor del Lead.`
+- **Thin community `Community 25`** (1 nodes): `Confirma que Otra información quedó persistida tras el guardado.      La primera`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 26`** (1 nodes): `Reabre el registro y confirma que Otra información quedó persistida.`
+- **Thin community `Community 26`** (1 nodes): `Evita navegar al siguiente Lead mientras el editor actual siga abierto.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 27`** (1 nodes): `Evita navegar al siguiente Lead mientras el editor actual siga abierto.`
+- **Thin community `Community 27`** (1 nodes): `Registra un fallo sin exponer el texto ni detener el resto de la cola.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 28`** (1 nodes): `Registra un fallo sin exponer el texto ni detener el resto de la cola.`
+- **Thin community `Community 28`** (1 nodes): `Ubica los snapshots fuera de la cola y del repositorio.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 29`** (1 nodes): `Mantiene los resultados junto a la cola, fuera del repositorio.`
+- **Thin community `Community 29`** (1 nodes): `Guarda el último valor confirmado, sin escribirlo en consola o logs.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 30`** (1 nodes): `Persiste el último estado de cada Lead para poder reanudar la revisión.`
+- **Thin community `Community 30`** (1 nodes): `Devuelve el PID que escucha en el puerto local indicado, si existe.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 31`** (1 nodes): `Muestra solo métricas operativas; nunca imprime el comentario preparado.`
+- **Thin community `Community 31`** (1 nodes): `Reinicia el navegador del perfil dedicado: cierra el que escucha en el     puert`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 32`** (1 nodes): `Obliga una elección explícita antes de abrir el editor del Lead.`
+- **Thin community `Community 32`** (1 nodes): `Publica puerto y token donde la UI puede leerlos (carpeta ya vinculada).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 33`** (1 nodes): `Evita navegar al siguiente Lead mientras el editor actual siga abierto.`
+- **Thin community `Community 33`** (1 nodes): `Publica puerto y token donde la UI puede leerlos (carpeta ya vinculada).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 34`** (1 nodes): `Registra un fallo sin exponer el texto ni detener el resto de la cola.`
+- **Thin community `Community 34`** (1 nodes): `Ejecuta un comando visible y detiene el arnés ante el primer fallo.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 35`** (1 nodes): `Devuelve un único control visible y deja el driver en su contexto.`
+- **Thin community `Community 35`** (1 nodes): `Resuelve shims `.cmd`/`.ps1` y binarios POSIX sin invocar un shell.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 36`** (1 nodes): `Busca el campo visible en el documento principal y en iframes accesibles.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 37`** (1 nodes): `Devuelve solo metadatos del DOM; nunca texto del comentario.`
+- **Thin community `Community 37`** (1 nodes): `Lee Comentario en modo lectura; si no está visible, no bloquea el Lead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 38`** (1 nodes): `Devuelve un único control visible y deja el driver en su contexto.`
+- **Thin community `Community 38`** (1 nodes): `Reconoce únicamente la marca exacta de duplicado, tolerando formato.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 39`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+- **Thin community `Community 39`** (1 nodes): `Devuelve solo metadatos del DOM; nunca texto del comentario.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 40`** (1 nodes): `Recorre la bandeja de arriba hacia abajo y de izquierda a derecha, sin abrir Lea`
+- **Thin community `Community 40`** (1 nodes): `Pulsa Guardar del formulario de edición activo y espera a que se cierre.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 41`** (1 nodes): `Conserva toda columna leída de la bandeja aunque no tenga alias configurado.`
+- **Thin community `Community 41`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 42`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+- **Thin community `Community 42`** (1 nodes): `Recorre la bandeja de arriba hacia abajo y de izquierda a derecha, sin abrir Lea`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 43`** (1 nodes): `Prioriza filas HTML y elimina contenedores ARIA que duplican registros.`
+- **Thin community `Community 43`** (1 nodes): `Conserva toda columna leída de la bandeja aunque no tenga alias configurado.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 44`** (1 nodes): `Metadatos por fila para diagnóstico local; nunca incluye valores de celdas.`
+- **Thin community `Community 44`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 45`** (1 nodes): `Usa los encabezados de la grilla o, si Lightning los separa, los del reporte vis`
+- **Thin community `Community 45`** (1 nodes): `Prioriza filas HTML y elimina contenedores ARIA que duplican registros.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 46`** (1 nodes): `Alinea celdas con encabezados usando la columna de propietario como referencia.`
+- **Thin community `Community 46`** (1 nodes): `Metadatos por fila para diagnóstico local; nunca incluye valores de celdas.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 47`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+- **Thin community `Community 47`** (1 nodes): `Usa los encabezados de la grilla o, si Lightning los separa, los del reporte vis`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 48`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+- **Thin community `Community 48`** (1 nodes): `Alinea celdas con encabezados usando la columna de propietario como referencia.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 49`** (1 nodes): ``--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.`
+- **Thin community `Community 49`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 50`** (1 nodes): `Lee la vista actual por defecto; el recorrido ampliado es explícito.`
+- **Thin community `Community 50`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 51`** (1 nodes): `Devuelve un único control visible y deja el driver en su contexto.`
+- **Thin community `Community 51`** (1 nodes): `Obliga una elección explícita antes de abrir el editor del Lead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (1 nodes): ``--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.`
+- **Thin community `Community 52`** (1 nodes): `Obliga una elección explícita antes de abrir el editor del Lead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (1 nodes): `Elimina representaciones DOM repetidas sin descartar filas sin ID.`
+- **Thin community `Community 53`** (1 nodes): `Obliga una elección explícita antes de abrir el editor del Lead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+- **Thin community `Community 54`** (1 nodes): `Iguala diferencias de solo-forma entre el texto escrito y el mostrado.      En m`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 55`** (1 nodes): `Prioriza filas HTML y elimina contenedores ARIA que duplican registros.`
+- **Thin community `Community 55`** (1 nodes): `Confirma que Otra información quedó persistida tras el guardado.      La primera`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 56`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+- **Thin community `Community 56`** (1 nodes): `Registra un fallo sin exponer el texto ni detener el resto de la cola.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 57`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+- **Thin community `Community 57`** (1 nodes): `Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 58`** (1 nodes): `Devuelve un único control visible y deja el driver en su contexto.`
+- **Thin community `Community 58`** (1 nodes): `Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abie`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 59`** (1 nodes): `Devuelve solo metadatos del DOM; nunca texto del comentario.`
+- **Thin community `Community 59`** (1 nodes): `Publica puerto y token donde la UI puede leerlos (carpeta ya vinculada).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 60`** (1 nodes): `Elimina representaciones DOM repetidas sin descartar filas sin ID.`
+- **Thin community `Community 60`** (1 nodes): `Publica puerto y token donde la UI puede leerlos (carpeta ya vinculada).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+- **Thin community `Community 61`** (1 nodes): `Redondea una duración a una décima para reportes operativos.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (1 nodes): `Prioriza filas HTML y elimina contenedores ARIA que duplican registros.`
+- **Thin community `Community 62`** (1 nodes): `Ubica el resumen agregado junto al resultado de la cola.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+- **Thin community `Community 63`** (1 nodes): `Resume resultados sin preservar identificadores ni contenido de Leads.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 64`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+- **Thin community `Community 64`** (1 nodes): `Persiste el resumen agregado localmente, sin resultados individuales.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+- **Thin community `Community 65`** (1 nodes): `Muestra solo métricas operativas; nunca imprime el comentario preparado.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+- **Thin community `Community 66`** (1 nodes): `Muestra solo métricas operativas; nunca imprime el comentario preparado.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 67`** (1 nodes): `Elimina representaciones DOM repetidas sin descartar filas sin ID.`
+- **Thin community `Community 67`** (1 nodes): `Confirma que Otra información quedó persistida tras el guardado.      La primera`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 68`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+- **Thin community `Community 68`** (1 nodes): `Evita navegar al siguiente Lead mientras el editor actual siga abierto.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+- **Thin community `Community 69`** (1 nodes): `Registra un fallo sin exponer el texto ni detener el resto de la cola.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 70`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+- **Thin community `Community 70`** (1 nodes): `Persiste el resumen agregado localmente, sin resultados individuales.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 71`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+- **Thin community `Community 71`** (1 nodes): `Persiste el resumen agregado localmente, sin resultados individuales.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+- **Thin community `Community 72`** (1 nodes): `Mantiene los resultados junto a la cola, fuera del repositorio.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+- **Thin community `Community 73`** (1 nodes): `Persiste el último estado de cada Lead para poder reanudar la revisión.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+- **Thin community `Community 74`** (1 nodes): `Muestra solo métricas operativas; nunca imprime el comentario preparado.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+- **Thin community `Community 75`** (1 nodes): `Obliga una elección explícita antes de abrir el editor del Lead.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 76`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+- **Thin community `Community 76`** (1 nodes): `Iguala diferencias de solo-forma entre el texto escrito y el mostrado.      En m`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+- **Thin community `Community 77`** (1 nodes): `Confirma que Otra información quedó persistida tras el guardado.      La primera`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 78`** (1 nodes): `Evita navegar al siguiente Lead mientras el editor actual siga abierto.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 79`** (1 nodes): `Registra un fallo sin exponer el texto ni detener el resto de la cola.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 80`** (1 nodes): `Mantiene los resultados junto a la cola, fuera del repositorio.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 81`** (1 nodes): `Persiste el último estado de cada Lead para poder reanudar la revisión.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 82`** (1 nodes): `Muestra solo métricas operativas; nunca imprime el comentario preparado.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 83`** (1 nodes): `Iguala diferencias de solo-forma entre el texto escrito y el mostrado.      En m`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 84`** (1 nodes): `Confirma que Otra información quedó persistida tras el guardado.      La primera`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 85`** (1 nodes): `Evita navegar al siguiente Lead mientras el editor actual siga abierto.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 86`** (1 nodes): `Registra un fallo sin exponer el texto ni detener el resto de la cola.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 87`** (1 nodes): `Abre el navegador con el perfil dedicado y puerto de depuración; queda abierto a`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 88`** (1 nodes): `Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abie`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 89`** (1 nodes): `Pulsa Guardar del formulario de edición activo y espera a que se cierre.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 90`** (1 nodes): `Mantiene los resultados junto a la cola, fuera del repositorio.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 91`** (1 nodes): `Persiste el último estado de cada Lead para poder reanudar la revisión.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 92`** (1 nodes): `Reabre el registro y confirma que Otra información quedó persistida.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 93`** (1 nodes): `Evita navegar al siguiente Lead mientras el editor actual siga abierto.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 94`** (1 nodes): `Registra un fallo sin exponer el texto ni detener el resto de la cola.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 95`** (1 nodes): `Mantiene los resultados junto a la cola, fuera del repositorio.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 96`** (1 nodes): `Persiste el último estado de cada Lead para poder reanudar la revisión.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 97`** (1 nodes): `Muestra solo métricas operativas; nunca imprime el comentario preparado.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 98`** (1 nodes): `Obliga una elección explícita antes de abrir el editor del Lead.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 99`** (1 nodes): `Evita navegar al siguiente Lead mientras el editor actual siga abierto.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 100`** (1 nodes): `Registra un fallo sin exponer el texto ni detener el resto de la cola.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 101`** (1 nodes): `Devuelve un único control visible y deja el driver en su contexto.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 102`** (1 nodes): `Busca el campo visible en el documento principal y en iframes accesibles.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 103`** (1 nodes): `Devuelve solo metadatos del DOM; nunca texto del comentario.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 104`** (1 nodes): `Devuelve un único control visible y deja el driver en su contexto.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 105`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 106`** (1 nodes): `Recorre la bandeja de arriba hacia abajo y de izquierda a derecha, sin abrir Lea`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 107`** (1 nodes): `Conserva toda columna leída de la bandeja aunque no tenga alias configurado.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 108`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 109`** (1 nodes): `Prioriza filas HTML y elimina contenedores ARIA que duplican registros.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 110`** (1 nodes): `Metadatos por fila para diagnóstico local; nunca incluye valores de celdas.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 111`** (1 nodes): `Usa los encabezados de la grilla o, si Lightning los separa, los del reporte vis`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 112`** (1 nodes): `Alinea celdas con encabezados usando la columna de propietario como referencia.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 113`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 114`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 115`** (1 nodes): ``--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 116`** (1 nodes): `Lee la vista actual por defecto; el recorrido ampliado es explícito.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 117`** (1 nodes): `Devuelve un único control visible y deja el driver en su contexto.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 118`** (1 nodes): ``--completo` recorre toda la bandeja; por defecto solo lo cargado en pantalla.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 119`** (1 nodes): `Elimina representaciones DOM repetidas sin descartar filas sin ID.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 120`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 121`** (1 nodes): `Prioriza filas HTML y elimina contenedores ARIA que duplican registros.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 122`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 123`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 124`** (1 nodes): `Devuelve un único control visible y deja el driver en su contexto.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 125`** (1 nodes): `Devuelve solo metadatos del DOM; nunca texto del comentario.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 126`** (1 nodes): `Elimina representaciones DOM repetidas sin descartar filas sin ID.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 127`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 128`** (1 nodes): `Prioriza filas HTML y elimina contenedores ARIA que duplican registros.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 129`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 130`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 131`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 132`** (1 nodes): `Elimina representaciones DOM repetidas sin descartar filas sin ID.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 133`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 134`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 135`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 136`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 137`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 138`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 139`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 140`** (1 nodes): `Inspecciona contextos DOM sin extraer textos, celdas ni identificadores.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 141`** (1 nodes): `Busca elementos sin mutar el DOM, incluyendo Shadow DOM abierto cuando existe.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 142`** (1 nodes): `Devuelve metadatos estructurales sin leer valores de filas ni encabezados.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `main()` connect `Community 0` to `Community 8`, `Community 1`, `Community 5`, `Community 7`?**
-  _High betweenness centrality (0.179) - this node is a cross-community bridge._
-- **Why does `main()` connect `Community 0` to `Community 1`, `Community 5`, `Community 6`, `Community 7`?**
-  _High betweenness centrality (0.120) - this node is a cross-community bridge._
-- **Why does `read_visible_unassigned_leads()` connect `Community 3` to `Community 0`, `Community 2`, `Community 4`, `Community 12`?**
-  _High betweenness centrality (0.120) - this node is a cross-community bridge._
-- **Are the 18 inferred relationships involving `main()` (e.g. with `load_config()` and `load_queue()`) actually correct?**
-  _`main()` has 18 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `main()` connect `Community 5` to `Community 0`, `Community 3`, `Community 4`, `Community 7`, `Community 8`, `Community 9`, `Community 11`?**
+  _High betweenness centrality (0.212) - this node is a cross-community bridge._
+- **Why does `main()` connect `Community 0` to `Community 3`?**
+  _High betweenness centrality (0.095) - this node is a cross-community bridge._
+- **Why does `main()` connect `Community 0` to `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 13`?**
+  _High betweenness centrality (0.082) - this node is a cross-community bridge._
+- **Are the 28 inferred relationships involving `main()` (e.g. with `load_config()` and `load_queue_file()`) actually correct?**
+  _`main()` has 28 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 7 inferred relationships involving `read_visible_unassigned_leads()` (e.g. with `read_report()` and `main()`) actually correct?**
   _`read_visible_unassigned_leads()` has 7 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 21 inferred relationships involving `main()` (e.g. with `load_config()` and `load_corrections()`) actually correct?**
-  _`main()` has 21 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 24 inferred relationships involving `main()` (e.g. with `load_config()` and `load_corrections()`) actually correct?**
+  _`main()` has 24 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 19 inferred relationships involving `VisibleLead` (e.g. with `LeadsUiTests` and `LocalReportTests`) actually correct?**
   _`VisibleLead` has 19 INFERRED edges - model-reasoned connections that need verification._

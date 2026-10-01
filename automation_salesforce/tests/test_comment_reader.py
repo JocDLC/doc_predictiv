@@ -4,7 +4,9 @@ from comment_reader import (
     build_record_url,
     field_result_if_found,
     field_result_in_any_frame,
+    find_comment,
     find_other_information,
+    is_duplicate_lead,
     next_attempt_number,
     other_information_structure_summary,
 )
@@ -47,9 +49,7 @@ class CommentReaderTests(unittest.TestCase):
         self.assertEqual(next_attempt_number(comment), 4)
 
     def test_find_other_information_returns_value_without_its_label(self):
-        driver = FakeCommentDriver(
-            {"found": True, "text": "Otra información\n1 INT Envío WhatsApp"}
-        )
+        driver = FakeCommentDriver({"found": True, "text": "Otra información\n1 INT Envío WhatsApp"})
 
         comment = find_other_information(driver, timeout_seconds=1)
 
@@ -60,6 +60,16 @@ class CommentReaderTests(unittest.TestCase):
         driver = FakeCommentDriver({"found": True, "text": "Otra información"})
 
         self.assertEqual(find_other_information(driver, timeout_seconds=1), "")
+
+    def test_find_comment_returns_visible_value_without_label(self):
+        driver = FakeCommentDriver({"found": True, "text": "Comentario\nLead Duplicado"})
+
+        self.assertEqual(find_comment(driver, timeout_seconds=1), "Lead Duplicado")
+
+    def test_duplicate_lead_uses_normalized_exact_match(self):
+        self.assertTrue(is_duplicate_lead(" lead   duplicado "))
+        self.assertFalse(is_duplicate_lead("Lead Duplicado - revisar"))
+        self.assertFalse(is_duplicate_lead(""))
 
     def test_field_result_wait_condition_rejects_missing_label(self):
         driver = FakeCommentDriver({"found": False, "text": ""})

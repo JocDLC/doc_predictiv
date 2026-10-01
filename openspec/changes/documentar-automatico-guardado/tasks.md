@@ -108,6 +108,16 @@
 - [x] El runner adjunto al navegador persistente abre su propia pestaña
       (`switch_to.new_window`) y no navega la pestaña de la UI.
 
+## Fase 4.7 — Excepción Lead Duplicado (pendiente)
+
+- [x] Leer el campo visible `Comentario` antes de preparar el Lead.
+- [x] Si su valor normalizado es exactamente `Lead Duplicado`, registrar
+      `duplicado` sin abrir el editor ni escribir en Salesforce.
+- [x] Mostrar el estado `duplicado` en la cola y mantener el Lead visible para
+      verificación manual; no marcarlo como documentado.
+- [x] Tests: igualdad normalizada, flujo duplicado sin escritura/Guardar y UI.
+      (107 tests OK, Ruff OK, JS OK.)
+
 ## Fase 4.6 — Mejoras de la vista de cola (2026-09-23)
 
 - [x] La tarjeta del Lead documentado muestra y copia el campo completo de

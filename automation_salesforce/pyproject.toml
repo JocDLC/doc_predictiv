@@ -1,0 +1,26 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.format]
+line-ending = "auto"
+quote-style = "double"
+
+[tool.coverage.run]
+branch = true
+relative_files = true
+source = ["."]
+omit = [
+    "harness.py",
+    "tests/*",
+]
+
+[tool.coverage.report]
+precision = 1
+show_missing = true
+
+[tool.coverage.xml]
+output = "coverage.xml"

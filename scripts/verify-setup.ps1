@@ -46,9 +46,9 @@ Test-Requirement "Skill de Graphify para agentes (~/.agents/skills)" `
     { Test-Path (Join-Path $env:USERPROFILE ".agents\skills\graphify\SKILL.md") } `
     "Ejecuta: graphify install"
 
-Test-Requirement "uv (requerido por el servidor MCP de Graphify)" `
-    { (Get-Command uv -ErrorAction SilentlyContinue) -or (Test-Path (Join-Path $env:USERPROFILE ".local\bin\uv.exe")) } `
-    "Ejecuta: pipx install uv"
+Test-Requirement "uv 0.11.25 (requerido por el servidor MCP de Graphify)" `
+    { (Get-Command uv -ErrorAction SilentlyContinue) -and ((uv --version) -match '^uv 0\.11\.25\b') } `
+    "Ejecuta: pipx install uv==0.11.25"
 
 Test-Requirement "Servidor MCP 'graphify' en Antigravity ($mcpFile)" `
     { (Test-Path $mcpFile) -and ((Get-Content $mcpFile -Raw | ConvertFrom-Json).mcpServers.PSObject.Properties["graphify"]) } `

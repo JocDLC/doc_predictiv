@@ -14,7 +14,7 @@ assert_command git "Instala Git desde https://git-scm.com"
 
 OPEN_SPEC_VERSION="1.6.0"
 GRAPHIFY_VERSION="0.10.0"
-UV_VERSION="latest"
+UV_VERSION="0.11.25"
 
 echo "==> Instalando OpenSpec CLI (global) v${OPEN_SPEC_VERSION}..."
 npm install -g "@fission-ai/openspec@${OPEN_SPEC_VERSION}"

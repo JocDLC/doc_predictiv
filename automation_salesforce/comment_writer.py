@@ -261,7 +261,9 @@ const elements = [];
 collect(document, new Set(), elements);
 const editors = elements.filter(isEditable);
 """
-EDITOR_CONTROL_SCRIPT = EDITOR_HELPERS_SCRIPT + """
+EDITOR_CONTROL_SCRIPT = (
+    EDITOR_HELPERS_SCRIPT
+    + """
 for (const editor of editors) {
     if (labels.includes(normalize(labelForCandidate(editor, elements)))) {
         return editor;
@@ -275,7 +277,10 @@ for (const label of labelElements(elements)) {
 }
 return null;
 """
-EDITOR_DIAGNOSTIC_SCRIPT = EDITOR_HELPERS_SCRIPT + """
+)
+EDITOR_DIAGNOSTIC_SCRIPT = (
+    EDITOR_HELPERS_SCRIPT
+    + """
 const found = labelElements(elements);
 return {
     matching_labels: found.length,
@@ -287,6 +292,7 @@ return {
     editor_labels: editors.map(editor => normalize(labelForCandidate(editor, elements))).slice(0, 15),
 };
 """
+)
 
 
 def validate_draft_body(draft_body: str) -> str:
@@ -319,10 +325,7 @@ def format_attempt(number: int, attempt: dict[str, str]) -> str:
     result = str(attempt.get("result") or "").strip()
     if not result:
         raise ValueError("El intento no tiene resultado para documentar.")
-    return (
-        f"{number} INT\t{result}\t{attempt.get('date', '')}"
-        f"\t{attempt.get('time', '')}\t{attempt.get('call_id', '')}"
-    )
+    return f"{number} INT\t{result}\t{attempt.get('date', '')}\t{attempt.get('time', '')}\t{attempt.get('call_id', '')}"
 
 
 def compose_attempts(
@@ -334,10 +337,7 @@ def compose_attempts(
         raise ValueError("El próximo INT debe ser mayor o igual a 1.")
     if not attempts:
         raise ValueError("El Lead no tiene intentos para documentar.")
-    new_entries = "\n".join(
-        format_attempt(next_int + index, attempt)
-        for index, attempt in enumerate(attempts)
-    )
+    new_entries = "\n".join(format_attempt(next_int + index, attempt) for index, attempt in enumerate(attempts))
     existing = str(existing_comment or "").rstrip()
     return f"{existing}\n{new_entries}" if existing else new_entries
 
@@ -411,7 +411,9 @@ arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});
 arguments[0].click();
 """
 
-SAVE_BUTTON_SCRIPT = EDITOR_HELPERS_SCRIPT + """
+SAVE_BUTTON_SCRIPT = (
+    EDITOR_HELPERS_SCRIPT
+    + """
 const saveLabels = ['guardar', 'save'];
 const candidates = elements.filter(element => isVisible(element)
     && element.matches('button')
@@ -432,6 +434,7 @@ const insideForm = element => {
 const preferred = candidates.filter(insideForm);
 return (preferred.length ? preferred : candidates)[0] || null;
 """
+)
 
 
 SAVE_SETTLE_SECONDS = 3.0
@@ -444,16 +447,13 @@ def save_edit_form(driver, timeout_seconds: int, settle_seconds: float = SAVE_SE
     evita que una navegación posterior aborte el guardado en curso.
     """
     save_button = WebDriverWait(driver, timeout_seconds).until(
-        lambda current_driver: find_element_in_any_frame(
-            current_driver, SAVE_BUTTON_SCRIPT
-        )
+        lambda current_driver: find_element_in_any_frame(current_driver, SAVE_BUTTON_SCRIPT)
     )
     driver.execute_script(CLICK_EDIT_CONTROL_SCRIPT, save_button)
     driver.switch_to.default_content()
-    WebDriverWait(driver, timeout_seconds).until(
-        lambda current_driver: not find_editor_control(current_driver)
-    )
+    WebDriverWait(driver, timeout_seconds).until(lambda current_driver: not find_editor_control(current_driver))
     time.sleep(settle_seconds)
+
 
 SET_EDITOR_VALUE_SCRIPT = """
 const editor = arguments[0];
@@ -486,10 +486,7 @@ def prepare_other_information(driver, prepared_comment: str, timeout_seconds: in
         editor = WebDriverWait(driver, timeout_seconds).until(find_editor_control)
     except TimeoutException:
         diagnostic = describe_editor_candidates(driver)
-        raise ValueError(
-            "No apareció el editor de 'Otra información'. "
-            f"Diagnóstico: {diagnostic}"
-        ) from None
+        raise ValueError(f"No apareció el editor de 'Otra información'. Diagnóstico: {diagnostic}") from None
     try:
         # Lightning termina de inicializar el componente ~2s después de abrir el
         # editor; escribir antes de eso deja que el framework pise el valor.

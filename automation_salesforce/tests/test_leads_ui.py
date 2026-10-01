@@ -36,10 +36,19 @@ class LeadsUiTests(unittest.TestCase):
         rendered = render_leads_ui(12, [self.lead])
 
         expected = [
-            "Fecha de creación", "Campaña", "Estado del candidato",
-            "Preferred mean of contact", "Propietario", "Sub-tipo de interés",
-            "Nombre y apellido", "Teléfono móvil", "Nombre corto concesionario",
-            "Vehículo de interés", "Correo", "Lead ID", "Otra información",
+            "Fecha de creación",
+            "Campaña",
+            "Estado del candidato",
+            "Preferred mean of contact",
+            "Propietario",
+            "Sub-tipo de interés",
+            "Nombre y apellido",
+            "Teléfono móvil",
+            "Nombre corto concesionario",
+            "Vehículo de interés",
+            "Correo",
+            "Lead ID",
+            "Otra información",
         ]
         self.assertEqual([label for _, label in available_columns([lead_payload(self.lead)])], expected)
         for label in expected:

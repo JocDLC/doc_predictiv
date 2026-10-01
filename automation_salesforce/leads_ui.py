@@ -47,9 +47,7 @@ def lead_payload(lead: VisibleLead) -> dict[str, object]:
     source = dict(lead.details)
     details = {field: source_value(source, field) for field, _ in DISPLAY_COLUMNS}
     details["lead_id"] = lead.lead_id
-    details["nombre"] = " ".join(
-        part for part in (details["nombre"], source_value(source, "apellido")) if part
-    )
+    details["nombre"] = " ".join(part for part in (details["nombre"], source_value(source, "apellido")) if part)
     return {"details": details}
 
 
@@ -77,7 +75,9 @@ def render_leads_ui(visible_row_count: int, leads: list[VisibleLead]) -> str:
 <script>const leads={safe_payload},columns={safe_columns},filterFields={safe_filters};function escapeHtml(value){{const node=document.createElement('span');node.textContent=value||'';return node.innerHTML}}function filters(){{const box=document.getElementById('filters');filterFields.filter(key=>columns.some(c=>c[0]===key)).forEach(key=>{{const select=document.createElement('select');select.id=key;select.append(new Option(`Todos: ${{columns.find(c=>c[0]===key)[1]}}`,''));[...new Set(leads.map(l=>l.details[key]).filter(Boolean))].sort().forEach(value=>select.add(new Option(value,value)));select.addEventListener('input',render);box.append(select)}})}}function render(){{const query=document.getElementById('search').value.toLowerCase();const result=leads.filter(lead=>filterFields.every(key=>!document.getElementById(key)||!document.getElementById(key).value||lead.details[key]===document.getElementById(key).value)&&JSON.stringify(lead.details).toLowerCase().includes(query));document.getElementById('headers').innerHTML=columns.map(([,label])=>`<th>${{escapeHtml(label)}}</th>`).join('');document.getElementById('rows').innerHTML=result.map(lead=>`<tr>${{columns.map(([key])=>`<td>${{escapeHtml(lead.details[key])}}</td>`).join('')}}</tr>`).join('')||`<tr><td colspan="${{Math.max(columns.length,1)}}">Sin coincidencias.</td></tr>`}}document.getElementById('search').addEventListener('input',render);document.getElementById('wrap').addEventListener('change',event=>{{document.querySelector('table').classList.toggle('compact',!event.target.checked)}});filters();render();</script></body></html>"""
 
 
-def write_leads_ui(visible_row_count: int, leads: list[VisibleLead], output_directory: Path, generated_at: datetime | None = None) -> Path:
+def write_leads_ui(
+    visible_row_count: int, leads: list[VisibleLead], output_directory: Path, generated_at: datetime | None = None
+) -> Path:
     output_directory.mkdir(parents=True, exist_ok=True)
     timestamp = generated_at or datetime.now()
     path = output_directory / f"leads_sin_gestion_{timestamp:%Y%m%d_%H%M%S}.html"

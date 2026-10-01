@@ -99,7 +99,9 @@ def main(argv: list[str] | None = None) -> int:
                 screenshot = capture_failure(driver, screenshot_directory, "correccion_error")
                 logger.error(
                     "Error leyendo Lead para corrección: lead=%s captura=%s motivo=%s",
-                    mask_lead_id(lead_id), screenshot.name, error,
+                    mask_lead_id(lead_id),
+                    screenshot.name,
+                    error,
                 )
                 print("No se pudo leer el Lead. Captura local guardada.")
                 record_result(results_path, correction_entry(lead_id, "error"))
@@ -132,7 +134,9 @@ def main(argv: list[str] | None = None) -> int:
                 screenshot = capture_failure(driver, screenshot_directory, "correccion_error")
                 logger.error(
                     "Error aplicando corrección: lead=%s captura=%s motivo=%s",
-                    mask_lead_id(lead_id), screenshot.name, error,
+                    mask_lead_id(lead_id),
+                    screenshot.name,
+                    error,
                 )
                 print("No se pudo aplicar la corrección. Captura local guardada.")
                 record_result(results_path, correction_entry(lead_id, "error"))
@@ -151,10 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         release_driver(driver)
 
-    print(
-        f"\nResumen: {stats['corregido']} corregidos, "
-        f"{stats['conflicto']} conflictos, {stats['error']} errores."
-    )
+    print(f"\nResumen: {stats['corregido']} corregidos, {stats['conflicto']} conflictos, {stats['error']} errores.")
     print(f"Resultados: {results_path}")
     return 0
 

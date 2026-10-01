@@ -2,10 +2,23 @@
 node_modules/
 __pycache__/
 .venv/
+.coverage
+coverage.xml
+htmlcov/
+.hypothesis/
+.cosmic-ray/
+cosmic-ray.sqlite
 
 # Builds
 dist/
 build/
+.archify/
+
+# Herramientas instaladas en el IDE (se reinstalan, no son código del proyecto)
+.devin/skills/
+
+# Artefacto de redirect accidental (nombre reservado de Windows)
+nul
 
 # IDE / SO
 .DS_Store
@@ -27,3 +40,7 @@ automation_salesforce/screenshots/
 automation_salesforce/profiles/
 automation_salesforce/queues/
 automation_salesforce/ui_output/
+_respaldo/
+
+# Reportes de verificacion de PC (por equipo)
+reporte_verificacion_pc.txt

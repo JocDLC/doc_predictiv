@@ -9,6 +9,6 @@ Estas son las versiones mínimas y fijadas que usa el arnés. No usar `@latest` 
 | Git | `2.40` | Para worktrees y hooks. |
 | `@fission-ai/openspec` | `1.6.0` | Instalación global vía `npm install -g @fission-ai/openspec@1.6.0`. |
 | `graphifyy` | `0.10.0` | Instalación vía `pipx install graphifyy==0.10.0`. |
-| `uv` | `latest` | Para MCP server de Graphify. Se fijará tras validar una versión estable. |
+| `uv` | `0.11.25` | Para MCP server de Graphify; versión validada en Windows. |
 
-> Nota: el bootstrap actual usa `@latest` porque OpenSpec y Graphify aún no tienen versiones LTS estables. La primera versión fija se escribe en `VERSIONS.md` después de que `verify-setup` pase en al menos una máquina de producción.
+Todas las instalaciones automatizadas deben usar estas versiones fijadas.

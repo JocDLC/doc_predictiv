@@ -1,0 +1,6 @@
+-r requirements.txt
+
+coverage==7.16.1
+cosmic-ray==8.7.0
+hypothesis==6.168.3
+ruff==0.16.6

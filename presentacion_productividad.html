@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optimización de Documentación Predictiva — Renault GBS Colombia</title>
+<style>
+  :root {
+    --bg: #0f1620;
+    --panel: #17222f;
+    --panel-2: #1d2c3d;
+    --ink: #e8eef5;
+    --muted: #93a5b8;
+    --accent: #4da3ff;
+    --good: #34c77b;
+    --warn: #f0a636;
+    --line: #2b3c50;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  /* ===== Deck ===== */
+  .deck { position: relative; height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 56px 60px 84px;
+  }
+  .slide.active { display: flex; animation: fadeIn .35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  /* margin:auto centra sin cortar el contenido cuando es más alto que la pantalla */
+  .slide-inner { width: 100%; max-width: 1080px; max-height: 100%; margin: auto; overflow-y: auto; }
+  @media (max-height: 820px) {
+    .slide { padding: 40px 56px 76px; }
+    h2 { margin-bottom: 12px; }
+    .card { padding: 16px 18px; }
+    .card .big { font-size: 1.7rem; }
+  }
+
+  /* Portada */
+  .cover { text-align: center; }
+  .logo { width: 96px; height: auto; }
+  .wordmark { letter-spacing: .38em; font-weight: 600; font-size: .95rem; margin: 8px 0 22px; }
+
+  h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.15; }
+  h2 { font-size: 1.8rem; font-weight: 650; margin-bottom: 20px; color: var(--accent); }
+  h3 { font-size: 1.1rem; margin-bottom: 8px; }
+  p, li, td, th { font-size: 1rem; }
+  .muted { color: var(--muted); }
+  .lead-sub { font-size: 1.15rem; color: var(--muted); margin-top: 16px; max-width: 760px; }
+
+  .tag {
+    display: inline-block;
+    font-size: .72rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 3px 10px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--muted);
+  }
+  .tag.declared { border-color: var(--warn); color: var(--warn); }
+  .tag.measured { border-color: var(--good); color: var(--good); }
+  .tag.projection { border-color: var(--accent); color: var(--accent); }
+
+  .grid { display: grid; gap: 18px; }
+  .cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .cols-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 820px) { .cols-3, .cols-2 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .card .big { font-size: 2.1rem; font-weight: 700; }
+  .card .unit { font-size: .95rem; color: var(--muted); }
+  .card.hl { border-color: var(--accent); background: var(--panel-2); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: .74rem; letter-spacing: .05em; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.total td { border-top: 2px solid var(--accent); font-weight: 700; }
+
+  .bar-row { display: grid; grid-template-columns: 200px 1fr 100px; align-items: center; gap: 14px; margin: 12px 0; }
+  .bar-track { background: var(--panel-2); border-radius: 8px; height: 30px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 8px; background: var(--accent); }
+  .bar-fill.g { background: var(--good); }
+  .bar-fill.w { background: var(--warn); }
+  .bar-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+  @media (max-width: 700px) { .bar-row { grid-template-columns: 120px 1fr 75px; } }
+
+  ul.checks { list-style: none; }
+  ul.checks li { padding: 6px 0 6px 28px; position: relative; }
+  ul.checks li::before { content: "✓"; position: absolute; left: 0; top: 6px; color: var(--good); font-weight: 700; }
+
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--panel-2);
+    padding: 13px 18px;
+    border-radius: 0 10px 10px 0;
+    margin-top: 18px;
+    color: var(--muted);
+    font-size: .93rem;
+  }
+  .mono { font-family: Consolas, monospace; font-size: .92em; }
+
+  /* ===== Navegación ===== */
+  .nav {
+    position: fixed; bottom: 22px; right: 26px;
+    display: flex; align-items: center; gap: 10px; z-index: 10;
+  }
+  .nav button {
+    background: var(--panel-2); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px;
+    width: 44px; height: 40px; font-size: 1.15rem;
+    cursor: pointer;
+  }
+  .nav button:hover { border-color: var(--accent); color: var(--accent); }
+  .nav .counter { color: var(--muted); font-size: .9rem; min-width: 52px; text-align: center; }
+
+  .progress {
+    position: fixed; top: 0; left: 0; height: 4px;
+    background: var(--accent); z-index: 10;
+    transition: width .3s ease;
+  }
+  .hint-keys {
+    position: fixed; bottom: 26px; left: 26px;
+    color: var(--muted); font-size: .8rem; z-index: 10;
+  }
+
+  @media print {
+    html, body { height: auto; overflow: visible; }
+    .slide { position: static; display: flex; page-break-after: always; min-height: 100vh; }
+    .nav, .progress, .hint-keys { display: none; }
+    body { background: #fff; color: #111; }
+    .card, .note { background: #f4f6f9; border-color: #d5dbe4; }
+    .bar-track { background: #e8ecf1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+<div class="deck" id="deck">
+
+<!-- 1. Portada -->
+<section class="slide">
+  <div class="slide-inner cover">
+    <svg class="logo" viewBox="0 0 954 1255" role="img" aria-label="Logo Renault">
+      <path fill="#4da3ff" fill-rule="evenodd" clip-rule="evenodd" d="M953.5000219726562,626.9100024414063 l-334.98,-626.91 h-94.51 L190.07002197265626,626.9100024414063 l215.27,403.24 l47.25,-89.26 L285.6300219726562,626.9100024414063 l285.63,-536.6 l286.68,536.6 l-333.93,627.96 h94.51 L953.5000219726562,626.9100024414063 zM762.3800219726563,626.9100024414063 L548.1600219726563,224.72000244140622 l-48.3,89.26 l168.02,312.93 l-286.68,537.65 L94.5100219726562,626.9100024414063 l334.98,-626.91 h-95.56 L0.000021972656213620212,626.9100024414063 l333.93,627.96 h94.51 L762.3800219726563,626.9100024414063 z"/>
+    </svg>
+    <div class="wordmark">RENAULT</div>
+    <p class="tag">Renault GBS Colombia · Gestión de Campañas Predictivas</p>
+    <h1 style="margin-top:20px;">Optimización de la documentación<br>de intentos de llamada</h1>
+    <p class="lead-sub" style="margin-left:auto; margin-right:auto;">
+      De copiar manualmente cada intento desde Wolkvox a Salesforce,
+      a un flujo local asistido y automatizado que reduce el tiempo por Lead
+      a <strong>~15 segundos medidos</strong>.
+    </p>
+    <p class="muted" style="margin-top:30px;">
+      Muestra del bot medida el 28/09/2026 · Procesamiento 100% local —
+      ningún dato de cliente sale del equipo.
+    </p>
+  </div>
+</section>
+
+<!-- 2. El punto de partida -->
+<section class="slide">
+  <div class="slide-inner">
+    <h2>Punto de partida</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Proceso manual original</h3>
+        <p>Para cada Lead, el auxiliar buscaba el registro en Salesforce a
+        partir de la base entregada por Wolkvox, ubicaba el campo
+        <em>Otra información</em>, componía el comentario
+        (<span class="mono">N INT</span> + resultado + fecha) y lo pegaba a mano.</p>
+        <p style="margin-top:14px;"><span class="tag declared">Rango declarado</span>
+        &nbsp;<strong>40–55 s por Lead</strong></p>
+      </div>
+      <div class="card">
+        <h3>Problemas que generaba</h3>
+        <ul class="checks">
+          <li>Búsqueda Lead por Lead dentro de Salesforce.</li>
+          <li>Composición manual del texto, propensa a errores de formato.</li>
+          <li>Numeración de intentos (INT) verificada a ojo.</li>
+          <li>Sin trazabilidad de qué quedó documentado.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Tres etapas -->
+<section class="slide">
+  <div class="slide-inner">
+    <h2>Tres etapas de optimización</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Modalidad</th>
+          <th style="text-align:right">Tiempo por Lead</th>
+          <th style="text-align:right">Leads por hora</th>
+          <th>Fuente</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Manual sin aplicación</td>
+          <td class="num">40–55 s</td>
+          <td class="num">65–90</td>
+          <td><span class="tag declared">declarado</span></td>
+        </tr>
+        <tr>
+          <td>App + documentación manual asistida<br>
+              <span class="muted" style="font-weight:400">la app ordena los intentos,
+              genera el comentario y abre el Lead automáticamente</span></td>
+          <td class="num">23–29 s</td>
+          <td class="num">124–157</td>
+          <td><span class="tag declared">declarado</span></td>
+        </tr>
+        <tr class="total">
+          <td>App + bot supervisado<br>
+              <span class="muted" style="font-weight:400">el bot escribe, guarda y
+              verifica cada Lead en Salesforce</span></td>
+          <td class="num">~15 s</td>
+          <td class="num">~227</td>
+          <td><span class="tag measured">medido</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">
+      Los dos primeros valores son rangos operativos declarados por el equipo.
+      El valor del bot corresponde a una <strong>muestra real medida</strong>
+      (n = 10 Leads, 28/09/2026): promedio 15,8 s, mediana 15,0 s,
+      rango 14,1–22,3 s, 100% de guardados verificados.
+    </div>
+  </div>
+</section>
+
+<!-- 4. Comparación visual -->
+<section class="slide">
+  <div class="slide-inner">
+    <h2>Comparación visual</h2>
+    <p class="muted" style="margin-bottom:16px;">Segundos por Lead (puntos medios de los rangos declarados vs. media medida del bot).</p>
+
+    <div class="bar-row">
+      <div>Manual sin app</div>
+      <div class="bar-track"><div class="bar-fill w" style="width:100%"></div></div>
+      <div class="bar-val">47,5 s</div>
+    </div>
+    <div class="bar-row">
+      <div>App + manual</div>
+      <div class="bar-track"><div class="bar-fill" style="width:55%"></div></div>
+      <div class="bar-val">26,0 s</div>
+    </div>
+    <div class="bar-row">
+      <div><strong>App + bot</strong></div>
+      <div class="bar-track"><div class="bar-fill g" style="width:33%"></div></div>
+      <div class="bar-val">15,8 s</div>
+    </div>
+
+    <div class="grid cols-3" style="margin-top:22px;">
+      <div class="card hl">
+        <div class="big">−66,7%</div>
+        <div class="unit">tiempo por Lead vs. proceso manual original</div>
+      </div>
+      <div class="card hl">
+        <div class="big">~3×</div>
+        <div class="unit">capacidad por hora vs. proceso manual</div>
+      </div>
+      <div class="card hl">
+        <div class="big">−39%</div>
+        <div class="unit">tiempo por Lead vs. app + documentación manual</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Cómo funciona -->
+<section class="slide">
+  <div class="slide-inner">
+    <h2>Cómo funciona la documentación automática</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Flujo por Lead (~15 s)</h3>
+        <ul class="checks">
+          <li>Abre el Lead en Salesforce por su URL directa.</li>
+          <li>Lee el campo <em>Comentario</em>: si dice
+            <span class="mono">Lead Duplicado</span>, lo omite y lo marca
+            para revisión humana.</li>
+          <li>Lee <em>Otra información</em> y calcula el próximo INT.</li>
+          <li>Escribe el comentario con el formato exacto y pulsa Guardar.</li>
+          <li>Relee el campo y verifica que el texto quedó persistido.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Desglose del tiempo medido</h3>
+        <table>
+          <tbody>
+            <tr><td>Navegación y carga de Salesforce</td><td class="num">~4,4 s</td></tr>
+            <tr><td>Editor Lightning (con esperas fijas)</td><td class="num">~3,8 s</td></tr>
+            <tr><td>Guardar + persistencia</td><td class="num">~6,0 s</td></tr>
+            <tr><td>Lecturas, chequeo de duplicado, verificación</td><td class="num">~1,5 s</td></tr>
+          </tbody>
+        </table>
+        <p class="muted" style="margin-top:10px;">El tiempo varía con la velocidad
+        de Salesforce: en corridas normales ~15 s; cuando la plataforma anda
+        lenta puede subir a ~20 s.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Impacto por hora -->
+<section class="slide">
+  <div class="slide-inner">
+    <h2>Impacto en la operación</h2>
+    <div class="grid cols-3">
+      <div class="card">
+        <div class="big">~76</div>
+        <div class="unit">Leads documentados <strong>por hora</strong><br>
+        proceso manual original<br><span class="tag declared">declarado</span></div>
+      </div>
+      <div class="card">
+        <div class="big">~138</div>
+        <div class="unit">Leads documentados <strong>por hora</strong><br>
+        app + documentación manual<br><span class="tag declared">declarado</span></div>
+      </div>
+      <div class="card hl">
+        <div class="big">~227</div>
+        <div class="unit">Leads documentados <strong>por hora</strong><br>
+        app + bot<br><span class="tag measured">medido</span></div>
+      </div>
+    </div>
+    <div class="note">
+      La capacidad por hora del bot (227) es la medida <strong>efectiva</strong>
+      del lote — ya incluye las pausas del ciclo. Fórmula de referencia:
+      <span class="mono">3600 ÷ segundos por Lead</span>. Con ~56 Leads por
+      campaña, un lote pasa de ~44 minutos manuales a ~15 minutos con el bot.
+    </div>
+  </div>
+</section>
+
+<!-- 7. Seguridad -->
+<section class="slide">
+  <div class="slide-inner">
+    <h2>Controles y seguridad</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Datos</h3>
+        <ul class="checks">
+          <li>Todo el procesamiento ocurre en el equipo del auxiliar.</li>
+          <li>Ningún dato de cliente se envía a servidores externos.</li>
+          <li>No se usa la API de Salesforce ni credenciales guardadas.</li>
+          <li>Login y doble factor los hace cada usuario, una vez por sesión.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Escritura controlada</h3>
+        <ul class="checks">
+          <li>El bot modifica únicamente el campo <em>Otra información</em>.</li>
+          <li>Guarda con el botón Guardar del formulario activo — nada más.</li>
+          <li>Cada guardado se relee y verifica antes de continuar.</li>
+          <li>Leads duplicados o con error quedan marcados para revisión,
+          nunca se pierden ni se repiten.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Despliegue -->
+<section class="slide">
+  <div class="slide-inner">
+    <h2>Propuesta de despliegue</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Modelo</h3>
+        <p>Paquete portátil local por auxiliar (~18 usuarios): la interfaz, el
+        runner del bot y las instrucciones distribuidas por SharePoint
+        (como repositorio, no como host de ejecución).</p>
+      </div>
+      <div class="card">
+        <h3>Por qué local</h3>
+        <ul class="checks">
+          <li>Cada usuario trabaja con su propia sesión de Salesforce.</li>
+          <li>Sin centralizar credenciales ni sesiones.</li>
+          <li>Sin dependencia de servidores corporativos adicionales.</li>
+          <li>Despliegue más rápido que reconstruir en Power Apps.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">
+      Próximos pasos: pilotear el paquete en el PC de un auxiliar, ajustar la
+      guía de instalación y luego distribuir al equipo completo.
+    </div>
+    <p class="muted" style="margin-top:26px; font-size:.85rem; text-align:center;">
+      Gestión de Campañas Predictivas — Renault GBS Colombia ·
+      Datos medidos el 28/09/2026 · Procesamiento 100% local
+    </p>
+  </div>
+</section>
+
+</div>
+
+<div class="hint-keys">← → para navegar · Home/Fin para ir al inicio/final</div>
+<nav class="nav">
+  <button id="prevBtn" title="Anterior">‹</button>
+  <span class="counter" id="counter">1 / 8</span>
+  <button id="nextBtn" title="Siguiente">›</button>
+</nav>
+
+<script>
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const total = slides.length;
+  let current = 0;
+
+  function showSlide(index) {
+    current = Math.max(0, Math.min(total - 1, index));
+    slides.forEach((s, i) => s.classList.toggle("active", i === current));
+    document.getElementById("counter").textContent = `${current + 1} / ${total}`;
+    document.getElementById("progress").style.width = `${((current + 1) / total) * 100}%`;
+    document.getElementById("prevBtn").disabled = current === 0;
+    document.getElementById("nextBtn").disabled = current === total - 1;
+  }
+
+  document.getElementById("prevBtn").addEventListener("click", () => showSlide(current - 1));
+  document.getElementById("nextBtn").addEventListener("click", () => showSlide(current + 1));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") showSlide(current + 1);
+    if (e.key === "ArrowLeft" || e.key === "PageUp") showSlide(current - 1);
+    if (e.key === "Home") showSlide(0);
+    if (e.key === "End") showSlide(total - 1);
+  });
+
+  showSlide(0);
+</script>
+</body>
+</html>

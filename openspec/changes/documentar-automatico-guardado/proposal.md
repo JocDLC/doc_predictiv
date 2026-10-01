@@ -35,6 +35,10 @@ qué Leads procesar y muestra el estado de cada uno.
    con una corrección local, el bot relee Salesforce y solo guarda si coincide con
    la última copia conocida por la aplicación. Una diferencia se registra como
    conflicto y nunca se sobrescribe automáticamente.
+7. **Excepción Lead Duplicado**: antes de preparar el editor, el bot lee el
+   campo visible `Comentario`. Si su valor normalizado es exactamente `Lead
+   Duplicado`, no escribe ni guarda en Salesforce, registra `duplicado` y la UI
+   lo deja visible para revisión del operador.
 
 ## Fuera de alcance
 

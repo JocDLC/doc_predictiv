@@ -109,6 +109,29 @@ ni resultados de cola.
 **Then** la UI puede mostrar el campo completo confirmado para revisión local y el
 archivo de resultado conserva solamente metadatos seguros.
 
+### Requirement: REQ-609: Excepción de Lead Duplicado
+
+El runner MUST leer el campo visible `Comentario` antes de preparar la edición.
+Si el valor normalizado del campo es exactamente `Lead Duplicado`, MUST registrar
+el resultado `duplicado`, MUST NOT abrir el editor de `Otra información` y MUST
+NOT escribir ni guardar en Salesforce. La UI MUST mostrar `duplicado` como
+estado para revisión y MUST NOT marcar el Lead como documentado.
+
+#### Scenario: Lead marcado como duplicado
+
+**Given** un Lead cuyo campo `Comentario` visible contiene `Lead Duplicado`.
+**When** el bot procesa la cola en modo `--auto`.
+**Then** el resultado del Lead es `duplicado`.
+**And** el bot no llama a preparar el editor ni a Guardar.
+**And** el Lead continúa visible en la cola y en la UI para validación manual.
+
+#### Scenario: Comentario distinto
+
+**Given** un Lead cuyo campo `Comentario` es vacío o tiene un valor distinto de
+`Lead Duplicado`.
+**When** el bot procesa la cola en modo `--auto`.
+**Then** conserva el flujo existente de preparación, guardado y verificación.
+
 ### Requirement: REQ-608: Corrección centralizada con detección de conflicto
 
 La UI MUST permitir editar localmente un snapshot completo y solicitar su

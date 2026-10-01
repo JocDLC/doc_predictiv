@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Contratos de negocio — Documentador predictivo</title>
+  <style>
+    :root { --bg:#f4f2ec; --surface:#fffdf8; --ink:#16251f; --muted:#5e6b65; --line:#b8c4bd; --brand:#087f5b; --brand2:#d6f5e8; --accent:#b85c1e; --focus:#005fcc; --shadow:0 18px 45px rgba(24,45,36,.12); }
+    [data-theme="dark"] { --bg:#101713; --surface:#18231e; --ink:#f2f7f4; --muted:#b7c4bd; --line:#46564e; --brand:#66ddb2; --brand2:#153f32; --accent:#ffad73; --focus:#8ec5ff; --shadow:0 18px 45px rgba(0,0,0,.35); }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 8% 0%,var(--brand2),transparent 30rem),var(--bg); color:var(--ink); font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    button,a,summary { font:inherit; }
+    button:focus-visible,a:focus-visible,summary:focus-visible { outline:3px solid var(--focus); outline-offset:3px; }
+    .shell { width:min(1440px,calc(100% - 2rem)); margin:auto; padding:2rem 0 4rem; }
+    header { display:flex; gap:2rem; align-items:flex-start; justify-content:space-between; margin-bottom:2rem; }
+    .eyebrow { margin:0 0 .4rem; color:var(--brand); font-weight:800; letter-spacing:.12em; text-transform:uppercase; font-size:.76rem; }
+    h1 { margin:0; max-width:850px; font-size:clamp(2rem,5vw,4.5rem); line-height:1; letter-spacing:-.045em; }
+    .subtitle { max-width:760px; margin:.9rem 0 0; color:var(--muted); font-size:clamp(1rem,2vw,1.25rem); }
+    .toolbar { display:flex; flex-wrap:wrap; gap:.6rem; }
+    .toolbar button,.close { border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--ink); padding:.65rem 1rem; cursor:pointer; }
+    .legend { display:flex; flex-wrap:wrap; gap:1rem; margin:0 0 1.25rem; color:var(--muted); font-size:.9rem; }
+    .legend span::before { content:""; display:inline-block; width:.75rem; height:.75rem; margin-right:.4rem; border-radius:50%; background:var(--brand); }
+    .legend .alt::before { background:var(--accent); }
+    .flow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1.5rem 2rem; list-style:none; padding:0; margin:0; counter-reset:step; }
+    .flow-item { position:relative; min-width:0; counter-increment:step; }
+    .flow-item:not(:last-child)::after { content:"→"; position:absolute; z-index:2; right:-1.45rem; top:50%; color:var(--brand); font-size:1.5rem; font-weight:900; }
+    .flow-item:nth-child(3n):not(:last-child)::after { content:"↓"; right:auto; left:50%; top:auto; bottom:-1.55rem; }
+    .node { width:100%; min-height:180px; display:flex; flex-direction:column; align-items:flex-start; text-align:left; border:1px solid var(--line); border-radius:22px; padding:1.25rem; background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--surface) 86%,var(--brand2))); color:var(--ink); box-shadow:var(--shadow); cursor:pointer; transition:transform .18s,border-color .18s; }
+    .node:hover { transform:translateY(-4px); border-color:var(--brand); }
+    .step { display:flex; align-items:center; gap:.5rem; color:var(--brand); font-size:.82rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+    .step::before { content:counter(step); display:grid; place-items:center; width:1.75rem; height:1.75rem; border-radius:50%; color:var(--surface); background:var(--brand); }
+    .node h2 { margin:.85rem 0 .4rem; font-size:1.22rem; line-height:1.15; }
+    .node p { margin:0; color:var(--muted); }
+    .handoff { margin-top:auto; padding-top:1rem; color:var(--brand); font-size:.82rem; font-weight:750; }
+    .alternatives { margin-top:2.25rem; padding:1.25rem; border:1px dashed var(--accent); border-radius:18px; background:color-mix(in srgb,var(--surface) 88%,transparent); }
+    .alternatives h2 { margin:0 0 .75rem; font-size:1rem; }
+    .route-list { display:flex; flex-wrap:wrap; gap:.55rem; margin:0; padding:0; list-style:none; }
+    .route { border-radius:999px; padding:.45rem .75rem; color:var(--ink); background:color-mix(in srgb,var(--accent) 14%,var(--surface)); font-size:.88rem; }
+    dialog { width:min(760px,calc(100% - 2rem)); max-height:90vh; padding:0; border:1px solid var(--line); border-radius:24px; color:var(--ink); background:var(--surface); box-shadow:var(--shadow); }
+    dialog::backdrop { background:rgba(7,18,13,.66); backdrop-filter:blur(5px); }
+    .dialog-head { position:sticky; top:0; z-index:2; display:flex; justify-content:space-between; gap:1rem; padding:1.25rem 1.4rem; background:var(--surface); border-bottom:1px solid var(--line); }
+    .dialog-head h2 { margin:0; font-size:1.55rem; }
+    .contract { padding:1.4rem; }
+    .purpose { margin-top:0; font-size:1.08rem; }
+    .contract-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .contract-card { padding:1rem; border-radius:16px; background:color-mix(in srgb,var(--brand2) 50%,var(--surface)); }
+    .contract-card h3 { margin:0 0 .5rem; font-size:.95rem; }
+    .contract-card ul { margin:0; padding-left:1.2rem; }
+    details { margin-top:1rem; border-top:1px solid var(--line); padding-top:1rem; }
+    summary { cursor:pointer; color:var(--brand); font-weight:800; }
+    .status { display:inline-block; margin:.8rem 0; padding:.3rem .65rem; border-radius:999px; background:var(--brand2); font-weight:700; }
+    .evidence-list { overflow-wrap:anywhere; }
+    .evidence-list a { color:var(--brand); }
+    footer { margin-top:2rem; color:var(--muted); font-size:.85rem; }
+    .presentation .shell { width:min(1760px,calc(100% - 2rem)); }
+    .presentation header { margin-bottom:1rem; }
+    .presentation .eyebrow,.presentation .subtitle,.presentation footer { display:none; }
+    .presentation .flow { grid-template-columns:repeat(5,minmax(0,1fr)); gap:1rem; }
+    .presentation .node { min-height:220px; font-size:1.08rem; }
+    .presentation .flow-item:nth-child(3n):not(:last-child)::after { content:"→"; left:auto; right:-.9rem; top:50%; bottom:auto; }
+    .presentation .flow-item:nth-child(5n):not(:last-child)::after { content:"↓"; right:auto; left:50%; top:auto; bottom:-1.1rem; }
+    @media (max-width:900px) { .flow { grid-template-columns:repeat(2,minmax(0,1fr)); } .flow-item:nth-child(3n):not(:last-child)::after { content:"→"; left:auto; right:-1.45rem; top:50%; bottom:auto; } .flow-item:nth-child(2n):not(:last-child)::after { content:"↓"; right:auto; left:50%; top:auto; bottom:-1.55rem; } header { flex-direction:column; } }
+    @media (max-width:620px) { .shell { width:min(100% - 1rem,1440px); padding-top:1rem; } .flow,.presentation .flow { grid-template-columns:1fr; } .flow-item:not(:last-child)::after,.presentation .flow-item:not(:last-child)::after { content:"↓" !important; right:auto !important; left:50% !important; top:auto !important; bottom:-1.55rem !important; } .contract-grid { grid-template-columns:1fr; } .node { min-height:0; } }
+    @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto!important; transition:none!important; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <p class="eyebrow">Vista ejecutiva · OpenSpec</p>
+        <h1 id="page-title">Contratos de negocio</h1>
+        <p class="subtitle" id="page-subtitle"></p>
+      </div>
+      <div class="toolbar" aria-label="Opciones de visualización">
+        <button id="theme-toggle" type="button" aria-pressed="false">Tema oscuro</button>
+        <button id="presentation-toggle" type="button" aria-pressed="false">Modo presentación</button>
+      </div>
+    </header>
+    <div class="legend" aria-label="Leyenda">
+      <span>Recorrido principal</span><span class="alt">Rutas de excepción y corrección</span>
+    </div>
+    <ol class="flow" id="business-flow" aria-label="Recorrido de macrofunciones"></ol>
+    <section class="alternatives" aria-labelledby="alternative-title">
+      <h2 id="alternative-title">Qué ocurre cuando el recorrido cambia</h2>
+      <ul class="route-list" id="alternative-routes"></ul>
+    </section>
+    <footer id="revision"></footer>
+  </main>
+
+  <dialog id="contract-dialog" aria-labelledby="contract-title">
+    <div class="dialog-head">
+      <div><p class="eyebrow">Contrato funcional</p><h2 id="contract-title"></h2></div>
+      <button class="close" id="contract-close" type="button" aria-label="Cerrar contrato">Cerrar</button>
+    </div>
+    <div class="contract" id="contract-content"></div>
+  </dialog>
+
+  <script id="business-contract-data" type="application/json">__BUSINESS_CONTRACT_DATA__</script>
+  <script>
+    (() => {
+      "use strict";
+      const data = JSON.parse(document.getElementById("business-contract-data").textContent);
+      const byId = Object.fromEntries(data.macrofunctions.map(item => [item.id, item]));
+      const flow = document.getElementById("business-flow");
+      const routes = document.getElementById("alternative-routes");
+      const dialog = document.getElementById("contract-dialog");
+      const content = document.getElementById("contract-content");
+      const title = document.getElementById("contract-title");
+      let trigger = null;
+
+      const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+      const list = values => `<ul>${values.map(value => `<li>${escapeHtml(value)}</li>`).join("")}</ul>`;
+      const statusLabel = status => ({verified:"Verificado con evidencia",partial:"Verificación parcial",pending:"Pendiente de implementación"})[status];
+
+      document.getElementById("page-title").textContent = data.title;
+      document.getElementById("page-subtitle").textContent = data.subtitle;
+      document.getElementById("revision").textContent = `Revisión ${data.revision} · Artefacto independiente del mapa técnico`;
+
+      data.macrofunctions.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.className = "flow-item";
+        const handoff = data.relationships.find(link => link.kind === "primary" && link.from === item.id);
+        const handoffText = handoff ? `<span class="handoff">Continúa con: ${escapeHtml(handoff.label)}</span>` : "";
+        li.innerHTML = `<button class="node" type="button" data-contract="${escapeHtml(item.id)}" aria-label="Abrir contrato: ${escapeHtml(item.name)}"><span class="step">Etapa ${index + 1}</span><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.summary)}</p>${handoffText}</button>`;
+        flow.appendChild(li);
+      });
+
+      data.relationships.filter(link => link.kind !== "primary").forEach(link => {
+        const li = document.createElement("li");
+        li.className = `route route-${link.kind}`;
+        li.textContent = `${byId[link.from].name} → ${link.label} → ${byId[link.to].name}`;
+        routes.appendChild(li);
+      });
+
+      const evidenceItems = (items, emptyLabel) => items.length
+        ? `<ul class="evidence-list">${items.map(path => `<li><code>${escapeHtml(path)}</code></li>`).join("")}</ul>`
+        : `<p>${escapeHtml(emptyLabel)}</p>`;
+
+      function openContract(item, button) {
+        trigger = button;
+        title.textContent = item.name;
+        const specItems = item.spec_refs.map((ref, index) => {
+          const anchor = `spec-${item.id}-${index + 1}`;
+          return `<li id="${escapeHtml(anchor)}"><a href="#${escapeHtml(anchor)}">${escapeHtml(ref.requirement)}</a><br><small>${ref.scenarios.map(escapeHtml).join(" · ")}</small><br><small>Fuente local: ${escapeHtml(ref.path)}</small></li>`;
+        }).join("");
+        content.innerHTML = `<p class="purpose">${escapeHtml(item.purpose)}</p>
+          <div class="contract-grid">
+            <section class="contract-card"><h3>Qué recibe</h3>${list(item.inputs)}</section>
+            <section class="contract-card"><h3>Qué entrega</h3>${list(item.outputs)}</section>
+            <section class="contract-card"><h3>Reglas de negocio</h3>${list(item.rules)}</section>
+            <section class="contract-card"><h3>Si algo falla</h3>${list(item.failure_behavior)}</section>
+          </div>
+          <details><summary>Ver contrato OpenSpec</summary><ul class="evidence-list">${specItems}</ul></details>
+          <details><summary>Ver evidencia técnica</summary><span class="status">${escapeHtml(statusLabel(item.verification_status))}</span><h3>Implementación</h3>${evidenceItems(item.implementation_refs,"Evidencia de implementación pendiente.")}<h3>Pruebas</h3>${evidenceItems(item.test_refs,"Evidencia de pruebas pendiente.")}</details>`;
+        dialog.showModal();
+      }
+
+      flow.addEventListener("click", event => {
+        const button = event.target.closest("[data-contract]");
+        if (button) openContract(byId[button.dataset.contract], button);
+      });
+      document.getElementById("contract-close").addEventListener("click", () => dialog.close());
+      dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
+      dialog.addEventListener("close", () => { if (trigger) trigger.focus(); });
+
+      document.getElementById("theme-toggle").addEventListener("click", event => {
+        const dark = document.documentElement.dataset.theme !== "dark";
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        event.currentTarget.setAttribute("aria-pressed", String(dark));
+        event.currentTarget.textContent = dark ? "Tema claro" : "Tema oscuro";
+      });
+      document.getElementById("presentation-toggle").addEventListener("click", event => {
+        const active = document.body.classList.toggle("presentation");
+        event.currentTarget.setAttribute("aria-pressed", String(active));
+        event.currentTarget.textContent = active ? "Vista normal" : "Modo presentación";
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -228,9 +228,7 @@ class ReportReaderTests(unittest.TestCase):
                 FakeLink("https://example.invalid/lightning/r/Lead/a1B000000000001AAA/view"),
             ]
         )
-        invalid_row = FakeRow(
-            links=[FakeLink("https://example.invalid/lightning/r/Lead/not-a-salesforce-id/view")]
-        )
+        invalid_row = FakeRow(links=[FakeLink("https://example.invalid/lightning/r/Lead/not-a-salesforce-id/view")])
         no_link_row = FakeRow()
         data_attribute_row = FakeRow(attributes={"data-recordid": "a1B000000000002AAA"})
 
@@ -240,13 +238,7 @@ class ReportReaderTests(unittest.TestCase):
         self.assertEqual(extract_lead_id(data_attribute_row), "a1B000000000002AAA")
 
     def test_extract_lead_id_supports_configurable_salesforce_object(self):
-        row = FakeRow(
-            links=[
-                FakeLink(
-                    "https://example.invalid/lightning/r/Prospecto__c/a1B000000000003AAA/view"
-                )
-            ]
-        )
+        row = FakeRow(links=[FakeLink("https://example.invalid/lightning/r/Prospecto__c/a1B000000000003AAA/view")])
 
         lead_id = extract_lead_id(row, record_object_api_name="Prospecto__c")
 
@@ -257,23 +249,15 @@ class ReportReaderTests(unittest.TestCase):
         duplicate_dom_row = VisibleLead("00Q000000000001AAA", "2026-09-09")
         second_lead = VisibleLead("00Q000000000002AAA", "2026-09-09")
 
-        unique_leads = deduplicate_visible_leads(
-            [first_lead, duplicate_dom_row, second_lead]
-        )
+        unique_leads = deduplicate_visible_leads([first_lead, duplicate_dom_row, second_lead])
 
         self.assertEqual(unique_leads, [first_lead, second_lead])
 
     def test_reader_includes_date_position_and_status_in_local_report_data(self):
-        other_owner_row = FakeRow(
-            cells=[FakeCell("2026-09-01"), FakeCell("OTRO_PROPIETARIO")]
-        )
+        other_owner_row = FakeRow(cells=[FakeCell("2026-09-01"), FakeCell("OTRO_PROPIETARIO")])
         qualifying_row = FakeRow(
             cells=[FakeCell("2026-09-02"), FakeCell("AR_LEAD_QUALIF")],
-            links=[
-                FakeLink(
-                    "https://example.invalid/lightning/r/Lead/00Q000000000001AAA/view"
-                )
-            ],
+            links=[FakeLink("https://example.invalid/lightning/r/Lead/00Q000000000001AAA/view")],
         )
         report_table = FakeTable(["Fecha de creación", "Propietario"], row_count=0)
         report_table.rows = [other_owner_row, qualifying_row]
@@ -298,11 +282,7 @@ class ReportReaderTests(unittest.TestCase):
     def test_reader_finds_owner_when_lightning_cells_are_not_header_aligned(self):
         qualifying_row = FakeRow(
             cells=[FakeCell("2026-09-02"), FakeCell("AR_LEAD_QUALIF")],
-            links=[
-                FakeLink(
-                    "https://example.invalid/lightning/r/Lead/00Q000000000003AAA/view"
-                )
-            ],
+            links=[FakeLink("https://example.invalid/lightning/r/Lead/00Q000000000003AAA/view")],
         )
         report_table = FakeTable(["Propietario", "Fecha de creación"], row_count=0)
         report_table.rows = [qualifying_row]
@@ -314,17 +294,13 @@ class ReportReaderTests(unittest.TestCase):
         self.assertEqual([lead.lead_id for lead in leads], ["00Q000000000003AAA"])
 
     def test_reader_uses_lead_id_column_when_row_has_no_record_link(self):
-        qualifying_row = FakeRow(
-            cells=[FakeCell("AR_LEAD_QU\nALIF"), FakeCell("00QbD00000000004AA")]
-        )
+        qualifying_row = FakeRow(cells=[FakeCell("AR_LEAD_QU\nALIF"), FakeCell("00QbD00000000004AA")])
         report_table = FakeTable(["Propietario del candidato", "Lead ID"], row_count=0)
         report_table.rows = [qualifying_row]
         report_table.role_rows = report_table.rows
         driver = FakeFrameDriver(main_tables=[], frame_tables=[[report_table]])
 
-        _, leads = read_visible_unassigned_leads(
-            driver, timeout_seconds=1, field_aliases={"lead_id": ["Lead ID"]}
-        )
+        _, leads = read_visible_unassigned_leads(driver, timeout_seconds=1, field_aliases={"lead_id": ["Lead ID"]})
 
         self.assertEqual([lead.lead_id for lead in leads], ["00QbD00000000004AA"])
 

@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from queue_loader import load_queue
+from queue_loader import load_queue, load_queue_file
 
 VALID_LEAD = {
     "lead_id": "00Q000000000001AAA",
@@ -75,6 +75,31 @@ class QueueLoaderTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "JSON"):
             load_queue(str(path), self.queue_directory)
+
+    def test_load_queue_file_returns_run_identity(self):
+        path = self.write_queue(
+            {
+                "generated_at": "t",
+                "source_file": "predictivo.csv",
+                "run_id": "run_20261001T000000Z_ab12cd",
+                "leads": [VALID_LEAD],
+            },
+            name="run_20261001T000000Z_ab12cd.json",
+        )
+
+        queue_file = load_queue_file(str(path), self.queue_directory)
+
+        self.assertEqual(queue_file["run_id"], "run_20261001T000000Z_ab12cd")
+        self.assertEqual(queue_file["source_file"], "predictivo.csv")
+        self.assertEqual(len(queue_file["leads"]), 1)
+
+    def test_load_queue_file_tolerates_legacy_queue_without_run_id(self):
+        path = self.write_queue({"leads": [VALID_LEAD]})
+
+        queue_file = load_queue_file(str(path), self.queue_directory)
+
+        self.assertEqual(queue_file["run_id"], "")
+        self.assertEqual(queue_file["source_file"], "")
 
 
 if __name__ == "__main__":

@@ -39,8 +39,7 @@ def print_preparation_summary(
 
 def confirm_preparation() -> bool:
     confirmation = input(
-        "Se abrirá y completará únicamente 'Otra información', sin guardar. "
-        "Escribí PREPARAR para continuar: "
+        "Se abrirá y completará únicamente 'Otra información', sin guardar. Escribí PREPARAR para continuar: "
     )
     return confirmation.strip() == "PREPARAR"
 

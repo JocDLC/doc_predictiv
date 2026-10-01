@@ -40,13 +40,17 @@ def _validate_lead(lead: object, lead_index: int) -> dict[str, object]:
     return {
         "lead_id": lead_id,
         "attempts": [
-            _validate_attempt(attempt, lead_index, attempt_index)
-            for attempt_index, attempt in enumerate(attempts)
+            _validate_attempt(attempt, lead_index, attempt_index) for attempt_index, attempt in enumerate(attempts)
         ],
     }
 
 
-def load_queue(queue_path: str, queue_directory: Path) -> list[dict[str, object]]:
+def load_queue_file(queue_path: str, queue_directory: Path) -> dict[str, object]:
+    """Lee la cola completa: Leads validados más la identidad de la tanda.
+
+    ``run_id`` y ``source_file`` son opcionales para compatibilidad con las
+    colas históricas que solo traían ``leads``.
+    """
     allowed_directory = queue_directory.resolve()
     candidate_path = Path(queue_path).expanduser().resolve()
     if candidate_path.parent != allowed_directory:
@@ -58,4 +62,15 @@ def load_queue(queue_path: str, queue_directory: Path) -> list[dict[str, object]
     leads = payload.get("leads") if isinstance(payload, dict) else None
     if not isinstance(leads, list) or not leads:
         raise ValueError("La cola no contiene Leads pendientes.")
-    return [_validate_lead(lead, index) for index, lead in enumerate(leads)]
+    return {
+        "leads": [
+            _validate_lead(lead, index) for index, lead in enumerate(leads)
+        ],
+        "run_id": str(payload.get("run_id") or "").strip(),
+        "source_file": str(payload.get("source_file") or "").strip(),
+    }
+
+
+def load_queue(queue_path: str, queue_directory: Path) -> list[dict[str, object]]:
+    """Mantiene el contrato anterior: solo la lista de Leads validados."""
+    return load_queue_file(queue_path, queue_directory)["leads"]

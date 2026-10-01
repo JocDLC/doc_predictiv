@@ -25,6 +25,41 @@ No escribe campos, no guarda, no cierra registros y no automatiza 2FA.
 
 Usar Ctrl+C para detener. No compartir la carpeta de perfil, `config.json`, logs ni capturas.
 
+Para desarrollar o ejecutar el arnés de calidad, instalar las dependencias
+separadas y fijadas con `python -m pip install -r requirements-dev.txt`. Este
+archivo incluye las dependencias de ejecución y añade lint, cobertura, pruebas
+generativas y mutación selectiva; ninguna de esas herramientas participa en la
+ejecución normal de la aplicación.
+
+## Arnés de calidad
+
+Todos los comandos se ejecutan desde `automation_salesforce/` y son locales. El
+arnés no abre navegadores ni accede a Salesforce por sí mismo.
+
+```powershell
+python harness.py format-check       # formato Ruff sin modificar archivos
+python harness.py lint               # errores E4/E7/E9/F
+python harness.py compile            # compilación de código y tests
+python harness.py test               # suite completa
+python harness.py coverage           # líneas y ramas, sin gate durante la línea base
+python harness.py verify             # formato + lint + compile + coverage + OpenSpec
+```
+
+Las capas también se pueden ejecutar de forma independiente:
+
+```powershell
+python harness.py unit
+python harness.py contract
+python harness.py integration-local
+python harness.py security-privacy
+python harness.py browser-local
+```
+
+`browser-local` valida inicialmente el propio harness sin abrir un navegador;
+las pruebas reales del HTML local se incorporan en la capa correspondiente de
+la auditoría. Las pruebas contra Salesforce estarán separadas, deshabilitadas
+por defecto y nunca formarán parte de `verify` ni de CI.
+
 ## Lectura del reporte
 
 Ejecutar `python run_report_read_only.py`, completar login y 2FA manualmente y

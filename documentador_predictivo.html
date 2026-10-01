@@ -84,6 +84,13 @@
   .badge.st-borrador { background: #fff4de; color: #b26a00; }
   .badge.st-corregido { background: #e3f2fd; color: #1565c0; }
   .badge.st-error { background: #fdecea; color: #c62828; }
+  .badge.st-duplicado { background: #fff4de; color: #b26a00; }
+  .badge.st-parcial, .badge.st-revision { background: #fff4de; color: #b26a00; }
+  .badge.st-historico { background: #eceff3; color: #6b7280; }
+  .time-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+  .time-normal { background: #e3f3e5; color: #2e7d32; }
+  .time-intermedio { background: #fff4de; color: #b26a00; }
+  .time-alto { background: #fdecea; color: #c62828; }
   .queue-panel { max-width: 900px; margin: 24px auto; background: var(--card); border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
   .queue-panel h2 { margin: 0 0 8px; font-size: 20px; }
   .queue-row { display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
@@ -276,10 +283,11 @@
       <div class="actions">
         <button class="btn primary" id="linkBotFolder">Vincular carpeta del bot</button>
         <button class="btn primary" id="runBot">Ejecutar bot</button>
+        <button class="btn" id="restartBotBrowser" title="Cierra y reabre el navegador dedicado del bot (incluida esta pestaña). Usalo si el bot dice 'corriendo' pero no abre pestañas de Salesforce.">Reiniciar navegador del bot</button>
         <button class="btn" id="clearDocumented" title="Quita de esta lista los leads ya documentados (su registro queda en la lista principal).">Limpiar documentados</button>
         <span class="stats" id="queueSyncState">Carpeta no vinculada</span>
       </div>
-      <p class="hint"><strong>Ejecutar bot</strong> lanza la documentaci&oacute;n autom&aacute;tica (requiere <code>python ui_server.py</code> corriendo una sola vez). Alternativa manual: <code>python run_document_queue.py --auto queues\cola_activa.json</code>. Los estados se actualizan solos.</p>
+      <p class="hint"><strong>Ejecutar bot</strong> lanza la documentaci&oacute;n autom&aacute;tica (requiere el servidor local corriendo: <code>INICIAR.bat</code> o <code>python ui_server.py</code>). Alternativa manual: <code>python run_document_queue.py --auto queues\cola_activa.json</code>. Los estados se actualizan solos.</p>
       <p class="hint"><strong>Reintentos:</strong> los leads con estado <strong>guardado</strong> salen solos de la cola, as&iacute; que <strong>volver a ejecutar el bot reintenta solo los que quedaron en error o pendientes</strong> &mdash; los ya documentados no se repiten. Antes de reintentar, verific&aacute; en Salesforce que el lead con error no haya quedado guardado igual; si se guard&oacute;, marc&aacute; <strong>Documentado</strong> a mano en la lista para que no se dupliquen los intentos.</p>
       <div id="queueList"></div>
       <div class="actions" style="margin-top:16px">
@@ -288,7 +296,7 @@
     </div>
   </section>
 
-  <footer class="note">Gesti&oacute;n de Campa&ntilde;as Predictivas &mdash; procesamiento 100% local (los archivos nunca se suben a ning&uacute;n servidor)</footer>
+  <footer class="note">Gesti&oacute;n de Campa&ntilde;as Predictivas <span id="appVersion"></span>&mdash; procesamiento 100% local (los archivos nunca se suben a ning&uacute;n servidor)</footer>
 </div>
 
 <div id="shortcutModal" class="shortcut-modal hidden" role="dialog" aria-modal="true" aria-labelledby="shortcutTitle">
@@ -327,6 +335,7 @@
 <script>
 "use strict";
 
+const APP_VERSION = "1.0.0";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -504,18 +513,79 @@ function setOffset(lead, n) {
   };
   saveProgress();
 }
+
+// ---------- Identidad por llamada ----------
+// La unidad de documentación es (lead, call_id). Un call_id tiene la forma
+// "1790709220.356411" y solo califica si es el último token de una línea
+// "N INT ..." para no confundir teléfonos, importes o fechas con IDs.
+const CALL_ID_RE = /^\d{5,}\.\d{3,}$/;
+const INT_LINE_RE = /^\s*\d+\s+INT\b/i;
+
+function extractCallIdsFromText(text) {
+  const ids = new Set();
+  for (const line of String(text || "").split("\n")) {
+    if (!INT_LINE_RE.test(line)) continue;
+    const tokens = line.trim().split(/\s+/);
+    const last = tokens[tokens.length - 1] || "";
+    if (CALL_ID_RE.test(last)) ids.add(last);
+  }
+  return ids;
+}
+
+// call_id confirmados para este lead: los registrados por el bot/marca manual
+// más los que aparecen en el snapshot confirmado de "Otra información".
+function documentedCallIdSet(lead) {
+  const p = progress[lead.id];
+  const ids = new Set();
+  if (p && typeof p === "object") {
+    (Array.isArray(p.documentedCallIds) ? p.documentedCallIds : []).forEach(id => ids.add(String(id)));
+    if (typeof p.fieldSnapshot === "string") {
+      extractCallIdsFromText(p.fieldSnapshot).forEach(id => ids.add(id));
+    }
+  }
+  return ids;
+}
+
+// Intentos del CSV actual que todavía no tienen evidencia en Salesforce.
+// Un intento sin call_id no es verificable: queda pendiente para revisión.
+function pendingAttempts(lead) {
+  const documented = documentedCallIdSet(lead);
+  return lead.attempts.filter(attempt => !attempt.callId || !documented.has(attempt.callId));
+}
+
+// Huella del conjunto de intentos que el operador vio al marcar manualmente:
+// si la lista cambia (intento nuevo en el mismo CSV), la marca no se hereda.
+function attemptScope(lead) {
+  return lead.attempts.map(attempt => `${attempt.ts}:${attempt.callId}`).join("|");
+}
+
 function isDone(lead) {
   const p = progress[lead.id];
-  return p === true || (p && typeof p === "object" && p.done);
+  if (p && typeof p === "object" && p.manualDone && p.manualDoneScope === attemptScope(lead)) return true;
+  if (!lead.attempts.length) return false;
+  const documented = documentedCallIdSet(lead);
+  return lead.attempts.every(attempt => attempt.callId && documented.has(attempt.callId));
 }
+
+// Marca manual del operador: cubre los intentos visibles en este momento, sin
+// heredarse a llamadas futuras del mismo lead.
 function setDone(lead, done) {
   const offset = getOffset(lead);
   const p = progress[lead.id];
+  const known = new Set(p && typeof p === "object" && Array.isArray(p.documentedCallIds) ? p.documentedCallIds : []);
+  lead.attempts.forEach(attempt => {
+    if (attempt.callId) done ? known.add(attempt.callId) : known.delete(attempt.callId);
+  });
   progress[lead.id] = {
     ...(p && typeof p === "object" ? p : {}),
     done,
+    manualDone: !!done,
+    manualDoneScope: done ? attemptScope(lead) : null,
+    documentedBy: done ? "manual" : p?.documentedBy,
+    duplicate: false,
     offset,
     overrideOffset: p?.overrideOffset,
+    documentedCallIds: [...known],
     documentedAt: done ? new Date().toISOString() : null,
     manualPastedAt: done ? new Date().toISOString() : null,
     preparedComment: p?.preparedComment ?? docText(lead),
@@ -523,13 +593,38 @@ function setDone(lead, done) {
   saveProgress();
 }
 // Estado de documentación por lead: pendiente | manual | bot.
-// Un snapshot o un resultado "guardado" solo existen tras un guardado verificado
-// del bot; marcar "Documentado" a mano cuenta como documentación manual.
+// "Documentado" exige que TODAS las llamadas del CSV actual tengan evidencia;
+// un resultado o snapshot histórico por sí solo nunca cierra intentos nuevos.
 function docStatus(lead) {
   const p = progress[lead.id];
-  if (p && typeof p === "object" && (p.botDone || p.fieldSnapshot !== undefined)) return "bot";
-  if (isDone(lead)) return "manual";
-  return "pendiente";
+  if (!isDone(lead)) {
+    if (p && typeof p === "object" && p.duplicate) return "duplicado";
+    return "pendiente";
+  }
+  if (p && typeof p === "object" && (p.botDone || p.fieldSnapshot !== undefined) && p.documentedBy !== "manual") return "bot";
+  return "manual";
+}
+
+function timePerformance(elapsedSeconds) {
+  const elapsed = Number(elapsedSeconds);
+  if (!Number.isFinite(elapsed) || elapsed <= 0) return null;
+  const measuredMean = Number(lastRunMetrics?.time_thresholds?.normal_max);
+  const values = Object.values(progress)
+    .map(record => Number(record?.botElapsedSeconds))
+    .filter(value => Number.isFinite(value) && value > 0);
+  const mean = Number.isFinite(measuredMean) && measuredMean > 0
+    ? measuredMean
+    : values.reduce((total, value) => total + value, 0) / values.length;
+  if (!Number.isFinite(mean) || mean <= 0) return null;
+  if (elapsed <= mean) return { className: "time-normal", label: "normal" };
+  if (elapsed <= mean * 1.2) return { className: "time-intermedio", label: "intermedio" };
+  return { className: "time-alto", label: "alto" };
+}
+
+function timeBadgeHtml(record) {
+  const elapsed = Number(record?.botElapsedSeconds);
+  const performance = timePerformance(elapsed);
+  return performance ? `<span class="time-badge ${performance.className}">${elapsed.toFixed(1)} s · ${performance.label}</span>` : "";
 }
 
 function recordCopiedComment(lead) {
@@ -550,7 +645,11 @@ function displayResult(lead, attempt) {
 
 function docText(lead) {
   const offset = getOffset(lead);
-  return lead.attempts
+  // Si el lead está parcialmente documentado solo se componen los intentos
+  // que faltan, para que copiar el texto no duplique llamadas ya hechas.
+  const pending = pendingAttempts(lead);
+  const source = pending.length && pending.length < lead.attempts.length ? pending : lead.attempts;
+  return source
     .map((a, i) => `${offset + i + 1} INT\t${displayResult(lead, a)}\t${a.date}\t${a.time}\t${a.callId}`)
     .join("\n");
 }
@@ -562,17 +661,18 @@ function detectLastInt(text) {
   return max >= 0 ? max : null;
 }
 
-// Cola para el bot de Salesforce: solo Lead ID e intentos de los pendientes.
-// No incluye número INT (el bot lo calcula leyendo Salesforce), nombre ni teléfono.
+// Cola para el bot de Salesforce: solo Lead ID e intentos PENDIENTES (los
+// call_id sin evidencia de documentación). No incluye número INT (el bot lo
+// calcula leyendo Salesforce), nombre ni teléfono.
 function buildBotQueue(onlyIds) {
   return {
     generated_at: new Date().toISOString(),
     source_file: fileName,
     leads: leads
-      .filter(lead => !isDone(lead) && (!onlyIds || onlyIds.has(lead.id)))
+      .filter(lead => !isDone(lead) && pendingAttempts(lead).length > 0 && (!onlyIds || onlyIds.has(lead.id)))
       .map(lead => ({
         lead_id: lead.id,
-        attempts: lead.attempts.map(attempt => ({
+        attempts: pendingAttempts(lead).map(attempt => ({
           result: displayResult(lead, attempt),
           date: attempt.date,
           time: attempt.time,
@@ -651,46 +751,100 @@ async function downloadCorrections() {
   }
 }
 
-// Aplica un snapshot confirmado del bot al progreso local (sin tocar Salesforce).
+// Aplica un snapshot del bot al progreso local (sin tocar Salesforce).
+// El snapshot guarda la copia del campo para revisión y confirma como
+// documentados SOLO los call_id que el texto contiene; nunca marca el lead
+// completo si el CSV trae llamadas nuevas.
 function applySnapshot(snapshot) {
   if (!snapshot || typeof snapshot.lead_id !== "string" || typeof snapshot.field_value !== "string") return false;
+  if (!leads.some(lead => lead.id === snapshot.lead_id)) return false;
   const previous = progress[snapshot.lead_id];
+  const evidenceIds = Array.isArray(snapshot.call_ids)
+    ? snapshot.call_ids.map(String)
+    : [...extractCallIdsFromText(snapshot.field_value)];
+  const known = new Set(
+    previous && typeof previous === "object" && Array.isArray(previous.documentedCallIds)
+      ? previous.documentedCallIds
+      : []
+  );
+  evidenceIds.forEach(id => known.add(id));
   progress[snapshot.lead_id] = {
     ...(previous && typeof previous === "object" ? previous : {}),
-    done: true,
-    botDone: true,
+    documentedCallIds: [...known],
     fieldSnapshot: snapshot.field_value,
     editedSnapshot: snapshot.field_value,
     preparedComment: snapshot.field_value,
     baseHash: String(snapshot.base_hash || ""),
     snapshotReadAt: String(snapshot.read_at || ""),
+    snapshotRunId: String(snapshot.run_id || previous?.snapshotRunId || ""),
   };
   return true;
 }
 
-// Aplica un estado del resultado del bot ("guardado"/"corregido"/"conflicto").
+// Aplica un estado del resultado del bot. Solo las entradas con
+// documented_call_ids (esquema v2 con run_id) confirman intentos; un resultado
+// legado por lead_id queda como "histórico" y no cierra llamadas nuevas.
 function applyBotResult(item) {
   if (!item || typeof item.lead_id !== "string") return "pendiente";
+  const lead = leads.find(candidate => candidate.id === item.lead_id);
+  if (!lead) return "ignorado";
   const previous = progress[item.lead_id];
-  if (item.status === "guardado" || item.status === "corregido") {
+  const base = previous && typeof previous === "object" ? previous : {};
+  const verifiedStatuses = ["guardado", "corregido", "ya_documentado", "parcial"];
+  if (verifiedStatuses.includes(item.status)) {
+    if (!Array.isArray(item.documented_call_ids)) {
+      // Resultado legado: evidencia histórica, no confirma el CSV actual.
+      progress[item.lead_id] = {
+        ...base,
+        historicalStatus: String(item.status),
+        historicalAt: String(item.at || ""),
+        correctedAt: item.status === "corregido" ? String(item.at || "") : previous?.correctedAt,
+      };
+      return "historico";
+    }
+    const known = new Set(Array.isArray(base.documentedCallIds) ? base.documentedCallIds : []);
+    item.documented_call_ids.forEach(id => { if (id) known.add(String(id)); });
     progress[item.lead_id] = {
-      ...(previous && typeof previous === "object" ? previous : {}),
-      done: true,
+      ...base,
+      documentedCallIds: [...known],
       botDone: true,
+      documentedBy: "bot",
       conflict: false,
+      needsReview: item.status === "parcial" ? true : base.needsReview,
       correctedAt: item.status === "corregido" ? String(item.at || "") : previous?.correctedAt,
       botSavedAt: String(item.at || ""),
+      botRunId: String(item.run_id || ""),
+      botElapsedSeconds: Number.isFinite(Number(item.elapsed_seconds)) ? Number(item.elapsed_seconds) : previous?.botElapsedSeconds,
     };
+    progress[item.lead_id].done = isDone(lead);
     return item.status;
   }
   if (item.status === "conflicto") {
-    progress[item.lead_id] = {
-      ...(previous && typeof previous === "object" ? previous : {}),
-      conflict: true,
-    };
+    progress[item.lead_id] = { ...base, conflict: true };
     return "conflicto";
   }
-  return item.status === "error" ? "error" : "pendiente";
+  if (item.status === "revision") {
+    progress[item.lead_id] = { ...base, needsReview: true, botRunId: String(item.run_id || "") };
+    return "revision";
+  }
+  if (item.status === "duplicado") {
+    progress[item.lead_id] = {
+      ...base,
+      done: false,
+      botDone: false,
+      duplicate: true,
+    };
+    return "duplicado";
+  }
+  if (item.status === "error") {
+    progress[item.lead_id] = {
+      ...base,
+      lastErrorAt: String(item.at || ""),
+      botRunId: String(item.run_id || ""),
+    };
+    return "error";
+  }
+  return "pendiente";
 }
 
 function importSnapshots(file) {
@@ -710,25 +864,31 @@ function importSnapshots(file) {
   reader.readAsText(file, "utf-8");
 }
 
-// Resultado del bot (*.resultado.json): "guardado"/"corregido" marca el lead como
-// documentado por bot; "conflicto" se señala sin tocar Salesforce; el resto queda pendiente.
+// Resultado del bot (*.resultado.json): solo los estados con evidencia de
+// call_id confirman intentos; los registros legados cuentan como históricos
+// y no marcan llamadas nuevas como documentadas.
 function importBotResults(file) {
   const reader = new FileReader();
   reader.onload = () => {
     try {
       const results = JSON.parse(String(reader.result || ""));
       if (!Array.isArray(results)) throw new Error("Formato inválido");
-      const counts = { guardado: 0, corregido: 0, conflicto: 0, otros: 0 };
+      const counts = {};
       results.forEach(item => {
         const status = applyBotResult(item);
-        counts[status in counts ? status : "otros"]++;
+        counts[status] = (counts[status] || 0) + 1;
       });
       saveProgress();
       render();
-      const saved = counts.guardado + counts.corregido;
+      const saved = (counts.guardado || 0) + (counts.corregido || 0);
       alert(`Resultado importado: ${saved} documentados por bot` +
+        (counts.ya_documentado ? `, ${counts.ya_documentado} ya estaban documentados` : "") +
+        (counts.parcial ? `, ${counts.parcial} parciales` : "") +
+        (counts.revision ? `, ${counts.revision} para revisar` : "") +
         (counts.conflicto ? `, ${counts.conflicto} con conflicto` : "") +
-        (counts.otros ? `, ${counts.otros} pendientes/errores` : "") + ".");
+        (counts.historico ? `, ${counts.historico} históricos sin aplicar` : "") +
+        (counts.ignorado ? `, ${counts.ignorado} de otro archivo` : "") +
+        (counts.error ? `, ${counts.error} errores` : "") + ".");
     } catch {
       alert("No se pudo leer el archivo de resultados.");
     }
@@ -743,10 +903,18 @@ function importBotResults(file) {
 const ACTIVE_QUEUE_NAME = "cola_activa.json";
 const ACTIVE_QUEUE_RESULT_NAME = "cola_activa.resultado.json";
 const ACTIVE_QUEUE_SNAPSHOTS_NAME = "cola_activa.snapshots.json";
+const ACTIVE_QUEUE_METRICS_NAME = "cola_activa.metricas.json";
+// Cuando ui_server.py sirve esta página en http://127.0.0.1:8765 el servidor
+// inyecta el token y la UI opera por HTTP: no hace falta vincular ninguna carpeta.
+const SERVER_MODE = location.hostname === "127.0.0.1" && location.port === "8765";
+const BOT_TOKEN = SERVER_MODE ? "__BOT_SERVER_TOKEN__" : "";
 let botDirHandle = null;
 let queuePollTimer = null;
 let queueSyncInfo = "";
 let lastRunStatus = {};
+let lastRunMetrics = null;
+let botRunInProgress = false;
+let botCompletionShown = false;
 
 function idbOpen() {
   return new Promise((resolve, reject) => {
@@ -779,27 +947,65 @@ function saveSelection() {
 }
 
 async function botDirGranted() {
+  if (SERVER_MODE) return true;
   return !!botDirHandle && (await botDirHandle.queryPermission({ mode: "readwrite" })) === "granted";
 }
 
 async function updateQueueSyncState() {
   const el = $("queueSyncState");
+  if (SERVER_MODE) { el.textContent = queueSyncInfo || "Conectado al servidor del bot."; return; }
   if (!botDirHandle) { el.textContent = "Carpeta no vinculada."; return; }
   if (!(await botDirGranted())) { el.textContent = "Permiso pendiente: tocá 'Vincular carpeta del bot'."; return; }
   el.textContent = queueSyncInfo || `Carpeta vinculada: ${botDirHandle.name}`;
 }
 
-// Reescribe la cola activa con la selección actual. Sin diálogos: usa el
-// permiso de carpeta concedido una sola vez.
+// Llamadas al servidor local. En modo servidor el token va en el header.
+async function botApi(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    headers: { "X-Bot-Token": BOT_TOKEN, ...(options.headers || {}) },
+  });
+  if (!response.ok) throw new Error(`bot api ${response.status}`);
+  return response.json();
+}
+
+// Lectura de un archivo operativo del bot: por HTTP en modo servidor,
+// por File System Access cuando la página se abre como file://.
+async function readBotFile(dirName, fileName) {
+  if (SERVER_MODE) {
+    const route = {
+      "queues/cola_activa.json": "/api/queue",
+      "queues/cola_activa.resultado.json": "/api/results",
+      "queues/cola_activa.metricas.json": "/api/metrics",
+      "ui_output/cola_activa.snapshots.json": "/api/snapshots",
+    }[`${dirName}/${fileName}`];
+    return route ? botApi(route) : null;
+  }
+  const dir = await botDirHandle.getDirectoryHandle(dirName);
+  const handle = await dir.getFileHandle(fileName);
+  return JSON.parse(await (await handle.getFile()).text());
+}
+
+// Reescribe la cola activa con la selección actual. En modo servidor la
+// escribe ui_server.py por HTTP; en modo archivo usa el permiso de carpeta
+// concedido una sola vez.
 async function writeActiveQueue() {
   try {
     if (!(await botDirGranted())) return;
-    const queuesDir = await botDirHandle.getDirectoryHandle("queues", { create: true });
-    const fileHandle = await queuesDir.getFileHandle(ACTIVE_QUEUE_NAME, { create: true });
     const queue = buildBotQueue(selectedIds);
-    const writable = await fileHandle.createWritable();
-    await writable.write(JSON.stringify(queue, null, 2));
-    await writable.close();
+    if (SERVER_MODE) {
+      await botApi("/api/queue", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(queue),
+      });
+    } else {
+      const queuesDir = await botDirHandle.getDirectoryHandle("queues", { create: true });
+      const fileHandle = await queuesDir.getFileHandle(ACTIVE_QUEUE_NAME, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(queue, null, 2));
+      await writable.close();
+    }
     queueSyncInfo = `cola_activa.json actualizada · ${queue.leads.length} leads · ${new Date().toLocaleTimeString()}`;
   } catch {
     queueSyncInfo = "No se pudo escribir cola_activa.json.";
@@ -807,33 +1013,68 @@ async function writeActiveQueue() {
   updateQueueSyncState();
 }
 
+function productivityMessage(metrics) {
+  const elapsed = metrics.saved_elapsed_seconds;
+  if (!elapsed) return `Bot finalizado: ${metrics.saved || 0} guardados, ${metrics.duplicates || 0} duplicados y ${metrics.errors || 0} errores.`;
+  const stages = metrics.stage_seconds_mean;
+  const stageLine = stages
+    ? `\nPor etapa: navegación ${stages.navigation ?? "?"}s · duplicado ${stages.comment_check ?? "?"}s · lectura ${stages.field_read ?? "?"}s · editor ${stages.editor ?? "?"}s · guardar ${stages.save_settle ?? "?"}s · verificar ${stages.verification ?? "?"}s · snapshot ${stages.snapshot ?? "?"}s`
+    : "";
+  return `Bot finalizado\n\n` +
+    `Muestra: ${metrics.sample_size}\n` +
+    `Guardados: ${metrics.saved} · Duplicados: ${metrics.duplicates || 0} · Errores: ${metrics.errors}\n` +
+    `Éxito: ${metrics.success_rate}%\n` +
+    `Tiempo por Lead: promedio ${elapsed.mean}s · mediana ${elapsed.median}s\n` +
+    `Rango: ${elapsed.min}s – ${elapsed.max}s\n` +
+    `Capacidad efectiva: ${metrics.effective_leads_per_hour} Leads/hora` +
+    stageLine;
+}
+
+async function notifyBotCompletion() {
+  if (!botRunInProgress || !(await botDirGranted())) return;
+  try {
+    const status = SERVER_MODE
+      ? await botApi("/status")
+      : await (await fetch(`http://127.0.0.1:${(await readBotFile("ui_output", "bot_session.json")).port}/status`)).json();
+    if (status.running) return;
+    botRunInProgress = false;
+    const metrics = await readBotFile("queues", ACTIVE_QUEUE_METRICS_NAME);
+    queueSyncInfo = productivityMessage(metrics).replaceAll("\n", " · ");
+    updateQueueSyncState();
+    if (!botCompletionShown) {
+      botCompletionShown = true;
+      alert(productivityMessage(metrics));
+    }
+  } catch { }
+}
+
 // Lee el resultado y los snapshots que el bot va dejando en la carpeta.
+// Solo se aplican a leads del CSV cargado y cada estado confirma únicamente
+// los call_id que su evidencia identifica; los registros legados quedan como
+// históricos. La cola se reescribe solo cuando el bot NO está corriendo,
+// para no mezclar la tanda activa con la edición en vivo.
 async function pollBotResults() {
   if (!(await botDirGranted())) return;
+  const leadIds = new Set(leads.map(lead => lead.id));
   try {
-    const queuesDir = await botDirHandle.getDirectoryHandle("queues");
-    const fileHandle = await queuesDir.getFileHandle(ACTIVE_QUEUE_RESULT_NAME);
-    const file = await fileHandle.getFile();
-    const results = JSON.parse(await file.text());
+    const results = await readBotFile("queues", ACTIVE_QUEUE_RESULT_NAME);
     if (Array.isArray(results)) {
       lastRunStatus = {};
       results.forEach(item => {
-        if (!item || typeof item.lead_id !== "string") return;
-        lastRunStatus[item.lead_id] = item.status;
+        if (!item || typeof item.lead_id !== "string" || !leadIds.has(item.lead_id)) return;
+        lastRunStatus[item.lead_id] = item.run_id ? item.status : "historico";
         applyBotResult(item);
       });
       saveProgress();
     }
   } catch { /* el archivo aún no existe o está siendo escrito */ }
   try {
-    const uiDir = await botDirHandle.getDirectoryHandle("ui_output");
-    const snapHandle = await uiDir.getFileHandle(ACTIVE_QUEUE_SNAPSHOTS_NAME);
-    const file = await snapHandle.getFile();
-    const snapshots = JSON.parse(await file.text());
+    const snapshots = await readBotFile("ui_output", ACTIVE_QUEUE_SNAPSHOTS_NAME);
     if (Array.isArray(snapshots)) {
       // No pisar un borrador local que el usuario esté editando.
       snapshots.forEach(snapshot => {
-        const record = snapshot && progress[snapshot.lead_id];
+        if (!snapshot || !leadIds.has(snapshot.lead_id)) return;
+        const record = progress[snapshot.lead_id];
         const editingDraft = record && typeof record === "object"
           && record.editedSnapshot !== undefined
           && record.editedSnapshot !== record.fieldSnapshot;
@@ -842,15 +1083,22 @@ async function pollBotResults() {
       saveProgress();
     }
   } catch { /* snapshots opcionales */ }
-  // Los leads documentados salen solos de la cola: la próxima corrida no los repite.
-  await writeActiveQueue();
+  try {
+    lastRunMetrics = await readBotFile("queues", ACTIVE_QUEUE_METRICS_NAME);
+  } catch { }
+  await notifyBotCompletion();
+  // Mientras el bot corre la cola congelada no se toca; al terminar, los
+  // leads documentados salen solos para que la próxima corrida no los repita.
+  if (!botRunInProgress) await writeActiveQueue();
   renderQueueList();
 }
 
 const QUEUE_STATUS_LABELS = {
   pendiente: "en cola", guardado: "guardado", corregido: "corregido",
-  conflicto: "conflicto", error: "error", omitido: "omitido", preparado: "preparado",
-  documentado: "documentado",
+  ya_documentado: "ya estaba documentado", parcial: "parcial: revisar",
+  revision: "revisar", historico: "histórico",
+  conflicto: "conflicto", duplicado: "duplicado: verificar", error: "error",
+  omitido: "omitido", preparado: "preparado", documentado: "documentado",
 };
 
 function renderQueueList() {
@@ -863,15 +1111,18 @@ function renderQueueList() {
   container.innerHTML = "";
   selected.forEach(lead => {
     const status = lastRunStatus[lead.id] || (isDone(lead) ? "documentado" : "pendiente");
-    const badgeClass = ["guardado", "corregido", "conflicto", "error", "pendiente", "borrador"].includes(status)
-      ? (status === "guardado" || status === "documentado" ? "bot" : status)
+    const badgeClass = ["guardado", "corregido", "conflicto", "duplicado", "error", "pendiente", "borrador",
+      "ya_documentado", "parcial", "revision", "historico"].includes(status)
+      ? (status === "guardado" || status === "documentado" || status === "ya_documentado" ? "bot" : status)
       : "pendiente";
     const record = progress[lead.id] && typeof progress[lead.id] === "object" ? progress[lead.id] : {};
+    const pendingCount = pendingAttempts(lead).length;
     const row = document.createElement("div");
     row.className = "queue-row";
     row.innerHTML =
       `<span class="name">${lead.nombre || "(sin nombre)"}</span>` +
-      `<span class="meta">${lead.id} &middot; ${lead.attempts.length} intento${lead.attempts.length === 1 ? "" : "s"}</span>` +
+      `<span class="meta">${lead.id} &middot; ${pendingCount} intento${pendingCount === 1 ? "" : "s"} pendiente${pendingCount === 1 ? "" : "s"}</span>` +
+      timeBadgeHtml(record) +
       `<span class="spacer"></span>` +
       `<button class="btn small queue-open">Abrir en Salesforce</button>` +
       (isDone(lead) ? `<button class="btn small queue-remove">Quitar</button>` : ``) +
@@ -905,31 +1156,54 @@ function stopQueuePolling() {
   if (queuePollTimer) { clearInterval(queuePollTimer); queuePollTimer = null; }
 }
 
-// Dispara el bot a través del servidor local (ui_server.py). El token de la
-// sesión se lee de ui_output\bot_session.json con el permiso de carpeta.
+// Dispara el bot a través del servidor local (ui_server.py). En modo servidor
+// el token viene inyectado en la página; en modo archivo se lee de
+// ui_output\bot_session.json con el permiso de carpeta.
 async function runBot() {
   try {
     if (!(await botDirGranted())) { alert("Primero vinculá la carpeta del bot."); return; }
-    const uiDir = await botDirHandle.getDirectoryHandle("ui_output");
-    const sessionHandle = await uiDir.getFileHandle("bot_session.json");
-    const session = JSON.parse(await (await sessionHandle.getFile()).text());
+    let runUrl = "/run";
+    let token = BOT_TOKEN;
+    if (!SERVER_MODE) {
+      const session = await readBotFile("ui_output", "bot_session.json");
+      runUrl = `http://127.0.0.1:${session.port}/run`;
+      token = session.token;
+    }
+    lastRunMetrics = null;
     await writeActiveQueue();
-    const response = await fetch(`http://127.0.0.1:${session.port}/run`, {
+    const response = await fetch(runUrl, {
       method: "POST",
-      headers: { "X-Bot-Token": session.token },
+      headers: { "X-Bot-Token": token },
     });
+    botRunInProgress = response.status === 202;
+    botCompletionShown = false;
     queueSyncInfo = response.status === 202
       ? "Bot iniciado — los estados se actualizan solos."
       : (response.status === 409 ? "El bot ya está corriendo." : `Respuesta inesperada del bot (${response.status}).`);
     updateQueueSyncState();
   } catch {
-    alert("No se pudo contactar al servidor local del bot.\nInicialo una sola vez con:\npython ui_server.py");
+    alert(SERVER_MODE
+      ? "El servidor local del bot dejó de responder.\nCerrá todo y volvé a ejecutar INICIAR.bat."
+      : "No se pudo contactar al servidor local del bot.\nInicialo una sola vez con:\npython ui_server.py");
   }
+}
+
+// Avisa si el servidor local sirve una versión distinta de la página cargada
+// (típico tras una actualización sin refrescar): la pestaña quedó vieja.
+async function checkServerVersion() {
+  if (!SERVER_MODE) return;
+  try {
+    const status = await botApi("/status");
+    if (status.version && status.version !== APP_VERSION) {
+      $("appVersion").textContent = `v${APP_VERSION} → hay v${status.version} en el servidor: recargá la página (F5)`;
+    }
+  } catch { /* el servidor puede no estar levantado */ }
 }
 
 async function openQueueView() {
   showView("viewQueue");
-  if (!botDirHandle) {
+  checkServerVersion();
+  if (!SERVER_MODE && !botDirHandle) {
     try { botDirHandle = (await idbGet("botDir")) || null; } catch { botDirHandle = null; }
   }
   if (await botDirGranted()) await writeActiveQueue();
@@ -980,6 +1254,7 @@ $("backFromQueue").addEventListener("click", async () => {
 });
 $("linkBotFolder").addEventListener("click", async () => {
   try {
+    if (SERVER_MODE) return;
     if (!botDirHandle) botDirHandle = (await idbGet("botDir")) || null;
     if (botDirHandle) {
       const permission = await botDirHandle.requestPermission({ mode: "readwrite" });
@@ -996,6 +1271,36 @@ $("linkBotFolder").addEventListener("click", async () => {
     await writeActiveQueue();
   } catch (error) {
     if (error.name !== "AbortError") alert("No se pudo vincular la carpeta del bot.");
+  }
+});
+if (SERVER_MODE) {
+  // En modo servidor la carpeta no hace falta: el botón queda oculto.
+  $("linkBotFolder").classList.add("hidden");
+  $("queueSyncState").textContent = "Conectado al servidor del bot.";
+}
+
+// Reinicia el Edge dedicado del bot a través del servidor local. La propia
+// pestaña de la app vive en ese navegador, así que se cierra y se reabre sola.
+$("restartBotBrowser").addEventListener("click", async () => {
+  if (!SERVER_MODE) {
+    alert("Este botón solo funciona cuando la app se abre desde el servidor local (http://127.0.0.1:8765).");
+    return;
+  }
+  if (!confirm("Se cerrará y reabrirá el navegador del bot, incluida esta pestaña.\nLa sesión de Salesforce se conserva.\n\n¿Continuar?")) return;
+  try {
+    const response = await fetch("/api/restart-browser", {
+      method: "POST",
+      headers: { "X-Bot-Token": BOT_TOKEN },
+    });
+    if (response.status === 409) {
+      alert("El bot está corriendo; esperá a que termine antes de reiniciar el navegador.");
+      return;
+    }
+    if (!response.ok) alert("No se pudo reiniciar el navegador del bot.");
+    queueSyncInfo = "Reiniciando el navegador del bot…";
+    updateQueueSyncState();
+  } catch {
+    // La pestaña puede cerrarse antes de recibir la respuesta: es lo esperado.
   }
 });
 $("clearDocumented").addEventListener("click", () => {
@@ -1231,8 +1536,8 @@ function render() {
     const text = record.fieldSnapshot !== undefined ? record.fieldSnapshot : docText(lead);
     const isAdjusted = progress[lead.id] && typeof progress[lead.id] === "object" && typeof progress[lead.id].overrideOffset === "number";
     const hasDraft = record.fieldSnapshot !== undefined && record.editedSnapshot !== undefined && record.editedSnapshot !== record.fieldSnapshot;
-    const status = record.conflict ? "conflicto" : (record.correctedAt ? "corregido" : (hasDraft ? "borrador" : docStatus(lead)));
-    const statusLabels = { bot: "por bot", manual: "manual", pendiente: "pendiente", conflicto: "conflicto", borrador: "borrador local", corregido: "corregido" };
+    const status = record.conflict ? "conflicto" : (record.correctedAt ? "corregido" : (hasDraft ? "borrador" : (record.needsReview && !done ? "revision" : docStatus(lead))));
+    const statusLabels = { bot: "por bot", manual: "manual", pendiente: "pendiente", duplicado: "duplicado: verificar", conflicto: "conflicto", borrador: "borrador local", corregido: "corregido", revision: "revisar" };
     const card = document.createElement("div");
     card.className = "card" + (done ? " done" : "");
     card.dataset.leadId = lead.id;
@@ -1242,6 +1547,7 @@ function render() {
         <span class="name">${lead.nombre || "(sin nombre)"}</span>
         <span class="badge">${lead.attempts.length} intento${lead.attempts.length === 1 ? "" : "s"}</span>
         <span class="badge st-${status}">${statusLabels[status]}</span>
+        ${timeBadgeHtml(record)}
         <span class="meta">Tel: ${lead.tel} &middot; Agente: ${lead.agente} &middot; ${lead.id}</span>
         <span class="spacer"></span>
       </div>
@@ -1378,6 +1684,8 @@ document.addEventListener("keydown", e => {
     check.dispatchEvent(new Event("change"));
   }
 });
+
+$("appVersion").textContent = "v" + APP_VERSION;
 
 const recovery = loadJSON(SESSION_KEY, null);
 if (recovery?.text && recovery?.name && typeof recovery.size === "number") {

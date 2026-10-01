@@ -5,6 +5,7 @@
 ```text
 por cada Lead de la cola (sin pausas):
   driver.get(lead_url) → wait_for_lightning_ready
+  find_comment → si normalizado == "Lead Duplicado": registrar duplicado y continuar
   find_other_information → next_attempt_number → compose_attempts
   prepare_other_information (lápiz → editor → escribir → verificar)
   save_record():
@@ -27,6 +28,7 @@ resumen final: guardados / errores
 | Cancelar | Nunca se pulsa automáticamente; si un Lead falla, el registro queda como estaba (el error aborta antes de Guardar). |
 | Test estático | Se permite `.click()` en el botón Guardar del formulario; siguen prohibidos `SaveEdit`, `save_record` de Aura, `updateRecord`, reasignar, cerrar, cambiar estado. |
 | Navegador | Mismo mecanismo persistente; el lote corre en la ventana abierta (minimizable). |
+| Lead Duplicado | Se lee el campo visible `Comentario` antes de abrir el editor. Igualdad normalizada exacta con `Lead Duplicado` → `duplicado`, sin preparar, editar ni guardar. |
 
 ## Contrato del resultado
 

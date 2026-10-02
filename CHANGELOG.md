@@ -11,6 +11,20 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.2] — 2026-10-02
+
+### Corregido
+
+- Lista principal: un Lead pendiente con snapshot viejo ya no muestra el texto
+  histórico del campo como si fuera el texto a documentar — y lo que es peor,
+  "Copiar texto" ya no copia contenido viejo. Ahora la tarjeta muestra el
+  texto a documentar (solo intentos pendientes) con rótulo explícito.
+- El texto a documentar se numera desde el último `N INT` de la lectura local
+  del campo (si existe), no desde el offset global: un Lead con 3 INT
+  guardados muestra el pendiente como `4 INT`.
+- Rótulos sobre el cuadro de texto: "Texto a documentar" (pendiente) vs
+  "Documentado en Salesforce — última lectura local" (hecho).
+
 ## [1.0.1] — 2026-10-02
 
 ### Corregido

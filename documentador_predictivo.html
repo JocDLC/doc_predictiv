@@ -106,7 +106,9 @@
   .queue-hist summary { cursor: pointer; font-size: 12px; color: var(--muted); }
   .queue-row .meta { color: var(--muted); font-size: 12px; }
   .sel-scope { max-width: 140px; }
-  .doc-text { margin-top: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
+  .doc-caption { margin-top: 10px; font-size: 11px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .03em; }
+  .doc-text { margin-top: 4px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
     padding: 10px 12px; font-family: Consolas, monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; }
   .snapshot-review { margin-top: 10px; }
   .snapshot-review summary { cursor: pointer; font-size: 13px; color: var(--muted); }
@@ -342,7 +344,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.0.2";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -508,6 +510,11 @@ function getOffset(lead) {
   const p = progress[lead.id];
   if (p && typeof p === "object" && p.done && typeof p.offset === "number") return p.offset;
   if (p && typeof p === "object" && typeof p.overrideOffset === "number") return p.overrideOffset;
+  // Con lectura previa del campo, el siguiente INT continúa desde ahí.
+  if (p && typeof p === "object" && typeof p.fieldSnapshot === "string") {
+    const fromSnapshot = lastIntNumber(p.fieldSnapshot);
+    if (fromSnapshot !== null) return fromSnapshot;
+  }
   return globalOffset;
 }
 function setOffset(lead, n) {
@@ -527,6 +534,19 @@ function setOffset(lead, n) {
 // "N INT ..." para no confundir teléfonos, importes o fechas con IDs.
 const CALL_ID_RE = /^\d{5,}\.\d{3,}$/;
 const INT_LINE_RE = /^\s*\d+\s+INT\b/i;
+const INT_NUMBER_RE = /(\d+)\s+INT\b/gi;
+
+// Último "N INT" presente en un texto del campo; null si no hay ninguno.
+function lastIntNumber(text) {
+  let max = null;
+  let m;
+  INT_NUMBER_RE.lastIndex = 0;
+  while ((m = INT_NUMBER_RE.exec(text)) !== null) {
+    const n = Number(m[1]);
+    if (max === null || n > max) max = n;
+  }
+  return max;
+}
 
 function extractCallIdsFromText(text) {
   const ids = new Set();
@@ -1568,7 +1588,13 @@ function render() {
 
     const offset = getOffset(lead);
     const record = progress[lead.id] && typeof progress[lead.id] === "object" ? progress[lead.id] : {};
-    const text = record.fieldSnapshot !== undefined ? record.fieldSnapshot : docText(lead);
+    // Pendiente: la tarjeta muestra el texto A DOCUMENTAR (solo intentos
+    // nuevos). Documentado: la lectura confirmada del campo, si existe.
+    // Un snapshot viejo nunca tapa el texto pendiente ni se copia por error.
+    const text = done && record.fieldSnapshot !== undefined ? record.fieldSnapshot : docText(lead);
+    const textCaption = done
+      ? (record.fieldSnapshot !== undefined ? "Documentado en Salesforce — última lectura local" : "Texto documentado")
+      : "Texto a documentar";
     const isAdjusted = progress[lead.id] && typeof progress[lead.id] === "object" && typeof progress[lead.id].overrideOffset === "number";
     const hasDraft = record.fieldSnapshot !== undefined && record.editedSnapshot !== undefined && record.editedSnapshot !== record.fieldSnapshot;
     const status = record.conflict ? "conflicto" : (record.correctedAt ? "corregido" : (hasDraft ? "borrador" : (record.needsReview && !done ? "revision" : docStatus(lead))));
@@ -1586,6 +1612,7 @@ function render() {
         <span class="meta">Tel: ${lead.tel} &middot; Agente: ${lead.agente} &middot; ${lead.id}</span>
         <span class="spacer"></span>
       </div>
+      <div class="doc-caption">${textCaption}</div>
       <div class="doc-text">${text || "(sin intentos registrados)"}</div>
       <div class="actions">
         <button class="btn primary small act-open">Abrir en Salesforce</button>

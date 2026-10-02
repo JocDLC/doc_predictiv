@@ -113,6 +113,8 @@ applySnapshot({
 });
 check('snapshot viejo no cierra intentos nuevos', isDone(lead) === false);
 check('pendientes siguen siendo los dos nuevos', pendingAttempts(lead).length === 2);
+check('texto a documentar numera desde el snapshot (3 INT -> 4 INT)',
+  docText(lead).startsWith('4 INT'));
 
 // 3) El lead sigue siendo elegible para la cola con los intentos nuevos.
 let queue = buildBotQueue(new Set([lead.id]));

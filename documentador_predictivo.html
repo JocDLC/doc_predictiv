@@ -344,7 +344,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.0.3";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -1128,6 +1128,11 @@ const QUEUE_STATUS_LABELS = {
   omitido: "omitido", preparado: "preparado", documentado: "documentado",
 };
 
+// Estado del panel histórico de la cola por Lead: el polling reconstruye el
+// DOM cada 3 s, así que el abierto/cerrado se guarda acá para no contraerlo.
+const queueHistState = new Map();
+const snapshotOpenState = new Map();
+
 function renderQueueList() {
   const container = $("queueList");
   const selected = leads.filter(lead => selectedIds.has(lead.id));
@@ -1196,6 +1201,12 @@ function renderQueueList() {
       doc.className = "queue-doc";
       doc.textContent = record.fieldSnapshot;
       review.append(summary, doc);
+      // Una vez guardado, el texto confirmado queda abierto para verificar;
+      // si el usuario lo expande o contrae a mano, se respeta su elección.
+      review.open = queueHistState.has(lead.id)
+        ? queueHistState.get(lead.id)
+        : ["guardado", "corregido", "ya_documentado"].includes(status);
+      review.addEventListener("toggle", () => queueHistState.set(lead.id, review.open));
       row.appendChild(review);
     }
     container.appendChild(row);
@@ -1632,6 +1643,10 @@ function render() {
     if (record.fieldSnapshot !== undefined) {
       const review = document.createElement("details");
       review.className = "snapshot-review";
+      // El DOM se reconstruye en cada render: el abierto/cerrado se persiste
+      // por Lead para que el panel no se contraiga solo.
+      review.open = snapshotOpenState.get(lead.id) === true;
+      review.addEventListener("toggle", () => snapshotOpenState.set(lead.id, review.open));
       const summary = document.createElement("summary");
       const snapAt = record.snapshotReadAt ? new Date(record.snapshotReadAt) : null;
       const snapWhen = snapAt && !isNaN(snapAt)

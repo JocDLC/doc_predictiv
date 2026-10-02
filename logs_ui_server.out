@@ -1,0 +1,41 @@
+Conectado al navegador persistente abierto.
+Sesión de Salesforce activa detectada; no hace falta autenticarse.
+
+=== Lead 1/5 ===
+Lead ID: 00QbD00000uNSBUUA4
+Caracteres previos: 356
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 415
+
+=== Lead 2/5 ===
+Lead ID: 00QbD00000uH91sUAC
+Caracteres previos: 298
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 357
+
+=== Lead 3/5 ===
+Lead ID: 00QbD00000ugcjoUAA
+Caracteres previos: 63
+Próximo INT: 2
+Intentos nuevos: 1
+Caracteres finales: 122
+
+=== Lead 4/5 ===
+Lead ID: 00QbD00000ugYJgUAM
+Caracteres previos: 36
+Próximo INT: 2
+Intentos nuevos: 1
+Caracteres finales: 95
+
+=== Lead 5/5 ===
+Lead ID: 00QbD00000uU8EaUAK
+Caracteres previos: 181
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 268
+
+Resumen: 5 guardados, 0 parciales, 0 ya documentados, 0 en revisión, 0 duplicados, 0 preparados, 0 omitidos, 0 errores.
+Resultados: C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\queues\cola_activa.resultado.json
+Métricas: C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\queues\cola_activa.metricas.json

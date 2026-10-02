@@ -11,6 +11,17 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.3] — 2026-10-02
+
+### Corregido
+
+- Vista de cola: el panel "Texto actual en Salesforce" se contraía solo a los
+  ~3 segundos porque el polling reconstruye la lista. El estado abierto se
+  persiste por Lead y **los Leads recién guardados abren solos** el texto
+  confirmado para verificación.
+- Lista principal: el panel editable del snapshot también conserva su estado
+  abierto entre re-renders.
+
 ## [1.0.2] — 2026-10-02
 
 ### Corregido

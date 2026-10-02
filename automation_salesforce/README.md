@@ -200,3 +200,17 @@ Notas:
 - Mientras el navegador persistente esté abierto, no lanzar otros runners que
   usen el mismo perfil sin adjuntarse (Edge no permite dos instancias del mismo
   perfil).
+
+## Mediciones de productividad
+
+Tiempos reales por Lead medidos en Salesforce Lightning (muestras locales):
+
+| Fecha | n | Promedio | Mediana | Rango | Leads/hora | Notas |
+|-------|---|----------|---------|-------|------------|-------|
+| 28/09/2026 | 10 | 15,8 s | 15,0 s | 14,1–22,3 s | ~227 | Sin controles de integridad adicionales. |
+| 02/10/2026 | 20 | 18,9 s | 18,6 s | 16,8–22,7 s | ~190 | Con dedupe por `call_id` + verificación post-guardado + snapshot local. 100% verificado. |
+
+Los ~3 s adicionales por Lead corresponden a los controles agregados (lectura
+del campo antes de escribir y verificación posterior). Es tiempo de máquina:
+con el bot el trabajo del auxiliar por Lead pasa a ~0 segundos — solo verifica
+los resultados y atiende los casos marcados para revisión.

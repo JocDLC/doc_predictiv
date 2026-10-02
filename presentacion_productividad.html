@@ -161,11 +161,12 @@
     <h1 style="margin-top:20px;">Optimización de la documentación<br>de intentos de llamada</h1>
     <p class="lead-sub" style="margin-left:auto; margin-right:auto;">
       De copiar manualmente cada intento desde Wolkvox a Salesforce,
-      a un flujo local asistido y automatizado que reduce el tiempo por Lead
-      a <strong>~15 segundos medidos</strong>.
+      a un flujo automatizado donde <strong>el trabajo del auxiliar por Lead
+      es ~0 segundos</strong>: el bot procesa cada Lead en ~19 s medidos y el
+      auxiliar solo verifica el resultado.
     </p>
     <p class="muted" style="margin-top:30px;">
-      Muestra del bot medida el 28/09/2026 · Procesamiento 100% local —
+      Muestras del bot medidas el 28/09 y 02/10/2026 · Procesamiento 100% local —
       ningún dato de cliente sale del equipo.
     </p>
   </div>
@@ -232,15 +233,27 @@
               verifica cada Lead en Salesforce</span></td>
           <td class="num">~15 s</td>
           <td class="num">~227</td>
-          <td><span class="tag measured">medido</span></td>
+          <td><span class="tag measured">medido 28/09</span></td>
+        </tr>
+        <tr class="total">
+          <td>App + bot <strong>con controles de integridad</strong><br>
+              <span class="muted" style="font-weight:400">lectura anti-duplicados
+              antes de escribir + verificación post-guardado + snapshot local</span></td>
+          <td class="num">~19 s</td>
+          <td class="num">~190</td>
+          <td><span class="tag measured">medido 02/10</span></td>
         </tr>
       </tbody>
     </table>
     <div class="note">
       Los dos primeros valores son rangos operativos declarados por el equipo.
-      El valor del bot corresponde a una <strong>muestra real medida</strong>
-      (n = 10 Leads, 28/09/2026): promedio 15,8 s, mediana 15,0 s,
-      rango 14,1–22,3 s, 100% de guardados verificados.
+      El bot tiene dos muestras reales: <strong>15,8 s promedio</strong>
+      (n = 10, 28/09/2026) sin controles adicionales y <strong>18,9 s promedio</strong>
+      (n = 20, 02/10/2026, mediana 18,6 s, rango 16,8–22,7 s, 100% verificado)
+      ya con lectura anti-duplicados y verificación de persistencia.<br>
+      <strong>La diferencia de ~3 s es tiempo de máquina, no del auxiliar:</strong>
+      con el bot el trabajo manual por Lead pasa a ~0 segundos — el auxiliar
+      solo verifica resultados y atiende los casos marcados para revisión.
     </div>
   </div>
 </section>
@@ -249,7 +262,7 @@
 <section class="slide">
   <div class="slide-inner">
     <h2>Comparación visual</h2>
-    <p class="muted" style="margin-bottom:16px;">Segundos por Lead (puntos medios de los rangos declarados vs. media medida del bot).</p>
+    <p class="muted" style="margin-bottom:16px;">Segundos por Lead (puntos medios de los rangos declarados vs. media medida del bot). La última barra es el trabajo manual que le queda al auxiliar con el bot.</p>
 
     <div class="bar-row">
       <div>Manual sin app</div>
@@ -263,22 +276,27 @@
     </div>
     <div class="bar-row">
       <div><strong>App + bot</strong></div>
-      <div class="bar-track"><div class="bar-fill g" style="width:33%"></div></div>
-      <div class="bar-val">15,8 s</div>
+      <div class="bar-track"><div class="bar-fill g" style="width:40%"></div></div>
+      <div class="bar-val">18,9 s</div>
+    </div>
+    <div class="bar-row">
+      <div><strong>Trabajo del auxiliar</strong> <span class="muted">(con bot)</span></div>
+      <div class="bar-track"><div class="bar-fill g" style="width:1%"></div></div>
+      <div class="bar-val">~0 s</div>
     </div>
 
     <div class="grid cols-3" style="margin-top:22px;">
       <div class="card hl">
-        <div class="big">−66,7%</div>
-        <div class="unit">tiempo por Lead vs. proceso manual original</div>
+        <div class="big">~0 s</div>
+        <div class="unit">trabajo manual por Lead<br>el auxiliar solo verifica</div>
       </div>
       <div class="card hl">
-        <div class="big">~3×</div>
-        <div class="unit">capacidad por hora vs. proceso manual</div>
+        <div class="big">−60%</div>
+        <div class="unit">tiempo de proceso por Lead<br>vs. proceso manual original</div>
       </div>
       <div class="card hl">
-        <div class="big">−39%</div>
-        <div class="unit">tiempo por Lead vs. app + documentación manual</div>
+        <div class="big">~2,5×</div>
+        <div class="unit">capacidad por hora vs. proceso manual<br>(190 Leads/h medidos)</div>
       </div>
     </div>
   </div>
@@ -290,30 +308,36 @@
     <h2>Cómo funciona la documentación automática</h2>
     <div class="grid cols-2">
       <div class="card">
-        <h3>Flujo por Lead (~15 s)</h3>
+        <h3>Flujo por Lead (~19 s, automático)</h3>
         <ul class="checks">
           <li>Abre el Lead en Salesforce por su URL directa.</li>
           <li>Lee el campo <em>Comentario</em>: si dice
             <span class="mono">Lead Duplicado</span>, lo omite y lo marca
             para revisión humana.</li>
-          <li>Lee <em>Otra información</em> y calcula el próximo INT.</li>
-          <li>Escribe el comentario con el formato exacto y pulsa Guardar.</li>
-          <li>Relee el campo y verifica que el texto quedó persistido.</li>
+          <li>Lee <em>Otra información</em>: identifica los intentos ya
+            documentados por su <span class="mono">call_id</span> y calcula el
+            próximo INT — nunca duplica lo ya escrito.</li>
+          <li>Escribe solo los intentos faltantes con el formato exacto
+            y pulsa Guardar.</li>
+          <li>Relee el campo, verifica la persistencia y guarda un snapshot
+            local con fecha de lectura.</li>
         </ul>
       </div>
       <div class="card">
-        <h3>Desglose del tiempo medido</h3>
+        <h3>Desglose medido (02/10/2026, n = 20)</h3>
         <table>
           <tbody>
-            <tr><td>Navegación y carga de Salesforce</td><td class="num">~4,4 s</td></tr>
-            <tr><td>Editor Lightning (con esperas fijas)</td><td class="num">~3,8 s</td></tr>
-            <tr><td>Guardar + persistencia</td><td class="num">~6,0 s</td></tr>
-            <tr><td>Lecturas, chequeo de duplicado, verificación</td><td class="num">~1,5 s</td></tr>
+            <tr><td>Navegación y carga de Salesforce</td><td class="num">3,1 s</td></tr>
+            <tr><td>Chequeo anti-duplicados + lectura inicial</td><td class="num">3,4 s</td></tr>
+            <tr><td>Editor Lightning (con esperas fijas)</td><td class="num">5,6 s</td></tr>
+            <tr><td>Guardar + persistencia</td><td class="num">6,5 s</td></tr>
+            <tr><td>Verificación post-guardado + snapshot</td><td class="num">0,4 s</td></tr>
           </tbody>
         </table>
-        <p class="muted" style="margin-top:10px;">El tiempo varía con la velocidad
-        de Salesforce: en corridas normales ~15 s; cuando la plataforma anda
-        lenta puede subir a ~20 s.</p>
+        <p class="muted" style="margin-top:10px;">Los controles de integridad
+        agregados (~3 s por Lead) suben el promedio de ~15 s a ~19 s. Es tiempo
+        de máquina: <strong>el operador no interviene</strong>. Cuando Salesforce
+        anda lento el tiempo sube, pero la tanda sigue sola.</p>
       </div>
     </div>
   </div>
@@ -335,16 +359,18 @@
         app + documentación manual<br><span class="tag declared">declarado</span></div>
       </div>
       <div class="card hl">
-        <div class="big">~227</div>
+        <div class="big">~190</div>
         <div class="unit">Leads documentados <strong>por hora</strong><br>
-        app + bot<br><span class="tag measured">medido</span></div>
+        app + bot, sin intervención del auxiliar<br><span class="tag measured">medido</span></div>
       </div>
     </div>
     <div class="note">
-      La capacidad por hora del bot (227) es la medida <strong>efectiva</strong>
+      La capacidad por hora del bot (190) es la medida <strong>efectiva</strong>
       del lote — ya incluye las pausas del ciclo. Fórmula de referencia:
       <span class="mono">3600 ÷ segundos por Lead</span>. Con ~56 Leads por
-      campaña, un lote pasa de ~44 minutos manuales a ~15 minutos con el bot.
+      campaña, un lote pasa de ~44 minutos de trabajo del auxiliar a ~18 minutos
+      de proceso automático con <strong>~0 minutos del auxiliar</strong>:
+      solo revisa los resultados y los casos marcados para revisión.
     </div>
   </div>
 </section>
@@ -369,6 +395,11 @@
           <li>El bot modifica únicamente el campo <em>Otra información</em>.</li>
           <li>Guarda con el botón Guardar del formulario activo — nada más.</li>
           <li>Cada guardado se relee y verifica antes de continuar.</li>
+          <li>Antes de escribir relee el campo: agrega solo los intentos que
+          falten, identificados por <span class="mono">call_id</span> — nunca
+          duplica ni repite un guardado anterior.</li>
+          <li>Un resultado o lectura histórica no marca como documentadas
+          llamadas nuevas del mismo Lead.</li>
           <li>Leads duplicados o con error quedan marcados para revisión,
           nunca se pierden ni se repiten.</li>
         </ul>
@@ -404,7 +435,7 @@
     </div>
     <p class="muted" style="margin-top:26px; font-size:.85rem; text-align:center;">
       Gestión de Campañas Predictivas — Renault GBS Colombia ·
-      Datos medidos el 28/09/2026 · Procesamiento 100% local
+      Datos medidos el 28/09 y 02/10/2026 · Procesamiento 100% local
     </p>
   </div>
 </section>

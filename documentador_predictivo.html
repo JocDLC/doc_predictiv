@@ -97,6 +97,13 @@
   .queue-doc { flex-basis: 100%; margin-top: 4px; background: #f8fafc; border: 1px solid var(--border);
     border-radius: 8px; padding: 8px 10px; font-family: Consolas, monospace; font-size: 12px;
     white-space: pre-wrap; word-break: break-all; }
+  .queue-pending { flex-basis: 100%; margin-top: 6px; background: #eef7ff; border: 1px solid #bcd7f0;
+    border-radius: 8px; padding: 8px 10px; }
+  .queue-pending-label { display: block; font-size: 11px; font-weight: 700; color: #1a5f9e;
+    text-transform: uppercase; letter-spacing: .03em; margin-bottom: 3px; }
+  .queue-pending-line { font-family: Consolas, monospace; font-size: 12px; color: #234; }
+  .queue-hist { flex-basis: 100%; margin-top: 4px; }
+  .queue-hist summary { cursor: pointer; font-size: 12px; color: var(--muted); }
   .queue-row .meta { color: var(--muted); font-size: 12px; }
   .sel-scope { max-width: 140px; }
   .doc-text { margin-top: 10px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;
@@ -335,7 +342,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.0.1";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -1137,11 +1144,39 @@ function renderQueueList() {
       writeActiveQueue();
       renderQueueList();
     });
+    const pending = pendingAttempts(lead);
+    if (pending.length) {
+      // Lo que el bot va a escribir: siempre visible, distinto de la lectura vieja.
+      const todo = document.createElement("div");
+      todo.className = "queue-pending";
+      const label = document.createElement("span");
+      label.className = "queue-pending-label";
+      label.textContent = "A documentar (intento nuevo)";
+      todo.appendChild(label);
+      pending.forEach(attempt => {
+        const line = document.createElement("div");
+        line.className = "queue-pending-line";
+        line.textContent = `${displayResult(lead, attempt)} · ${attempt.date} ${attempt.time}` +
+          (attempt.callId ? ` · ${attempt.callId}` : " · sin call_id");
+        todo.appendChild(line);
+      });
+      row.appendChild(todo);
+    }
     if (record.fieldSnapshot !== undefined) {
+      // Lectura guardada del campo: referencia histórica colapsada, no es lo que se escribe.
+      const review = document.createElement("details");
+      review.className = "queue-hist";
+      const summary = document.createElement("summary");
+      const readAt = record.snapshotReadAt ? new Date(record.snapshotReadAt) : null;
+      const when = readAt && !isNaN(readAt)
+        ? ` — leído ${readAt.toLocaleDateString("es-AR")} ${readAt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}`
+        : "";
+      summary.textContent = `Texto actual en Salesforce (lectura anterior${when}; el bot solo agrega el intento pendiente)`;
       const doc = document.createElement("div");
       doc.className = "queue-doc";
       doc.textContent = record.fieldSnapshot;
-      row.appendChild(doc);
+      review.append(summary, doc);
+      row.appendChild(review);
     }
     container.appendChild(row);
   });
@@ -1571,7 +1606,11 @@ function render() {
       const review = document.createElement("details");
       review.className = "snapshot-review";
       const summary = document.createElement("summary");
-      summary.textContent = "Otra información confirmada por bot (local)";
+      const snapAt = record.snapshotReadAt ? new Date(record.snapshotReadAt) : null;
+      const snapWhen = snapAt && !isNaN(snapAt)
+        ? ` (lectura del ${snapAt.toLocaleDateString("es-AR")} ${snapAt.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })})`
+        : "";
+      summary.textContent = `Última lectura local de "Otra información"${snapWhen}`;
       const editor = document.createElement("textarea");
       editor.className = "snapshot-editor";
       editor.value = record.editedSnapshot ?? record.fieldSnapshot;

@@ -272,9 +272,7 @@ def lead_context(run_id: str, source_file: str, attempts: list[dict[str, str]]) 
     return {
         "run_id": run_id,
         "source_file": source_file,
-        "request_call_ids": [
-            attempt["call_id"] for attempt in attempts if attempt.get("call_id")
-        ],
+        "request_call_ids": [attempt["call_id"] for attempt in attempts if attempt.get("call_id")],
         "documented_call_ids": [],
         "added_call_ids": [],
     }
@@ -306,8 +304,14 @@ def main(argv: list[str] | None = None) -> int:
     run_id = options.get("run_id") or queue_file["run_id"] or new_run_id()
     source_file = queue_file["source_file"]
     stats = {
-        "preparado": 0, "guardado": 0, "parcial": 0, "ya_documentado": 0,
-        "revision": 0, "duplicado": 0, "omitido": 0, "error": 0,
+        "preparado": 0,
+        "guardado": 0,
+        "parcial": 0,
+        "ya_documentado": 0,
+        "revision": 0,
+        "duplicado": 0,
+        "omitido": 0,
+        "error": 0,
     }
     batch_results: list[dict] = []
     logger = create_logger(ROOT / config["log_directory"])
@@ -375,9 +379,7 @@ def main(argv: list[str] | None = None) -> int:
                 next_int = next_attempt_number(existing_comment)
                 # Solo se escriben los call_id ausentes; los ya presentes y los
                 # ambiguos (sin call_id con campo cargado) no se duplican.
-                missing_attempts, present_ids, unverifiable = partition_attempts(
-                    existing_comment, attempts
-                )
+                missing_attempts, present_ids, unverifiable = partition_attempts(existing_comment, attempts)
                 context["documented_call_ids"] = list(present_ids)
             except (ValueError, TimeoutException, WebDriverException) as error:
                 stats["error"] += 1
@@ -518,9 +520,7 @@ def main(argv: list[str] | None = None) -> int:
                         )
                     )
                     continue
-                written_ids = [
-                    attempt["call_id"] for attempt in missing_attempts if attempt.get("call_id")
-                ]
+                written_ids = [attempt["call_id"] for attempt in missing_attempts if attempt.get("call_id")]
                 context["documented_call_ids"] = list(present_ids) + written_ids
                 context["added_call_ids"] = written_ids
                 final_status = "parcial" if unverifiable else "guardado"

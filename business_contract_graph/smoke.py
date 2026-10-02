@@ -1,24 +1,33 @@
-"""Smoke local y sin red del HTML de contratos."""
+"""Smoke local y sin dependencias de red del workflow Archify publicado."""
 
 from __future__ import annotations
 
 import contextlib
 import http.server
+import re
 import threading
 import urllib.request
 from pathlib import Path
 
-from .paths import OUTPUT_PATH, TECHNICAL_GRAPH_PATH
+from .paths import PUBLISHED_OUTPUT_PATH, TECHNICAL_GRAPH_PATH
 from .validator import ContractValidationError
 
 REQUIRED_MARKERS = (
-    "Contratos de negocio",
-    'id="business-contract-data"',
-    'id="contract-dialog"',
-    'id="theme-toggle"',
-    'id="presentation-toggle"',
-    "Cargar base de Leads",
-    "Guardar y verificar la documentación",
+    "Del contacto a la documentación",
+    "1 · Salesforce → Wolkvox",
+    "2 · Wolkvox → Salesforce",
+    "CSV de Salesforce",
+    "CSV con intentos",
+    "Documentar en Salesforce",
+    "Documentar manualmente",
+    "Documentar con el bot",
+    "Qué recibe:",
+    "Qué entrega:",
+    "Regla principal:",
+    "Si falla:",
+)
+EXTERNAL_DEPENDENCY = re.compile(
+    r"<(?:script|link)\b[^>]*(?:src|href)=[\"']https?://", re.IGNORECASE
 )
 
 
@@ -27,7 +36,7 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
         return
 
 
-def smoke_html(output_path: Path = OUTPUT_PATH) -> None:
+def smoke_html(output_path: Path = PUBLISHED_OUTPUT_PATH) -> None:
     if output_path.resolve() == TECHNICAL_GRAPH_PATH.resolve():
         raise ContractValidationError(
             "El smoke no admite el gráfico técnico como salida de negocio."
@@ -36,14 +45,11 @@ def smoke_html(output_path: Path = OUTPUT_PATH) -> None:
     missing = [marker for marker in REQUIRED_MARKERS if marker not in html]
     if missing:
         raise ContractValidationError(
-            f"HTML incompleto; faltan marcadores: {', '.join(missing)}."
+            f"HTML Archify incompleto; faltan marcadores: {', '.join(missing)}."
         )
-    if any(
-        token in html.lower()
-        for token in ("https://", "http://", 'src="//', 'href="//')
-    ):
+    if EXTERNAL_DEPENDENCY.search(html):
         raise ContractValidationError(
-            "El HTML contiene una dependencia de red externa."
+            "El HTML Archify contiene una dependencia de red externa."
         )
 
     handler = lambda *args, **kwargs: QuietHandler(
@@ -56,9 +62,9 @@ def smoke_html(output_path: Path = OUTPUT_PATH) -> None:
         url = f"http://127.0.0.1:{server.server_port}/{output_path.name}"
         with contextlib.closing(urllib.request.urlopen(url, timeout=5)) as response:
             body = response.read().decode("utf-8")
-            if response.status != 200 or "Contratos de negocio" not in body:
+            if response.status != 200 or REQUIRED_MARKERS[0] not in body:
                 raise ContractValidationError(
-                    "El servidor local no devolvió el artefacto esperado."
+                    "El servidor local no devolvió el workflow esperado."
                 )
     finally:
         server.shutdown()

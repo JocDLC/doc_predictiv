@@ -17,8 +17,8 @@ class BusinessContractCliTests(unittest.TestCase):
             text=True,
         )
 
-    def test_validate_generate_and_smoke_commands_succeed(self):
-        for command in ("validate", "generate", "smoke"):
+    def test_validate_and_candidate_commands_succeed(self):
+        for command in ("validate", "candidate"):
             with self.subTest(command=command):
                 completed = self.run_cli(command)
                 self.assertEqual(
@@ -27,7 +27,6 @@ class BusinessContractCliTests(unittest.TestCase):
 
     def test_unknown_command_is_a_controlled_failure(self):
         completed = self.run_cli("unknown")
-
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("invalid choice", completed.stderr)
 

@@ -63,9 +63,7 @@ def load_queue_file(queue_path: str, queue_directory: Path) -> dict[str, object]
     if not isinstance(leads, list) or not leads:
         raise ValueError("La cola no contiene Leads pendientes.")
     return {
-        "leads": [
-            _validate_lead(lead, index) for index, lead in enumerate(leads)
-        ],
+        "leads": [_validate_lead(lead, index) for index, lead in enumerate(leads)],
         "run_id": str(payload.get("run_id") or "").strip(),
         "source_file": str(payload.get("source_file") or "").strip(),
     }

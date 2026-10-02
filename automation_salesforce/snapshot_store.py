@@ -46,9 +46,7 @@ def record_snapshot(
         "base_hash": content_hash(field_value),
         "read_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "run_id": str(run_id or ""),
-        "call_ids": sorted(
-            call_ids if call_ids is not None else documented_call_ids(field_value)
-        ),
+        "call_ids": sorted(call_ids if call_ids is not None else documented_call_ids(field_value)),
     }
     snapshot_path.parent.mkdir(parents=True, exist_ok=True)
     snapshot_path.write_text(

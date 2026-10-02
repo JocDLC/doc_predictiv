@@ -11,6 +11,19 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.1] — 2026-10-02
+
+### Corregido
+
+- Vista de cola: el snapshot histórico de `Otra información` ya no se muestra
+  suelto debajo del Lead (parecía texto recién documentado). Ahora va
+  colapsado en un `details` rotulado "Texto actual en Salesforce (lectura
+  anterior…)", con fecha/hora de la lectura.
+- La tarjeta muestra primero el bloque **"A documentar (intento nuevo)"** con
+  resultado, fecha, hora y `call_id` de cada intento pendiente.
+- En la lista principal, el detalle del snapshot indica la fecha de lectura en
+  lugar del ambiguo "confirmada por bot".
+
 ## [1.0.0] — 2026-10-01
 
 Primera versión etiquetada. Corrige el incidente de "falsos documentados"

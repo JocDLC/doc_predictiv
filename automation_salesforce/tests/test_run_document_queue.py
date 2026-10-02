@@ -108,10 +108,14 @@ class RunDocumentQueueTests(unittest.TestCase):
         queue_path, auto_mode, options = parse_queue_args(
             [
                 "--auto",
-                "--run-id", "run_20261001T000000Z_abc123",
-                "--results", "queues/cola_activa.resultado.json",
-                "--snapshots", "ui_output/cola_activa.snapshots.json",
-                "--metrics", "queues/cola_activa.metricas.json",
+                "--run-id",
+                "run_20261001T000000Z_abc123",
+                "--results",
+                "queues/cola_activa.resultado.json",
+                "--snapshots",
+                "ui_output/cola_activa.snapshots.json",
+                "--metrics",
+                "queues/cola_activa.metricas.json",
                 "queues/run_x.json",
             ]
         )

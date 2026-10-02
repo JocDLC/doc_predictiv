@@ -15,9 +15,7 @@ from tempfile import TemporaryDirectory
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 UI_PAGE = REPOSITORY_ROOT / "documentador_predictivo.html"
-FALLBACK_NODE = Path(
-    r"C:\Users\ax24611\Downloads\_dev\tools\node-v24.21.0-win-x64\node.exe"
-)
+FALLBACK_NODE = Path(r"C:\Users\ax24611\Downloads\_dev\tools\node-v24.21.0-win-x64\node.exe")
 
 
 def node_executable() -> str | None:

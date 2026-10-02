@@ -1,73 +1,102 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from business_contract_graph.generator import generate_graph
-from business_contract_graph.paths import SOURCE_PATH, TEMPLATE_PATH
+from business_contract_graph.generator import build_candidate, generate_candidate
+from business_contract_graph.paths import SOURCE_PATH
 from business_contract_graph.validator import load_contracts, sha256
 
 
 class BusinessContractGeneratorTests(unittest.TestCase):
     def setUp(self):
         self.data = load_contracts(SOURCE_PATH)
+        self.candidate = build_candidate(self.data)
 
-    def generate(self, directory: str) -> Path:
-        output = Path(directory) / "business-contracts.html"
-        return generate_graph(
-            source_path=SOURCE_PATH,
-            template_path=TEMPLATE_PATH,
-            output_path=output,
-        )
+    def test_candidate_is_native_showcase_workflow_v2(self):
+        self.assertEqual(self.candidate["schema_version"], 2)
+        self.assertEqual(self.candidate["diagram_type"], "workflow")
+        self.assertEqual(self.candidate["meta"]["quality_profile"], "showcase")
+        self.assertEqual(self.candidate["meta"]["animation"], "none")
+        self.assertNotIn("visual_preset", self.candidate["meta"])
 
     def test_two_generations_have_the_same_hash(self):
         with tempfile.TemporaryDirectory() as directory:
-            output = self.generate(directory)
-            first_hash = sha256(output)
-            output = self.generate(directory)
+            first = Path(directory) / "first.json"
+            second = Path(directory) / "second.json"
+            generate_candidate(candidate_path=first)
+            generate_candidate(candidate_path=second)
+            self.assertEqual(sha256(first), sha256(second))
 
-            self.assertEqual(sha256(output), first_hash)
+    def test_candidate_contains_every_source_node_once(self):
+        candidate_ids = [node["id"] for node in self.candidate["nodes"]]
+        source_ids = [
+            *(item["id"] for item in self.data["artifacts"]),
+            *(item["id"] for item in self.data["macrofunctions"]),
+        ]
+        self.assertCountEqual(candidate_ids, source_ids)
+        self.assertEqual(len(candidate_ids), len(set(candidate_ids)))
 
-    def test_each_node_and_relationship_is_serialized_once(self):
-        with tempfile.TemporaryDirectory() as directory:
-            html = self.generate(directory).read_text(encoding="utf-8")
+    def test_each_macrofunction_has_one_native_contract_card(self):
+        card_titles = [card["title"] for card in self.candidate["cards"]]
+        expected_titles = [item["name"] for item in self.data["macrofunctions"]]
+        self.assertEqual(card_titles, expected_titles)
+        for card in self.candidate["cards"]:
+            with self.subTest(card=card["title"]):
+                self.assertEqual(len(card["items"]), 4)
+                self.assertTrue(card["items"][0].startswith("Qué recibe:"))
+                self.assertTrue(card["items"][1].startswith("Qué entrega:"))
+                self.assertTrue(card["items"][2].startswith("Regla principal:"))
+                self.assertTrue(card["items"][3].startswith("Si falla:"))
 
-        for item in [*self.data["macrofunctions"], *self.data["relationships"]]:
-            with self.subTest(item=item["id"]):
-                self.assertEqual(html.count(f'"id":"{item["id"]}"'), 1)
+    def test_candidate_exposes_two_roots_and_manual_bot_paths(self):
+        semantic = self.candidate["semanticChecks"]
+        self.assertEqual(
+            set(semantic["allowedRoots"]),
+            {"salesforce-csv", "wolkvox-attempts-csv"},
+        )
+        required_paths = {
+            (item["from"], item["to"]) for item in semantic["requiredPaths"]
+        }
+        self.assertIn(("wolkvox-attempts-csv", "document-manually"), required_paths)
+        self.assertIn(("wolkvox-attempts-csv", "document-with-bot"), required_paths)
 
-    def test_output_is_self_contained_responsive_and_presentable(self):
-        with tempfile.TemporaryDirectory() as directory:
-            html = self.generate(directory).read_text(encoding="utf-8")
+    def test_salesforce_documentation_is_a_visible_external_destination(self):
+        node_by_id = {node["id"]: node for node in self.candidate["nodes"]}
+        salesforce_documentation = node_by_id["confirm-salesforce-documentation"]
+        self.assertEqual(salesforce_documentation["label"], "Documentar en Salesforce")
+        self.assertEqual(salesforce_documentation["type"], "cloud")
+        self.assertEqual(salesforce_documentation["tag"], "Externo")
 
-        for marker in (
-            'id="theme-toggle"',
-            'id="presentation-toggle"',
-            "@media (max-width:900px)",
-            "@media (max-width:620px)",
-            "prefers-reduced-motion",
-        ):
-            with self.subTest(marker=marker):
-                self.assertIn(marker, html)
-        self.assertNotIn("https://", html.lower())
-        self.assertNotIn('src="//', html.lower())
+    def test_candidate_uses_csv_and_does_not_advertise_xlsx(self):
+        rendered = json.dumps(self.candidate, ensure_ascii=False)
+        self.assertIn("CSV exportado de Salesforce", rendered)
+        self.assertIn("CSV con intentos", rendered)
+        self.assertIn("CSV descargado de Wolkvox con intentos de llamada", rendered)
+        self.assertNotIn("XLSX", rendered.upper())
 
-    def test_technical_evidence_is_only_rendered_inside_details(self):
-        template = TEMPLATE_PATH.read_text(encoding="utf-8")
-        evidence_details = template.index("<details><summary>Ver evidencia técnica")
-        implementation = template.index("item.implementation_refs")
-        test_refs = template.index("item.test_refs")
-
-        self.assertLess(evidence_details, implementation)
-        self.assertLess(evidence_details, test_refs)
-
-    def test_references_do_not_escape_the_served_artifact(self):
-        with tempfile.TemporaryDirectory() as directory:
-            html = self.generate(directory).read_text(encoding="utf-8")
-
-        self.assertNotIn("../../", html)
-        self.assertIn('href="#${escapeHtml(anchor)}"', html)
+    def test_business_labels_hide_technical_identifiers(self):
+        visible_text = json.dumps(
+            {
+                "lanes": self.candidate["lanes"],
+                "nodes": [
+                    {
+                        "label": node["label"],
+                        "sublabel": node.get("sublabel"),
+                        "tag": node.get("tag"),
+                    }
+                    for node in self.candidate["nodes"]
+                ],
+                "edges": [edge.get("label") for edge in self.candidate["edges"]],
+                "cards": self.candidate["cards"],
+            },
+            ensure_ascii=False,
+        )
+        for forbidden in (".py", "localhost", "127.0.0.1", "selenium", "DOM"):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, visible_text)
 
 
 if __name__ == "__main__":

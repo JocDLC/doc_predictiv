@@ -1,5 +1,10 @@
 # Evidencia de implementación — Fase 4
 
+> **Estado histórico — no aprobado.** Este prototipo usó una plantilla HTML
+> propia, mezcló los dos recorridos del negocio y anunció XLSX sin soporte
+> operativo. Fue sustituido por el workflow nativo de Archify documentado en
+> `phase-4-archify-correction-2026-10-01.md`.
+
 Fecha: 2026-10-01
 
 ## Artefactos

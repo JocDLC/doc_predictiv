@@ -135,7 +135,10 @@ def run_business_contract_graph() -> None:
         python_module("unittest", "discover", "-s", f"{package}/tests", "-v"),
         cwd=REPOSITORY_ROOT,
     )
-    run(python_module(package, "verify"), cwd=REPOSITORY_ROOT)
+    # CI valida y genera el candidato determinista. La finalización visual usa
+    # Archify localmente y deja recibos que se comprueban con el comando verify.
+    run(python_module(package, "validate"), cwd=REPOSITORY_ROOT)
+    run(python_module(package, "candidate"), cwd=REPOSITORY_ROOT)
 
 
 def run_named_command(command: str) -> None:

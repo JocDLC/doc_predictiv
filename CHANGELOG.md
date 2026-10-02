@@ -47,12 +47,31 @@ detectado el 2026-10-01.
 - El formato de cola/resultados/snapshots gana campos nuevos pero acepta los
   archivos anteriores (se tratan como históricos).
 
-## Hitos previos (sin etiquetar)
+## Historial previo (versiones retroactivas `0.x`)
 
-| Commit | Descripción |
-|--------|-------------|
-| `9a3d1e7` | Documentación automática con guardado verificado y cola viva |
-| `35a451f` | Aviso de columnas omitidas y alto de fila ajustable |
-| `1fdf366` | UI local para leads QUALIF |
-| `e0850e1` | Automatización local asistida de Salesforce |
-| `7119405` | Aplicación de campañas predictivas inicial |
+Las fases de desarrollo previas a la primera versión estable fueron etiquetadas
+retroactivamente sobre sus commits originales, para mantener la trazabilidad.
+`git checkout v0.x.y` reconstruye cada estado histórico.
+
+### [0.4.0] — commit `9a3d1e7`
+
+Documentación automática con guardado verificado y cola viva en la UI
+(bot en modo `--auto`, verificación post-guardado, polling en vivo).
+
+### [0.3.1] — commit `35a451f`
+
+Aviso de columnas omitidas del CSV y alto de fila ajustable en la UI.
+
+### [0.3.0] — commit `1fdf366`
+
+UI local para leads `AR_LEAD_QUALIF`: selección de cola, snapshot y progreso.
+
+### [0.2.0] — commit `e0850e1`
+
+Automatización local asistida de Salesforce (Selenium + Edge dedicado,
+modo supervisado sin guardar).
+
+### [0.1.0] — commit `7119405`
+
+Aplicación inicial de campañas predictivas: carga del CSV, normalización,
+generación de archivos Wolkvox y documentación manual de intentos.

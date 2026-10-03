@@ -6,7 +6,7 @@ Las tres páginas locales de documentación y productividad aparecen en el naveg
 
 - Declarar un favicon SVG embebido y distintivo en cada una de las tres páginas locales.
 - Conservar los títulos y el contenido funcional actuales de cada página.
-- Regenerar los artefactos Archify de negocio y arquitectura de forma verificable antes de publicar sus copias locales.
+- Regenerar los artefactos Archify de negocio y arquitectura de forma verificable antes de que un publicador local agregue únicamente su favicon a las copias locales servidas.
 - Añadir comprobaciones que exijan el favicon correcto en las tres salidas.
 
 ## Capabilities

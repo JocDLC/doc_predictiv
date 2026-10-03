@@ -21,6 +21,7 @@ REQUIRED_MARKERS = (
     "Documentar en Salesforce",
     "Documentar manualmente",
     "Documentar con el bot",
+    'data-favicon="business-flow"',
     "Qué recibe:",
     "Qué entrega:",
     "Regla principal:",

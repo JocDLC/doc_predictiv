@@ -344,7 +344,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.0.3";
+const APP_VERSION = "1.0.4";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -1065,6 +1065,19 @@ async function notifyBotCompletion() {
       : await (await fetch(`http://127.0.0.1:${(await readBotFile("ui_output", "bot_session.json")).port}/status`)).json();
     if (status.running) return;
     botRunInProgress = false;
+    if (status.exit_code !== null && status.exit_code !== 0) {
+      const hint = `El bot terminó con un error (código ${status.exit_code}). ` +
+        "Si no se abrieron las pestañas de los Leads, el navegador del bot puede " +
+        "estar trabado: probá 'Reiniciar navegador del bot' y ejecutá de nuevo.";
+      queueSyncInfo = hint;
+      updateQueueSyncState();
+      if (!botCompletionShown) {
+        botCompletionShown = true;
+        alert(hint);
+      }
+      renderQueueList();
+      return;
+    }
     const metrics = await readBotFile("queues", ACTIVE_QUEUE_METRICS_NAME);
     queueSyncInfo = productivityMessage(metrics).replaceAll("\n", " · ");
     updateQueueSyncState();

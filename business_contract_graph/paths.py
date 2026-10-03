@@ -15,7 +15,7 @@ WORKFLOW_DIRECTORY = (
 CANDIDATE_PATH = WORKFLOW_DIRECTORY / "candidate.json"
 ARCHIFY_OUTPUT_PATH = WORKFLOW_DIRECTORY / "documentador-business-contracts.html"
 PUBLISHED_OUTPUT_PATH = SERVED_DIRECTORY / "documentador-business-contracts.html"
-FINALIZE_EVIDENCE_DIRECTORY = WORKFLOW_DIRECTORY / "review-salesforce"
+FINALIZE_EVIDENCE_DIRECTORY = WORKFLOW_DIRECTORY / "review-favicon"
 FINALIZE_SUMMARY_PATH = (
     FINALIZE_EVIDENCE_DIRECTORY
     / "documentador-business-contracts.finalize-summary.json"
@@ -24,5 +24,5 @@ VISUAL_EVIDENCE_DIRECTORY = REPOSITORY_ROOT / ".archify" / "vis-salesforce"
 TECHNICAL_GRAPH_PATH = SERVED_DIRECTORY / "documentador-architecture.html"
 
 EXPECTED_TECHNICAL_GRAPH_SHA256 = (
-    "1024d1e1b547451dee11f758e17fa56122e59647c645bd378ee43db3d10d7f5b"
+    "24a07fe661e6cfe19a8d6393af6b43bf4a6a4527135a60b21e986d58ee9293ad"
 )

@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from page_identity import publish_decorated_html, verify_decorated_html
+
 from .paths import (
     ARCHIFY_OUTPUT_PATH,
     CANDIDATE_PATH,
@@ -353,8 +355,14 @@ def verify_archify_artifacts() -> None:
         raise ContractValidationError("El HTML no coincide con el recibo de Archify.")
     if not PUBLISHED_OUTPUT_PATH.is_file():
         raise ContractValidationError("Falta la copia publicada del workflow.")
-    if sha256(PUBLISHED_OUTPUT_PATH) != sha256(ARCHIFY_OUTPUT_PATH):
-        raise ContractValidationError("La copia publicada no coincide con Archify.")
+    try:
+        verify_decorated_html(
+            ARCHIFY_OUTPUT_PATH.read_text(encoding="utf-8"),
+            PUBLISHED_OUTPUT_PATH.read_text(encoding="utf-8"),
+            "business-flow",
+        )
+    except ValueError as exc:
+        raise ContractValidationError(str(exc)) from exc
     if PUBLISHED_OUTPUT_PATH.resolve() == TECHNICAL_GRAPH_PATH.resolve():
         raise ContractValidationError("La publicación apunta al gráfico técnico.")
 
@@ -376,7 +384,7 @@ def verify_archify_artifacts() -> None:
 
 
 def publish_archify_artifact() -> Path:
-    """Publica una copia byte a byte del HTML ya finalizado por Archify."""
+    """Publica una copia decorada del HTML ya finalizado por Archify."""
 
     if not ARCHIFY_OUTPUT_PATH.is_file() or not FINALIZE_SUMMARY_PATH.is_file():
         raise ContractValidationError(
@@ -385,8 +393,7 @@ def publish_archify_artifact() -> Path:
     summary = json.loads(FINALIZE_SUMMARY_PATH.read_text(encoding="utf-8"))
     if not summary.get("ok") or summary.get("status") != "pass":
         raise ContractValidationError("No se publica un workflow Archify no aprobado.")
-    html = ARCHIFY_OUTPUT_PATH.read_bytes()
-    scan_sensitive_text(html.decode("utf-8"), location="HTML Archify")
-    PUBLISHED_OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    PUBLISHED_OUTPUT_PATH.write_bytes(html)
+    html = ARCHIFY_OUTPUT_PATH.read_text(encoding="utf-8")
+    scan_sensitive_text(html, location="HTML Archify")
+    publish_decorated_html(ARCHIFY_OUTPUT_PATH, PUBLISHED_OUTPUT_PATH, "business-flow")
     return PUBLISHED_OUTPUT_PATH

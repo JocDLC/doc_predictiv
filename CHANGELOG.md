@@ -11,6 +11,21 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.4] — 2026-10-02
+
+### Corregido
+
+- Si el puerto de depuración del navegador dedicado queda trabado (responde
+  `/json` pero no crea sesiones WebDriver), el bot ahora falla en **15 s** con
+  un mensaje claro en vez de colgar ~120 s sin abrir pestañas.
+- La UI avisa cuando el bot termina con `exit_code != 0` ("reiniciá el
+  navegador del bot") en lugar de quedar en silencio.
+
+### Detalle técnico
+
+- `create_driver` usa `ClientConfig(timeout=15)` solo para crear la sesión
+  adjunta y restaura 120 s para los comandos Lightning.
+
 ## [1.0.3] — 2026-10-02
 
 ### Corregido

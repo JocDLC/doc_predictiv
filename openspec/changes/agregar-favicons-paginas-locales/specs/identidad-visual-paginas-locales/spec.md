@@ -12,11 +12,11 @@ El sistema SHALL declarar un favicon SVG embebido y distinguible en cada una de 
 - **THEN** el favicon usa una URL `data:image/svg+xml` y no existe una solicitud HTTP externa para obtenerlo
 
 ### Requirement: Preservación de artefactos Archify
-Los favicons de los diagramas de negocio y arquitectura SHALL originarse en sus candidatos Archify y MUST publicarse solo después de una finalización válida con calidad `showcase`.
+Los diagramas de negocio y arquitectura SHALL finalizarse mediante Archify con calidad `showcase` antes de que un publicador local agregue únicamente su favicon SVG a la copia servida. El publicador MUST conservar sin cambios el cuerpo y los recursos del HTML validado por Archify.
 
 #### Scenario: Regeneración verificable
 - **WHEN** se actualiza un favicon de un diagrama Archify
-- **THEN** los gates `validate`, `deliver`, `check` y `browser-check` pasan antes de publicar el HTML actualizado
+- **THEN** los gates `validate`, `deliver`, `check` y `browser-check` pasan antes de publicar la copia con favicon, y la verificación del publicador confirma que solo cambió el `<head>`
 
 ### Requirement: Verificación de publicación local
 El harness SHALL comprobar el favicon esperado y la respuesta satisfactoria de las tres URLs locales.

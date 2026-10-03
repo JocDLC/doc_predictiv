@@ -39,3 +39,345 @@ Caracteres finales: 268
 Resumen: 5 guardados, 0 parciales, 0 ya documentados, 0 en revisión, 0 duplicados, 0 preparados, 0 omitidos, 0 errores.
 Resultados: C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\queues\cola_activa.resultado.json
 Métricas: C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\queues\cola_activa.metricas.json
+Conectado al navegador persistente abierto.
+Sesión de Salesforce activa detectada; no hace falta autenticarse.
+
+=== Lead 1/20 ===
+Lead ID: 00QbD00000uQ8HrUAK
+Caracteres previos: 278
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 329
+
+=== Lead 2/20 ===
+Lead ID: 00QbD00000uO5OBUA0
+Caracteres previos: 195
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 282
+
+=== Lead 3/20 ===
+Lead ID: 00QbD00000uNqU2UAK
+Caracteres previos: 375
+Próximo INT: 5
+Intentos nuevos: 1
+Caracteres finales: 450
+
+=== Lead 4/20 ===
+Lead ID: 00QbD00000uNLUwUAO
+Caracteres previos: 118
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 182
+
+=== Lead 5/20 ===
+Lead ID: 00QbD00000uLQQkUAO
+Caracteres previos: 174
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 238
+
+=== Lead 6/20 ===
+Lead ID: 00QbD00000uLKQ9UAO
+Caracteres previos: 169
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 256
+
+=== Lead 7/20 ===
+Lead ID: 00QbD00000uXka5UAC
+Caracteres previos: 246
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 310
+
+=== Lead 8/20 ===
+Lead ID: 00QbD00000ugPpuUAE
+Caracteres previos: 111
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 175
+
+=== Lead 9/20 ===
+Lead ID: 00QbD00000ucl5jUAA
+Caracteres previos: 111
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 175
+
+=== Lead 10/20 ===
+Lead ID: 00QbD00000ugFHAUA2
+Caracteres previos: 114
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 178
+
+=== Lead 11/20 ===
+Lead ID: 00QbD00000ugbFrUAI
+Caracteres previos: 54
+Próximo INT: 2
+Intentos nuevos: 1
+Caracteres finales: 116
+
+=== Lead 12/20 ===
+Lead ID: 00QbD00000uUSMpUAO
+Caracteres previos: 318
+Próximo INT: 5
+Intentos nuevos: 1
+Caracteres finales: 372
+
+=== Lead 13/20 ===
+Lead ID: 00QbD00000uU5rgUAC
+Caracteres previos: 146
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 200
+
+=== Lead 14/20 ===
+Lead ID: 00QbD00000uSCE6UAO
+Caracteres previos: 146
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 200
+
+=== Lead 15/20 ===
+Lead ID: 00QbD00000uQh16UAC
+Caracteres previos: 146
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 200
+
+=== Lead 16/20 ===
+Lead ID: 00QbD00000uQTz0UAG
+Caracteres previos: 151
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 205
+
+=== Lead 17/20 ===
+Lead ID: 00QbD00000uQMKpUAO
+Caracteres previos: 146
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 200
+
+=== Lead 18/20 ===
+Lead ID: 00QbD00000uPqZUUA0
+Caracteres previos: 146
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 200
+
+=== Lead 19/20 ===
+Lead ID: 00QbD00000uOicLUAS
+Caracteres previos: 146
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 200
+
+=== Lead 20/20 ===
+Lead ID: 00QbD00000uOR0RUAW
+Caracteres previos: 156
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 210
+
+Resumen: 20 guardados, 0 parciales, 0 ya documentados, 0 en revisión, 0 duplicados, 0 preparados, 0 omitidos, 0 errores.
+Resultados: C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\queues\cola_activa.resultado.json
+Métricas: C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\queues\cola_activa.metricas.json
+Traceback (most recent call last):
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py", line 1450, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\socket.py", line 725, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 594, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 321, in main
+    driver = create_driver(
+        browser,
+    ...<2 lines>...
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py", line 94, in create_driver
+    driver = webdriver.Edge(options=options) if browser == "edge" else webdriver.Chrome(options=options)
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\edge\webdriver.py", line 45, in __init__
+    super().__init__(
+    ~~~~~~~~~~~~~~~~^
+        browser_name=DesiredCapabilities.EDGE["browserName"],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        keep_alive=keep_alive,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\chromium\webdriver.py", line 66, in __init__
+    super().__init__(command_executor=executor, options=self.options)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\common\webdriver.py", line 25, in __init__
+    super().__init__(*args, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 291, in __init__
+    self.start_session(capabilities)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 398, in start_session
+    response = self.execute(Command.NEW_SESSION, caps)["value"]
+               ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 500, in execute
+    response = cast(RemoteConnection, self.command_executor).execute(driver_command, params)
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 407, in execute
+    return self._request(command_info[0], url, body=data)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 431, in _request
+    response = self._conn.request(method, url, body=body, headers=headers, timeout=self._client_config.timeout)
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\_request_methods.py", line 143, in request
+    return self.request_encode_body(
+           ~~~~~~~~~~~~~~~~~~~~~~~~^
+        method, url, fields=fields, headers=headers, **urlopen_kw
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\_request_methods.py", line 278, in request_encode_body
+    return self.urlopen(method, url, **extra_kw)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\poolmanager.py", line 457, in urlopen
+    response = conn.urlopen(method, u.request_uri, **kw)
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\retry.py", line 490, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\util.py", line 39, in reraise
+    raise value
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 536, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 367, in _raise_timeout
+    raise ReadTimeoutError(
+        self, url, f"Read timed out. (read timeout={timeout_value})"
+    ) from err
+urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='localhost', port=60093): Read timed out. (read timeout=120)
+Traceback (most recent call last):
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py", line 1450, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\http\client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\socket.py", line 725, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 594, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 321, in main
+    driver = create_driver(
+        browser,
+    ...<2 lines>...
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py", line 94, in create_driver
+    driver = webdriver.Edge(options=options) if browser == "edge" else webdriver.Chrome(options=options)
+             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\edge\webdriver.py", line 45, in __init__
+    super().__init__(
+    ~~~~~~~~~~~~~~~~^
+        browser_name=DesiredCapabilities.EDGE["browserName"],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        keep_alive=keep_alive,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\chromium\webdriver.py", line 66, in __init__
+    super().__init__(command_executor=executor, options=self.options)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\common\webdriver.py", line 25, in __init__
+    super().__init__(*args, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 291, in __init__
+    self.start_session(capabilities)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 398, in start_session
+    response = self.execute(Command.NEW_SESSION, caps)["value"]
+               ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 500, in execute
+    response = cast(RemoteConnection, self.command_executor).execute(driver_command, params)
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 407, in execute
+    return self._request(command_info[0], url, body=data)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 431, in _request
+    response = self._conn.request(method, url, body=body, headers=headers, timeout=self._client_config.timeout)
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\_request_methods.py", line 143, in request
+    return self.request_encode_body(
+           ~~~~~~~~~~~~~~~~~~~~~~~~^
+        method, url, fields=fields, headers=headers, **urlopen_kw
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\_request_methods.py", line 278, in request_encode_body
+    return self.urlopen(method, url, **extra_kw)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\poolmanager.py", line 457, in urlopen
+    response = conn.urlopen(method, u.request_uri, **kw)
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\retry.py", line 490, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\util\util.py", line 39, in reraise
+    raise value
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 536, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\urllib3\connectionpool.py", line 367, in _raise_timeout
+    raise ReadTimeoutError(
+        self, url, f"Read timed out. (read timeout={timeout_value})"
+    ) from err
+urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='localhost', port=52185): Read timed out. (read timeout=120)

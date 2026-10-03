@@ -76,22 +76,51 @@ def open_url_in_browser(executable: Path, profile_directory: Path, url: str) -> 
     )
 
 
+# Adjuntarse a un navegador sano es instantáneo; un puerto de depuración
+# trabado responde /json pero nunca crea la sesión y Selenium colgaba ~120 s
+# (la UI solo veía "bot corriendo" sin pestañas). El timeout corto detecta el
+# caso rápido y solo aplica a la creación de la sesión.
+ATTACH_SESSION_TIMEOUT_SECONDS = 15
+COMMAND_TIMEOUT_SECONDS = 120
+
+
 def create_driver(browser: str, executable: Path, profile_directory: Path, debugger_address: str | None = None):
     from selenium import webdriver
     from selenium.common.exceptions import WebDriverException
     from selenium.webdriver.chrome.options import Options as ChromeOptions
     from selenium.webdriver.edge.options import Options as EdgeOptions
+    from selenium.webdriver.remote.client_config import ClientConfig
 
     options = EdgeOptions() if browser == "edge" else ChromeOptions()
     attached = bool(debugger_address) and debugger_is_listening(debugger_address)
+    client_config = None
     if attached:
         options.add_experimental_option("debuggerAddress", debugger_address)
+        client_config = ClientConfig(
+            remote_server_addr="http://localhost",
+            timeout=ATTACH_SESSION_TIMEOUT_SECONDS,
+        )
     else:
         profile_directory.mkdir(parents=True, exist_ok=True)
         options.binary_location = str(executable)
         options.add_argument(f"--user-data-dir={profile_directory}")
         options.add_argument("--start-maximized")
-    driver = webdriver.Edge(options=options) if browser == "edge" else webdriver.Chrome(options=options)
+    constructor = webdriver.Edge if browser == "edge" else webdriver.Chrome
+    try:
+        driver = constructor(options=options, client_config=client_config)
+    except WebDriverException as error:
+        if attached:
+            raise RuntimeError(
+                "No se pudo conectar al navegador persistente en "
+                f"{debugger_address} ({ATTACH_SESSION_TIMEOUT_SECONDS} s). El puerto de "
+                "depuración parece trabado: reiniciá el navegador dedicado del bot "
+                "('Reiniciar navegador del bot' en la app o INICIAR.bat)."
+            ) from error
+        raise
+    if attached:
+        # Los comandos Lightning pueden tardar más que el límite corto usado
+        # para crear la sesión: se restaura el timeout habitual.
+        driver.command_executor.client_config.timeout = COMMAND_TIMEOUT_SECONDS
     driver.attached_to_persistent_browser = attached
     if attached:
         # El bot trabaja en una pestaña propia para no navegar la pestaña

@@ -63,6 +63,7 @@ NODE_TAGS = {
 
 NODE_WIDTHS = {
     "confirm-salesforce-documentation": 180,
+    "organize-call-attempts": 180,
 }
 
 NODE_LABELS = {
@@ -71,7 +72,7 @@ NODE_LABELS = {
     "wolkvox-ready-csv": "CSV Wolkvox",
     "upload-wolkvox-campaign": "Subir a Wolkvox",
     "wolkvox-attempts-csv": "CSV con intentos",
-    "organize-call-attempts": "Ordenar llamadas",
+    "organize-call-attempts": "Ordenar Intentos llamadas",
     "select-documentation-batch": "Elegir lote",
     "document-manually": "Ruta manual",
     "document-with-bot": "Ruta con bot",
@@ -86,7 +87,7 @@ EDGE_LABELS = {
     "wolkvox-file-to-upload": "Campaña",
     "attempts-to-organize": "Intentos",
     "organize-to-select": "Pendientes",
-    "select-to-manual": "Manual",
+    "organize-to-manual": "Manual",
     "select-to-bot": "Bot",
     "manual-to-confirm": "Registrado",
     "bot-to-confirm": "Guardado",
@@ -305,8 +306,8 @@ def build_candidate(data: dict[str, Any]) -> dict[str, Any]:
             "allowedTerminals": ["upload-wolkvox-campaign", "review-results"],
             "requiredPaths": [
                 {"from": "salesforce-csv", "to": "upload-wolkvox-campaign"},
-                {"from": "wolkvox-attempts-csv", "to": "document-manually"},
-                {"from": "wolkvox-attempts-csv", "to": "document-with-bot"},
+                {"from": "organize-call-attempts", "to": "document-manually"},
+                {"from": "select-documentation-batch", "to": "document-with-bot"},
                 {"from": "document-manually", "to": "confirm-salesforce-documentation"},
                 {"from": "document-with-bot", "to": "confirm-salesforce-documentation"},
             ],

@@ -60,8 +60,10 @@ class BusinessContractGeneratorTests(unittest.TestCase):
         required_paths = {
             (item["from"], item["to"]) for item in semantic["requiredPaths"]
         }
-        self.assertIn(("wolkvox-attempts-csv", "document-manually"), required_paths)
-        self.assertIn(("wolkvox-attempts-csv", "document-with-bot"), required_paths)
+        self.assertIn(("organize-call-attempts", "document-manually"), required_paths)
+        self.assertIn(
+            ("select-documentation-batch", "document-with-bot"), required_paths
+        )
 
     def test_salesforce_documentation_is_a_visible_external_destination(self):
         node_by_id = {node["id"]: node for node in self.candidate["nodes"]}

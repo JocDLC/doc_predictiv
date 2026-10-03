@@ -128,7 +128,8 @@ def restart_browser(config: dict) -> None:
             time.sleep(0.5)
     subprocess.run(["taskkill", "/IM", "msedgedriver.exe", "/F"], capture_output=True)
     _, executable = detect_browser(config["browser"])
-    urls = [config["salesforce_url"], f"http://127.0.0.1:{SERVER_PORT}/"]
+    # Primera pestaña la app (lo que el operador necesita ver) y Salesforce al lado.
+    urls = [f"http://127.0.0.1:{SERVER_PORT}/", config["salesforce_url"]]
     launch_persistent_browser(executable, local_path(config["profile_directory"]), debugger_address, urls)
 
 

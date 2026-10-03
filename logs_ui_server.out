@@ -381,3 +381,193 @@ Traceback (most recent call last):
         self, url, f"Read timed out. (read timeout={timeout_value})"
     ) from err
 urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='localhost', port=52185): Read timed out. (read timeout=120)
+Conectado al navegador persistente abierto.
+Sesión de Salesforce activa detectada; no hace falta autenticarse.
+
+=== Lead 1/17 ===
+Lead ID: 00QbD00000uONpdUAG
+Caracteres previos: 263
+Próximo INT: 5
+Intentos nuevos: 1
+Caracteres finales: 317
+
+=== Lead 2/17 ===
+Lead ID: 00QbD00000uL6zwUAC
+Caracteres previos: 217
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 271
+
+=== Lead 3/17 ===
+Lead ID: 00QbD00000uK7JhUAK
+Caracteres previos: 188
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 242
+
+=== Lead 4/17 ===
+Lead ID: 00QbD00000uIPm5UAG
+Caracteres previos: 240
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 294
+
+=== Lead 5/17 ===
+Lead ID: 00QbD00000uI9ivUAC
+Caracteres previos: 214
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 268
+
+=== Lead 6/17 ===
+Lead ID: 00QbD00000uHNhXUAW
+Caracteres previos: 174
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 228
+
+=== Lead 7/17 ===
+Lead ID: 00QbD00000uH6opUAC
+Caracteres previos: 156
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 210
+
+=== Lead 8/17 ===
+Lead ID: 00QbD00000uGG3sUAG
+Caracteres previos: 146
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 200
+
+=== Lead 9/17 ===
+Lead ID: 00QbD00000u7MLKUA2
+Caracteres previos: 146
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 200
+
+=== Lead 10/17 ===
+Lead ID: 00QbD00000u6pfYUAQ
+Caracteres previos: 146
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 200
+
+=== Lead 11/17 ===
+Lead ID: 00QbD00000uQ9M7UAK
+Caracteres previos: 108
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 162
+
+=== Lead 12/17 ===
+Lead ID: 00QbD00000uanJhUAI
+Caracteres previos: 217
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 271
+
+=== Lead 13/17 ===
+Lead ID: 00QbD00000uZNRLUA4
+Caracteres previos: 111
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 165
+
+=== Lead 14/17 ===
+Lead ID: 00QbD00000uZNmLUAW
+Caracteres previos: 107
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 161
+
+=== Lead 15/17 ===
+Lead ID: 00QbD00000uZIl2UAG
+Caracteres previos: 111
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 165
+
+=== Lead 16/17 ===
+Lead ID: 00QbD00000uXflmUAC
+Caracteres previos: 111
+Próximo INT: 3
+Intentos nuevos: 1
+Caracteres finales: 165
+
+=== Lead 17/17 ===
+Lead ID: 00QbD00000ubnvxUAA
+Caracteres previos: 287
+Próximo INT: 4
+Intentos nuevos: 1
+Caracteres finales: 341
+
+Resumen: 17 guardados, 0 parciales, 0 ya documentados, 0 en revisión, 0 duplicados, 0 preparados, 0 omitidos, 0 errores.
+Resultados: C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\queues\cola_activa.resultado.json
+Métricas: C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\queues\cola_activa.metricas.json
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 594, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 321, in main
+    driver = create_driver(
+        browser,
+    ...<2 lines>...
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py", line 110, in create_driver
+    driver = constructor(options=options, client_config=client_config)
+TypeError: WebDriver.__init__() got an unexpected keyword argument 'client_config'
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 594, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 321, in main
+    driver = create_driver(
+        browser,
+    ...<2 lines>...
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py", line 110, in create_driver
+    driver = constructor(options=options, client_config=client_config)
+TypeError: WebDriver.__init__() got an unexpected keyword argument 'client_config'
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 594, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 321, in main
+    driver = create_driver(
+        browser,
+    ...<2 lines>...
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py", line 110, in create_driver
+    driver = constructor(options=options, client_config=client_config)
+TypeError: WebDriver.__init__() got an unexpected keyword argument 'client_config'
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 594, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 321, in main
+    driver = create_driver(
+        browser,
+    ...<2 lines>...
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py", line 110, in create_driver
+    driver = constructor(options=options, client_config=client_config)
+TypeError: WebDriver.__init__() got an unexpected keyword argument 'client_config'
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 594, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\run_document_queue.py", line 321, in main
+    driver = create_driver(
+        browser,
+    ...<2 lines>...
+        config.get("debugger_address", "127.0.0.1:9222"),
+    )
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\automation_salesforce\browser_factory.py", line 110, in create_driver
+    driver = constructor(options=options, client_config=client_config)
+TypeError: WebDriver.__init__() got an unexpected keyword argument 'client_config'

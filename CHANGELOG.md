@@ -11,6 +11,16 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.8] — 2026-10-02
+
+### Agregado
+
+- Al abrirse, el navegador dedicado deja la app como primera pestaña y
+  Salesforce al lado (antes era al revés), tanto en
+  "Reiniciar navegador del bot" como en `open_persistent_browser.py`.
+- La app indica el requisito de estar logueado en Salesforce: en la
+  pantalla de inicio y en la vista de cola del bot.
+
 ## [1.0.7] — 2026-10-02
 
 ### Corregido

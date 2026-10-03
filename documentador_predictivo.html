@@ -180,6 +180,7 @@
         <span class="module-action">Documentar resultados &rarr;</span>
       </button>
     </div>
+    <p class="hint"><strong>Para documentar con el bot:</strong> inici&aacute; sesi&oacute;n en <strong>Salesforce</strong> (con 2FA si lo pide) en la pesta&ntilde;a de al lado. El bot solo puede escribir mientras la sesi&oacute;n est&eacute; activa.</p>
   </section>
 
   <section id="viewPrepare" class="hidden">
@@ -296,6 +297,7 @@
         <button class="btn" id="clearDocumented" title="Quita de esta lista los leads ya documentados (su registro queda en la lista principal).">Limpiar documentados</button>
         <span class="stats" id="queueSyncState">Carpeta no vinculada</span>
       </div>
+      <p class="hint"><strong>Requisito:</strong> ten&eacute;s que estar <strong>logueado en Salesforce</strong> en la otra pesta&ntilde;a de este navegador (con 2FA completado) antes de ejecutar el bot.</p>
       <p class="hint"><strong>Ejecutar bot</strong> lanza la documentaci&oacute;n autom&aacute;tica (requiere el servidor local corriendo: <code>INICIAR.bat</code> o <code>python ui_server.py</code>). Alternativa manual: <code>python run_document_queue.py --auto queues\cola_activa.json</code>. Los estados se actualizan solos.</p>
       <p class="hint"><strong>Reintentos:</strong> los leads con estado <strong>guardado</strong> salen solos de la cola, as&iacute; que <strong>volver a ejecutar el bot reintenta solo los que quedaron en error o pendientes</strong> &mdash; los ya documentados no se repiten. Antes de reintentar, verific&aacute; en Salesforce que el lead con error no haya quedado guardado igual; si se guard&oacute;, marc&aacute; <strong>Documentado</strong> a mano en la lista para que no se dupliquen los intentos.</p>
       <div id="queueList"></div>
@@ -344,7 +346,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.0.7";
+const APP_VERSION = "1.0.8";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",

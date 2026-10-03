@@ -124,6 +124,27 @@ class UiServerApiTests(unittest.TestCase):
         finally:
             ui_server.current_process = None
 
+    def test_restart_browser_opens_the_app_tab_first_then_salesforce(self):
+        import ui_server
+
+        config = {
+            "browser": "edge",
+            "debugger_address": "127.0.0.1:9222",
+            "profile_directory": "perfil",
+            "salesforce_url": "https://sf.example",
+        }
+        with (
+            patch("ui_server.find_listening_pid", return_value=None),
+            patch("ui_server.subprocess.run"),
+            patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
+            patch("ui_server.launch_persistent_browser") as launch,
+        ):
+            ui_server.restart_browser(config)
+        self.assertEqual(
+            launch.call_args.args[3],
+            ["http://127.0.0.1:8765/", "https://sf.example"],
+        )
+
     def test_find_listening_pid_parses_netstat(self):
         import ui_server
 

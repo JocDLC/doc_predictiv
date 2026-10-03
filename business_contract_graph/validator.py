@@ -386,8 +386,8 @@ def _validate_relationships(data: dict[str, Any], node_ids: set[str]) -> None:
 
     required_paths = (
         ("salesforce-csv", "upload-wolkvox-campaign"),
-        ("wolkvox-attempts-csv", "document-manually"),
-        ("wolkvox-attempts-csv", "document-with-bot"),
+        ("organize-call-attempts", "document-manually"),
+        ("select-documentation-batch", "document-with-bot"),
         ("document-manually", "confirm-salesforce-documentation"),
         ("document-with-bot", "confirm-salesforce-documentation"),
         ("confirm-salesforce-documentation", "review-results"),

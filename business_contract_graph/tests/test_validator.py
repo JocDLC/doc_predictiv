@@ -56,6 +56,9 @@ class ContractValidatorTests(unittest.TestCase):
 
     def test_manual_and_bot_routes_both_finish_in_salesforce_confirmation(self):
         edges = {(item["from"], item["to"]) for item in self.data["relationships"]}
+        self.assertIn(("organize-call-attempts", "document-manually"), edges)
+        self.assertNotIn(("select-documentation-batch", "document-manually"), edges)
+        self.assertIn(("select-documentation-batch", "document-with-bot"), edges)
         self.assertIn(("document-manually", "confirm-salesforce-documentation"), edges)
         self.assertIn(("document-with-bot", "confirm-salesforce-documentation"), edges)
 
@@ -145,7 +148,7 @@ class ContractValidatorTests(unittest.TestCase):
         invalid["relationships"] = [
             relation
             for relation in invalid["relationships"]
-            if relation["id"] != "select-to-manual"
+            if relation["id"] != "organize-to-manual"
         ]
         with self.assertRaisesRegex(ContractValidationError, "camino obligatorio"):
             validate_contracts(invalid)

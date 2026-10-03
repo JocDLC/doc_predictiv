@@ -15,7 +15,7 @@ WORKFLOW_DIRECTORY = (
 CANDIDATE_PATH = WORKFLOW_DIRECTORY / "candidate.json"
 ARCHIFY_OUTPUT_PATH = WORKFLOW_DIRECTORY / "documentador-business-contracts.html"
 PUBLISHED_OUTPUT_PATH = SERVED_DIRECTORY / "documentador-business-contracts.html"
-FINALIZE_EVIDENCE_DIRECTORY = WORKFLOW_DIRECTORY / "review-favicon"
+FINALIZE_EVIDENCE_DIRECTORY = WORKFLOW_DIRECTORY / "review-manual-route"
 FINALIZE_SUMMARY_PATH = (
     FINALIZE_EVIDENCE_DIRECTORY
     / "documentador-business-contracts.finalize-summary.json"

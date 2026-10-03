@@ -34,9 +34,10 @@ def main() -> int:
 
     config = load_config()
     debugger_address = config.get("debugger_address", DEFAULT_DEBUGGER_ADDRESS)
+    # Primera pestaña la app (lo que el operador necesita ver) y Salesforce al lado.
     urls = [config["salesforce_url"]]
     if not args.no_app:
-        urls.append(args.app_url)
+        urls.insert(0, args.app_url)
 
     browser, executable = detect_browser(config["browser"])
     profile_directory = local_path(config["profile_directory"])
@@ -47,8 +48,8 @@ def main() -> int:
     else:
         launch_persistent_browser(executable, profile_directory, debugger_address, urls)
         print(f"{browser.capitalize()} abierto con el perfil dedicado en {debugger_address}.")
-    print("Pestaña 1: Salesforce — iniciá sesión y completá 2FA si te lo pide.")
-    print("Pestaña 2: la app del Documentador Predictivo.")
+    print("Pestaña 1: la app del Documentador Predictivo.")
+    print("Pestaña 2: Salesforce — iniciá sesión y completá 2FA si te lo pide.")
     print("Dejá esta ventana abierta mientras trabajás; el bot se conecta a ella.")
     return 0
 

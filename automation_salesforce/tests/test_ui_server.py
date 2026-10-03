@@ -155,6 +155,18 @@ class UiServerApiTests(unittest.TestCase):
             active = json.loads((queue_directory / "cola_activa.json").read_text(encoding="utf-8"))
             self.assertNotIn("run_id", active)
 
+    def _post_run(self):
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{self.port}/run",
+            method="POST",
+            headers={"X-Bot-Token": "token-x"},
+        )
+        try:
+            with urllib.request.urlopen(request) as response:
+                return response.status, json.loads(response.read())
+        except urllib.error.HTTPError as error:
+            return error.code, json.loads(error.read())
+
     def test_run_freezes_the_queue_and_passes_run_id_to_the_runner(self):
         import ui_server
 
@@ -162,27 +174,57 @@ class UiServerApiTests(unittest.TestCase):
             TemporaryDirectory() as tmp,
             patch.object(ui_server, "ROOT", Path(tmp)),
             patch.object(ui_server, "load_config", return_value={}),
+            patch("ui_server.debugger_is_listening", return_value=True),
+            patch("ui_server.debugger_http_ready", return_value=True),
             patch("ui_server.subprocess.Popen") as popen,
         ):
             (Path(tmp) / "queues").mkdir()
             (Path(tmp) / "queues" / "cola_activa.json").write_text('{"leads": []}', encoding="utf-8")
             popen.return_value.poll.return_value = None
-            request = urllib.request.Request(
-                f"http://127.0.0.1:{self.port}/run",
-                method="POST",
-                headers={"X-Bot-Token": "token-x"},
-            )
-            with urllib.request.urlopen(request) as response:
-                self.assertEqual(response.status, 202)
-                run_id = json.loads(response.read())["run_id"]
+            status, payload = self._post_run()
 
+            self.assertEqual(status, 202)
             argv = popen.call_args.args[0]
             self.assertIn("--run-id", argv)
-            self.assertIn(run_id, argv)
-            frozen = Path(tmp) / "queues" / f"{run_id}.json"
+            self.assertIn(payload["run_id"], argv)
+            frozen = Path(tmp) / "queues" / f"{payload['run_id']}.json"
             self.assertTrue(frozen.is_file())
-            self.assertEqual(json.loads(frozen.read_text())["run_id"], run_id)
+            self.assertEqual(json.loads(frozen.read_text())["run_id"], payload["run_id"])
         ui_server.current_process = None
+
+    def test_run_rejects_when_the_dedicated_browser_is_closed(self):
+        import ui_server
+
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ui_server, "ROOT", Path(tmp)),
+            patch.object(ui_server, "load_config", return_value={}),
+            patch("ui_server.debugger_is_listening", return_value=False),
+            patch("ui_server.subprocess.Popen") as popen,
+        ):
+            status, payload = self._post_run()
+
+        self.assertEqual(status, 503)
+        self.assertIn("no está abierto", payload["error"])
+        popen.assert_not_called()
+        self.assertFalse((Path(tmp) / "queues").exists())
+
+    def test_run_rejects_when_the_debugger_port_is_wedged(self):
+        import ui_server
+
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ui_server, "ROOT", Path(tmp)),
+            patch.object(ui_server, "load_config", return_value={}),
+            patch("ui_server.debugger_is_listening", return_value=True),
+            patch("ui_server.debugger_http_ready", return_value=False),
+            patch("ui_server.subprocess.Popen") as popen,
+        ):
+            status, payload = self._post_run()
+
+        self.assertEqual(status, 503)
+        self.assertIn("trabado", payload["error"])
+        popen.assert_not_called()
 
 
 if __name__ == "__main__":

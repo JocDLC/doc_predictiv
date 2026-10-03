@@ -4,6 +4,7 @@ import os
 import socket
 import subprocess
 import threading
+import urllib.request
 from pathlib import Path
 
 BROWSER_PATHS = {
@@ -36,6 +37,23 @@ def debugger_is_listening(debugger_address: str, timeout_seconds: float = 1.0) -
     try:
         with socket.create_connection((host or "127.0.0.1", int(port)), timeout=timeout_seconds):
             return True
+    except (OSError, ValueError):
+        return False
+
+
+def debugger_http_ready(debugger_address: str, timeout_seconds: float = 3.0) -> bool:
+    """Confirma que el depurador responda HTTP, no solo acepte el socket.
+
+    Un puerto trabado pasa ``debugger_is_listening`` pero nunca contesta
+    ``/json/version``: es el estado que colgaba la creación de la sesión.
+    """
+    host, _, port = debugger_address.rpartition(":")
+    try:
+        with urllib.request.urlopen(
+            f"http://{host or '127.0.0.1'}:{port}/json/version",
+            timeout=timeout_seconds,
+        ) as response:
+            return response.status == 200
     except (OSError, ValueError):
         return False
 

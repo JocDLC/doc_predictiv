@@ -344,7 +344,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.0.5";
+const APP_VERSION = "1.0.6";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -1256,10 +1256,15 @@ async function runBot() {
     });
     botRunInProgress = response.status === 202;
     botCompletionShown = false;
+    let serverError = "";
+    if (response.status !== 202) {
+      try { serverError = (await response.json()).error || ""; } catch { serverError = ""; }
+    }
     queueSyncInfo = response.status === 202
       ? "Bot iniciado — los estados se actualizan solos."
-      : (response.status === 409 ? "El bot ya está corriendo." : `Respuesta inesperada del bot (${response.status}).`);
+      : (serverError || (response.status === 409 ? "El bot ya está corriendo." : `Respuesta inesperada del bot (${response.status}).`));
     updateQueueSyncState();
+    if (response.status === 503) alert(`No se pudo iniciar el bot.\n\n${serverError}`);
   } catch {
     alert(SERVER_MODE
       ? "El servidor local del bot dejó de responder.\nCerrá todo y volvé a ejecutar INICIAR.bat."

@@ -11,6 +11,16 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.6] — 2026-10-02
+
+### Agregado
+
+- Verificación previa en `POST /run`: si el navegador dedicado está cerrado
+  el bot no arranca y la UI muestra cómo reabrirlo; si el puerto de
+  depuración acepta TCP pero no responde HTTP (`/json/version`, señal de
+  puerto trabado) indica usar "Reiniciar navegador del bot". Ya no se puede
+  lanzar una tanda condenada a fallar.
+
 ## [1.0.5] — 2026-10-02
 
 ### Corregido

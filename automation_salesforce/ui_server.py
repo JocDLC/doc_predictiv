@@ -21,6 +21,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from browser_factory import (
+    debugger_http_ready,
     debugger_is_listening,
     detect_browser,
     launch_persistent_browser,
@@ -252,6 +253,22 @@ def make_handler(token: str, config: dict | None = None):
                 if current_process is not None and current_process.poll() is None:
                     self._send(409, {"status": "ya esta corriendo"})
                     return
+                cfg = config or load_config()
+                debugger_address = cfg.get("debugger_address", "127.0.0.1:9222")
+                if not debugger_is_listening(debugger_address):
+                    self._send(503, {
+                        "error": "El navegador dedicado del bot no está abierto. "
+                        "Abrilo con INICIAR.bat o el botón "
+                        "'Reiniciar navegador del bot' y volvé a intentar.",
+                    })
+                    return
+                if not debugger_http_ready(debugger_address):
+                    self._send(503, {
+                        "error": "El navegador dedicado está abierto pero su puerto "
+                        "de depuración no responde (quedó trabado). Usá "
+                        "'Reiniciar navegador del bot' y volvé a intentar.",
+                    })
+                    return
                 queue_directory = ROOT / "queues"
                 queue_directory.mkdir(parents=True, exist_ok=True)
                 run_id = "run_" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + secrets.token_hex(3)
@@ -260,7 +277,6 @@ def make_handler(token: str, config: dict | None = None):
                 except OSError:
                     self._send(500, {"error": "no se pudo congelar la cola activa"})
                     return
-                cfg = config or load_config()
                 current_process = subprocess.Popen(
                     [
                         sys.executable,

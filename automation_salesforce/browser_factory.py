@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import socket
 import subprocess
+import threading
 from pathlib import Path
 
 BROWSER_PATHS = {
@@ -81,7 +82,45 @@ def open_url_in_browser(executable: Path, profile_directory: Path, url: str) -> 
 # (la UI solo veía "bot corriendo" sin pestañas). El timeout corto detecta el
 # caso rápido y solo aplica a la creación de la sesión.
 ATTACH_SESSION_TIMEOUT_SECONDS = 15
-COMMAND_TIMEOUT_SECONDS = 120
+
+
+def _kill_orphaned_driver_processes() -> None:
+    """Libera una creación de sesión colgada cerrando los drivers Chromium."""
+    for executable_name in ("msedgedriver.exe", "chromedriver.exe"):
+        try:
+            subprocess.run(
+                ["taskkill", "/IM", executable_name, "/F"],
+                capture_output=True,
+                timeout=10,
+            )
+        except (OSError, subprocess.SubprocessError):
+            pass
+
+
+def _create_driver_with_timeout(constructor, options, timeout_seconds: float):
+    """Crea el WebDriver en un hilo y abandona si la sesión no se forma.
+
+    Un puerto de depuración trabado deja ``NEW_SESSION`` esperando ~120 s sin
+    respuesta. El hilo queda como daemon y al matar el driver huérfano se
+    libera solo; el proceso del runner puede continuar y salir limpio.
+    """
+    result: dict = {}
+
+    def _work() -> None:
+        try:
+            result["driver"] = constructor(options=options)
+        except BaseException as error:  # noqa: BLE001 — se propaga abajo
+            result["error"] = error
+
+    thread = threading.Thread(target=_work, daemon=True)
+    thread.start()
+    thread.join(timeout_seconds)
+    if thread.is_alive():
+        _kill_orphaned_driver_processes()
+        raise RuntimeError(f"La creación de la sesión no respondió en {timeout_seconds} s.")
+    if "error" in result:
+        raise result["error"]
+    return result["driver"]
 
 
 def create_driver(browser: str, executable: Path, profile_directory: Path, debugger_address: str | None = None):
@@ -89,38 +128,36 @@ def create_driver(browser: str, executable: Path, profile_directory: Path, debug
     from selenium.common.exceptions import WebDriverException
     from selenium.webdriver.chrome.options import Options as ChromeOptions
     from selenium.webdriver.edge.options import Options as EdgeOptions
-    from selenium.webdriver.remote.client_config import ClientConfig
 
     options = EdgeOptions() if browser == "edge" else ChromeOptions()
     attached = bool(debugger_address) and debugger_is_listening(debugger_address)
-    client_config = None
     if attached:
         options.add_experimental_option("debuggerAddress", debugger_address)
-        client_config = ClientConfig(
-            remote_server_addr="http://localhost",
-            timeout=ATTACH_SESSION_TIMEOUT_SECONDS,
-        )
     else:
         profile_directory.mkdir(parents=True, exist_ok=True)
         options.binary_location = str(executable)
         options.add_argument(f"--user-data-dir={profile_directory}")
         options.add_argument("--start-maximized")
     constructor = webdriver.Edge if browser == "edge" else webdriver.Chrome
-    try:
-        driver = constructor(options=options, client_config=client_config)
-    except WebDriverException as error:
-        if attached:
+    if attached:
+        try:
+            driver = _create_driver_with_timeout(
+                constructor, options, ATTACH_SESSION_TIMEOUT_SECONDS
+            )
+        except WebDriverException as error:
+            raise RuntimeError(
+                "No se pudo conectar al navegador persistente en "
+                f"{debugger_address}. Revisá que la ventana dedicada esté abierta."
+            ) from error
+        except RuntimeError as error:
             raise RuntimeError(
                 "No se pudo conectar al navegador persistente en "
                 f"{debugger_address} ({ATTACH_SESSION_TIMEOUT_SECONDS} s). El puerto de "
                 "depuración parece trabado: reiniciá el navegador dedicado del bot "
                 "('Reiniciar navegador del bot' en la app o INICIAR.bat)."
             ) from error
-        raise
-    if attached:
-        # Los comandos Lightning pueden tardar más que el límite corto usado
-        # para crear la sesión: se restaura el timeout habitual.
-        driver.command_executor.client_config.timeout = COMMAND_TIMEOUT_SECONDS
+    else:
+        driver = constructor(options=options)
     driver.attached_to_persistent_browser = attached
     if attached:
         # El bot trabaja en una pestaña propia para no navegar la pestaña

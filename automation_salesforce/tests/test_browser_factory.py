@@ -1,3 +1,4 @@
+import time
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -5,8 +6,7 @@ from unittest.mock import patch
 
 import browser_factory
 from browser_factory import (
-    ATTACH_SESSION_TIMEOUT_SECONDS,
-    COMMAND_TIMEOUT_SECONDS,
+    _create_driver_with_timeout,
     create_driver,
     launch_persistent_browser,
     open_url_in_browser,
@@ -63,20 +63,28 @@ class BrowserFactoryTests(unittest.TestCase):
         self.assertIn("--user-data-dir=perfil", command)
         self.assertEqual(command[-1], "http://127.0.0.1:8765/")
 
-    def test_attached_driver_uses_short_session_timeout_then_restores(self):
-        client_config = SimpleNamespace(timeout=None)
-        driver = SimpleNamespace(
-            command_executor=SimpleNamespace(client_config=client_config),
-            switch_to=SimpleNamespace(new_window=lambda *_: None),
-        )
+    def test_driver_creation_abandons_a_hung_session(self):
+        with (
+            self.assertRaisesRegex(RuntimeError, "no respondió"),
+            patch("browser_factory._kill_orphaned_driver_processes") as kill,
+        ):
+            _create_driver_with_timeout(lambda options: time.sleep(5), object(), 0.05)
+        kill.assert_called_once()
+
+    def test_driver_creation_propagates_constructor_errors(self):
+        def broken(options):
+            raise ValueError("falló")
+
+        with self.assertRaisesRegex(ValueError, "falló"):
+            _create_driver_with_timeout(broken, object(), 5)
+
+    def test_attached_driver_marks_persistent_browser(self):
+        driver = SimpleNamespace(switch_to=SimpleNamespace(new_window=lambda *_: None))
         with (
             patch("browser_factory.debugger_is_listening", return_value=True),
-            patch("selenium.webdriver.Edge", return_value=driver) as edge,
+            patch("selenium.webdriver.Edge", return_value=driver),
         ):
             result = create_driver("edge", Path("msedge.exe"), Path("perfil"), "127.0.0.1:9222")
-        passed_config = edge.call_args.kwargs["client_config"]
-        self.assertEqual(passed_config.timeout, ATTACH_SESSION_TIMEOUT_SECONDS)
-        self.assertEqual(client_config.timeout, COMMAND_TIMEOUT_SECONDS)
         self.assertTrue(result.attached_to_persistent_browser)
 
     def test_attached_driver_failure_raises_clear_error(self):
@@ -86,7 +94,7 @@ class BrowserFactoryTests(unittest.TestCase):
             patch("browser_factory.debugger_is_listening", return_value=True),
             patch("selenium.webdriver.Edge", side_effect=WebDriverException("timeout")),
         ):
-            with self.assertRaisesRegex(RuntimeError, "Reiniciar navegador|reinici"):
+            with self.assertRaisesRegex(RuntimeError, "navegador persistente"):
                 create_driver("edge", Path("msedge.exe"), Path("perfil"), "127.0.0.1:9222")
 
 

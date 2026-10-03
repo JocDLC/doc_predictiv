@@ -11,6 +11,15 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.5] — 2026-10-02
+
+### Corregido
+
+- La protección de `v1.0.4` usaba `client_config`, que el constructor público
+  de `webdriver.Edge` no acepta: el bot fallaba con `TypeError` en cada
+  ejecución adjunta. Se reemplazó por un watchdog con hilo que abandona la
+  creación de sesión a los 15 s y libera el driver huérfano.
+
 ## [1.0.4] — 2026-10-02
 
 ### Corregido
@@ -23,8 +32,8 @@ Cada versión liberada lleva un tag de Git `v<versión>`.
 
 ### Detalle técnico
 
-- `create_driver` usa `ClientConfig(timeout=15)` solo para crear la sesión
-  adjunta y restaura 120 s para los comandos Lightning.
+- `create_driver` crea la sesión adjunta en un hilo con límite de 15 s
+  (mecanismo corregido en v1.0.5).
 
 ## [1.0.3] — 2026-10-02
 

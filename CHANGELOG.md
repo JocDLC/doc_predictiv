@@ -11,6 +11,16 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.9] — 2026-10-03
+
+### Corregido
+
+- Puerto de depuración trabado tras cada tanda: en modo adjunto
+  `release_driver` no cerraba la sesión, así que cada ejecución dejaba un
+  chromedriver y una pestaña huérfanos hasta que Chromium dejaba de aceptar
+  sesiones nuevas. Ahora se cierra la pestaña de trabajo y la sesión:
+  verificado en vivo que el navegador persistente queda abierto.
+
 ## [1.0.8] — 2026-10-02
 
 ### Agregado

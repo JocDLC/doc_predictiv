@@ -18,9 +18,13 @@ class FakeDriver:
     def __init__(self, attached=False):
         self.attached_to_persistent_browser = attached
         self.quit_called = False
+        self.close_called = False
 
     def quit(self):
         self.quit_called = True
+
+    def close(self):
+        self.close_called = True
 
 
 class BrowserFactoryTests(unittest.TestCase):
@@ -31,12 +35,15 @@ class BrowserFactoryTests(unittest.TestCase):
 
         self.assertTrue(driver.quit_called)
 
-    def test_release_driver_keeps_the_persistent_browser_open(self):
+    def test_release_driver_frees_the_session_of_an_attached_browser(self):
+        # quit() en un driver adjunto no cierra la ventana (no la creó el
+        # driver): libera la sesión y mata al chromedriver huérfano.
         driver = FakeDriver(attached=True)
 
         release_driver(driver)
 
-        self.assertFalse(driver.quit_called)
+        self.assertTrue(driver.quit_called)
+        self.assertTrue(driver.close_called)
 
     def test_debugger_is_listening_rejects_unreachable_address(self):
         self.assertFalse(browser_factory.debugger_is_listening("127.0.0.1:1", 0.2))

@@ -188,7 +188,21 @@ def create_driver(browser: str, executable: Path, profile_directory: Path, debug
 
 
 def release_driver(driver) -> None:
-    """Cierra el navegador solo si lo abrió este proceso; si está adjunto, lo deja abierto."""
+    """Libera la sesión de WebDriver sin tumbar el navegador persistente.
+
+    En modo adjunto el navegador no lo creó el driver, así que ``quit()`` solo
+    cierra la sesión y termina al chromedriver (verificado: la ventana sigue
+    abierta). Sin esto cada tanda deja un chromedriver y una sesión huérfanos
+    que acaban trabando el puerto de depuración.
+    """
     if getattr(driver, "attached_to_persistent_browser", False):
+        try:
+            driver.close()  # pestaña de trabajo que abrió el bot
+        except Exception:  # noqa: BLE001 — liberar la sesión importa más
+            pass
+        try:
+            driver.quit()
+        except Exception:  # noqa: BLE001
+            pass
         return
     driver.quit()

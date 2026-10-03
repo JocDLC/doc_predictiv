@@ -10,6 +10,7 @@ from unittest.mock import patch
 import run_document_queue
 from run_document_queue import (
     ask_lead_action,
+    fail_lead,
     parse_queue_args,
     print_lead_summary,
     record_result,
@@ -44,6 +45,35 @@ class RunDocumentQueueTests(unittest.TestCase):
         answers = iter(["x", "PREPARAR"])
         with patch("builtins.input", lambda _: next(answers)):
             self.assertEqual(ask_lead_action(), "preparar")
+
+    def test_fail_lead_logs_the_exception_type_not_just_the_message(self):
+        import logging
+        from selenium.common.exceptions import TimeoutException
+
+        class FakeDriver:
+            def save_screenshot(self, path):
+                Path(path).write_bytes(b"png")
+
+        logger = logging.getLogger("test_fail_lead")
+        logger.setLevel(logging.ERROR)
+        stream = io.StringIO()
+        handler = logging.StreamHandler(stream)
+        logger.addHandler(handler)
+        self.addCleanup(logger.removeHandler, handler)
+
+        with TemporaryDirectory() as tmp:
+            fail_lead(
+                FakeDriver(),
+                Path(tmp),
+                logger,
+                Path(tmp) / "r.json",
+                "00Q000000000001AAA",
+                3,
+                2,
+                TimeoutException(""),
+            )
+
+        self.assertIn("TimeoutException", stream.getvalue())
 
     def test_results_path_sits_next_to_the_queue_file(self):
         path = results_path_for("queues/cola_predictivo_20260917_101500.json")

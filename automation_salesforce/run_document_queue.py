@@ -246,11 +246,16 @@ def fail_lead(
 ) -> dict:
     """Registra un fallo sin exponer el texto ni detener el resto de la cola."""
     screenshot = capture_failure(driver, screenshot_directory, "queue_error")
+    # Las excepciones de Selenium suelen tener mensaje vacío ("Message:"); el
+    # tipo (TimeoutException, StaleElementReference…) es lo que diagnostica.
+    reason_text = (
+        f"{type(reason).__name__}: {reason}" if isinstance(reason, Exception) else str(reason)
+    )
     logger.error(
         "Error procesando Lead: lead=%s captura=%s motivo=%s",
         mask_lead_id(lead_id),
         screenshot.name,
-        reason,
+        reason_text,
     )
     print("No se pudo procesar el Lead. Captura local guardada; revisalo a mano.")
     entry = result_entry(
@@ -489,19 +494,35 @@ def main(argv: list[str] | None = None) -> int:
                     )
                     stage_seconds["verification"] = time.monotonic() - stage_started_at
                 except (ValueError, TimeoutException, WebDriverException) as error:
-                    stats["error"] += 1
-                    batch_results.append(
-                        fail(
-                            lead_id=lead_id,
-                            next_int=next_int,
-                            attempts_count=len(attempts),
-                            reason=error,
-                            elapsed_seconds=time.monotonic() - lead_started_at,
-                            stage_seconds=stage_seconds,
-                            extra=context,
+                    # El editor puede quedar cargando aunque el guardado haya
+                    # terminado: recargar el registro descarta el formulario
+                    # trabado y confirma el valor persistido antes de declarar
+                    # error (evita falsos errores por lentitud de Salesforce).
+                    stage_seconds["save_settle"] = time.monotonic() - stage_started_at
+                    stage_started_at = time.monotonic()
+                    try:
+                        driver.get(record_url)
+                        wait_for_lightning_ready(driver, timeout_seconds)
+                        persisted = find_other_information(driver, timeout_seconds)
+                        persisted_length = len(persisted)
+                        saved = normalize_persisted_text(persisted) == normalize_persisted_text(prepared)
+                    except (ValueError, TimeoutException, WebDriverException):
+                        saved = False
+                    stage_seconds["verification"] = time.monotonic() - stage_started_at
+                    if not saved:
+                        stats["error"] += 1
+                        batch_results.append(
+                            fail(
+                                lead_id=lead_id,
+                                next_int=next_int,
+                                attempts_count=len(attempts),
+                                reason=error,
+                                elapsed_seconds=time.monotonic() - lead_started_at,
+                                stage_seconds=stage_seconds,
+                                extra=context,
+                            )
                         )
-                    )
-                    continue
+                        continue
                 if not saved:
                     stats["error"] += 1
                     batch_results.append(

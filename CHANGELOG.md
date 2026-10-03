@@ -11,6 +11,17 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.10] — 2026-10-03
+
+### Corregido
+
+- Falsos errores por lentitud de Salesforce: si la espera del editor tras
+  Guardar vence, el bot ahora recarga el registro y verifica el valor
+  persistido antes de declarar `error` — un guardado que completó de fondo
+  ya no se reporta como fallido.
+- Los motivos de error del log registran el tipo de excepción
+  (`TimeoutException`, etc.) además del mensaje, que suele venir vacío.
+
 ## [1.0.9] — 2026-10-03
 
 ### Corregido

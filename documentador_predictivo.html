@@ -344,7 +344,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.0.6";
+const APP_VERSION = "1.0.7";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -980,11 +980,15 @@ async function botDirGranted() {
 
 async function updateQueueSyncState() {
   const el = $("queueSyncState");
-  if (SERVER_MODE) { el.textContent = queueSyncInfo || "Conectado al servidor del bot."; return; }
+  if (SERVER_MODE) { el.textContent = botSessionStale ? STALE_SESSION_MSG : (queueSyncInfo || "Conectado al servidor del bot."); return; }
   if (!botDirHandle) { el.textContent = "Carpeta no vinculada."; return; }
   if (!(await botDirGranted())) { el.textContent = "Permiso pendiente: tocá 'Vincular carpeta del bot'."; return; }
   el.textContent = queueSyncInfo || `Carpeta vinculada: ${botDirHandle.name}`;
 }
+
+// Mensaje cuando el token de esta pestaña ya no sirve (servidor reiniciado).
+const STALE_SESSION_MSG = "El servidor del bot se reinició: recargá la página (F5) para renovar la sesión.";
+let botSessionStale = false;
 
 // Llamadas al servidor local. En modo servidor el token va en el header.
 async function botApi(path, options = {}) {
@@ -992,6 +996,12 @@ async function botApi(path, options = {}) {
     ...options,
     headers: { "X-Bot-Token": BOT_TOKEN, ...(options.headers || {}) },
   });
+  if (response.status === 403) {
+    botSessionStale = true;
+    queueSyncInfo = STALE_SESSION_MSG;
+    updateQueueSyncState();
+    throw new Error("bot api 403");
+  }
   if (!response.ok) throw new Error(`bot api ${response.status}`);
   return response.json();
 }
@@ -1262,9 +1272,11 @@ async function runBot() {
     }
     queueSyncInfo = response.status === 202
       ? "Bot iniciado — los estados se actualizan solos."
-      : (serverError || (response.status === 409 ? "El bot ya está corriendo." : `Respuesta inesperada del bot (${response.status}).`));
+      : (response.status === 403
+        ? (botSessionStale = true, STALE_SESSION_MSG)
+        : (serverError || (response.status === 409 ? "El bot ya está corriendo." : `Respuesta inesperada del bot (${response.status}).`)));
     updateQueueSyncState();
-    if (response.status === 503) alert(`No se pudo iniciar el bot.\n\n${serverError}`);
+    if (response.status === 503 || response.status === 403) alert(`No se pudo iniciar el bot.\n\n${queueSyncInfo}`);
   } catch {
     alert(SERVER_MODE
       ? "El servidor local del bot dejó de responder.\nCerrá todo y volvé a ejecutar INICIAR.bat."
@@ -1376,6 +1388,13 @@ $("restartBotBrowser").addEventListener("click", async () => {
       method: "POST",
       headers: { "X-Bot-Token": BOT_TOKEN },
     });
+    if (response.status === 403) {
+      botSessionStale = true;
+      queueSyncInfo = STALE_SESSION_MSG;
+      updateQueueSyncState();
+      alert(STALE_SESSION_MSG);
+      return;
+    }
     if (response.status === 409) {
       alert("El bot está corriendo; esperá a que termine antes de reiniciar el navegador.");
       return;

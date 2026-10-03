@@ -11,6 +11,16 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.0.7] — 2026-10-02
+
+### Corregido
+
+- Sesión vencida explícita: al reiniciarse el servidor el token de la
+  pestaña queda viejo y antes solo se veía "token inválido o ausente".
+  Ahora cualquier 403 marca la sesión y la app indica
+  "El servidor del bot se reinició: recargá la página (F5)", en "Ejecutar
+  bot", "Reiniciar navegador del bot" y el indicador de sincronización.
+
 ## [1.0.6] — 2026-10-02
 
 ### Agregado

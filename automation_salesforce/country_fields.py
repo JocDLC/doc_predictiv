@@ -59,3 +59,17 @@ def field_labels(country: object, role: str) -> tuple[str, ...]:
 def field_display(country: object, role: str) -> str:
     """Nombre legible del campo físico para mensajes de la consola."""
     return _DISPLAY[field_key(country, role)]
+
+
+# Cola fría que la conversión asigna como propietario final, por país.
+# Argentina usa AR_LEAD_COLD; México MX_LEAD_COLD y Colombia CO_LEAD_COLD —
+# el modo comparte los dos porque la tanda siempre es de un solo país.
+_FINAL_OWNERS = {
+    ARGENTINA: ("AR_LEAD_COLD",),
+    COLOMBIA_MEXICO: ("MX_LEAD_COLD", "CO_LEAD_COLD"),
+}
+
+
+def final_owners(country: object) -> tuple[str, ...]:
+    """Propietarios finales aceptados tras ``Convert Lead → Yes``."""
+    return _FINAL_OWNERS[normalize_country(country)]

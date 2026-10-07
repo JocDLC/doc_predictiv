@@ -17,11 +17,15 @@ Valores exactos aprobados por el usuario — alimentan dashboards, no editar:
   del mismo motivo es `Permanece ilocalizable`.
 
 La decisión de cuándo cerrar es del auxiliar: no hay mínimo de intentos.
-El éxito final exige ``Estado de candidato = Cerrado`` y
-``Propietario del candidato = AR_LEAD_COLD`` tras ``Convert Lead → Yes``.
+El éxito final exige ``Estado de candidato = Cerrado`` y que el
+``Propietario del candidato`` quede en la cola fría del país
+(``AR_LEAD_COLD`` en Argentina, ``MX_LEAD_COLD``/``CO_LEAD_COLD`` en el
+modo Colombia/México) tras ``Convert Lead → Yes``.
 """
 
 from __future__ import annotations
+
+from country_fields import ARGENTINA, final_owners
 
 FINAL_OWNER = "AR_LEAD_COLD"
 CLOSED_STATE = "Cerrado"
@@ -741,16 +745,17 @@ def verify_persisted_fields(
     )
 
 
-def is_final_closed(state: dict[str, str]) -> bool:
-    """Éxito real del cierre: estado Cerrado y propietario AR_LEAD_COLD."""
+def is_final_closed(state: dict[str, str], country: object = ARGENTINA) -> bool:
+    """Éxito real del cierre: estado Cerrado y propietario en la cola fría
+    del país (AR_LEAD_COLD en Argentina, MX_/CO_LEAD_COLD en el otro modo)."""
     return (
         normalized_value(state.get("estado", "")) == CLOSED_STATE
-        and normalized_value(state.get("propietario", "")) == FINAL_OWNER
+        and normalized_value(state.get("propietario", "")) in final_owners(country)
     )
 
 
-def already_closed(state: dict[str, str], contract: dict[str, object]) -> bool:
+def already_closed(state: dict[str, str], contract: dict[str, object], country: object = ARGENTINA) -> bool:
     """Resultado final ya presente y compatible con el motivo pedido."""
-    return is_final_closed(state) and normalized_value(state.get("comentario", "")) == contract_text(
-        contract, "comentario"
-    )
+    return is_final_closed(state, country) and normalized_value(
+        state.get("comentario", "")
+    ) == contract_text(contract, "comentario")

@@ -36,7 +36,10 @@ Cada versión liberada lleva un tag de Git `v<versión>`.
   solo la pestaña que falta (app y Salesforce se detectan por host, así una
   pestaña de un Lead ya cuenta como Salesforce abierto). Las pestañas
   restauradas tras un reinicio tampoco se duplican.
-- Verificación local: 281 tests, incluidos escenarios DOM y runner con datos
+- Propietario final del cierre por país: la conversión en México asigna
+  `MX_LEAD_COLD` y en Colombia `CO_LEAD_COLD`; antes se exigía siempre
+  `AR_LEAD_COLD` y un cierre exitoso quedaba como `conversion_no_verificada`.
+- Verificación local: 283 tests, incluidos escenarios DOM y runner con datos
   sintéticos. Los pilotos reales por país quedan pendientes de autorización.
   La CLI OpenSpec continúa no disponible en esta máquina.
 

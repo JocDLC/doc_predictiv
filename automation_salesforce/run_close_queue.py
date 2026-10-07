@@ -3,7 +3,8 @@
 Cierre en dos hitos verificables por Lead:
 1. ``Guardar`` del trío Comentario/Cualificación/Sub-Cualificación → estado
    ``Cerrado`` (hito intermedio ``conversion_pendiente``).
-2. ``Convert Lead → Yes`` → propietario ``AR_LEAD_COLD`` →
+2. ``Convert Lead → Yes`` → propietario en la cola fría del país
+   (``AR_LEAD_COLD``/``MX_LEAD_COLD``/``CO_LEAD_COLD``) →
    ``cerrado_verificado``.
 
 No hay mínimo de intentos: el auxiliar decide cuándo cerrar. Si la sesión de
@@ -28,7 +29,7 @@ from closure_store import (
 )
 from comment_reader import build_record_url, find_field_text, find_field_value, is_duplicate_lead
 from comment_writer import prepare_other_information, save_edit_form
-from country_fields import ARGENTINA, field_display, field_labels, normalize_country
+from country_fields import ARGENTINA, field_display, field_labels, final_owners, normalize_country
 from lead_closure import (
     CLOSED_STATE,
     COMMENT_FIELD_LABELS,
@@ -289,7 +290,7 @@ def close_one_lead(
     if is_duplicate_lead(state["comentario"]) or is_duplicate_lead(motive_text):
         logger.info("Lead duplicado, cierre omitido: lead=%s", mask_lead_id(lead_id))
         return record(STATUS_REVIEW)
-    if is_final_closed(state) and motive_satisfied(motive_text):
+    if is_final_closed(state, country) and motive_satisfied(motive_text):
         return record(STATUS_ALREADY_CLOSED)
 
     # Si ya quedó Cerrado con el motivo pedido pero sin la conversión, retoma
@@ -413,7 +414,7 @@ def close_one_lead(
         last_reload = time.monotonic()
         max_attempts = max(3, timeout_seconds)
         attempts = 0
-        while attempts < max_attempts and time.monotonic() < deadline and not is_final_closed(final_state):
+        while attempts < max_attempts and time.monotonic() < deadline and not is_final_closed(final_state, country):
             attempts += 1
             if normalized_value(final_state.get("estado")) == CLOSED_STATE:
                 # El estado ya persistió: esperar la actualización del propietario.
@@ -431,7 +432,7 @@ def close_one_lead(
     except (TimeoutException, WebDriverException) as error:
         return fail(error, status=STATUS_CONVERSION_UNVERIFIED)
 
-    if is_final_closed(final_state):
+    if is_final_closed(final_state, country):
         logger.info(
             "Lead cerrado y verificado: lead=%s motivo=%s",
             mask_lead_id(lead_id),
@@ -439,8 +440,9 @@ def close_one_lead(
         )
         return record(STATUS_VERIFIED)
     if normalized_value(final_state["estado"]) == CLOSED_STATE:
+        expected = "/".join(final_owners(country))
         return fail(
-            ValueError("Estado Cerrado pero propietario no verificado como AR_LEAD_COLD."),
+            ValueError(f"Estado Cerrado pero propietario no verificado como {expected}."),
             status=STATUS_CONVERSION_UNVERIFIED,
         )
     return fail(

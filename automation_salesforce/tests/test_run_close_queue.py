@@ -97,7 +97,12 @@ class CloseOneLeadTests(unittest.TestCase):
                     patches["convert_lead"].assert_not_called()
 
     def test_mexico_already_closed_never_opens_editor_or_converts(self):
-        state = {**FINAL_STATE, "comentario": "1 INT Resultado previo", "motivo": "Texto previo\nIlocalizable"}
+        state = {
+            **FINAL_STATE,
+            "propietario": "MX_LEAD_COLD",
+            "comentario": "1 INT Resultado previo",
+            "motivo": "Texto previo\nIlocalizable",
+        }
         entry, patches = self.run_lead([state], country="colombia_mexico")
         self.assertEqual(entry["status"], "ya_cerrado")
         patches["prepare_other_information"].assert_not_called()
@@ -251,6 +256,34 @@ class CloseOneLeadTests(unittest.TestCase):
 
         self.assertEqual(entry["status"], "conversion_no_verificada")
 
+    def test_mexico_final_owner_is_mx_lead_cold(self):
+        """La conversión en México asigna MX_LEAD_COLD: verificarla contra
+        AR_LEAD_COLD declaraba conversion_no_verificada un cierre exitoso."""
+        partial = {
+            "estado": "Cerrado", "propietario": "Auxiliar X",
+            "comentario": "INT 1 previo", "motivo": "Texto\nIlocalizable",
+        }
+        mx_final = {**partial, "propietario": "MX_LEAD_COLD"}
+        entry, _ = self.run_lead([partial, mx_final], country="colombia_mexico")
+
+        self.assertEqual(entry["status"], "cerrado_verificado")
+
+    def test_colombia_mexico_rejects_the_argentina_cold_queue(self):
+        """AR_LEAD_COLD no es el propietario final válido del modo
+        Colombia/México: una cola equivocada no cuenta como cierre."""
+        wrong_queue = {
+            "estado": "Cerrado", "propietario": "AR_LEAD_COLD",
+            "comentario": "INT 1 previo", "motivo": "Texto\nIlocalizable",
+        }
+        entry, _ = self.run_lead(
+            [{"estado": "Cerrado", "propietario": "Auxiliar X",
+              "comentario": "INT 1 previo", "motivo": "Texto\nIlocalizable"}]
+            + [wrong_queue] * 10,
+            country="colombia_mexico",
+        )
+
+        self.assertEqual(entry["status"], "conversion_no_verificada")
+
     def test_final_verification_waits_for_expected_owner(self):
         """El propietario cambia tras Cerrado: espera hasta el resultado final."""
         pending = {"estado": "Cerrado", "propietario": "Auxiliar X", "comentario": "Ilocalizable"}
@@ -305,7 +338,7 @@ class CloseOneLeadTests(unittest.TestCase):
         }
         col_saved = {**col_open, "estado": "Cerrado", "motivo": "Ilocalizable"}
         col_final = {
-            "estado": "Cerrado", "propietario": "AR_LEAD_COLD",
+            "estado": "Cerrado", "propietario": "MX_LEAD_COLD",
             "comentario": "INT 1 previo", "motivo": "Ilocalizable",
         }
         entry, patches = self.run_lead(
@@ -351,7 +384,7 @@ class CloseOneLeadTests(unittest.TestCase):
         }
         col_saved = {**col_open, "estado": "Cerrado", "motivo": appended}
         col_final = {
-            "estado": "Cerrado", "propietario": "AR_LEAD_COLD",
+            "estado": "Cerrado", "propietario": "MX_LEAD_COLD",
             "comentario": "INT 1 previo", "motivo": appended,
         }
         entry, patches = self.run_lead(

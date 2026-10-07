@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from comment_reader import SALESFORCE_ID_PATTERN
+from country_fields import normalize_country
 
 ATTEMPT_FIELDS = ("result", "date", "time", "call_id")
 
@@ -66,6 +67,8 @@ def load_queue_file(queue_path: str, queue_directory: Path) -> dict[str, object]
         "leads": [_validate_lead(lead, index) for index, lead in enumerate(leads)],
         "run_id": str(payload.get("run_id") or "").strip(),
         "source_file": str(payload.get("source_file") or "").strip(),
+        # Colas históricas sin "country" conservan el esquema Argentina.
+        "country": normalize_country(payload.get("country") if isinstance(payload, dict) else None),
     }
 
 

@@ -26,6 +26,9 @@ from browser_factory import (
     detect_browser,
     launch_persistent_browser,
 )
+from closure_store import validate_close_queue
+from country_fields import normalize_country
+from queue_loader import load_queue_file
 
 ROOT = Path(__file__).parent
 
@@ -41,6 +44,7 @@ def local_path(value: str) -> Path:
 
 SERVER_PORT = 8765
 ACTIVE_QUEUE = "cola_activa.json"
+ACTIVE_CLOSE_QUEUE = "cola_cierre_activa.json"
 SESSION_FILE = "bot_session.json"
 UI_PAGE = ROOT.parent / "documentador_predictivo.html"
 TOKEN_PLACEHOLDER = "__BOT_SERVER_TOKEN__"
@@ -52,10 +56,15 @@ API_FILES = {
     "/api/results": ROOT / "queues" / "cola_activa.resultado.json",
     "/api/metrics": ROOT / "queues" / "cola_activa.metricas.json",
     "/api/snapshots": ROOT / "ui_output" / "cola_activa.snapshots.json",
+    "/api/close-queue": ROOT / "queues" / "cola_cierre_activa.json",
+    "/api/close-results": ROOT / "queues" / "cola_cierre_activa.resultado.json",
 }
-WRITABLE_API = {"/api/queue"}
+WRITABLE_API = {"/api/queue", "/api/close-queue"}
 
 current_process: subprocess.Popen | None = None
+# Identifica qué runner tiene la exclusión mutua: la UI muestra la operación
+# activa y el reinicio del navegador se bloquea con cualquiera de las dos.
+current_operation: str | None = None
 # Serializa el congelado de la cola y el arranque del runner: un PUT o una
 # segunda ejecución no pueden mezclarse con la tanda activa.
 run_lock = threading.Lock()
@@ -70,13 +79,12 @@ def app_version() -> str:
     return match.group(1) if match else "desconocida"
 
 
-def freeze_active_queue(queue_directory: Path, run_id: str) -> Path:
-    """Copia la cola activa a un archivo inmutable identificado por ``run_id``.
+def freeze_queue(active_path: Path, frozen_path: Path, run_id: str) -> Path:
+    """Copia una cola activa a un archivo inmutable identificado por ``run_id``.
 
-    El runner trabaja sobre esa copia: un ``PUT /api/queue`` posterior solo
-    prepara el borrador de la próxima tanda sin alterar la ejecución en curso.
+    El runner trabaja sobre esa copia: un ``PUT`` posterior solo prepara el
+    borrador de la próxima tanda sin alterar la ejecución en curso.
     """
-    active_path = queue_directory / ACTIVE_QUEUE
     try:
         payload = json.loads(active_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -88,9 +96,22 @@ def freeze_active_queue(queue_directory: Path, run_id: str) -> Path:
         "run_id": run_id,
         "frozen_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
-    frozen_path = queue_directory / f"{run_id}.json"
     frozen_path.write_text(json.dumps(frozen, indent=2, ensure_ascii=False), encoding="utf-8")
     return frozen_path
+
+
+def freeze_active_queue(queue_directory: Path, run_id: str) -> Path:
+    """Congela la cola de documentación activa (``cola_activa.json``)."""
+    return freeze_queue(queue_directory / ACTIVE_QUEUE, queue_directory / f"{run_id}.json", run_id)
+
+
+def freeze_active_close_queue(queue_directory: Path, run_id: str) -> Path:
+    """Congela la cola de cierre activa (``cola_cierre_activa.json``)."""
+    return freeze_queue(
+        queue_directory / ACTIVE_CLOSE_QUEUE,
+        queue_directory / f"cierre_{run_id}.json",
+        run_id,
+    )
 
 
 def find_listening_pid(port: str) -> str | None:
@@ -197,6 +218,7 @@ def make_handler(token: str, config: dict | None = None):
                     200,
                     {
                         "running": running,
+                        "operation": current_operation if running else None,
                         "exit_code": None if running or current_process is None else current_process.returncode,
                         "version": app_version(),
                     },
@@ -230,6 +252,19 @@ def make_handler(token: str, config: dict | None = None):
             if not isinstance(payload, dict) or not isinstance(payload.get("leads"), list):
                 self._send(400, {"error": "se esperaba un objeto con la lista 'leads'"})
                 return
+            try:
+                # El modo de país se congela en la cola: se rechaza de entrada
+                # cualquier valor que los runners no puedan interpretar.
+                normalize_country(payload.get("country"))
+            except ValueError as error:
+                self._send(400, {"error": str(error)})
+                return
+            if self.path == "/api/close-queue":
+                try:
+                    validate_close_queue(payload)
+                except ValueError as error:
+                    self._send(400, {"error": str(error)})
+                    return
             target = API_FILES[self.path]
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -247,55 +282,108 @@ def make_handler(token: str, config: dict | None = None):
                 self._send(202, {"status": "reiniciando el navegador del bot"})
                 threading.Thread(target=restart_browser, args=(config or load_config(),), daemon=True).start()
                 return
-            if self.path != "/run":
+            if self.path not in ("/run", "/run-close"):
                 self._send(404, {"error": "ruta desconocida"})
                 return
             with run_lock:
                 if current_process is not None and current_process.poll() is None:
-                    self._send(409, {"status": "ya esta corriendo"})
+                    self._send(409, {"status": "ya esta corriendo", "operation": current_operation})
                     return
                 cfg = config or load_config()
                 debugger_address = cfg.get("debugger_address", "127.0.0.1:9222")
                 if not debugger_is_listening(debugger_address):
-                    self._send(503, {
-                        "error": "El navegador dedicado del bot no está abierto. "
-                        "Abrilo con INICIAR.bat o el botón "
-                        "'Reiniciar navegador del bot' y volvé a intentar.",
-                    })
+                    self._send(
+                        503,
+                        {
+                            "error": "El navegador dedicado del bot no está abierto. "
+                            "Abrilo con INICIAR.bat o el botón "
+                            "'Reiniciar navegador del bot' y volvé a intentar.",
+                        },
+                    )
                     return
                 if not debugger_http_ready(debugger_address):
-                    self._send(503, {
-                        "error": "El navegador dedicado está abierto pero su puerto "
-                        "de depuración no responde (quedó trabado). Usá "
-                        "'Reiniciar navegador del bot' y volvé a intentar.",
-                    })
+                    self._send(
+                        503,
+                        {
+                            "error": "El navegador dedicado está abierto pero su puerto "
+                            "de depuración no responde (quedó trabado). Usá "
+                            "'Reiniciar navegador del bot' y volvé a intentar.",
+                        },
+                    )
                     return
                 queue_directory = ROOT / "queues"
                 queue_directory.mkdir(parents=True, exist_ok=True)
                 run_id = "run_" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + secrets.token_hex(3)
-                try:
-                    frozen_path = freeze_active_queue(queue_directory, run_id)
-                except OSError:
-                    self._send(500, {"error": "no se pudo congelar la cola activa"})
+                if self.path == "/run-close":
+                    started = self._start_close_run(cfg, queue_directory, run_id)
+                else:
+                    started = self._start_document_run(cfg, queue_directory, run_id)
+                if not started:
+                    # La respuesta de error ya la envió el helper.
                     return
-                current_process = subprocess.Popen(
-                    [
-                        sys.executable,
-                        str(ROOT / "run_document_queue.py"),
-                        "--auto",
-                        "--run-id",
-                        run_id,
-                        "--results",
-                        str(ROOT / "queues" / "cola_activa.resultado.json"),
-                        "--snapshots",
-                        str(ROOT / cfg.get("ui_output_directory", "ui_output") / "cola_activa.snapshots.json"),
-                        "--metrics",
-                        str(ROOT / "queues" / "cola_activa.metricas.json"),
-                        str(frozen_path),
-                    ],
-                    cwd=str(ROOT),
-                )
-            self._send(202, {"status": "iniciado", "queue": ACTIVE_QUEUE, "run_id": run_id})
+            queue_name = ACTIVE_CLOSE_QUEUE if self.path == "/run-close" else ACTIVE_QUEUE
+            self._send(202, {"status": "iniciado", "queue": queue_name, "run_id": run_id})
+
+        def _start_document_run(self, cfg: dict, queue_directory: Path, run_id: str) -> bool:
+            global current_process, current_operation
+            try:
+                frozen_path = freeze_active_queue(queue_directory, run_id)
+            except OSError:
+                self._send(500, {"error": "no se pudo congelar la cola activa"})
+                return False
+            try:
+                load_queue_file(str(frozen_path), queue_directory)
+            except (OSError, ValueError):
+                self._send(400, {"error": "Cola de documentación vacía o inválida. Revisá los intentos pendientes."})
+                return False
+            current_operation = "documentacion"
+            current_process = subprocess.Popen(
+                [
+                    sys.executable,
+                    str(ROOT / "run_document_queue.py"),
+                    "--auto",
+                    "--run-id",
+                    run_id,
+                    "--results",
+                    str(queue_directory / "cola_activa.resultado.json"),
+                    "--snapshots",
+                    str(ROOT / cfg.get("ui_output_directory", "ui_output") / "cola_activa.snapshots.json"),
+                    "--metrics",
+                    str(queue_directory / "cola_activa.metricas.json"),
+                    str(frozen_path),
+                ],
+                cwd=str(ROOT),
+            )
+            return True
+
+        def _start_close_run(self, cfg: dict, queue_directory: Path, run_id: str) -> bool:
+            global current_process, current_operation
+            active_path = queue_directory / ACTIVE_CLOSE_QUEUE
+            try:
+                validate_close_queue(json.loads(active_path.read_text(encoding="utf-8")))
+            except (OSError, json.JSONDecodeError, ValueError) as error:
+                self._send(400, {"error": f"Cola de cierre inválida: {error}"})
+                return False
+            try:
+                frozen_path = freeze_active_close_queue(queue_directory, run_id)
+            except OSError:
+                self._send(500, {"error": "no se pudo congelar la cola de cierre"})
+                return False
+            current_operation = "cierre"
+            current_process = subprocess.Popen(
+                [
+                    sys.executable,
+                    str(ROOT / "run_close_queue.py"),
+                    "--auto",
+                    "--run-id",
+                    run_id,
+                    "--results",
+                    str(queue_directory / "cola_cierre_activa.resultado.json"),
+                    str(frozen_path),
+                ],
+                cwd=str(ROOT),
+            )
+            return True
 
         def log_message(self, *_args) -> None:
             pass

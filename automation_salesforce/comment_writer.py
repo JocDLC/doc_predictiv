@@ -342,21 +342,21 @@ def compose_attempts(
     return f"{existing}\n{new_entries}" if existing else new_entries
 
 
-def find_element_in_any_frame(driver, script: str):
+def find_element_in_any_frame(driver, script: str, labels: tuple = OTHER_INFORMATION_LABELS):
     """Devuelve un único control visible y deja el driver en su contexto."""
     switch_to = getattr(driver, "switch_to", None)
     if switch_to is None:
-        return driver.execute_script(script, OTHER_INFORMATION_LABELS)
+        return driver.execute_script(script, labels)
 
     switch_to.default_content()
-    element = driver.execute_script(script, OTHER_INFORMATION_LABELS)
+    element = driver.execute_script(script, labels)
     if element:
         return element
     frames = driver.find_elements(By.CSS_SELECTOR, "iframe, frame")
     for frame in frames:
         try:
             switch_to.frame(frame)
-            element = driver.execute_script(script, OTHER_INFORMATION_LABELS)
+            element = driver.execute_script(script, labels)
             if element:
                 return element
         except WebDriverException:
@@ -366,37 +366,37 @@ def find_element_in_any_frame(driver, script: str):
     return None
 
 
-def find_edit_control(driver):
-    edit_control = find_element_in_any_frame(driver, EDIT_CONTROL_SCRIPT)
+def find_edit_control(driver, labels: tuple = OTHER_INFORMATION_LABELS):
+    edit_control = find_element_in_any_frame(driver, EDIT_CONTROL_SCRIPT, labels)
     if edit_control:
         return edit_control
-    scroll_toward_other_information(driver)
+    scroll_toward_other_information(driver, labels)
     return False
 
 
-def find_editor_control(driver):
-    return find_element_in_any_frame(driver, EDITOR_CONTROL_SCRIPT)
+def find_editor_control(driver, labels: tuple = OTHER_INFORMATION_LABELS):
+    return find_element_in_any_frame(driver, EDITOR_CONTROL_SCRIPT, labels)
 
 
 def describe_editor_candidates(driver):
     return find_element_in_any_frame(driver, EDITOR_DIAGNOSTIC_SCRIPT)
 
 
-def scroll_toward_other_information(driver) -> bool:
+def scroll_toward_other_information(driver, labels: tuple = OTHER_INFORMATION_LABELS) -> bool:
     switch_to = getattr(driver, "switch_to", None)
     if switch_to is None:
-        result = driver.execute_script(FIELD_SCROLL_SCRIPT, OTHER_INFORMATION_LABELS)
+        result = driver.execute_script(FIELD_SCROLL_SCRIPT, labels)
         return bool(result.get("progressed"))
 
     results = []
     switch_to.default_content()
     try:
-        results.append(driver.execute_script(FIELD_SCROLL_SCRIPT, OTHER_INFORMATION_LABELS))
+        results.append(driver.execute_script(FIELD_SCROLL_SCRIPT, labels))
         frames = driver.find_elements(By.CSS_SELECTOR, "iframe, frame")
         for frame in frames:
             try:
                 switch_to.frame(frame)
-                results.append(driver.execute_script(FIELD_SCROLL_SCRIPT, OTHER_INFORMATION_LABELS))
+                results.append(driver.execute_script(FIELD_SCROLL_SCRIPT, labels))
             except WebDriverException:
                 pass
             finally:
@@ -478,20 +478,30 @@ EDITOR_READY_SECONDS = 2.0
 EDITOR_STABILITY_SECONDS = 0.8
 
 
-def prepare_other_information(driver, prepared_comment: str, timeout_seconds: int) -> None:
-    edit_control = WebDriverWait(driver, timeout_seconds).until(find_edit_control)
+def prepare_other_information(
+    driver,
+    prepared_comment: str,
+    timeout_seconds: int,
+    labels: tuple = OTHER_INFORMATION_LABELS,
+    display_name: str = "Otra información",
+) -> None:
+    edit_control = WebDriverWait(driver, timeout_seconds).until(
+        lambda current: find_edit_control(current, labels)
+    )
     driver.execute_script(CLICK_EDIT_CONTROL_SCRIPT, edit_control)
     driver.switch_to.default_content()
     try:
-        editor = WebDriverWait(driver, timeout_seconds).until(find_editor_control)
+        editor = WebDriverWait(driver, timeout_seconds).until(
+            lambda current: find_editor_control(current, labels)
+        )
     except TimeoutException:
         diagnostic = describe_editor_candidates(driver)
-        raise ValueError(f"No apareció el editor de 'Otra información'. Diagnóstico: {diagnostic}") from None
+        raise ValueError(f"No apareció el editor de '{display_name}'. Diagnóstico: {diagnostic}") from None
     try:
         # Lightning termina de inicializar el componente ~2s después de abrir el
         # editor; escribir antes de eso deja que el framework pise el valor.
         time.sleep(EDITOR_READY_SECONDS)
-        refreshed = find_editor_control(driver)
+        refreshed = find_editor_control(driver, labels)
         if refreshed:
             editor = refreshed
         for attempt in range(2):
@@ -500,14 +510,14 @@ def prepare_other_information(driver, prepared_comment: str, timeout_seconds: in
                 # Una segunda lectura confirma que el valor quedó estable y el
                 # framework no lo restauró con el dato anterior del registro.
                 time.sleep(EDITOR_STABILITY_SECONDS)
-                refreshed = find_editor_control(driver)
+                refreshed = find_editor_control(driver, labels)
                 if refreshed:
                     editor = refreshed
                 if verify_editor_value(editor, prepared_comment):
                     return
             if attempt == 0:
                 time.sleep(0.5)
-                refreshed = find_editor_control(driver)
+                refreshed = find_editor_control(driver, labels)
                 if refreshed:
                     editor = refreshed
                 continue

@@ -40,6 +40,38 @@ class SnapshotStoreTests(unittest.TestCase):
 
         self.assertEqual(payload[0]["call_ids"], [])
 
+    def test_snapshot_carries_field_and_country_metadata(self):
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "cola.snapshots.json"
+            record_snapshot(
+                path,
+                "00Q000000000001AAA",
+                "valor",
+                field="comentario",
+                country="colombia_mexico",
+            )
+
+            payload = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload[0]["field"], "comentario")
+        self.assertEqual(payload[0]["country"], "colombia_mexico")
+
+    def test_snapshots_of_different_fields_do_not_overwrite_each_other(self):
+        """La evidencia de Otra información y la de Comentario del mismo Lead
+        conviven: una corrida Argentina no pisa la de Colombia/México."""
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "cola.snapshots.json"
+            record_snapshot(path, "00Q000000000001AAA", "v-arg", field="otra_informacion")
+            record_snapshot(path, "00Q000000000001AAA", "v-col", field="comentario")
+
+            payload = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertEqual(len(payload), 2)
+        self.assertEqual(
+            {(item["field"], item["field_value"]) for item in payload},
+            {("otra_informacion", "v-arg"), ("comentario", "v-col")},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

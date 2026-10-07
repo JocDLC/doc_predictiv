@@ -19,18 +19,22 @@ from selenium.common.exceptions import TimeoutException, WebDriverException
 from attempt_identity import partition_attempts
 from browser_factory import create_driver, detect_browser, release_driver
 from comment_reader import (
+    OTHER_INFORMATION_LABELS,
     build_record_url,
-    find_comment,
+    find_field_text,
+    find_field_value,
     find_other_information,
     is_duplicate_lead,
     next_attempt_number,
 )
+
 from comment_writer import (
     compose_attempts,
     find_editor_control,
     prepare_other_information,
     save_edit_form,
 )
+from country_fields import field_display, field_key, field_labels, normalize_country
 from local_audit import capture_failure, create_logger, mask_lead_id
 from productivity_metrics import (
     metrics_path_for,
@@ -151,8 +155,9 @@ def verify_saved_value(
     timeout_seconds: int,
     retries: int = 2,
     delay_seconds: float = 2.0,
+    labels: tuple[str, ...] = (),
 ) -> tuple[bool, int]:
-    """Confirma que Otra información quedó persistida tras el guardado.
+    """Confirma que el campo de intentos quedó persistido tras el guardado.
 
     La primera lectura se hace en la misma página: tras Guardar, el campo en
     modo lectura ya muestra el valor persistido, sin costo de recarga. Solo si
@@ -170,7 +175,11 @@ def verify_saved_value(
             time.sleep(delay_seconds)
             driver.get(record_url)
             wait_for_lightning_ready(driver, timeout_seconds)
-        persisted = find_other_information(driver, timeout_seconds)
+        persisted = (
+            find_other_information(driver, timeout_seconds)
+            if not labels
+            else find_field_value(driver, timeout_seconds, labels)
+        )
         persisted_length = len(persisted)
         if normalize_persisted_text(persisted) == expected_text:
             return True, persisted_length, reloads
@@ -221,13 +230,13 @@ def new_run_id() -> str:
     return f"run_{stamp}_{secrets.token_hex(3)}"
 
 
-def wait_for_manual_decision(driver) -> None:
+def wait_for_manual_decision(driver, labels: tuple[str, ...] = (), display_name: str = "Otra información") -> None:
     """Evita navegar al siguiente Lead mientras el editor actual siga abierto."""
     while True:
         input("Borrador cargado. Revisalo en Salesforce, elegí Guardar o Cancelar y presioná Enter aquí: ")
-        if not find_editor_control(driver):
+        if not find_editor_control(driver, labels or OTHER_INFORMATION_LABELS):
             return
-        print("El editor de 'Otra información' sigue abierto. Guardá o cancelá antes de continuar.")
+        print(f"El editor de '{display_name}' sigue abierto. Guardá o cancelá antes de continuar.")
 
 
 def fail_lead(
@@ -308,6 +317,18 @@ def main(argv: list[str] | None = None) -> int:
     snapshot_path = snapshot_path or snapshot_path_for(queue_path, ui_output_directory)
     run_id = options.get("run_id") or queue_file["run_id"] or new_run_id()
     source_file = queue_file["source_file"]
+    # El modo de país viene congelado en la cola y decide el campo físico.
+    country = normalize_country(queue_file["country"])
+    attempt_labels = field_labels(country, "attempts")
+    attempt_display = field_display(country, "attempts")
+    attempt_field_key = field_key(country, "attempts")
+    closure_labels = field_labels(country, "closure")
+
+    def read_attempts(current_driver, timeout):
+        # El camino histórico (Otra información) queda intacto para Argentina.
+        if not attempt_labels or attempt_labels == OTHER_INFORMATION_LABELS:
+            return find_other_information(current_driver, timeout)
+        return find_field_value(current_driver, timeout, attempt_labels)
     stats = {
         "preparado": 0,
         "guardado": 0,
@@ -343,6 +364,7 @@ def main(argv: list[str] | None = None) -> int:
             lead_id = lead["lead_id"]
             attempts = lead["attempts"]
             context = lead_context(run_id, source_file, attempts)
+            context["country"] = country
             print(f"\n=== Lead {index}/{len(leads)} ===")
             next_int = 0
             stage_seconds: dict[str, float] = {}
@@ -359,8 +381,15 @@ def main(argv: list[str] | None = None) -> int:
                 wait_for_lightning_ready(driver, timeout_seconds)
                 stage_seconds["navigation"] = time.monotonic() - stage_started_at
                 stage_started_at = time.monotonic()
-                duplicate = is_duplicate_lead(find_comment(driver, timeout_seconds))
+                # La marca "Lead duplicado" puede quedar en cualquiera de los
+                # dos campos según el país; se revisan ambos sin espera.
+                duplicate = is_duplicate_lead(find_field_text(driver, closure_labels))
                 stage_seconds["comment_check"] = time.monotonic() - stage_started_at
+                if not duplicate:
+                    stage_started_at = time.monotonic()
+                    existing_comment = read_attempts(driver, timeout_seconds)
+                    stage_seconds["field_read"] = time.monotonic() - stage_started_at
+                    duplicate = is_duplicate_lead(existing_comment)
                 if duplicate:
                     stats["duplicado"] += 1
                     duplicate_entry = result_entry(
@@ -378,9 +407,6 @@ def main(argv: list[str] | None = None) -> int:
                     logger.info("Lead duplicado omitido: lead=%s", mask_lead_id(lead_id))
                     print("Lead marcado como duplicado; no se documenta automáticamente.")
                     continue
-                stage_started_at = time.monotonic()
-                existing_comment = find_other_information(driver, timeout_seconds)
-                stage_seconds["field_read"] = time.monotonic() - stage_started_at
                 next_int = next_attempt_number(existing_comment)
                 # Solo se escriben los call_id ausentes; los ya presentes y los
                 # ambiguos (sin call_id con campo cargado) no se duplican.
@@ -413,7 +439,14 @@ def main(argv: list[str] | None = None) -> int:
                     extra=context,
                 )
                 record_result(results_path, entry)
-                record_snapshot(snapshot_path, lead_id, existing_comment, run_id)
+                record_snapshot(
+                snapshot_path,
+                lead_id,
+                existing_comment,
+                run_id,
+                field=attempt_field_key,
+                country=country,
+            )
                 if auto_mode:
                     batch_results.append(entry)
                 logger.info(
@@ -465,7 +498,13 @@ def main(argv: list[str] | None = None) -> int:
                 # Solo carga el borrador; Guardar o Cancelar siguen siendo manuales
                 # salvo en modo --auto.
                 stage_started_at = time.monotonic()
-                prepare_other_information(driver, prepared, timeout_seconds)
+                prepare_other_information(
+                    driver,
+                    prepared,
+                    timeout_seconds,
+                    labels=attempt_labels,
+                    display_name=attempt_display,
+                )
                 stage_seconds["editor"] = time.monotonic() - stage_started_at
             except (ValueError, TimeoutException, WebDriverException) as error:
                 stats["error"] += 1
@@ -490,7 +529,7 @@ def main(argv: list[str] | None = None) -> int:
                     stage_seconds["save_settle"] = time.monotonic() - stage_started_at
                     stage_started_at = time.monotonic()
                     saved, persisted_length, verify_reloads = verify_saved_value(
-                        driver, record_url, prepared, timeout_seconds
+                        driver, record_url, prepared, timeout_seconds, labels=attempt_labels
                     )
                     stage_seconds["verification"] = time.monotonic() - stage_started_at
                 except (ValueError, TimeoutException, WebDriverException) as error:
@@ -503,7 +542,7 @@ def main(argv: list[str] | None = None) -> int:
                     try:
                         driver.get(record_url)
                         wait_for_lightning_ready(driver, timeout_seconds)
-                        persisted = find_other_information(driver, timeout_seconds)
+                        persisted = read_attempts(driver, timeout_seconds)
                         persisted_length = len(persisted)
                         saved = normalize_persisted_text(persisted) == normalize_persisted_text(prepared)
                     except (ValueError, TimeoutException, WebDriverException):
@@ -551,9 +590,11 @@ def main(argv: list[str] | None = None) -> int:
                 record_snapshot(
                     snapshot_path,
                     lead_id,
-                    find_other_information(driver, timeout_seconds),
+                    read_attempts(driver, timeout_seconds),
                     run_id,
                     context["documented_call_ids"],
+                    field=attempt_field_key,
+                    country=country,
                 )
                 stage_seconds["snapshot"] = time.monotonic() - stage_started_at
                 logger.info(
@@ -583,7 +624,7 @@ def main(argv: list[str] | None = None) -> int:
                 next_int,
                 len(missing_attempts),
             )
-            wait_for_manual_decision(driver)
+            wait_for_manual_decision(driver, attempt_labels, attempt_display)
             stats["preparado"] += 1
             record_result(
                 results_path,

@@ -102,6 +102,19 @@
   .queue-pending-label { display: block; font-size: 11px; font-weight: 700; color: #1a5f9e;
     text-transform: uppercase; letter-spacing: .03em; margin-bottom: 3px; }
   .queue-pending-line { font-family: Consolas, monospace; font-size: 12px; color: #234; }
+  .queue-close { flex-basis: 100%; margin-top: 4px; display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .queue-close .close-badge { margin-left: auto; }
+  .closure-bar { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
+  .country-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 10px 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: #fafbfd; }
+  .country-flag { display: inline-block; width: 26px; height: 18px; border-radius: 3px; border: 1px solid rgba(0,0,0,.18); flex: none; }
+  .flag-argentina { background: linear-gradient(180deg, #75aadb 0 33%, #ffffff 33% 66%, #75aadb 66% 100%); }
+  .flag-colombia { background: linear-gradient(180deg, #fcd116 0 50%, #003893 50% 75%, #ce1126 75% 100%); }
+  .flag-mexico { background: linear-gradient(90deg, #006847 0 33%, #ffffff 33% 66%, #ce1126 66% 100%); }
+  .flag-desconocido { background: #e0e0e0; }
+  .country-dest { font-size: 12px; color: var(--muted); }
+  .country-warn { color: #b26a00; font-weight: 600; font-size: 12px; }
+  .closure-title { font-weight: 700; font-size: 13px; }
   .queue-hist { flex-basis: 100%; margin-top: 4px; }
   .queue-hist summary { cursor: pointer; font-size: 12px; color: var(--muted); }
   .queue-row .meta { color: var(--muted); font-size: 12px; }
@@ -290,6 +303,17 @@
     <div class="queue-panel">
       <h2>Cola de documentaci&oacute;n del bot</h2>
       <p class="hint">Leads marcados con el checkbox <strong>Cola</strong>. La cola se escribe sola en <code>queues\cola_activa.json</code> cada vez que cambia la selecci&oacute;n.</p>
+      <div class="country-bar" id="countryBar">
+        <span class="country-flag flag-desconocido" id="countryFlag" title="País de la base detectado por TEL1"></span>
+        <label class="check" for="countryMode" title="Campos de Salesforce donde el bot escribe los intentos y el motivo de cierre">País/campos:</label>
+        <select id="countryMode" class="sel-scope">
+          <option value="argentina">Argentina</option>
+          <option value="colombia_mexico">Colombia/México</option>
+        </select>
+        <span class="country-dest" id="countryDest"></span>
+        <button class="btn small hidden" id="countryFix"></button>
+        <span class="country-warn hidden" id="countryWarn"></span>
+      </div>
       <div class="actions">
         <button class="btn primary" id="linkBotFolder">Vincular carpeta del bot</button>
         <button class="btn primary" id="runBot">Ejecutar bot</button>
@@ -297,6 +321,21 @@
         <button class="btn" id="clearDocumented" title="Quita de esta lista los leads ya documentados (su registro queda en la lista principal).">Limpiar documentados</button>
         <span class="stats" id="queueSyncState">Carpeta no vinculada</span>
       </div>
+      <div class="actions closure-bar">
+        <span class="closure-title">Cierre de Leads:</span>
+        <select id="closureScope" class="sel-scope" title="Marcar o desmarcar 'Incluir en cierre' en los leads de esta cola">
+          <option value="">Incluir en cierre…</option>
+          <option value="all">Todos</option>
+          <option value="none">Ninguno</option>
+        </select>
+        <select id="closureReasonBulk" class="sel-scope" title="Asigna el mismo motivo a todos los leads incluidos en el cierre">
+          <option value="">Motivo a seleccionados…</option>
+          <option value="ilocalizable">Ilocalizable</option>
+          <option value="deja_de_interactuar">Deja de interactuar</option>
+        </select>
+        <button class="btn primary" id="runClose" title="Cierra en Salesforce los leads con 'Incluir en cierre' marcado y motivo elegido. Modifica el registro: requiere confirmación.">Ejecutar cierre</button>
+      </div>
+      <p class="hint"><strong>Cierre:</strong> marc&aacute; <em>Incluir en cierre</em> en cada lead y eleg&iacute; el motivo (<em>Ilocalizable</em> si nunca hubo contacto, <em>Deja de interactuar</em> si hubo contacto pero no se pudo continuar). El auxiliar decide cu&aacute;ndo cerrar: no hay un m&iacute;nimo de intentos. <strong>Ejecutar cierre</strong> pide confirmaci&oacute;n y luego el bot guarda el motivo en el campo del pa&iacute;s, los campos de cualificaci&oacute;n y ejecuta <em>Convert Lead &rarr; Yes</em> en cada lead seleccionado.</p>
       <p class="hint"><strong>Requisito:</strong> ten&eacute;s que estar <strong>logueado en Salesforce</strong> en la otra pesta&ntilde;a de este navegador (con 2FA completado) antes de ejecutar el bot.</p>
       <p class="hint"><strong>Ejecutar bot</strong> lanza la documentaci&oacute;n autom&aacute;tica (requiere el servidor local corriendo: <code>INICIAR.bat</code> o <code>python ui_server.py</code>). Alternativa manual: <code>python run_document_queue.py --auto queues\cola_activa.json</code>. Los estados se actualizan solos.</p>
       <p class="hint"><strong>Reintentos:</strong> los leads con estado <strong>guardado</strong> salen solos de la cola, as&iacute; que <strong>volver a ejecutar el bot reintenta solo los que quedaron en error o pendientes</strong> &mdash; los ya documentados no se repiten. Antes de reintentar, verific&aacute; en Salesforce que el lead con error no haya quedado guardado igual; si se guard&oacute;, marc&aacute; <strong>Documentado</strong> a mano en la lista para que no se dupliquen los intentos.</p>
@@ -346,7 +385,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.0.10";
+const APP_VERSION = "1.2.0";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -367,6 +406,132 @@ let globalOffset = 0;
 let clipboardEnabled = localStorage.getItem("dp_clipboardEnabled") !== "false";
 let copiedLeadId = null;
 const selectedIds = new Set();
+// Selección de cierre, independiente de la de documentación: leadId → motivo.
+let closureSelection = {};
+let lastClosureStatus = {};
+const CLOSURE_REASON_LABELS = { ilocalizable: "Ilocalizable", deja_de_interactuar: "Deja de interactuar" };
+const CLOSURE_STATUS_LABELS = {
+  cerrado_verificado: "cerrado",
+  ya_cerrado: "ya cerrado",
+  conversion_pendiente: "conversión pendiente",
+  conversion_no_verificada: "conversión sin verificar",
+  conflicto: "conflicto: revisar",
+  revision: "revisar",
+  error: "error",
+};
+
+// ---------- País y campos de Salesforce ----------
+// Wolkvox entrega tandas homogéneas: todos los TEL1 de la base pertenecen al
+// mismo país, así que el prefijo identifica el modo de campos del lote.
+// Argentina: 91549 · México: 9352 · Colombia: 957.
+const COUNTRY_PREFIXES = { argentina: "91549", mexico: "9352", colombia: "957" };
+const COUNTRY_DISPLAY = { argentina: "Argentina", colombia: "Colombia", mexico: "México" };
+const MODE_DISPLAY = { argentina: "Argentina", colombia_mexico: "Colombia/México" };
+const MODE_FIELDS = {
+  argentina: "Intentos → Otra información · Cierre → Comentario",
+  colombia_mexico: "Intentos → Comentario · Cierre → Otra información",
+};
+// Resultado de la clasificación de la base completa cargada (no solo selección).
+let batchInfo = { status: "sin_base", country: "", counts: {} };
+// Modo de campos elegido: se congela dentro de cada cola exportada.
+let queueCountryMode = "argentina";
+
+function countryFromTel(tel) {
+  const digits = String(tel || "").replace(/\D+/g, "");
+  if (!digits) return "sin_tel";
+  for (const [country, prefix] of Object.entries(COUNTRY_PREFIXES)) {
+    if (digits.startsWith(prefix)) return country;
+  }
+  return "invalido";
+}
+
+// Clasifica TODAS las filas del archivo (incluidas las sin ID de Lead): la
+// tanda solo es válida si un único país concreto cubre todos los TEL1.
+// Colombia y México comparten modo de campos, pero una base que las mezcle se
+// rechaza igual: Wolkvox nunca arma tandas multi-país.
+function detectBatchCountry(rows) {
+  const counts = { argentina: 0, colombia: 0, mexico: 0, sin_tel: 0, invalido: 0 };
+  rows.forEach(row => { counts[countryFromTel(clean(row["TEL1"]))] += 1; });
+  const found = ["argentina", "colombia", "mexico"].filter(country => counts[country] > 0);
+  if (!rows.length) return { status: "empty", country: "", counts };
+  if (counts.sin_tel + counts.invalido > 0) return { status: "invalid", country: "", counts };
+  if (found.length !== 1) return { status: "mixed", country: "", counts };
+  return { status: "ok", country: found[0], counts };
+}
+
+function expectedModeFor(country) {
+  return country === "argentina" ? "argentina" : "colombia_mexico";
+}
+
+// Clave del campo físico de intentos según el modo activo (para aislar
+// snapshots de un modo del otro).
+function attemptsFieldKey() {
+  return queueCountryMode === "argentina" ? "otra_informacion" : "comentario";
+}
+
+// Validación previa a exportar/ejecutar: reporta países y conteos, nunca
+// teléfonos. Un lote mezclado o inválido no tiene bypass.
+function countryGate() {
+  if (!leads.length) return { ok: false, message: "Cargá la base del predictivo primero." };
+  if (batchInfo.status === "empty") return { ok: false, message: "La base cargada no tiene filas para documentar." };
+  if (batchInfo.status === "invalid") {
+    const bad = (batchInfo.counts.sin_tel || 0) + (batchInfo.counts.invalido || 0);
+    return { ok: false, message: `La base tiene ${bad} registro${bad === 1 ? "" : "s"} con teléfono vacío o prefijo desconocido. Revisá el archivo: no se puede continuar.` };
+  }
+  if (batchInfo.status === "mixed") {
+    const parts = ["argentina", "colombia", "mexico"]
+      .filter(country => batchInfo.counts[country] > 0)
+      .map(country => `${batchInfo.counts[country]} de ${COUNTRY_DISPLAY[country]}`);
+    return { ok: false, message: `La base mezcla países (${parts.join(" + ")}). Wolkvox arma tandas de un solo país: revisá el archivo antes de continuar.` };
+  }
+  const expected = expectedModeFor(batchInfo.country);
+  if (queueCountryMode !== expected) {
+    return {
+      ok: false,
+      fixMode: expected,
+      message: `La base detectada es ${COUNTRY_DISPLAY[batchInfo.country]} pero el selector está en ${MODE_DISPLAY[queueCountryMode]}.`,
+    };
+  }
+  return { ok: true };
+}
+
+function assertCountryGate() {
+  const gate = countryGate();
+  renderCountryBar();
+  if (gate.ok) return true;
+  alert(gate.message + (gate.fixMode ? `\n\nUsá el botón "Cambiar a ${MODE_DISPLAY[gate.fixMode]}" o el selector de País para corregirlo.` : ""));
+  return false;
+}
+
+function renderCountryBar() {
+  const flag = $("countryFlag");
+  if (!flag) return;
+  const detected = batchInfo.status === "ok" ? batchInfo.country : "";
+  flag.className = `country-flag flag-${detected || "desconocido"}`;
+  flag.title = detected ? `Base detectada: ${COUNTRY_DISPLAY[detected]}` : "País de la base no identificado";
+  $("countryMode").value = queueCountryMode;
+  $("countryDest").textContent = detected
+    ? `${COUNTRY_DISPLAY[detected]} · ${MODE_FIELDS[queueCountryMode]}`
+    : MODE_FIELDS[queueCountryMode];
+  const gate = countryGate();
+  const warn = $("countryWarn");
+  warn.classList.toggle("hidden", gate.ok);
+  warn.textContent = gate.ok ? "" : gate.message;
+  const fix = $("countryFix");
+  fix.classList.toggle("hidden", !gate.fixMode);
+  fix.textContent = gate.fixMode ? `Cambiar a ${MODE_DISPLAY[gate.fixMode]}` : "";
+  fix.dataset.mode = gate.fixMode || "";
+}
+
+function setCountryMode(mode) {
+  if (!MODE_DISPLAY[mode]) return;
+  queueCountryMode = mode;
+  if (fileKey) { try { localStorage.setItem("dp_country_" + fileKey, mode); } catch { /* sin persistencia */ } }
+  renderCountryBar();
+  // La cola activa congela el modo al escribirse: se reescribe para que la
+  // próxima ejecución use el país elegido, no el anterior.
+  writeActiveQueue();
+}
 
 function loadJSON(key, fallback) {
   try { const v = JSON.parse(localStorage.getItem(key)); return v && typeof v === "object" ? v : fallback; }
@@ -397,7 +562,7 @@ const PREPARE_FIELDS = [
   ["vehicle", "Vehículo", ["vehiculo de interes", "vehiculo", "vehículo", "modelo"]],
   ["dealer", "Concesionario", ["nombre corto de la concesion", "concesionario", "concesion", "dealer"]],
 ];
-const COUNTRY_PREFIXES = { ARG: "91549", COL: "957", MEX: "9352" };
+const WOLKVOX_PREFIXES = { ARG: "91549", COL: "957", MEX: "9352" };
 let prepareRows = [];
 let prepareHeaders = [];
 let prepareMapping = {};
@@ -437,7 +602,7 @@ function detectColumn(headers, aliases) {
 function normalizePhone(value, country) {
   const digits = String(value || "").replace(/\D/g, "");
   if (digits.length < 10) return null;
-  return COUNTRY_PREFIXES[country] + digits.slice(-10);
+  return WOLKVOX_PREFIXES[country] + digits.slice(-10);
 }
 
 function escapeHTML(value) {
@@ -534,7 +699,7 @@ function setOffset(lead, n) {
 // La unidad de documentación es (lead, call_id). Un call_id tiene la forma
 // "1790709220.356411" y solo califica si es el último token de una línea
 // "N INT ..." para no confundir teléfonos, importes o fechas con IDs.
-const CALL_ID_RE = /^\d{5,}\.\d{3,}$/;
+const CALL_ID_RE = /[ \t]+\d{1,2}\/\d{1,2}\/(?:\d{4}|\d{2})[ \t]+\d{1,2}:\d{2}(?::\d{2})?[ \t]+(\S[^\r\n]*)$/;
 const INT_LINE_RE = /^\s*\d+\s+INT\b/i;
 const INT_NUMBER_RE = /(\d+)\s+INT\b/gi;
 
@@ -554,9 +719,8 @@ function extractCallIdsFromText(text) {
   const ids = new Set();
   for (const line of String(text || "").split("\n")) {
     if (!INT_LINE_RE.test(line)) continue;
-    const tokens = line.trim().split(/\s+/);
-    const last = tokens[tokens.length - 1] || "";
-    if (CALL_ID_RE.test(last)) ids.add(last);
+    const match = line.trim().match(CALL_ID_RE);
+    if (match) ids.add(match[1].trim());
   }
   return ids;
 }
@@ -697,6 +861,8 @@ function buildBotQueue(onlyIds) {
   return {
     generated_at: new Date().toISOString(),
     source_file: fileName,
+    // Modo de país congelado en la cola: el runner decide el campo físico.
+    country: queueCountryMode,
     leads: leads
       .filter(lead => !isDone(lead) && pendingAttempts(lead).length > 0 && (!onlyIds || onlyIds.has(lead.id)))
       .map(lead => ({
@@ -712,6 +878,7 @@ function buildBotQueue(onlyIds) {
 }
 
 async function downloadBotQueue(onlyIds) {
+  if (!assertCountryGate()) return;
   const queue = buildBotQueue(onlyIds);
   if (!queue.leads.length) {
     alert(onlyIds ? "No hay leads seleccionados pendientes para exportar." : "No hay leads pendientes para exportar.");
@@ -742,6 +909,7 @@ async function downloadBotQueue(onlyIds) {
 // confirmado. Incluye el hash base para que el bot verifique que Salesforce no
 // cambió antes de escribir.
 async function downloadCorrections() {
+  if (!assertCountryGate()) return;
   const entries = leads
     .filter(lead => {
       const record = progress[lead.id];
@@ -771,6 +939,7 @@ async function downloadCorrections() {
     await writable.write(new Blob([JSON.stringify({
       generated_at: now.toISOString(),
       source_file: fileName,
+      country: queueCountryMode,
       corrections: entries,
     }, null, 2)], { type: "application/json;charset=utf-8" }));
     await writable.close();
@@ -787,6 +956,10 @@ async function downloadCorrections() {
 function applySnapshot(snapshot) {
   if (!snapshot || typeof snapshot.lead_id !== "string" || typeof snapshot.field_value !== "string") return false;
   if (!leads.some(lead => lead.id === snapshot.lead_id)) return false;
+  // El snapshot queda atado al campo físico: una lectura de Otra información
+  // (Argentina) nunca puede pasar por una lectura de Comentario (Col/Mex).
+  const snapField = snapshot.field ? String(snapshot.field) : "otra_informacion";
+  if (snapField !== attemptsFieldKey()) return false;
   const previous = progress[snapshot.lead_id];
   const evidenceIds = Array.isArray(snapshot.call_ids)
     ? snapshot.call_ids.map(String)
@@ -933,6 +1106,8 @@ const ACTIVE_QUEUE_NAME = "cola_activa.json";
 const ACTIVE_QUEUE_RESULT_NAME = "cola_activa.resultado.json";
 const ACTIVE_QUEUE_SNAPSHOTS_NAME = "cola_activa.snapshots.json";
 const ACTIVE_QUEUE_METRICS_NAME = "cola_activa.metricas.json";
+const CLOSE_QUEUE_NAME = "cola_cierre_activa.json";
+const CLOSE_QUEUE_RESULT_NAME = "cola_cierre_activa.resultado.json";
 // Cuando ui_server.py sirve esta página en http://127.0.0.1:8765 el servidor
 // inyecta el token y la UI opera por HTTP: no hace falta vincular ninguna carpeta.
 const SERVER_MODE = location.hostname === "127.0.0.1" && location.port === "8765";
@@ -973,6 +1148,115 @@ async function idbGet(key) {
 
 function saveSelection() {
   try { localStorage.setItem("dp_selection_" + fileKey, JSON.stringify([...selectedIds])); } catch { /* sin persistencia */ }
+}
+
+function saveClosureSelection() {
+  try { localStorage.setItem("dp_closure_" + fileKey, JSON.stringify(closureSelection)); } catch { /* sin persistencia */ }
+}
+
+// Leads visibles en la vista de cola: el alcance de "Todos"/"Ninguno" del
+// cierre es exactamente lo que el usuario está viendo, no otra cosa.
+function queuedLeads() {
+  return leads.filter(lead => selectedIds.has(lead.id));
+}
+
+// Leads preparados para cerrar: checkbox marcado + motivo elegido.
+function closureReadyLeads() {
+  return queuedLeads().filter(lead => CLOSURE_REASON_LABELS[closureSelection[lead.id]]);
+}
+
+function closureMissingReason() {
+  return queuedLeads().filter(
+    lead => closureSelection[lead.id] !== undefined && !CLOSURE_REASON_LABELS[closureSelection[lead.id]]
+  );
+}
+
+// Cola de cierre que el servidor valida y congela: solo lead_id + motivo.
+function buildCloseQueue() {
+  return {
+    operation: "close_leads",
+    generated_at: new Date().toISOString(),
+    source_file: fileName,
+    country: queueCountryMode,
+    leads: closureReadyLeads().map(lead => ({ lead_id: lead.id, reason: closureSelection[lead.id] })),
+  };
+}
+
+// Escribe la cola de cierre: por HTTP en modo servidor, por File System
+// Access cuando la página se abrió como file://.
+async function writeCloseQueue(queue) {
+  if (SERVER_MODE) {
+    await botApi("/api/close-queue", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(queue),
+    });
+    return;
+  }
+  const queuesDir = await botDirHandle.getDirectoryHandle("queues", { create: true });
+  const fileHandle = await queuesDir.getFileHandle(CLOSE_QUEUE_NAME, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(JSON.stringify(queue, null, 2));
+  await writable.close();
+}
+
+// Confirma el lote y dispara el runner de cierre. Es una acción de negocio
+// que modifica Salesforce: siempre pasa por confirmación explícita.
+let closeRunInProgress = false;
+async function runClosure() {
+  try {
+    if (!(await botDirGranted())) { alert("Primero vinculá la carpeta del bot."); return; }
+    if (!assertCountryGate()) return;
+    const missing = closureMissingReason();
+    if (missing.length) {
+      alert(`${missing.length} lead${missing.length === 1 ? "" : "s"} incluido${missing.length === 1 ? "" : "s"} en el cierre no tiene motivo elegido. Asignale Ilocalizable o Deja de interactuar.`);
+      return;
+    }
+    const queue = buildCloseQueue();
+    if (!queue.leads.length) { alert("No hay leads incluidos en el cierre. Marcá 'Incluir en cierre' y elegí el motivo."); return; }
+    const porMotivo = {};
+    queue.leads.forEach(lead => { porMotivo[lead.reason] = (porMotivo[lead.reason] || 0) + 1; });
+    const detalle = Object.entries(porMotivo)
+      .map(([reason, count]) => `${count} como "${CLOSURE_REASON_LABELS[reason]}"`)
+      .join("\n");
+    const campoMotivo = queueCountryMode === "argentina" ? "Comentario" : "Otra información";
+    const confirmed = confirm(
+      `Vas a cerrar ${queue.leads.length} lead${queue.leads.length === 1 ? "" : "s"} en Salesforce:\n\n${detalle}\n\n` +
+      `En cada uno el bot va a guardar el motivo en ${campoMotivo}, Cualificación y Sub-Cualificación, ` +
+      `y ejecutar "Convert Lead → Yes". Esta acción no se puede deshacer desde la app.\n\n¿Confirmás el cierre del lote?`
+    );
+    if (!confirmed) return;
+    let runUrl = "/run-close";
+    let token = BOT_TOKEN;
+    if (!SERVER_MODE) {
+      const session = await readBotFile("ui_output", "bot_session.json");
+      runUrl = `http://127.0.0.1:${session.port}/run-close`;
+      token = session.token;
+    }
+    await writeCloseQueue(queue);
+    const response = await fetch(runUrl, {
+      method: "POST",
+      headers: { "X-Bot-Token": token },
+    });
+    botRunInProgress = response.status === 202;
+    closeRunInProgress = response.status === 202;
+    botCompletionShown = false;
+    let serverError = "";
+    if (response.status !== 202) {
+      try { serverError = (await response.json()).error || ""; } catch { serverError = ""; }
+    }
+    queueSyncInfo = response.status === 202
+      ? "Cierre iniciado — los estados se actualizan solos."
+      : (response.status === 403
+        ? (botSessionStale = true, STALE_SESSION_MSG)
+        : (serverError || (response.status === 409 ? "El bot ya está corriendo." : `Respuesta inesperada del bot (${response.status}).`)));
+    updateQueueSyncState();
+    if (response.status !== 202) alert(`No se pudo iniciar el cierre.\n\n${queueSyncInfo}`);
+  } catch {
+    alert(SERVER_MODE
+      ? "El servidor local del bot dejó de responder.\nCerrá todo y volvé a ejecutar INICIAR.bat."
+      : "No se pudo contactar al servidor local del bot.\nInicialo una sola vez con:\npython ui_server.py");
+  }
 }
 
 async function botDirGranted() {
@@ -1017,6 +1301,7 @@ async function readBotFile(dirName, fileName) {
       "queues/cola_activa.resultado.json": "/api/results",
       "queues/cola_activa.metricas.json": "/api/metrics",
       "ui_output/cola_activa.snapshots.json": "/api/snapshots",
+      "queues/cola_cierre_activa.resultado.json": "/api/close-results",
     }[`${dirName}/${fileName}`];
     return route ? botApi(route) : null;
   }
@@ -1028,10 +1313,17 @@ async function readBotFile(dirName, fileName) {
 // Reescribe la cola activa con la selección actual. En modo servidor la
 // escribe ui_server.py por HTTP; en modo archivo usa el permiso de carpeta
 // concedido una sola vez.
-async function writeActiveQueue() {
+async function writeActiveQueue(queue = buildBotQueue(selectedIds)) {
+  let written = false;
   try {
-    if (!(await botDirGranted())) return;
-    const queue = buildBotQueue(selectedIds);
+    if (!(await botDirGranted())) return false;
+    const gate = countryGate();
+    if (!gate.ok) {
+      queueSyncInfo = `Cola no exportada: ${gate.message}`;
+      updateQueueSyncState();
+      renderCountryBar();
+      return false;
+    }
     if (SERVER_MODE) {
       await botApi("/api/queue", {
         method: "PUT",
@@ -1046,10 +1338,12 @@ async function writeActiveQueue() {
       await writable.close();
     }
     queueSyncInfo = `cola_activa.json actualizada · ${queue.leads.length} leads · ${new Date().toLocaleTimeString()}`;
+    written = true;
   } catch {
     queueSyncInfo = "No se pudo escribir cola_activa.json.";
   }
   updateQueueSyncState();
+  return written;
 }
 
 function productivityMessage(metrics) {
@@ -1078,14 +1372,37 @@ async function notifyBotCompletion() {
     if (status.running) return;
     botRunInProgress = false;
     if (status.exit_code !== null && status.exit_code !== 0) {
-      const hint = `El bot terminó con un error (código ${status.exit_code}). ` +
-        "Si no se abrieron las pestañas de los Leads, el navegador del bot puede " +
-        "estar trabado: probá 'Reiniciar navegador del bot' y ejecutá de nuevo.";
+      const hint = status.exit_code === 2
+        ? "No se pudo procesar la cola: está vacía o es inválida (código 2). Revisá la selección y los intentos pendientes. Para cerrar Leads, usá 'Ejecutar cierre'."
+        : `El bot terminó con un error (código ${status.exit_code}). Revisá el resultado de la corrida antes de reintentar; no se confirmó la causa del fallo.`;
+      closeRunInProgress = false;
       queueSyncInfo = hint;
       updateQueueSyncState();
       if (!botCompletionShown) {
         botCompletionShown = true;
         alert(hint);
+      }
+      renderQueueList();
+      return;
+    }
+    if (status.operation === "cierre" || closeRunInProgress) {
+      closeRunInProgress = false;
+      const results = await readBotFile("queues", CLOSE_QUEUE_RESULT_NAME);
+      const counts = {};
+      if (Array.isArray(results)) {
+        results.forEach(item => {
+          if (item && item.run_id) counts[item.status] = (counts[item.status] || 0) + 1;
+        });
+      }
+      const detalle = Object.entries(counts)
+        .map(([status, count]) => `${count} ${CLOSURE_STATUS_LABELS[status] || status}`)
+        .join("\n");
+      const mensaje = `Cierre finalizado\n\n${detalle || "Sin resultados registrados."}`;
+      queueSyncInfo = mensaje.replaceAll("\n", " · ");
+      updateQueueSyncState();
+      if (!botCompletionShown) {
+        botCompletionShown = true;
+        alert(mensaje);
       }
       renderQueueList();
       return;
@@ -1138,11 +1455,32 @@ async function pollBotResults() {
   try {
     lastRunMetrics = await readBotFile("queues", ACTIVE_QUEUE_METRICS_NAME);
   } catch { }
+  try {
+    const closeResults = await readBotFile("queues", CLOSE_QUEUE_RESULT_NAME);
+    if (Array.isArray(closeResults)) {
+      lastClosureStatus = {};
+      closeResults.forEach(item => applyCloseResult(item, leadIds));
+    }
+  } catch { /* sin corrida de cierre todavía */ }
   await notifyBotCompletion();
   // Mientras el bot corre la cola congelada no se toca; al terminar, los
   // leads documentados salen solos para que la próxima corrida no los repita.
   if (!botRunInProgress) await writeActiveQueue();
   renderQueueList();
+}
+
+// Aplica un resultado de cierre al estado local: actualiza el badge y, si el
+// Lead ya quedó cerrado/convertido, lo desmarca de la selección de cierre
+// para que no vuelva a entrar en el próximo lote aunque siga visible.
+function applyCloseResult(item, leadIds) {
+  if (!item || typeof item.lead_id !== "string" || !leadIds.has(item.lead_id) || !item.run_id) return "ignorado";
+  lastClosureStatus[item.lead_id] = item.status;
+  if ((item.status === "cerrado_verificado" || item.status === "ya_cerrado")
+    && closureSelection[item.lead_id] !== undefined) {
+    delete closureSelection[item.lead_id];
+    saveClosureSelection();
+  }
+  return item.status;
 }
 
 const QUEUE_STATUS_LABELS = {
@@ -1193,6 +1531,30 @@ function renderQueueList() {
       saveSelection();
       writeActiveQueue();
       renderQueueList();
+    });
+    // Cierre: selección y motivo propios, separados del estado de documentación.
+    const closeWrap = document.createElement("div");
+    closeWrap.className = "queue-close";
+    const included = closureSelection[lead.id] !== undefined;
+    const closeStatus = lastClosureStatus[lead.id];
+    closeWrap.innerHTML =
+      `<label class="check"><input type="checkbox" class="close-check"${included ? " checked" : ""}> Incluir en cierre</label>` +
+      `<label class="check"><input type="radio" name="closeReason_${lead.id}" value="ilocalizable"${closureSelection[lead.id] === "ilocalizable" ? " checked" : ""}> Ilocalizable</label>` +
+      `<label class="check"><input type="radio" name="closeReason_${lead.id}" value="deja_de_interactuar"${closureSelection[lead.id] === "deja_de_interactuar" ? " checked" : ""}> Deja de interactuar</label>` +
+      (closeStatus ? `<span class="badge st-${closeStatus === "cerrado_verificado" || closeStatus === "ya_cerrado" ? "bot" : "parcial"} close-badge">${CLOSURE_STATUS_LABELS[closeStatus] || closeStatus}</span>` : "");
+    row.appendChild(closeWrap);
+    closeWrap.querySelector(".close-check").addEventListener("change", event => {
+      if (event.target.checked) closureSelection[lead.id] = closureSelection[lead.id] || "";
+      else delete closureSelection[lead.id];
+      saveClosureSelection();
+      renderQueueList();
+    });
+    closeWrap.querySelectorAll(`input[name="closeReason_${lead.id}"]`).forEach(radio => {
+      radio.addEventListener("change", () => {
+        closureSelection[lead.id] = radio.value; // elegir motivo también lo incluye
+        saveClosureSelection();
+        renderQueueList();
+      });
     });
     const pending = pendingAttempts(lead);
     if (pending.length) {
@@ -1253,6 +1615,12 @@ function stopQueuePolling() {
 async function runBot() {
   try {
     if (!(await botDirGranted())) { alert("Primero vinculá la carpeta del bot."); return; }
+    if (!assertCountryGate()) return;
+    const queue = buildBotQueue(selectedIds);
+    if (!queue.leads.length) {
+      alert("No hay intentos pendientes para documentar en los Leads seleccionados. Si querés cerrar Leads, usá 'Ejecutar cierre'; es una operación independiente.");
+      return;
+    }
     let runUrl = "/run";
     let token = BOT_TOKEN;
     if (!SERVER_MODE) {
@@ -1261,12 +1629,16 @@ async function runBot() {
       token = session.token;
     }
     lastRunMetrics = null;
-    await writeActiveQueue();
+    if (!(await writeActiveQueue(queue))) {
+      alert(`No se pudo iniciar la documentación.\n\n${queueSyncInfo}`);
+      return;
+    }
     const response = await fetch(runUrl, {
       method: "POST",
       headers: { "X-Bot-Token": token },
     });
     botRunInProgress = response.status === 202;
+    closeRunInProgress = false;
     botCompletionShown = false;
     let serverError = "";
     if (response.status !== 202) {
@@ -1278,7 +1650,7 @@ async function runBot() {
         ? (botSessionStale = true, STALE_SESSION_MSG)
         : (serverError || (response.status === 409 ? "El bot ya está corriendo." : `Respuesta inesperada del bot (${response.status}).`)));
     updateQueueSyncState();
-    if (response.status === 503 || response.status === 403) alert(`No se pudo iniciar el bot.\n\n${queueSyncInfo}`);
+    if (response.status !== 202) alert(`No se pudo iniciar el bot.\n\n${queueSyncInfo}`);
   } catch {
     alert(SERVER_MODE
       ? "El servidor local del bot dejó de responder.\nCerrá todo y volvé a ejecutar INICIAR.bat."
@@ -1301,6 +1673,7 @@ async function checkServerVersion() {
 async function openQueueView() {
   showView("viewQueue");
   checkServerVersion();
+  renderCountryBar();
   if (!SERVER_MODE && !botDirHandle) {
     try { botDirHandle = (await idbGet("botDir")) || null; } catch { botDirHandle = null; }
   }
@@ -1344,6 +1717,8 @@ $("exportSelection").addEventListener("click", () => {
 });
 $("openQueue").addEventListener("click", openQueueView);
 $("runBot").addEventListener("click", runBot);
+$("countryMode").addEventListener("change", event => setCountryMode(event.target.value));
+$("countryFix").addEventListener("click", () => setCountryMode($("countryFix").dataset.mode));
 $("backFromQueue").addEventListener("click", async () => {
   stopQueuePolling();
   await pollBotResults();
@@ -1408,7 +1783,35 @@ $("restartBotBrowser").addEventListener("click", async () => {
     // La pestaña puede cerrarse antes de recibir la respuesta: es lo esperado.
   }
 });
+$("closureScope").addEventListener("change", event => {
+  const scope = event.target.value;
+  queuedLeads().forEach(lead => {
+    if (scope === "all" && closureSelection[lead.id] === undefined) closureSelection[lead.id] = "";
+    if (scope === "none") delete closureSelection[lead.id];
+  });
+  event.target.value = "";
+  saveClosureSelection();
+  renderQueueList();
+});
+$("closureReasonBulk").addEventListener("change", event => {
+  const reason = event.target.value;
+  event.target.value = "";
+  if (!reason) return;
+  let assigned = 0;
+  queuedLeads().forEach(lead => {
+    if (closureSelection[lead.id] !== undefined) { closureSelection[lead.id] = reason; assigned++; }
+  });
+  saveClosureSelection();
+  renderQueueList();
+  queueSyncInfo = assigned
+    ? `Motivo "${CLOSURE_REASON_LABELS[reason]}" asignado a ${assigned} lead${assigned === 1 ? "" : "s"} del cierre.`
+    : "Ningún lead incluido en el cierre; marcá 'Incluir en cierre' primero.";
+  updateQueueSyncState();
+});
+$("runClose").addEventListener("click", runClosure);
 $("clearDocumented").addEventListener("click", () => {
+  const withClosure = queuedLeads().filter(lead => isDone(lead) && closureSelection[lead.id] !== undefined).length;
+  if (withClosure && !confirm(`${withClosure} lead${withClosure === 1 ? "" : "s"} documentado${withClosure === 1 ? "" : "s"} está${withClosure === 1 ? "" : "n"} preparado${withClosure === 1 ? "" : "s"} para cierre y se ocultará${withClosure === 1 ? "" : "n"} de esta lista (su selección de cierre se conserva). ¿Continuar?`)) return;
   let removed = 0;
   leads.forEach(lead => {
     if (selectedIds.has(lead.id) && isDone(lead)) { selectedIds.delete(lead.id); removed++; }
@@ -1529,11 +1932,22 @@ $("exportQueue").addEventListener("click", () => downloadBotQueue());
 function loadCSVContent(text, name, size, saveRecovery = true) {
   const rows = parseCSV(text);
   leads = buildLeads(rows);
+  // La clasificación cubre TODAS las filas, no solo las que tienen ID.
+  batchInfo = detectBatchCountry(rows);
   if (!leads.length) { alert("No se encontraron registros con ID de lead. \u00bfEs el archivo correcto?"); return; }
   fileKey = name + "_" + size;
   fileName = name;
+  // El modo arranca en el país detectado (o el elegido antes para esta base);
+  // si luego difiere del detectado, la barra avisa y las acciones se bloquean.
+  const savedMode = localStorage.getItem("dp_country_" + fileKey);
+  queueCountryMode = batchInfo.status === "ok"
+    ? (MODE_DISPLAY[savedMode] ? savedMode : expectedModeFor(batchInfo.country))
+    : (MODE_DISPLAY[savedMode] ? savedMode : "argentina");
+  renderCountryBar();
   selectedIds.clear();
   (loadJSON("dp_selection_" + fileKey, []) || []).forEach(id => selectedIds.add(id));
+  closureSelection = loadJSON("dp_closure_" + fileKey, {}) || {};
+  lastClosureStatus = {};
   progress = loadJSON("dp_progress_" + fileKey, {});
   globalOffset = loadJSON("dp_globalOffset_" + fileKey, 0);
   $("globalOffset").value = globalOffset;

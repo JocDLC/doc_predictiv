@@ -40,6 +40,8 @@ automation_salesforce/screenshots/
 automation_salesforce/profiles/
 automation_salesforce/queues/
 automation_salesforce/ui_output/
+automation_salesforce/_reset_backup_*/
+automation_salesforce/ui_server_console.log
 _respaldo/
 
 # Reportes de verificacion de PC (por equipo)

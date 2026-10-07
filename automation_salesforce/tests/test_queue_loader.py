@@ -101,6 +101,24 @@ class QueueLoaderTests(unittest.TestCase):
         self.assertEqual(queue_file["run_id"], "")
         self.assertEqual(queue_file["source_file"], "")
 
+    def test_country_is_returned_from_queue(self):
+        path = self.write_queue({"leads": [VALID_LEAD], "country": "colombia_mexico"})
+
+        queue_file = load_queue_file(str(path), self.queue_directory)
+
+        self.assertEqual(queue_file["country"], "colombia_mexico")
+
+    def test_missing_country_defaults_to_argentina(self):
+        path = self.write_queue({"leads": [VALID_LEAD]})
+
+        self.assertEqual(load_queue_file(str(path), self.queue_directory)["country"], "argentina")
+
+    def test_unknown_country_rejected(self):
+        path = self.write_queue({"leads": [VALID_LEAD], "country": "peru"})
+
+        with self.assertRaisesRegex(ValueError, "país"):
+            load_queue(str(path), self.queue_directory)
+
 
 if __name__ == "__main__":
     unittest.main()

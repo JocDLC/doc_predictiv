@@ -17,9 +17,10 @@ from datetime import datetime, timezone
 from selenium.common.exceptions import TimeoutException, WebDriverException
 
 from browser_factory import create_driver, detect_browser, release_driver
-from comment_reader import build_record_url, find_other_information
+from comment_reader import build_record_url, find_field_value
 from comment_writer import prepare_other_information, save_edit_form
 from correction_loader import load_corrections
+from country_fields import field_display, field_key, field_labels
 from local_audit import capture_failure, create_logger, mask_lead_id
 from run_document_queue import (
     record_result,
@@ -54,10 +55,18 @@ def main(argv: list[str] | None = None) -> int:
     config = load_config()
     try:
         # Validar antes de abrir Edge evita una sesión innecesaria.
-        corrections = load_corrections(corrections_path)
+        payload = load_corrections(corrections_path)
+        corrections = payload["corrections"]
     except ValueError as error:
         print(f"Cola de correcciones inválida: {error}")
         return 2
+
+    # El modo de país del archivo decide el campo físico: una corrección
+    # generada para Otra información nunca escribe Comentario.
+    country = payload["country"]
+    attempt_labels = field_labels(country, "attempts")
+    attempt_display = field_display(country, "attempts")
+    attempt_field_key = field_key(country, "attempts")
 
     results_path = results_path_for(corrections_path)
     ui_output_directory = ROOT / config.get("ui_output_directory", "ui_output")
@@ -93,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
                 # siendo el que la UI confirmó (mismo hash).
                 driver.get(record_url)
                 wait_for_lightning_ready(driver, timeout_seconds)
-                current_value = find_other_information(driver, timeout_seconds)
+                current_value = find_field_value(driver, timeout_seconds, attempt_labels)
             except (ValueError, TimeoutException, WebDriverException) as error:
                 stats["error"] += 1
                 screenshot = capture_failure(driver, screenshot_directory, "correccion_error")
@@ -119,10 +128,16 @@ def main(argv: list[str] | None = None) -> int:
                 continue
 
             try:
-                prepare_other_information(driver, correction["new_value"], timeout_seconds)
+                prepare_other_information(
+                    driver,
+                    correction["new_value"],
+                    timeout_seconds,
+                    labels=attempt_labels,
+                    display_name=attempt_display,
+                )
                 save_edit_form(driver, timeout_seconds)
-                saved, persisted_length = verify_saved_value(
-                    driver, record_url, correction["new_value"], timeout_seconds
+                saved, persisted_length, _verify_reloads = verify_saved_value(
+                    driver, record_url, correction["new_value"], timeout_seconds, labels=attempt_labels
                 )
                 if not saved:
                     raise ValueError(
@@ -147,7 +162,9 @@ def main(argv: list[str] | None = None) -> int:
             record_snapshot(
                 snapshot_path,
                 lead_id,
-                find_other_information(driver, timeout_seconds),
+                find_field_value(driver, timeout_seconds, attempt_labels),
+                field=attempt_field_key,
+                country=country,
             )
             logger.info("Corrección aplicada y verificada: lead=%s", mask_lead_id(lead_id))
             print("Corregido y verificado.")

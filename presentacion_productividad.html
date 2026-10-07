@@ -67,6 +67,15 @@
   .tag.declared { border-color: var(--warn); color: var(--warn); }
   .tag.measured { border-color: var(--good); color: var(--good); }
   .tag.projection { border-color: var(--accent); color: var(--accent); }
+  .zero {
+    display: inline-block;
+    padding: 2px 9px;
+    border: 1px solid rgba(52, 199, 123, .6);
+    border-radius: 999px;
+    background: rgba(52, 199, 123, .16);
+    color: var(--good);
+    font-weight: 800;
+  }
 
   .grid { display: grid; gap: 18px; }
   .cols-3 { grid-template-columns: repeat(3, 1fr); }
@@ -163,7 +172,7 @@
     <p class="lead-sub" style="margin-left:auto; margin-right:auto;">
       De copiar manualmente cada intento desde Wolkvox a Salesforce,
       a un flujo automatizado donde <strong>el trabajo del auxiliar por Lead
-      es ~0 segundos</strong>: el bot procesa cada Lead en ~19 s medidos y el
+      es <span class="zero">~0 segundos</span></strong>: el bot procesa cada Lead en ~19 s medidos y el
       auxiliar solo verifica el resultado.
     </p>
     <p class="muted" style="margin-top:30px;">
@@ -185,7 +194,7 @@
         <em>Otra información</em>, componía el comentario
         (<span class="mono">N INT</span> + resultado + fecha) y lo pegaba a mano.</p>
         <p style="margin-top:14px;"><span class="tag declared">Rango declarado</span>
-        &nbsp;<strong>40–55 s por Lead</strong></p>
+        &nbsp;<strong>38–49 s por Lead</strong></p>
       </div>
       <div class="card">
         <h3>Problemas que generaba</h3>
@@ -208,7 +217,8 @@
       <thead>
         <tr>
           <th>Modalidad</th>
-          <th style="text-align:right">Tiempo por Lead</th>
+          <th style="text-align:right">Trabajo del auxiliar</th>
+          <th style="text-align:right">Tiempo total de la App por Lead</th>
           <th style="text-align:right">Leads por hora</th>
           <th>Fuente</th>
         </tr>
@@ -216,14 +226,16 @@
       <tbody>
         <tr>
           <td>Manual sin aplicación</td>
-          <td class="num">40–55 s</td>
-          <td class="num">65–90</td>
+          <td class="num">38–49 s</td>
+          <td class="num">38–49 s</td>
+          <td class="num">73–95</td>
           <td><span class="tag declared">declarado</span></td>
         </tr>
         <tr>
           <td>App + documentación manual asistida<br>
               <span class="muted" style="font-weight:400">la app ordena los intentos,
               genera el comentario y abre el Lead automáticamente</span></td>
+          <td class="num">23–29 s</td>
           <td class="num">23–29 s</td>
           <td class="num">124–157</td>
           <td><span class="tag declared">declarado</span></td>
@@ -232,6 +244,7 @@
           <td>App + bot supervisado<br>
               <span class="muted" style="font-weight:400">el bot escribe, guarda y
               verifica cada Lead en Salesforce</span></td>
+          <td class="num"><span class="zero">~0 s</span></td>
           <td class="num">~15 s</td>
           <td class="num">~227</td>
           <td><span class="tag measured">medido 28/09</span></td>
@@ -240,6 +253,7 @@
           <td>App + bot <strong>con controles de integridad</strong><br>
               <span class="muted" style="font-weight:400">lectura anti-duplicados
               antes de escribir + verificación post-guardado + snapshot local</span></td>
+          <td class="num"><span class="zero">~0 s</span></td>
           <td class="num">~19 s</td>
           <td class="num">~190</td>
           <td><span class="tag measured">medido 02/10</span></td>
@@ -253,7 +267,7 @@
       (n = 20, 02/10/2026, mediana 18,6 s, rango 16,8–22,7 s, 100% verificado)
       ya con lectura anti-duplicados y verificación de persistencia.<br>
       <strong>La diferencia de ~3 s es tiempo de máquina, no del auxiliar:</strong>
-      con el bot el trabajo manual por Lead pasa a ~0 segundos — el auxiliar
+      con el bot el trabajo manual por Lead pasa a <span class="zero">~0 segundos</span> — el auxiliar
       solo verifica resultados y atiende los casos marcados para revisión.
     </div>
   </div>
@@ -268,27 +282,27 @@
     <div class="bar-row">
       <div>Manual sin app</div>
       <div class="bar-track"><div class="bar-fill w" style="width:100%"></div></div>
-      <div class="bar-val">47,5 s</div>
+      <div class="bar-val">43,5 s</div>
     </div>
     <div class="bar-row">
       <div>App + manual</div>
-      <div class="bar-track"><div class="bar-fill" style="width:55%"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:60%"></div></div>
       <div class="bar-val">26,0 s</div>
     </div>
     <div class="bar-row">
       <div><strong>App + bot</strong></div>
-      <div class="bar-track"><div class="bar-fill g" style="width:40%"></div></div>
+      <div class="bar-track"><div class="bar-fill g" style="width:43%"></div></div>
       <div class="bar-val">18,9 s</div>
     </div>
     <div class="bar-row">
       <div><strong>Trabajo del auxiliar</strong> <span class="muted">(con bot)</span></div>
       <div class="bar-track"><div class="bar-fill g" style="width:1%"></div></div>
-      <div class="bar-val">~0 s</div>
+      <div class="bar-val"><span class="zero">~0 s</span></div>
     </div>
 
     <div class="grid cols-3" style="margin-top:22px;">
       <div class="card hl">
-        <div class="big">~0 s</div>
+        <div class="big"><span class="zero">~0 s</span></div>
         <div class="unit">trabajo manual por Lead<br>el auxiliar solo verifica</div>
       </div>
       <div class="card hl">

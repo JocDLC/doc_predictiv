@@ -11,6 +11,90 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## Pendiente de publicar
+
+### Corregido
+
+- Identidad de intentos independiente del país: Python y UI comparan el ID
+  completo de la columna posterior a fecha/hora en líneas INT, sin imponer
+  cantidad de puntos, longitud numérica o alfabeto. Los IDs mexicanos ya
+  documentados no se vuelven a escribir; no se borran duplicados históricos.
+- Reconocimiento de `Sub cualificación`/`Sub cualificacion` en México tanto
+  para seleccionar la opción como para verificar el valor persistido.
+- Cierre bloqueado en revisión si estado o propietario no se pudieron leer;
+  al reanudar una conversión pendiente se verifican también los picklists.
+- Documentación: la UI bloquea colas sin intentos pendientes y no ejecuta si
+  falla la sincronización. El servidor valida la copia congelada antes de
+  lanzar el runner; un código 2 ya no sugiere reiniciar el navegador.
+  El cierre sigue siendo independiente de los intentos pendientes.
+- Verificación local: 275 tests, incluidos escenarios DOM y runner con datos
+  sintéticos. Pendientes el fix del servidor y los pilotos reales antes del
+  ZIP final y commit. La CLI OpenSpec continúa no disponible en esta máquina.
+
+## [1.2.0] — 2026-10-06
+
+### Agregado
+
+- Selector de país/modo de campos en la vista de la cola del bot:
+  **Argentina** (intentos en `Otra información`, motivo de cierre en
+  `Comentario`) y **Colombia/México** (intentos en `Comentario`, motivo de
+  cierre agregado al final de `Otra información` conservando el texto previo).
+- Detección del país de la tanda por `TEL1` sobre **toda** la base Wolkvox
+  (`91549` Argentina, `9352` México, `957` Colombia) con bandera e indicador
+  visibles. Una base mezclada, con prefijos desconocidos o teléfonos vacíos
+  bloquea la documentación y el cierre antes de tocar Salesforce; si el país
+  detectado no coincide con el selector, la app ofrece cambiarlo.
+- El modo de país viaja congelado en las colas de documentación, cierre y
+  correcciones; los runners resuelven las etiquetas del campo desde ese
+  valor y no pueden cambiarlo a mitad de ejecución.
+- Los snapshots registran el campo físico y el modo de país, de modo que una
+  lectura de `Otra información` (Argentina) nunca se aplique como evidencia de
+  `Comentario` (Colombia/México) ni al revés.
+
+### Seguridad
+
+- Los teléfonos se usan solo localmente para detectar el país: nunca entran
+  a colas, resultados, logs ni mensajes de error (los reportes muestran
+  cantidades y categorías).
+
+### Compatibilidad
+
+- Las colas, snapshots y correcciones históricas sin `country` se interpretan
+  como `argentina`, el comportamiento previo.
+
+## [1.1.0] — 2026-10-03
+
+### Agregado
+
+- Cierre de Leads por lote desde la vista de cola del bot: checkbox
+  "Incluir en cierre" por Lead, motivo exclusivo `Ilocalizable` o
+  `Deja de interactuar`, selección masiva Todos/Ninguno y asignación de
+  motivo a seleccionados. La decisión de cuándo cerrar es del auxiliar:
+  no hay mínimo ni validación de cantidad de intentos.
+- El bot de cierre (`run_close_queue.py`) edita Comentario, Cualificación
+  y Sub-Cualificación con los literales exactos del motivo, guarda, verifica
+  el estado `Cerrado` y ejecuta `Convert Lead → Yes`, confirmando el
+  propietario final `AR_LEAD_COLD`. Los resultados quedan separados de los
+  de documentación (`conversion_pendiente`, `conversion_no_verificada`,
+  `cerrado_verificado`, `ya_cerrado`, `revision`, `conflicto`, `error`).
+- Servidor local: `PUT /api/close-queue`, `GET /api/close-results` y
+  `POST /run-close` con los mismos controles de token, prechequeo del
+  navegador y exclusión mutua que la documentación.
+
+### Seguridad
+
+- La ejecución del cierre requiere confirmación explícita del lote en la
+  UI; seleccionar o asignar motivos no escribe nada en Salesforce.
+
+### Corregido
+
+- Verificación posterior a `Convert Lead → Yes`: el bot ahora espera el
+  resultado definitivo (`Cerrado + AR_LEAD_COLD`) durante el período de carga
+  y la propagación del propietario, en lugar de cortar la comprobación con
+  cualquier texto no vacío. También lee el nombre visible del lookup de
+  propietario; Salesforce puede exponer el ID interno del usuario en `.value`.
+  Esto evita falsos `conversion_no_verificada` y las recargas repetidas.
+
 ## [1.0.10] — 2026-10-03
 
 ### Corregido

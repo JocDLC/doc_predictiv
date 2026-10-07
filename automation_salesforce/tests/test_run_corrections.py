@@ -19,7 +19,7 @@ def synthetic_correction(lead_id: str = "00Q000000000001AAA", new_value: str = "
 
 
 class RunCorrectionsTests(unittest.TestCase):
-    def run_synthetic_main(self, corrections, *, field_reads, verification=(True, 11)):
+    def run_synthetic_main(self, corrections, *, field_reads, verification=(True, 11, 0)):
         temporary_directory = tempfile.TemporaryDirectory()
         self.addCleanup(temporary_directory.cleanup)
         root = Path(temporary_directory.name)
@@ -49,7 +49,13 @@ class RunCorrectionsTests(unittest.TestCase):
         }
         stack.enter_context(patch.object(run_corrections, "ROOT", root))
         stack.enter_context(patch.object(run_corrections, "load_config", return_value=config))
-        stack.enter_context(patch.object(run_corrections, "load_corrections", return_value=corrections))
+        stack.enter_context(
+            patch.object(
+                run_corrections,
+                "load_corrections",
+                return_value={"corrections": corrections, "country": "argentina"},
+            )
+        )
         stack.enter_context(patch.object(run_corrections, "results_path_for", return_value=root / "results.json"))
         stack.enter_context(patch.object(run_corrections, "snapshot_path_for", return_value=root / "snapshots.json"))
         stack.enter_context(patch.object(run_corrections, "create_logger", return_value=logger))
@@ -61,7 +67,7 @@ class RunCorrectionsTests(unittest.TestCase):
         stack.enter_context(
             patch.object(run_corrections, "build_record_url", side_effect=lambda _url, lead_id, _object: lead_id)
         )
-        stack.enter_context(patch.object(run_corrections, "find_other_information", side_effect=field_reads))
+        stack.enter_context(patch.object(run_corrections, "find_field_value", side_effect=field_reads))
         stack.enter_context(patch.object(run_corrections, "verify_saved_value", return_value=verification))
         stack.enter_context(patch.object(run_corrections, "mask_lead_id", return_value="00Q***AAA"))
 
@@ -77,12 +83,20 @@ class RunCorrectionsTests(unittest.TestCase):
         )
 
         self.assertEqual(result, 0)
-        mocks["prepare"].assert_called_once_with(driver, "valor nuevo", 7)
+        mocks["prepare"].assert_called_once_with(
+            driver,
+            "valor nuevo",
+            7,
+            labels=("otra información", "otra informacion"),
+            display_name="Otra información",
+        )
         mocks["save"].assert_called_once_with(driver, 7)
         mocks["record_snapshot"].assert_called_once_with(
             root / "snapshots.json",
             correction["lead_id"],
             "valor nuevo",
+            field="otra_informacion",
+            country="argentina",
         )
         self.assertEqual(mocks["record_result"].call_args.args[1]["status"], "corregido")
         mocks["release"].assert_called_once_with(driver)
@@ -115,7 +129,7 @@ class RunCorrectionsTests(unittest.TestCase):
         result, driver, mocks, _root = self.run_synthetic_main(
             [synthetic_correction()],
             field_reads=["valor base"],
-            verification=(False, 4),
+            verification=(False, 4, 0),
         )
 
         self.assertEqual(result, 0)

@@ -31,10 +31,43 @@ class DocumentedCallIdsTests(unittest.TestCase):
         self.assertEqual(documented_call_ids(""), set())
         self.assertEqual(documented_call_ids(None), set())
 
-    def test_ignores_final_tokens_that_are_not_call_ids(self):
-        field = "1 INT Llamada 30/09/2026 13:41 CELULAR"
+    def test_ignores_lines_without_the_call_id_column(self):
+        field = "1 INT Llamada 30/09/2026 13:41\n2 INT CELULAR\n3 INT 2999999999"
 
         self.assertEqual(documented_call_ids(field), set())
+
+    def test_call_ids_are_opaque_values_after_date_and_time(self):
+        for call_id in (
+            "178000001.000002.123456.01", "000001", "CALL-MX_A:b/7",
+            "b8c26780-2997-4441-811a-349135660001", "CELULAR", "MX lote 0001",
+        ):
+            with self.subTest(call_id=call_id):
+                for separator in (" ", "\t"):
+                    field = separator.join(("4 INT", "Fallo de línea", "5/10/2026", "17:38", call_id))
+                    self.assertEqual(documented_call_ids(field), {call_id})
+                    missing, present, ambiguous = partition_attempts(field, [attempt(call_id)])
+                    self.assertEqual((missing, present, ambiguous), ([], [call_id], []))
+
+    def test_mexico_repeated_history_does_not_add_or_renumber_attempts(self):
+        from comment_reader import next_attempt_number
+
+        ids = ["178000001.000002.173816.49", "178000001.000002.130042.54"]
+        field = "\n".join(
+            f"{number} INT Fallo de línea 5/10/2026 17:38 {call_id}"
+            for number, call_id in enumerate(ids + ids, start=4)
+        )
+        missing, present, ambiguous = partition_attempts(field, [attempt(value) for value in ids])
+        self.assertEqual(missing, [])
+        self.assertEqual(present, ids)
+        self.assertEqual(ambiguous, [])
+        self.assertEqual(next_attempt_number(field), 8)
+
+    def test_opaque_ids_keep_case_zeros_and_full_boundaries(self):
+        field = "1 INT Resultado 5/10/2026 17:38 MX-0001.a.b"
+        requested = ["mx-0001.a.b", "MX-1.a.b", "0001.a.b", "MX-0001.a.b.0", "MX-0001.a.b"]
+        missing, present, _ = partition_attempts(field, [attempt(value) for value in requested])
+        self.assertEqual([item["call_id"] for item in missing], requested[:-1])
+        self.assertEqual(present, requested[-1:])
 
 
 class PartitionAttemptsTests(unittest.TestCase):

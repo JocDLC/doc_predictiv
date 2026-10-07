@@ -25,28 +25,38 @@ def record_snapshot(
     field_value: str,
     run_id: str = "",
     call_ids: list[str] | None = None,
+    field: str = "otra_informacion",
+    country: str = "argentina",
 ) -> None:
     """Guarda el último valor confirmado, sin escribirlo en consola o logs.
 
     ``run_id`` y ``call_ids`` identifican la ejecución y las llamadas que la
     lectura confirma; sin ellos la evidencia queda como histórica y no puede
-    marcar intentos nuevos como documentados.
+    marcar intentos nuevos como documentados. ``field`` y ``country`` atan la
+    evidencia al campo físico y al modo de país para que una lectura hecha en
+    ``Otra información`` (Argentina) nunca se aplique a ``Comentario``
+    (Colombia/México) ni al revés.
     """
+    field_key = str(field or "otra_informacion")
     snapshots = {}
     if snapshot_path.exists():
         try:
             for item in json.loads(snapshot_path.read_text(encoding="utf-8")):
-                snapshots[item["lead_id"]] = item
+                # Los registros históricos sin "field" son del esquema Argentina.
+                key = f'{item["lead_id"]}|{item.get("field") or "otra_informacion"}'
+                snapshots[key] = item
         except (json.JSONDecodeError, KeyError, TypeError):
             snapshots = {}
 
-    snapshots[lead_id] = {
+    snapshots[f"{lead_id}|{field_key}"] = {
         "lead_id": lead_id,
         "field_value": field_value,
         "base_hash": content_hash(field_value),
         "read_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "run_id": str(run_id or ""),
         "call_ids": sorted(call_ids if call_ids is not None else documented_call_ids(field_value)),
+        "field": field_key,
+        "country": str(country or "argentina"),
     }
     snapshot_path.parent.mkdir(parents=True, exist_ok=True)
     snapshot_path.write_text(

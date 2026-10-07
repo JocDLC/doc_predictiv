@@ -12,7 +12,8 @@
     "openspec/changes/corregir-documentacion-por-intento/specs/documentacion-por-intento/spec.md",
     "openspec/changes/documentar-automatico-guardado/specs/guardado-automatico/spec.md",
     "openspec/changes/documentar-desde-html-supervisado/specs/documentar-cola-supervisada/spec.md",
-    "openspec/changes/medir-productividad-documentacion/specs/medicion-productividad/spec.md"
+    "openspec/changes/medir-productividad-documentacion/specs/medicion-productividad/spec.md",
+    "openspec/changes/cerrar-leads-por-motivo/specs/cierre-leads-por-motivo/spec.md"
   ],
   "journeys": [
     {

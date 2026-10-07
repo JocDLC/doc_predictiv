@@ -1,12 +1,15 @@
 """Carga y valida colas de corrección generadas desde la UI local.
 
-Cada corrección lleva el texto completo de ``Otra información`` (dato de
+Cada corrección lleva el texto completo del campo de intentos (dato de
 cliente), por eso el archivo vive en ``ui_output/`` y nunca en ``queues/``
-ni en el repositorio. Contrato del JSON::
+ni en el repositorio. ``country`` decide si ese campo es ``Otra información``
+(Argentina) o ``Comentario`` (Colombia/México); los archivos históricos sin
+``country`` corresponden a ``Otra información``. Contrato del JSON::
 
     {
       "generated_at": "...",
       "source_file": "...",
+      "country": "argentina | colombia_mexico",
       "corrections": [
         {"lead_id": "...", "new_value": "...", "base_hash": "<sha256 hex>"}
       ]
@@ -18,6 +21,8 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+
+from country_fields import normalize_country
 
 _HEX_64 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -33,8 +38,8 @@ def _valid_correction(item: object) -> bool:
     )
 
 
-def load_corrections(corrections_path: str) -> list[dict]:
-    """Devuelve las correcciones válidas o lanza ValueError con el motivo."""
+def load_corrections(corrections_path: str) -> dict[str, object]:
+    """Devuelve ``{"corrections": [...], "country": <modo>}`` o lanza ValueError."""
     path = Path(corrections_path).expanduser().resolve()
     if not path.exists():
         raise ValueError(f"no existe el archivo: {path}")  # noqa: TRY003 - mensaje de uso para el operador
@@ -51,4 +56,6 @@ def load_corrections(corrections_path: str) -> list[dict]:
         raise ValueError(  # noqa: TRY003 - validación de contenido del archivo
             f"{len(invalid)} correcciones inválidas (lead_id, new_value y base_hash sha256 requeridos)"
         )
-    return corrections
+    # Archivos históricos sin "country" corresponden al esquema Argentina.
+    country = normalize_country(data.get("country") if isinstance(data, dict) else None)
+    return {"corrections": corrections, "country": country}

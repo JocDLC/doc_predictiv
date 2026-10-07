@@ -11,7 +11,10 @@ from __future__ import annotations
 
 import re
 
-CALL_ID_PATTERN = re.compile(r"^\d{5,}\.\d{3,}$")
+CALL_ID_PATTERN = re.compile(
+    r"[ \t]+\d{1,2}/\d{1,2}/(?:\d{4}|\d{2})[ \t]+"
+    r"\d{1,2}:\d{2}(?::\d{2})?[ \t]+(?P<call_id>\S[^\r\n]*)$"
+)
 INT_LINE_PATTERN = re.compile(r"^\s*\d+\s+INT\b", re.IGNORECASE)
 
 
@@ -21,9 +24,9 @@ def documented_call_ids(field_text: str) -> set[str]:
     for line in str(field_text or "").splitlines():
         if not INT_LINE_PATTERN.match(line):
             continue
-        tokens = line.split()
-        if tokens and CALL_ID_PATTERN.match(tokens[-1]):
-            ids.add(tokens[-1])
+        match = CALL_ID_PATTERN.search(line)
+        if match:
+            ids.add(match.group("call_id").strip())
     return ids
 
 

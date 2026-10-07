@@ -5,7 +5,7 @@ import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import run_document_queue
 from run_document_queue import (
@@ -22,6 +22,62 @@ from run_document_queue import (
 
 
 class RunDocumentQueueTests(unittest.TestCase):
+    def test_mexico_existing_opaque_ids_skip_editor_and_save_in_both_modes(self):
+        ids = ["178000001.000002.123456.01", "MX-lote_0001", "000001"]
+        attempts = [
+            {"result": "Fallo de línea", "date": "5/10/2026", "time": "17:38", "call_id": value}
+            for value in ids
+        ]
+        field = "\n".join(
+            f"{number} INT Fallo de línea 5/10/2026 17:38 {value}"
+            for number, value in enumerate(ids, start=4)
+        )
+        for auto in (True, False):
+            with self.subTest(auto=auto), TemporaryDirectory() as directory:
+                root = Path(directory)
+                queue_directory = root / "queues"
+                queue_directory.mkdir()
+                queue_path = queue_directory / "synthetic.json"
+                queue_path.write_text(json.dumps({
+                    "country": "colombia_mexico", "run_id": "synthetic",
+                    "leads": [{"lead_id": "00Q000000000001AAA", "attempts": attempts}],
+                }), encoding="utf-8")
+                config = {
+                    "browser": "edge", "profile_directory": str(root / "profile"),
+                    "salesforce_url": "https://synthetic.example", "log_directory": "logs",
+                    "screenshot_directory": "screenshots", "queue_directory": "queues",
+                    "timeouts": {"page_load_seconds": 5},
+                }
+                mocks = {
+                    "load_config": Mock(return_value=config), "create_logger": Mock(),
+                    "detect_browser": Mock(return_value=("edge", root / "edge.exe")),
+                    "create_driver": Mock(), "release_driver": Mock(),
+                    "prompt_for_manual_authentication": Mock(), "wait_for_lightning_ready": Mock(),
+                    "find_field_text": Mock(return_value=""), "find_field_value": Mock(return_value=field),
+                    "find_other_information": Mock(), "prepare_other_information": Mock(),
+                    "save_edit_form": Mock(), "ask_lead_action": Mock(),
+                }
+                with (
+                    patch.object(run_document_queue, "ROOT", root),
+                    patch.multiple(run_document_queue, **mocks),
+                    redirect_stdout(io.StringIO()),
+                ):
+                    result = run_document_queue.main((["--auto"] if auto else []) + [str(queue_path)])
+                self.assertEqual(result, 0)
+                mocks["find_field_value"].assert_called_once_with(
+                    mocks["create_driver"].return_value, 5, ("comentario",)
+                )
+                for name in ("prepare_other_information", "save_edit_form", "find_other_information", "ask_lead_action"):
+                    mocks[name].assert_not_called()
+                saved = json.loads(queue_path.with_suffix(".resultado.json").read_text(encoding="utf-8"))[0]
+                self.assertEqual(saved["status"], "ya_documentado")
+                self.assertEqual(saved["documented_call_ids"], ids)
+                self.assertEqual(saved["next_int"], 7)
+                snapshot = json.loads((root / "ui_output" / "synthetic.snapshots.json").read_text(encoding="utf-8"))[0]
+                self.assertEqual(snapshot["field_value"], field)
+                self.assertEqual(set(snapshot["call_ids"]), set(ids))
+                self.assertEqual(snapshot["field"], "comentario")
+
     def test_summary_prints_metrics_without_comment_content(self):
         output = io.StringIO()
         with redirect_stdout(output):
@@ -125,7 +181,7 @@ class RunDocumentQueueTests(unittest.TestCase):
         editors = iter([object(), None])
         with (
             patch("builtins.input", lambda _: next(answers)),
-            patch.object(run_document_queue, "find_editor_control", lambda _driver: next(editors)),
+            patch.object(run_document_queue, "find_editor_control", lambda *_args: next(editors)),
         ):
             wait_for_manual_decision(object())
 
@@ -247,7 +303,7 @@ class RunDocumentQueueTests(unittest.TestCase):
         source = inspect.getsource(run_document_queue)
 
         self.assertLess(
-            source.index("is_duplicate_lead(find_comment"), source.index("prepare_other_information(driver")
+            source.index("is_duplicate_lead(find_field_text"), source.index("prepare_other_information(")
         )
         self.assertIn('"duplicado"', source)
 

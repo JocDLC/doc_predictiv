@@ -178,6 +178,27 @@ el hash con `base_hash`:
 Importar el `*.resultado.json` en la UI muestra `corregido` o `conflicto`;
 los conflictos conservan el botón manual “Abrir en Salesforce”.
 
+### Cierre de Leads por lote
+
+En la vista de cola, cada Lead tiene checkbox **"Incluir en cierre"** y motivo
+(`Ilocalizable` o `Deja de interactuar`). La barra de cierre permite marcar
+**Todos**/**Ninguno** y asignar motivo a los seleccionados. **"Ejecutar
+cierre"** pide confirmación y lanza `run_close_queue.py` sobre
+`queues/cola_cierre_activa.json` (congelada como `cierre_<run_id>.json`).
+
+La decisión de cuándo cerrar es del auxiliar: no hay mínimo de intentos.
+
+Por Lead el bot: doble clic en `Comentario` (sección Cualificación) → literal
+exacto del motivo → `Cualificación` por etiqueta → `Sub-Cualificación`
+dependiente por etiqueta → **Guardar** con recuperación de timeout → verifica
+los tres campos + `Estado de candidato = Cerrado` + `Otra información`
+intacta (hito `conversion_pendiente`) → **Convert Lead → Yes** → verifica
+`Propietario del candidato = AR_LEAD_COLD` → `cerrado_verificado`.
+
+Si la conversación falla o no se puede comprobar, el estado queda
+`conversion_pendiente`/`conversion_no_verificada` y **nunca** se reintenta
+`Yes` a ciegas — volver a lanzar el lote reanuda solo desde la conversión.
+
 ## Navegador persistente (opcional)
 
 Para no autenticarse en cada ejecución:

@@ -31,10 +31,11 @@ class CorrectionLoaderTests(unittest.TestCase):
             path = Path(temporary_directory) / "correcciones.json"
             _write_corrections(path, [_valid_correction()])
 
-            corrections = load_corrections(str(path))
+            payload = load_corrections(str(path))
 
-        self.assertEqual(len(corrections), 1)
-        self.assertEqual(corrections[0]["lead_id"], "00Q000000000001AAA")
+        self.assertEqual(len(payload["corrections"]), 1)
+        self.assertEqual(payload["corrections"][0]["lead_id"], "00Q000000000001AAA")
+        self.assertEqual(payload["country"], "argentina")
 
     def test_rejects_missing_file(self):
         with self.assertRaises(ValueError):
@@ -65,6 +66,27 @@ class CorrectionLoaderTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 load_corrections(str(path))
+
+    def test_rejects_unknown_country(self):
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "correcciones.json"
+            path.write_text(
+                json.dumps({"country": "peru", "corrections": [_valid_correction()]}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "país"):
+                load_corrections(str(path))
+
+    def test_reads_colombia_mexico_country(self):
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "correcciones.json"
+            path.write_text(
+                json.dumps({"country": "colombia_mexico", "corrections": [_valid_correction()]}),
+                encoding="utf-8",
+            )
+
+            self.assertEqual(load_corrections(str(path))["country"], "colombia_mexico")
 
 
 class CorrectionDecisionTests(unittest.TestCase):

@@ -102,9 +102,12 @@ class UiServerApiTests(unittest.TestCase):
             method="POST",
             headers={"X-Bot-Token": "token-x"},
         )
-        with patch("ui_server.restart_browser"):
+        completed = threading.Event()
+        with patch("ui_server.restart_browser", side_effect=lambda config: completed.set()) as restart:
             with urllib.request.urlopen(request) as response:
                 self.assertEqual(response.status, 202)
+            self.assertTrue(completed.wait(5), "El hilo debe finalizar dentro del mock de reinicio")
+            restart.assert_called_once()
 
     def test_restart_browser_refuses_while_the_bot_runs(self):
         import ui_server
@@ -200,7 +203,12 @@ class UiServerApiTests(unittest.TestCase):
             patch("ui_server.subprocess.Popen") as popen,
         ):
             (Path(tmp) / "queues").mkdir()
-            (Path(tmp) / "queues" / "cola_activa.json").write_text('{"leads": []}', encoding="utf-8")
+            (Path(tmp) / "queues" / "cola_activa.json").write_text(json.dumps({
+                "country": "colombia_mexico",
+                "leads": [{"lead_id": "00Q000000000001AAA", "attempts": [
+                    {"result": "No contesta", "date": "1/10/2026", "time": "10:00", "call_id": "MX-001"},
+                ]}],
+            }), encoding="utf-8")
             popen.return_value.poll.return_value = None
             status, payload = self._post_run()
 
@@ -212,6 +220,28 @@ class UiServerApiTests(unittest.TestCase):
             self.assertTrue(frozen.is_file())
             self.assertEqual(json.loads(frozen.read_text())["run_id"], payload["run_id"])
         ui_server.current_process = None
+
+    def test_run_rejects_empty_documentation_even_after_a_previous_process(self):
+        import ui_server
+
+        previous = unittest.mock.Mock(returncode=2)
+        previous.poll.return_value = 2
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ui_server, "ROOT", Path(tmp)),
+            patch.object(ui_server, "current_process", previous),
+            patch.object(ui_server, "load_config", return_value={}),
+            patch("ui_server.debugger_is_listening", return_value=True),
+            patch("ui_server.debugger_http_ready", return_value=True),
+            patch("ui_server.subprocess.Popen") as popen,
+        ):
+            queue_directory = Path(tmp) / "queues"
+            queue_directory.mkdir()
+            (queue_directory / "cola_activa.json").write_text('{"leads": []}', encoding="utf-8")
+            status, payload = self._post_run()
+            self.assertEqual(status, 400)
+            self.assertIn("cola", payload["error"].lower())
+            popen.assert_not_called()
 
     def test_run_rejects_when_the_dedicated_browser_is_closed(self):
         import ui_server
@@ -246,6 +276,142 @@ class UiServerApiTests(unittest.TestCase):
         self.assertEqual(status, 503)
         self.assertIn("trabado", payload["error"])
         popen.assert_not_called()
+
+    def _post(self, path):
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{self.port}{path}",
+            method="POST",
+            headers={"X-Bot-Token": "token-x"},
+        )
+        try:
+            with urllib.request.urlopen(request) as response:
+                return response.status, json.loads(response.read())
+        except urllib.error.HTTPError as error:
+            return error.code, json.loads(error.read())
+
+    def _put(self, path, payload):
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{self.port}{path}",
+            data=json.dumps(payload).encode(),
+            method="PUT",
+            headers={"X-Bot-Token": "token-x", "Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(request) as response:
+                return response.status, json.loads(response.read())
+        except urllib.error.HTTPError as error:
+            return error.code, json.loads(error.read())
+
+    def _valid_close_queue(self):
+        return {
+            "operation": "close_leads",
+            "generated_at": "t",
+            "leads": [{"lead_id": "00Q000000000001AAA", "reason": "ilocalizable"}],
+        }
+
+    def test_put_close_queue_validates_reasons(self):
+        with TemporaryDirectory() as tmp, patch("ui_server.API_FILES", {"/api/close-queue": Path(tmp) / "c.json"}):
+            status, payload = self._put("/api/close-queue", self._valid_close_queue())
+            self.assertEqual(status, 200)
+
+            bad = {"operation": "close_leads", "leads": [{"lead_id": "00Q000000000001AAA", "reason": "x"}]}
+            status, payload = self._put("/api/close-queue", bad)
+            self.assertEqual(status, 400)
+            self.assertIn("motivo", payload["error"])
+
+            missing_op = {"leads": [{"lead_id": "00Q000000000001AAA", "reason": "ilocalizable"}]}
+            status, _ = self._put("/api/close-queue", missing_op)
+            self.assertEqual(status, 400)
+
+    def test_close_results_endpoint_reads_only_whitelisted_file(self):
+        status, _ = self._get("/api/close-results")
+        self.assertEqual(status, 403)
+        with TemporaryDirectory() as tmp, patch("ui_server.API_FILES", {"/api/close-results": Path(tmp) / "r.json"}):
+            status, body = self._get("/api/close-results", token="token-x")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(body), [])
+
+    def test_run_close_freezes_and_launches_close_runner(self):
+        import ui_server
+
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ui_server, "ROOT", Path(tmp)),
+            patch.object(ui_server, "load_config", return_value={}),
+            patch("ui_server.debugger_is_listening", return_value=True),
+            patch("ui_server.debugger_http_ready", return_value=True),
+            patch("ui_server.subprocess.Popen") as popen,
+        ):
+            (Path(tmp) / "queues").mkdir()
+            (Path(tmp) / "queues" / "cola_cierre_activa.json").write_text(
+                json.dumps(self._valid_close_queue()), encoding="utf-8"
+            )
+            popen.return_value.poll.return_value = None
+            status, payload = self._post("/run-close")
+
+            self.assertEqual(status, 202)
+            argv = popen.call_args.args[0]
+            self.assertIn("run_close_queue.py", argv[1])
+            self.assertIn("--run-id", argv)
+            frozen = Path(tmp) / "queues" / f"cierre_{payload['run_id']}.json"
+            self.assertTrue(frozen.is_file())
+            self.assertEqual(json.loads(frozen.read_text())["run_id"], payload["run_id"])
+            self.assertEqual(ui_server.current_operation, "cierre")
+        ui_server.current_process = None
+        ui_server.current_operation = None
+
+    def test_run_close_rejects_invalid_queue_without_spawn(self):
+        import ui_server
+
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ui_server, "ROOT", Path(tmp)),
+            patch.object(ui_server, "load_config", return_value={}),
+            patch("ui_server.debugger_is_listening", return_value=True),
+            patch("ui_server.debugger_http_ready", return_value=True),
+            patch("ui_server.subprocess.Popen") as popen,
+        ):
+            (Path(tmp) / "queues").mkdir()
+            (Path(tmp) / "queues" / "cola_cierre_activa.json").write_text(
+                json.dumps({"operation": "close_leads", "leads": [{"lead_id": "x", "reason": "?"}]}),
+                encoding="utf-8",
+            )
+            status, payload = self._post("/run-close")
+
+        self.assertEqual(status, 400)
+        self.assertIn("inválida", payload["error"])
+        popen.assert_not_called()
+
+    def test_run_close_rejects_missing_queue_without_spawn(self):
+        import ui_server
+
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ui_server, "ROOT", Path(tmp)),
+            patch.object(ui_server, "load_config", return_value={}),
+            patch("ui_server.debugger_is_listening", return_value=True),
+            patch("ui_server.debugger_http_ready", return_value=True),
+            patch("ui_server.subprocess.Popen") as popen,
+        ):
+            (Path(tmp) / "queues").mkdir()
+            status, payload = self._post("/run-close")
+
+        self.assertEqual(status, 400)
+        popen.assert_not_called()
+
+    def test_status_reports_operation_while_running(self):
+        import ui_server
+
+        runner = unittest.mock.Mock()
+        runner.poll.return_value = None
+        ui_server.current_process = runner
+        ui_server.current_operation = "cierre"
+        try:
+            status, body = self._get("/status")
+        finally:
+            ui_server.current_process = None
+            ui_server.current_operation = None
+        self.assertEqual(json.loads(body)["operation"], "cierre")
 
 
 if __name__ == "__main__":

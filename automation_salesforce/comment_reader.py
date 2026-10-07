@@ -77,12 +77,23 @@ function isVisible(element) {
 function valueFromField(container) {
     const descendants = [];
     collect(container, new Set(), descendants);
+    const ownerNames = descendants.filter(element => element.matches
+        && element.matches('.owner-name') && isVisible(element));
+    for (const element of ownerNames) {
+        const value = textAfterLabel(element.innerText || element.textContent || '');
+        if (value) {
+            return value;
+        }
+    }
     const preferred = descendants.filter(element => element.matches && element.matches(
         'textarea, input:not([type="hidden"]), lightning-formatted-text, '
         + 'lightning-base-formatted-text, .slds-form-element__static, [data-output-element-id]'
     ));
     for (const element of preferred) {
-        const rawValue = element.value || element.innerText || element.textContent || '';
+        const isFormControl = element.matches('textarea, input, select');
+        const rawValue = isFormControl
+            ? element.value
+            : element.innerText || element.textContent || '';
         const value = textAfterLabel(rawValue);
         if (value && !labels.includes(normalize(value))) {
             return value;
@@ -237,26 +248,38 @@ def field_result_in_any_frame(driver, script: str, labels: tuple[str, ...] = OTH
     )
 
 
-def field_result_with_text(driver):
-    result = field_result_if_found(driver)
+def field_result_with_text(driver, labels: tuple[str, ...] = OTHER_INFORMATION_LABELS):
+    result = field_result_if_found(driver, labels)
     return result if result and result.get("text") else False
 
 
-def find_other_information(driver, timeout_seconds: int) -> str:
+def find_field_value(driver, timeout_seconds: int, labels: tuple[str, ...] = OTHER_INFORMATION_LABELS) -> str:
+    """Lee el campo físico indicado, esperando a que sea visible si hace falta."""
     try:
-        result = WebDriverWait(driver, timeout_seconds).until(field_result_with_text)
+        result = WebDriverWait(driver, timeout_seconds).until(
+            lambda current: field_result_with_text(current, labels)
+        )
     except TimeoutException:
-        result = field_result_if_found(driver)
+        result = field_result_if_found(driver, labels)
         if not result:
             raise
-    return text_without_field_label(result["text"])
+    return text_without_field_label(result["text"], labels)
+
+
+def find_other_information(driver, timeout_seconds: int) -> str:
+    return find_field_value(driver, timeout_seconds, OTHER_INFORMATION_LABELS)
+
+
+def find_field_text(driver, labels: tuple[str, ...]) -> str:
+    """Lectura sin espera del campo indicado; "" si no está visible."""
+    result = field_result_if_found(driver, labels)
+    return text_without_field_label(result["text"], labels) if result else ""
 
 
 def find_comment(driver, timeout_seconds: int) -> str:
     """Lee Comentario en modo lectura; si no está visible, no bloquea el Lead."""
     del timeout_seconds
-    result = field_result_if_found(driver, COMMENT_LABELS)
-    return text_without_field_label(result["text"], COMMENT_LABELS) if result else ""
+    return find_field_text(driver, COMMENT_LABELS)
 
 
 def is_duplicate_lead(comment: str) -> bool:

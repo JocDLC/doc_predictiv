@@ -183,6 +183,22 @@ check('marca manual no cubre intento nuevo', isDone(lead3) === false);
 // 11) extractCallIdsFromText no confunde teléfonos ni fechas con call_ids.
 const ids = extractCallIdsFromText('nota 2999999999\n4 INT texto 30/09/2026 13:41 1790793665.523415');
 check('extrae solo el call_id', ids.size === 1 && ids.has('1790793665.523415'));
+
+const opaqueIds = ['178000001.000002.123456.01', '000001', 'CALL-MX_A:b/7',
+  'b8c26780-2997-4441-811a-349135660001', 'CELULAR', 'MX lote 0001'];
+const opaqueHistory = opaqueIds.map((id, i) => `${i + 1} INT Fallo de línea 5/10/2026 17:38 ${id}`).join('\n');
+check('IDs opacos completos sin formato por país',
+  [...extractCallIdsFromText(opaqueHistory)].join('|') === opaqueIds.join('|'));
+check('sin ID no confunde fecha hora o telefono',
+  extractCallIdsFromText('1 INT Llamada 5/10/2026 17:38\n2 INT 2999999999\nnota 5/10/2026 17:38 MX-1').size === 0);
+queueCountryMode = 'colombia_mexico';
+progress = {};
+lead.attempts = opaqueIds.map(id => ({ ts: '1', date: '5/10/2026', time: '17:38', result: 'NO-ANSWER', tel: '', callId: id }));
+applySnapshot({lead_id: lead.id, field_value: opaqueHistory, field: 'comentario', country: 'colombia_mexico', base_hash: 'x'});
+check('snapshot mexicano sin call_ids confirma el historial por ID', pendingAttempts(lead).length === 0);
+check('reintento mexicano no genera cola', buildBotQueue(new Set([lead.id])).leads.length === 0);
+lead.attempts.push({ ts: '2', date: '6/10/2026', time: '17:38', result: 'NO-ANSWER', tel: '', callId: '178000001.000002.123456.01.0' });
+check('IDs con sufijo distinto no se confunden', pendingAttempts(lead).length === 1);
 """
 
 
@@ -193,12 +209,12 @@ class UiDocumentationStateTests(unittest.TestCase):
             self.skipTest("Node.js no disponible para ejecutar las funciones JS reales")
         self.node = node
 
-    def run_ui_scenario(self) -> str:
+    def run_ui_scenario(self, scenario=SCENARIO_JS) -> str:
         with TemporaryDirectory() as temporary_directory:
             harness_path = Path(temporary_directory) / "harness.js"
             scenario_path = Path(temporary_directory) / "scenario.js"
             harness_path.write_text(HARNESS_JS, encoding="utf-8")
-            scenario_path.write_text(SCENARIO_JS, encoding="utf-8")
+            scenario_path.write_text(scenario, encoding="utf-8")
             completed = subprocess.run(
                 [self.node, str(harness_path), str(UI_PAGE), str(scenario_path)],
                 capture_output=True,
@@ -209,6 +225,48 @@ class UiDocumentationStateTests(unittest.TestCase):
         if completed.returncode != 0:
             self.fail(f"El harness JS falló:\n{output}")
         return output
+
+    def test_documentation_preflight_and_validation_messages(self):
+        output = self.run_ui_scenario(r"""
+        (async () => {
+          const alerts = [], requests = [];
+          alert = message => alerts.push(message);
+          botDirGranted = async () => true;
+          assertCountryGate = () => true;
+          updateQueueSyncState = () => {};
+          renderQueueList = () => {};
+          readBotFile = async () => ({port: 8765, token: 'synthetic'});
+          fetch = async url => { requests.push(url); return {status: 202}; };
+          leads = [{id: '00Q000000000001AAA', attempts: []}];
+          selectedIds.add(leads[0].id);
+          let writes = 0;
+          writeActiveQueue = async () => { writes++; return true; };
+          await runBot();
+          check('cola vacia no hace POST ni escribe', requests.length === 0 && writes === 0);
+          check('cola vacia explica documentacion y cierre', alerts.some(text => text.includes('pendientes') && text.includes('Ejecutar cierre')));
+          closureSelection = {[leads[0].id]: 'ilocalizable'};
+          writeCloseQueue = async () => {};
+          await runClosure();
+          check('cierre sigue disponible sin intentos pendientes', requests.length === 1 && requests[0].endsWith('/run-close'));
+          requests.length = 0;
+          leads[0].attempts = [{callId: 'MX-1', date: '1/10/2026', time: '10:00', result: 'NO-ANSWER'}];
+          writeActiveQueue = async () => { queueSyncInfo = 'No se pudo escribir cola_activa.json.'; return false; };
+          await runBot();
+          check('fallo de escritura no lanza cola anterior', requests.length === 0);
+          writeActiveQueue = async () => true;
+          await runBot();
+          check('cola pendiente valida hace POST', requests.length === 1 && requests[0].endsWith('/run'));
+          alerts.length = 0;
+          botRunInProgress = true;
+          botCompletionShown = false;
+          fetch = async () => ({json: async () => ({running:false, exit_code:2})});
+          await notifyBotCompletion();
+          check('codigo 2 identifica validacion de cola', alerts.length === 1 && /cola/i.test(alerts[0]));
+          check('codigo 2 no recomienda reiniciar navegador', alerts.length === 1 && !/reiniciar navegador/i.test(alerts[0]));
+        })().catch(error => { console.error(error); check('sin errores de escenario', false); });
+        """)
+        self.assertNotIn("FAIL", output, output)
+        self.assertEqual(sum(line.startswith("PASS") for line in output.splitlines()), 7, output)
 
     def test_incident_scenarios_in_real_ui_functions(self):
         output = self.run_ui_scenario()

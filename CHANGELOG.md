@@ -11,7 +11,7 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
-## Pendiente de publicar
+## [1.2.1] — 2026-10-07
 
 ### Corregido
 
@@ -27,9 +27,18 @@ Cada versión liberada lleva un tag de Git `v<versión>`.
   falla la sincronización. El servidor valida la copia congelada antes de
   lanzar el runner; un código 2 ya no sugiere reiniciar el navegador.
   El cierre sigue siendo independiente de los intentos pendientes.
-- Verificación local: 275 tests, incluidos escenarios DOM y runner con datos
-  sintéticos. Pendientes el fix del servidor y los pilotos reales antes del
-  ZIP final y commit. La CLI OpenSpec continúa no disponible en esta máquina.
+- Puerto de depuración trabado: el servidor ahora hace una sonda real de
+  sesión Selenium antes de lanzar el runner (que `/json` responda no basta).
+  Si la sonda falla, reinicia el navegador dedicado **una sola vez** y
+  reintenta, todo antes de tocar ningún Lead; solo si tampoco revive rechaza
+  la tanda con 503.
+- Pestañas duplicadas: al abrir o reiniciar el navegador dedicado se abre
+  solo la pestaña que falta (app y Salesforce se detectan por host, así una
+  pestaña de un Lead ya cuenta como Salesforce abierto). Las pestañas
+  restauradas tras un reinicio tampoco se duplican.
+- Verificación local: 281 tests, incluidos escenarios DOM y runner con datos
+  sintéticos. Los pilotos reales por país quedan pendientes de autorización.
+  La CLI OpenSpec continúa no disponible en esta máquina.
 
 ## [1.2.0] — 2026-10-06
 

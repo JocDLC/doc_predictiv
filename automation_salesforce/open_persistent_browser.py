@@ -9,7 +9,7 @@ from browser_factory import (
     debugger_is_listening,
     detect_browser,
     launch_persistent_browser,
-    open_url_in_browser,
+    open_missing_tabs,
 )
 
 ROOT = Path(__file__).parent
@@ -42,9 +42,11 @@ def main() -> int:
     browser, executable = detect_browser(config["browser"])
     profile_directory = local_path(config["profile_directory"])
     if debugger_is_listening(debugger_address):
-        for url in urls:
-            open_url_in_browser(executable, profile_directory, url)
-        print(f"Ya había un navegador en {debugger_address}; se abrieron las pestañas allí.")
+        opened = open_missing_tabs(executable, profile_directory, debugger_address, urls)
+        if opened:
+            print(f"Ya había un navegador en {debugger_address}; se abrieron solo las pestañas que faltaban.")
+        else:
+            print(f"Ya había un navegador en {debugger_address} con la app y Salesforce abiertos; no se duplicaron pestañas.")
     else:
         launch_persistent_browser(executable, profile_directory, debugger_address, urls)
         print(f"{browser.capitalize()} abierto con el perfil dedicado en {debugger_address}.")

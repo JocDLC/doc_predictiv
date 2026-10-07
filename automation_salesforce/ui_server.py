@@ -21,10 +21,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from browser_factory import (
+    create_driver,
     debugger_http_ready,
     debugger_is_listening,
     detect_browser,
     launch_persistent_browser,
+    open_missing_tabs,
+    release_driver,
+    wait_for_debugger,
 )
 from closure_store import validate_close_queue
 from country_fields import normalize_country
@@ -132,9 +136,32 @@ def find_listening_pid(port: str) -> str | None:
     return None
 
 
+def debugger_session_attachable(config: dict, debugger_address: str) -> bool:
+    """Sonda real: que el puerto responda HTTP no basta. Cuando el depurador
+    se traba, ``/json`` contesta pero Selenium nunca logra crear la sesión.
+
+    La sonda adjunta y libera una sesión vacía; cuesta ~1 s con el navegador
+    sano y detecta en ~15 s el puerto trabado.
+    """
+    try:
+        browser, executable = detect_browser(config["browser"])
+        driver = create_driver(
+            browser,
+            executable,
+            local_path(config["profile_directory"]),
+            debugger_address,
+        )
+    except Exception:  # noqa: BLE001 — cualquier fallo de adjunte cuenta como no sano
+        return False
+    release_driver(driver)
+    return True
+
+
 def restart_browser(config: dict) -> None:
     """Reinicia el navegador del perfil dedicado: cierra el que escucha en el
-    puerto de depuración y lo vuelve a abrir con Salesforce y la app."""
+    puerto de depuración y lo vuelve a abrir. Las pestañas de la app y de
+    Salesforce se abren solo si faltan: si el navegador restauró su sesión,
+    no se duplican."""
     debugger_address = config.get("debugger_address", "127.0.0.1:9222")
     port = debugger_address.rpartition(":")[2]
     pid = find_listening_pid(port)
@@ -149,9 +176,13 @@ def restart_browser(config: dict) -> None:
             time.sleep(0.5)
     subprocess.run(["taskkill", "/IM", "msedgedriver.exe", "/F"], capture_output=True)
     _, executable = detect_browser(config["browser"])
+    profile_directory = local_path(config["profile_directory"])
+    launch_persistent_browser(executable, profile_directory, debugger_address)
+    if not wait_for_debugger(debugger_address):
+        return
     # Primera pestaña la app (lo que el operador necesita ver) y Salesforce al lado.
     urls = [f"http://127.0.0.1:{SERVER_PORT}/", config["salesforce_url"]]
-    launch_persistent_browser(executable, local_path(config["profile_directory"]), debugger_address, urls)
+    open_missing_tabs(executable, profile_directory, debugger_address, urls)
 
 
 def write_session_file(ui_output_directory: Path, port: int, token: str) -> Path:
@@ -301,16 +332,28 @@ def make_handler(token: str, config: dict | None = None):
                         },
                     )
                     return
-                if not debugger_http_ready(debugger_address):
-                    self._send(
-                        503,
-                        {
-                            "error": "El navegador dedicado está abierto pero su puerto "
-                            "de depuración no responde (quedó trabado). Usá "
-                            "'Reiniciar navegador del bot' y volvé a intentar.",
-                        },
-                    )
-                    return
+                # Un puerto trabado puede responder /json y aun así colgar la
+                # sesión de Selenium: la sonda es la prueba decisiva. Si falla
+                # se reinicia el navegador dedicado una sola vez, todavía sin
+                # tocar ningún Lead; si tampoco revive, se rechaza la tanda.
+                if not (
+                    debugger_http_ready(debugger_address)
+                    and debugger_session_attachable(cfg, debugger_address)
+                ):
+                    restart_browser(cfg)
+                    if not (
+                        debugger_http_ready(debugger_address)
+                        and debugger_session_attachable(cfg, debugger_address)
+                    ):
+                        self._send(
+                            503,
+                            {
+                                "error": "El puerto de depuración del navegador dedicado "
+                                "quedó trabado y el reinicio automático no lo recuperó. "
+                                "Cerrá la ventana del bot y abrila con INICIAR.bat.",
+                            },
+                        )
+                        return
                 queue_directory = ROOT / "queues"
                 queue_directory.mkdir(parents=True, exist_ok=True)
                 run_id = "run_" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + secrets.token_hex(3)

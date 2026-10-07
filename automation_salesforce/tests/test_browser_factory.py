@@ -1,3 +1,4 @@
+import json
 import time
 import unittest
 from pathlib import Path
@@ -7,8 +8,11 @@ from unittest.mock import patch
 import browser_factory
 from browser_factory import (
     _create_driver_with_timeout,
+    _same_site,
     create_driver,
+    debugger_tab_urls,
     launch_persistent_browser,
+    open_missing_tabs,
     open_url_in_browser,
     release_driver,
 )
@@ -103,6 +107,67 @@ class BrowserFactoryTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(RuntimeError, "navegador persistente"):
                 create_driver("edge", Path("msedge.exe"), Path("perfil"), "127.0.0.1:9222")
+
+    def test_tab_urls_returns_only_page_targets(self):
+        payload = json.dumps([
+            {"type": "page", "url": "http://127.0.0.1:8765/"},
+            {"type": "page", "url": "https://sf.example/lightning/r/Lead/00Q1/view"},
+            {"type": "service_worker", "url": "chrome://serviceworker"},
+        ]).encode()
+        response = unittest.mock.MagicMock()
+        response.read.return_value = payload
+        response.__enter__.return_value = response
+        with patch("browser_factory.urllib.request.urlopen", return_value=response):
+            urls = debugger_tab_urls("127.0.0.1:9222")
+        self.assertEqual(
+            urls,
+            ["http://127.0.0.1:8765/", "https://sf.example/lightning/r/Lead/00Q1/view"],
+        )
+
+    def test_same_site_matches_by_host_not_by_page(self):
+        self.assertTrue(
+            _same_site("https://sf.example/lightning/r/Lead/00Q1/view", "https://sf.example")
+        )
+        self.assertTrue(_same_site("http://127.0.0.1:8765/index.html", "http://127.0.0.1:8765/"))
+        self.assertFalse(_same_site("https://otro.example", "https://sf.example"))
+        self.assertFalse(_same_site("about:blank", "http://127.0.0.1:8765/"))
+
+    def test_open_missing_tabs_skips_tabs_already_open(self):
+        opened = []
+        existing = iter([
+            ["http://127.0.0.1:8765/", "https://sf.example/lightning/r/Lead/00Q1/view"],
+        ])
+        with (
+            patch("browser_factory.debugger_tab_urls", side_effect=lambda *a, **k: next(existing, [])),
+            patch("browser_factory.open_url_in_browser", side_effect=lambda *a: opened.append(a[2])),
+            patch("browser_factory.time.sleep"),
+        ):
+            result = open_missing_tabs(
+                Path("msedge.exe"),
+                Path("perfil"),
+                "127.0.0.1:9222",
+                ["http://127.0.0.1:8765/", "https://sf.example"],
+            )
+        self.assertEqual(result, [])
+
+    def test_open_missing_tabs_opens_only_the_one_that_is_missing(self):
+        opened = []
+        with (
+            patch(
+                "browser_factory.debugger_tab_urls",
+                return_value=["https://sf.example/lightning/o/Lead/list"],
+            ),
+            patch("browser_factory.open_url_in_browser", side_effect=lambda *a: opened.append(a[2])),
+            patch("browser_factory.time.sleep"),
+        ):
+            result = open_missing_tabs(
+                Path("msedge.exe"),
+                Path("perfil"),
+                "127.0.0.1:9222",
+                ["http://127.0.0.1:8765/", "https://sf.example"],
+            )
+        self.assertEqual(result, ["http://127.0.0.1:8765/"])
+        self.assertEqual(opened, ["http://127.0.0.1:8765/"])
 
 
 if __name__ == "__main__":

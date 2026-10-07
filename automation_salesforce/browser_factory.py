@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
 import os
 import socket
 import subprocess
 import threading
+import time
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
 BROWSER_PATHS = {
     "edge": [
@@ -93,6 +96,67 @@ def open_url_in_browser(executable: Path, profile_directory: Path, url: str) -> 
         ],
         close_fds=True,
     )
+
+
+def debugger_tab_urls(debugger_address: str, timeout_seconds: float = 3.0) -> list[str]:
+    """URLs de las pestañas abiertas en el navegador depurable.
+
+    ``/json/list`` devuelve todos los targets; solo interesan las pestañas
+    reales (``type == "page"``), no workers ni extensiones.
+    """
+    host, _, port = debugger_address.rpartition(":")
+    try:
+        with urllib.request.urlopen(
+            f"http://{host or '127.0.0.1'}:{port}/json/list",
+            timeout=timeout_seconds,
+        ) as response:
+            targets = json.loads(response.read().decode("utf-8"))
+    except (OSError, ValueError):
+        return []
+    if not isinstance(targets, list):
+        return []
+    return [t["url"] for t in targets if isinstance(t, dict) and t.get("type") == "page" and t.get("url")]
+
+
+def _same_site(tab_url: str, target_url: str) -> bool:
+    """Mismo host:puerto. Una pestaña de un Lead ya cuenta como Salesforce
+    abierto; solo distingue el dominio, no la página concreta."""
+    return bool(urlparse(tab_url).netloc) and urlparse(tab_url).netloc == urlparse(target_url).netloc
+
+
+def open_missing_tabs(
+    executable: Path,
+    profile_directory: Path,
+    debugger_address: str,
+    urls: list[str],
+) -> list[str]:
+    """Abre solo las pestañas que faltan y devuelve las URLs abiertas.
+
+    Consulta las pestañas actuales del navegador dedicado: si la app o
+    Salesforce ya están abiertos (cualquier página del mismo host), no se
+    duplican. Tras un reinicio con restauración de sesión tampoco repite
+    las pestañas que el navegador recuperó solo.
+    """
+    opened: list[str] = []
+    existing = debugger_tab_urls(debugger_address)
+    for url in urls:
+        if any(_same_site(tab, url) for tab in existing):
+            continue
+        open_url_in_browser(executable, profile_directory, url)
+        opened.append(url)
+        time.sleep(0.8)
+        existing = debugger_tab_urls(debugger_address) or existing
+    return opened
+
+
+def wait_for_debugger(debugger_address: str, timeout_seconds: float = 30.0) -> bool:
+    """Espera a que el depurador responda HTTP tras relanzar el navegador."""
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        if debugger_http_ready(debugger_address):
+            return True
+        time.sleep(0.5)
+    return debugger_http_ready(debugger_address)
 
 
 # Adjuntarse a un navegador sano es instantáneo; un puerto de depuración

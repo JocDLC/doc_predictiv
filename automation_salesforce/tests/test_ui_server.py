@@ -127,7 +127,7 @@ class UiServerApiTests(unittest.TestCase):
         finally:
             ui_server.current_process = None
 
-    def test_restart_browser_opens_the_app_tab_first_then_salesforce(self):
+    def test_restart_browser_opens_only_the_missing_tabs(self):
         import ui_server
 
         config = {
@@ -141,12 +141,36 @@ class UiServerApiTests(unittest.TestCase):
             patch("ui_server.subprocess.run"),
             patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
             patch("ui_server.launch_persistent_browser") as launch,
+            patch("ui_server.wait_for_debugger", return_value=True),
+            patch("ui_server.open_missing_tabs", return_value=["http://127.0.0.1:8765/"]) as open_tabs,
         ):
             ui_server.restart_browser(config)
+        # El relanzado no pasa URLs: la sesión restaurada ya puede traerlas.
+        self.assertEqual(launch.call_args.args[3:], ())
         self.assertEqual(
-            launch.call_args.args[3],
+            open_tabs.call_args.args[3],
             ["http://127.0.0.1:8765/", "https://sf.example"],
         )
+
+    def test_restart_browser_skips_tabs_when_the_debugger_never_responds(self):
+        import ui_server
+
+        config = {
+            "browser": "edge",
+            "debugger_address": "127.0.0.1:9222",
+            "profile_directory": "perfil",
+            "salesforce_url": "https://sf.example",
+        }
+        with (
+            patch("ui_server.find_listening_pid", return_value=None),
+            patch("ui_server.subprocess.run"),
+            patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
+            patch("ui_server.launch_persistent_browser"),
+            patch("ui_server.wait_for_debugger", return_value=False),
+            patch("ui_server.open_missing_tabs") as open_tabs,
+        ):
+            ui_server.restart_browser(config)
+        open_tabs.assert_not_called()
 
     def test_find_listening_pid_parses_netstat(self):
         import ui_server
@@ -200,6 +224,7 @@ class UiServerApiTests(unittest.TestCase):
             patch.object(ui_server, "load_config", return_value={}),
             patch("ui_server.debugger_is_listening", return_value=True),
             patch("ui_server.debugger_http_ready", return_value=True),
+            patch("ui_server.debugger_session_attachable", return_value=True),
             patch("ui_server.subprocess.Popen") as popen,
         ):
             (Path(tmp) / "queues").mkdir()
@@ -233,6 +258,7 @@ class UiServerApiTests(unittest.TestCase):
             patch.object(ui_server, "load_config", return_value={}),
             patch("ui_server.debugger_is_listening", return_value=True),
             patch("ui_server.debugger_http_ready", return_value=True),
+            patch("ui_server.debugger_session_attachable", return_value=True),
             patch("ui_server.subprocess.Popen") as popen,
         ):
             queue_directory = Path(tmp) / "queues"
@@ -269,13 +295,51 @@ class UiServerApiTests(unittest.TestCase):
             patch.object(ui_server, "load_config", return_value={}),
             patch("ui_server.debugger_is_listening", return_value=True),
             patch("ui_server.debugger_http_ready", return_value=False),
+            patch("ui_server.debugger_session_attachable", return_value=False),
+            patch("ui_server.restart_browser") as restart,
             patch("ui_server.subprocess.Popen") as popen,
         ):
             status, payload = self._post_run()
 
         self.assertEqual(status, 503)
         self.assertIn("trabado", payload["error"])
+        restart.assert_called_once()
         popen.assert_not_called()
+
+    def test_run_recovers_a_wedged_debugger_by_restarting_the_browser_once(self):
+        import ui_server
+
+        with (
+            TemporaryDirectory() as tmp,
+            patch.object(ui_server, "ROOT", Path(tmp)),
+            patch.object(ui_server, "load_config", return_value={}),
+            patch("ui_server.debugger_is_listening", return_value=True),
+            # El puerto responde /json pero la sesión de Selenium no se crea:
+            # es el estado trabado real. Tras el reinicio la sonda ya pasa.
+            patch("ui_server.debugger_http_ready", return_value=True),
+            patch(
+                "ui_server.debugger_session_attachable",
+                side_effect=[False, True],
+            ) as probe,
+            patch("ui_server.restart_browser") as restart,
+            patch("ui_server.subprocess.Popen") as popen,
+        ):
+            (Path(tmp) / "queues").mkdir()
+            (Path(tmp) / "queues" / "cola_activa.json").write_text(json.dumps({
+                "country": "argentina",
+                "leads": [{"lead_id": "00Q000000000001AAA", "attempts": [
+                    {"result": "No contesta", "date": "1/10/2026", "time": "10:00", "call_id": "AR-001"},
+                ]}],
+            }), encoding="utf-8")
+            popen.return_value.poll.return_value = None
+            status, payload = self._post("/run")
+
+            self.assertEqual(status, 202)
+            restart.assert_called_once()
+            self.assertEqual(probe.call_count, 2)
+            popen.assert_called_once()
+        ui_server.current_process = None
+        ui_server.current_operation = None
 
     def _post(self, path):
         request = urllib.request.Request(
@@ -340,6 +404,7 @@ class UiServerApiTests(unittest.TestCase):
             patch.object(ui_server, "load_config", return_value={}),
             patch("ui_server.debugger_is_listening", return_value=True),
             patch("ui_server.debugger_http_ready", return_value=True),
+            patch("ui_server.debugger_session_attachable", return_value=True),
             patch("ui_server.subprocess.Popen") as popen,
         ):
             (Path(tmp) / "queues").mkdir()
@@ -369,6 +434,7 @@ class UiServerApiTests(unittest.TestCase):
             patch.object(ui_server, "load_config", return_value={}),
             patch("ui_server.debugger_is_listening", return_value=True),
             patch("ui_server.debugger_http_ready", return_value=True),
+            patch("ui_server.debugger_session_attachable", return_value=True),
             patch("ui_server.subprocess.Popen") as popen,
         ):
             (Path(tmp) / "queues").mkdir()
@@ -391,6 +457,7 @@ class UiServerApiTests(unittest.TestCase):
             patch.object(ui_server, "load_config", return_value={}),
             patch("ui_server.debugger_is_listening", return_value=True),
             patch("ui_server.debugger_http_ready", return_value=True),
+            patch("ui_server.debugger_session_attachable", return_value=True),
             patch("ui_server.subprocess.Popen") as popen,
         ):
             (Path(tmp) / "queues").mkdir()

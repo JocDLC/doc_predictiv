@@ -3,9 +3,11 @@ import unittest
 from selenium.webdriver.common.by import By
 
 from report_reader import (
+    HEADER_FALLBACK_SELECTOR,
     REPORT_CANDIDATE_SELECTOR,
     VisibleLead,
     aligned_values,
+    clean_header_text,
     column_offset,
     deduplicate_visible_leads,
     extract_created_at,
@@ -15,6 +17,7 @@ from report_reader import (
     find_owner_header_index,
     find_report_rows,
     find_report_table,
+    header_labels,
     is_unassigned_owner,
     is_visible_element,
     merge_visible_leads,
@@ -176,6 +179,47 @@ class ReportReaderTests(unittest.TestCase):
         selected = select_report_table(driver, require_owner_header=False)
 
         self.assertIs(selected, report_table)
+
+    def test_select_report_table_prefers_data_grid_over_index_grid_on_row_tie(self):
+        # La bandeja real de Lightning dibuja dos grillas con la misma cantidad
+        # de filas: una solo con la columna "#" y otra con las 15+ celdas de
+        # datos. Empatadas en filas, gana la más densa.
+        index_table = FakeTable([], row_count=0)
+        index_table.rows = [FakeRow(cells=[FakeCell(str(i))]) for i in range(18)]
+        index_table.role_rows = index_table.rows
+        data_table = FakeTable([], row_count=0)
+        data_table.rows = [FakeRow(cells=[FakeCell("x") for _ in range(15)]) for _ in range(18)]
+        data_table.role_rows = data_table.rows
+        driver = FakeDriver([index_table, data_table])
+
+        selected = select_report_table(driver, require_owner_header=False)
+
+        self.assertIs(selected, data_table)
+
+    def test_header_labels_fallback_selector_and_menu_text_cleanup(self):
+        # Lightning pone los th en la primera fila (sin thead) y concatena el
+        # rótulo del menú "Acciones de columna" al texto del encabezado.
+        headers = [FakeCell("CampañaAcciones de columna"), FakeCell("Propietario del candidatoAcciones de columna")]
+        table = FakeTable([], row_count=0)
+        table.find_elements = lambda _by, selector: headers if selector == HEADER_FALLBACK_SELECTOR else []
+
+        self.assertEqual(header_labels(table), ["Campaña", "Propietario del candidato"])
+
+    def test_clean_header_text_keeps_plain_labels(self):
+        self.assertEqual(clean_header_text("Lead IDAcciones de columna"), "Lead ID")
+        self.assertEqual(clean_header_text("Lead ID"), "Lead ID")
+        self.assertEqual(clean_header_text("Contexto  Acciones de col"), "Contexto")
+
+    def test_find_header_index_accepts_lightning_prefix_labels(self):
+        headers = ["Fecha de creación por el cliente", "Nombre corto de la Concesionaria"]
+
+        self.assertEqual(find_header_index(headers, "Fecha de creación"), 0)
+        self.assertEqual(find_header_index(headers, "Nombre corto"), 1)
+        self.assertIsNone(find_header_index(headers, "Campaña"))
+
+    def test_find_header_index_prefix_needs_minimum_length(self):
+        self.assertIsNone(find_header_index(["Estado de candidato"], "Es"))
+        self.assertIsNone(find_header_index(["Nombre"], "Nombre corto concesionario"))
 
     def test_find_report_rows_prefers_html_rows_over_aria_containers(self):
         first_row = FakeRow()

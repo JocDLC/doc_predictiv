@@ -117,3 +117,26 @@ Rules:
 - If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
 - For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
 - After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
+
+## Tracker Gantt
+
+Este proyecto está traqueado en el tablero Gantt del usuario
+(`C:\Users\ax24611\Downloads\_dev\Grantt`). Al empezar/terminar trabajo
+traqueable, reportar con:
+
+```
+node C:\Users\ax24611\Downloads\_dev\Grantt\scripts\update-tracker.mjs <comando>
+```
+
+Comandos: `list` | `start <id>` | `stop <id> --progress N` | `status <id> <estado>` |
+`blocker <id> "motivo"` | `unblock <id>` | `release <projectId> "vX.Y — nombre" [--date D]` |
+`add <projectId> "Nombre" --start D --end D [--deps ids] [--est N]` |
+`log <id> "avance"` | `marker "texto" --date D` | `unmarker <id>`
+
+- Este repo corresponde al proyecto `wolkvox` del tracker.
+- **`release` ≠ `marker`**: las versiones del repo (v1.x, tags git) van con
+  `release` → pill 🚀 en la banda del proyecto. `marker` es SOLO para
+  stoppers/cortes externos (línea roja), nunca para versiones.
+- `start`/`stop` documentan las horas automáticamente; `--push` publica al link
+  compartido (usar solo si el usuario lo pide).
+- Ver skill `gantt-tracker` para detalles.

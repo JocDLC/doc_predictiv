@@ -18,6 +18,7 @@
   header h1 { font-size: 18px; margin: 0; border-left: 1px solid rgba(255,255,255,.45); padding-left: 14px; }
   header .sub { font-size: 12px; opacity: .85; }
   .container { max-width: 1200px; margin: 0 auto; padding: 16px 24px 60px; }
+  .container.monitor-wide { max-width: none; padding-left: 20px; padding-right: 20px; }
   .home { max-width: 900px; margin: 48px auto; text-align: center; }
   .home h2 { font-size: 30px; margin: 0 0 10px; color: #12304a; }
   .home > p { margin: 0 auto 32px; max-width: 620px; color: var(--muted); line-height: 1.5; }
@@ -164,6 +165,59 @@
   .map-table code { background: #eef2f7; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
   .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
   .hidden { display: none; }
+
+  .monitor-banner { background: #e3f3e5; border: 1px solid #2e7d32; color: #1b5e20;
+    border-radius: 10px; padding: 12px 16px; font-weight: 600; margin: 10px 0; cursor: pointer; }
+  .monitor-banner.monitor-info { background: #fff8e1; border-color: #f9a825; color: #6d4c00;
+    font-weight: 500; }
+  .monitor-status-line { font-size: 13px; color: var(--muted); margin: 6px 0; }
+  .bandeja-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .bandeja-row:last-child { border-bottom: none; }
+  .bandeja-row .bandeja-name { font-weight: 700; font-size: 13px; min-width: 70px; }
+  .bandeja-row input[type="text"], .bandeja-row input[type="url"] {
+    flex: 1; min-width: 220px; padding: 6px 10px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 12px; }
+  .bandeja-row .owner-input { flex: 0 1 190px; min-width: 150px; }
+  .bandeja-row .bandeja-offset { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+  .sched-chip { display: inline-flex; align-items: center; gap: 6px; background: #eef4fa;
+    border: 1px solid var(--border); border-radius: 8px; padding: 4px 9px; margin: 5px 6px 0 0; font-size: 12px; }
+  .sched-chip button { border: none; background: none; cursor: pointer; color: #c62828; font-weight: 700; font-size: 13px; }
+  .sched-add { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .sched-add input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+  .equipo-member { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+
+  .equipo-franjas { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .equipo-franjas input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+  #viewMonitor .queue-panel { max-width: none; margin: 16px 0; }
+  .monitor-config { border: 1px solid var(--border); border-radius: 14px; background: var(--card);
+    padding: 0 18px; margin-bottom: 16px; }
+  .monitor-config > summary { cursor: pointer; font-weight: 600; font-size: 14px; padding: 13px 0;
+    color: #12304a; list-style-position: inside; }
+  .monitor-config .prepare-card { margin-top: 4px; }
+  .monitor-table-wrap { overflow: auto; margin-top: 8px; max-height: 68vh; border: 1px solid var(--border); border-radius: 10px; }
+  .monitor-table { border-collapse: collapse; font-size: 11.5px; min-width: 100%; width: 100%; }
+  .monitor-table th, .monitor-table td { border: 1px solid var(--border); border-top: none; padding: 2px 6px; text-align: left; vertical-align: middle; line-height: 1.25; }
+  .monitor-table td { line-height: 0; }
+  .monitor-table td .cell { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
+  .monitor-table td.hint { font-size: inherit; margin-top: 0; }
+  .monitor-table td a.lead-link { color: #1a5fb4; font-weight: 600; text-decoration: none; }
+  .monitor-table td a.lead-link:hover { text-decoration: underline; }
+  .monitor-table .badge { padding: 1px 7px; }
+  .monitor-table .asignado { color: var(--muted); font-size: 11px; }
+  .monitor-table th { background: #e7eef6; color: #2c4a63; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+  .monitor-table tr:nth-child(odd) td { background: #f7fafd; }
+  .monitor-table tr:hover td { background: #e8f2fc; }
+  @keyframes monitorFlash { from { background: #ffe9a8; } }
+  .monitor-table tr.nuevo td { animation: monitorFlash 4s ease-out; }
+  .monitor-table th { cursor: grab; }
+  .monitor-table th .col-resize { position: absolute; right: -4px; top: 0; width: 8px; height: 100%; cursor: col-resize; z-index: 2; }
+  .monitor-table th.over { outline: 2px dashed var(--accent); outline-offset: -2px; }
+  .cols-panel { position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.15); padding: 10px 12px; min-width: 210px; max-height: 55vh; overflow: auto; }
+  .cols-panel label { display: flex; gap: 6px; align-items: center; font-size: 12px; padding: 2px 0; cursor: pointer; white-space: nowrap; }
+  @media (max-width: 1100px) { .monitor-table { font-size: 10.5px; } .monitor-table th, .monitor-table td { padding: 1px 4px; } .monitor-table td .cell { max-width: 120px; } }
+  #connLost { position: fixed; top: 0; left: 0; right: 0; background: #fdecea; color: #c62828;
+    text-align: center; font-size: 13px; font-weight: 600; padding: 7px; z-index: 20; }
   footer.note { text-align:center; font-size: 11px; color: var(--muted); margin-top: 30px; }
 </style>
 </head>
@@ -174,8 +228,9 @@
   <h1>Gesti&oacute;n de Campa&ntilde;as Predictivas</h1>
   <span class="sub">Procesamiento local &mdash; ning&uacute;n dato se env&iacute;a a servidores externos</span>
 </header>
+<div id="connLost" class="hidden">Conexión perdida con el servidor del bot — reintentando…</div>
 
-<div class="container">
+<div class="container" id="appContainer">
   <section id="viewHome" class="home">
     <h2>Seleccion&aacute; una tarea</h2>
     <p>Prepará la base para cargar una campaña en Wolkvox o documentá los resultados del predictivo en Salesforce.</p>
@@ -191,6 +246,12 @@
         <h3>Documentar predictivo</h3>
         <p>Organizá los resultados de Wolkvox y generá el texto para documentar cada lead.</p>
         <span class="module-action">Documentar resultados &rarr;</span>
+      </button>
+      <button class="module-card" id="openMonitor">
+        <svg class="module-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+        <h3>Monitor de Bandeja</h3>
+        <p>Revisa las bandejas de Salesforce cada minuto y asigna a tu usuario los leads nuevos con Pick Up.</p>
+        <span class="module-action">Abrir monitor &rarr;</span>
       </button>
     </div>
     <p class="hint"><strong>Para documentar con el bot:</strong> inici&aacute; sesi&oacute;n en <strong>Salesforce</strong> (con 2FA si lo pide) en la pesta&ntilde;a de al lado. El bot solo puede escribir mientras la sesi&oacute;n est&eacute; activa.</p>
@@ -321,6 +382,9 @@
         <button class="btn" id="clearDocumented" title="Quita de esta lista los leads ya documentados (su registro queda en la lista principal).">Limpiar documentados</button>
         <span class="stats" id="queueSyncState">Carpeta no vinculada</span>
       </div>
+      <div class="monitor-banner monitor-info hidden" id="queueMonitorAlert">
+        &#9888; El <strong>Monitor de Bandeja</strong> est&aacute; revisando las bandejas ahora: los bots de documentar y cierre no pueden correr en este momento. Esper&aacute; unos segundos a que termine el ciclo y reintent&aacute;.
+      </div>
       <div class="actions closure-bar">
         <span class="closure-title">Cierre de Leads:</span>
         <select id="closureScope" class="sel-scope" title="Marcar o desmarcar 'Incluir en cierre' en los leads de esta cola">
@@ -342,6 +406,80 @@
       <div id="queueList"></div>
       <div class="actions" style="margin-top:16px">
         <button class="btn" id="backFromQueue">Volver a la lista</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="viewMonitor" class="hidden">
+    <div class="queue-panel">
+      <h2>Monitor de Bandeja</h2>
+      <p class="hint">Revisa las bandejas habilitadas cada ~1 minuto. Cuando aparece un lead <strong>nuevo sin asignar</strong>, abre el registro, pulsa <strong>Pick Up</strong> y verifica que quede a nombre de tu usuario. Trabaja en su propia ventana del navegador del bot: pod&eacute;s minimizarla y seguir usando las dem&aacute;s pesta&ntilde;as. Se pausa solo mientras el bot de documentaci&oacute;n o cierre est&aacute; trabajando.</p>
+      <div class="monitor-banner monitor-info hidden" id="monitorLoginAlert" title="Tocá para cerrar el aviso">
+        &#9888; El monitor usa el navegador del bot: ten&eacute;s que estar <strong>logueado en Salesforce</strong> ah&iacute;. Si la sesi&oacute;n expir&oacute;, el monitor se pausa y avisa.
+      </div>
+      <div class="monitor-banner hidden" id="monitorBanner" title="Tocá para cerrar el aviso"></div>
+      <div class="monitor-status-line" id="monitorStatus">Estado del monitor: consultando…</div>
+      <div class="actions">
+        <button class="btn primary" id="monitorToggle">Activar monitor</button>
+        <button class="btn" id="monitorCheck" title="Revisa las bandejas ahora. Sin franja vigente corre en modo prueba: lista los leads sin tomarlos">Revisar ahora</button>
+        <button class="btn" id="monitorRefresh" title="Volver a leer el estado del monitor">Actualizar</button>
+        <button class="btn" id="monitorRestartBrowser" title="Cierra y reabre el navegador dedicado del bot (incluida esta pestaña). Usalo si el monitor dice que el navegador no responde.">Reiniciar navegador del bot</button>
+        <label class="hint" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="monitorDryRun"> Modo prueba &mdash; solo listar los QUALIF, no toma ninguno
+        </label>
+        <label class="hint" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" title="Tras tomar un lead AR cuya preferencia de contacto es WhatsApp, documenta '1 INT Envío WhatsApp' en Otra información y pulsa Send To Whatsapp automáticamente">
+          <input type="checkbox" id="monitorWhatsapp"> WhatsApp auto &mdash; env&iacute;a el primer mensaje a leads AR que pidieron WhatsApp
+        </label>
+        <label class="hint" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" title="Emite un aviso sonoro y resalta la fila cuando aparece un lead nuevo en la lista">
+          <input type="checkbox" id="monitorSound"> Sonido &mdash; avisa cuando entra un lead nuevo
+        </label>
+        <label class="hint" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" title="Muestra una notificación de Windows cuando aparece un lead nuevo — funciona aunque esta pestaña esté en segundo plano o minimizada">
+          <input type="checkbox" id="monitorNotify"> Notificar &mdash; aviso de Windows al entrar un lead
+        </label>
+      </div>
+      <details class="monitor-config" id="monitorConfig">
+        <summary>Configuraci&oacute;n &mdash; bandejas y horario <span class="hint" style="display:inline;font-weight:400">(plegable: queda guardado c&oacute;mo lo dejaste)</span></summary>
+        <div class="prepare-card">
+          <h3>Bandejas</h3>
+          <div class="hint">Elegí qué bandejas revisar y la URL del reporte de cada una (queda guardada y se puede cambiar). El "propietario sin asignar" es el nombre que marca los leads disponibles en esa bandeja.</div>
+          <div id="monitorBandejas"></div>
+          <div class="actions"><button class="btn" id="monitorSaveBandejas">Guardar bandejas</button><span class="hint" id="bandejasMsg"></span></div>
+        </div>
+        <div class="prepare-card">
+          <h3>Horario del monitor — leads a tu nombre</h3>
+          <div class="hint">Franjas en formato hh:mm: dentro de ellas el monitor toma los leads <strong>a nombre del usuario logueado</strong> en Salesforce. Fuera de toda franja —propia o del equipo— <strong>no se toma nada</strong>: el lead espera en la cola al pr&oacute;ximo turno. Las franjas no pueden solaparse. El bot&oacute;n <strong>Revisar ahora</strong> funciona siempre, pero sin franja vigente corre en <strong>modo prueba</strong>: lista los leads como <em>detectado</em> sin tomarlos.</div>
+          <div id="monitorSchedule"></div>
+          <div class="sched-add">
+            <input type="time" id="schedStart" value="08:00"> &ndash; <input type="time" id="schedEnd" value="20:00">
+            <button class="btn small" id="schedAdd">Agregar franja</button>
+            <button class="btn" id="monitorSaveSchedule">Guardar horario</button>
+            <span class="hint" id="scheduleMsg"></span>
+          </div>
+        </div>
+        <div class="prepare-card">
+          <h3>Equipo — reasignación por turno</h3>
+          <div class="hint">Personas que reciben los leads tomados dentro de <strong>sus franjas</strong>: en su turno el lead se toma y se les reasigna. El <strong>nombre debe ser exacto</strong> como aparece en Salesforce (ej. "Micaela Caetano"). Una persona sin franjas no recibe leads. Si también hay franja propia vigente (Horario del monitor), esa gana y los leads son del usuario logueado; si la franja es de otra persona, se le cambia el propietario — <strong>nunca se le envía WhatsApp automático</strong>. <strong>Las franjas se guardan solas</strong>: escribí desde/hasta y tocá <strong>+ franja</strong> — queda guardada al instante, sin Guardar.</div>
+          <div id="monitorEquipo"></div>
+          <div class="actions">
+            <button class="btn small" id="equipoAdd">Agregar persona</button>
+            <button class="btn" id="monitorSaveEquipo">Guardar equipo</button>
+            <span class="hint" id="equipoMsg"></span>
+          </div>
+        </div>
+      </details>
+      <div class="prepare-card">
+        <div class="actions" style="justify-content:space-between;align-items:center">
+          <h3 style="margin:0">Leads detectados</h3>
+          <div style="display:flex;gap:8px;align-items:center;position:relative">
+            <button class="btn" id="monitorColsBtn" title="Elegí qué columnas ver. Para ordenarlas, arrastrá los encabezados; para el ancho, arrastrá el borde derecho del encabezado.">Columnas</button>
+            <button class="btn" id="monitorClearResults" title="Borra solo esta lista local; no modifica Salesforce ni la configuración del monitor">Limpiar lista</button>
+            <div id="monitorColsPanel" class="cols-panel hidden"></div>
+          </div>
+        </div>
+        <div class="monitor-table-wrap"><table class="monitor-table" id="monitorTable"></table></div>
+      </div>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn" id="backFromMonitor">Inicio</button>
       </div>
     </div>
   </section>
@@ -385,7 +523,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.2.1";
+const APP_VERSION = "1.4.0";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -1602,11 +1740,830 @@ function renderQueueList() {
 
 function startQueuePolling() {
   stopQueuePolling();
-  queuePollTimer = setInterval(pollBotResults, 3000);
+  // Sin polling en reposo: la página solo se relee mientras un run está activo
+  // o cuando llega un evento SSE, así el texto seleccionado no se pierde.
+  queuePollTimer = setInterval(() => { if (botRunInProgress) pollBotResults(); }, 3000);
   pollBotResults();
 }
 function stopQueuePolling() {
   if (queuePollTimer) { clearInterval(queuePollTimer); queuePollTimer = null; }
+}
+
+// ---------- Monitor de Bandeja ----------
+// El monitor vive en el servidor (ui_server.py): esta vista solo lee su estado,
+// cambia la configuración y escucha los eventos que el servidor empuja por SSE.
+
+const BANDEJA_DEFS = [
+  { code: "AR", name: "Argentina", flag: "flag-argentina", owner: "AR_LEAD_QUALIF", tz: 2 },
+  { code: "CO", name: "Colombia", flag: "flag-colombia", owner: "CO_LEAD_QUALIF", tz: 0 },
+  { code: "MX", name: "México", flag: "flag-mexico", owner: "MX_LEAD_QUALIF", tz: -1 },
+];
+const MONITOR_COLUMNS = [
+  ["fecha_creacion", "Fecha creación"],
+  ["estado_candidato", "Estado"],
+  ["campana", "Campaña"],
+  ["preferencia_contacto", "Contacto preferido"],
+  ["propietario_candidato", "Propietario"],
+  ["subtipo_interes", "Sub-tipo interés"],
+  ["nombre", "Nombre"],
+  ["apellido", "Apellido"],
+  ["telefono", "Teléfono móvil"],
+  ["nombre_corto_concesionario", "Concesionario"],
+  ["vehiculo_interes", "Vehículo interés"],
+  ["email", "Correo electrónico"],
+  ["lead_id", "Lead ID"],
+  ["otra_informacion", "Otra información"],
+];
+const MONITOR_STATUS_LABELS = {
+  tomado: "asignado", tomado_por_otro: "tomado por otro",
+  no_verificado: "sin verificar", error: "error", session_lost: "sesión caída",
+  detectado: "detectado",
+};
+const MONITOR_PAUSE_LABELS = {
+  run_activo: "pausado: hay un bot corriendo",
+  fuera_de_horario: "pausado: fuera del horario configurado",
+  sin_bandejas: "pausado: ninguna bandeja habilitada",
+  session_lost: "pausado: la sesión de Salesforce expiró",
+  navegador_trabado: "pausado: el navegador del bot no responde — tocá 'Reiniciar navegador del bot'",
+};
+const NO_DISPONIBLE = "No disponible en bandeja";
+
+let monitorState = null;
+let monitorCycleRunning = false;
+let monitorSeenIds = new Set();
+let monitorFirstRender = true;
+let monitorAudioCtx = null;
+let monitorDraftSchedule = [];
+let monitorDraftEquipo = [];
+let botEvents = null;
+// Si el usuario está editando bandejas, horario o equipo, un refresco del
+// estado (evento SSE, toggle, actualizar) no debe pisar lo que está tipeando.
+let bandejasDirty = false;
+let scheduleDirty = false;
+let equipoDirty = false;
+
+// URL y token del servidor en ambos modos (misma página servida o file://).
+async function monitorEndpoint() {
+  if (SERVER_MODE) return { base: "", token: BOT_TOKEN };
+  const session = await readBotFile("ui_output", "bot_session.json");
+  return { base: `http://127.0.0.1:${session.port}`, token: session.token };
+}
+
+async function monitorApi(path, options = {}) {
+  const { base, token } = await monitorEndpoint();
+  const response = await fetch(base + path, {
+    ...options,
+    headers: { "X-Bot-Token": token, ...(options.headers || {}) },
+  });
+  if (response.status === 403) {
+    botSessionStale = true;
+    throw new Error(STALE_SESSION_MSG);
+  }
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || `bot api ${response.status}`);
+  return payload;
+}
+
+async function loadMonitorState() {
+  try {
+    monitorState = await monitorApi("/api/monitor");
+    if (!scheduleDirty) {
+      monitorDraftSchedule = (monitorState.schedule || []).map(slot => ({ ...slot }));
+    }
+    if (!equipoDirty) {
+      monitorDraftEquipo = (monitorState.equipo || []).map(m => ({ ...m, franjas: (m.franjas || []).map(f => ({ ...f })) }));
+    }
+    renderMonitor();
+  } catch (error) {
+    $("monitorStatus").textContent = botSessionStale
+      ? STALE_SESSION_MSG
+      : "No se pudo leer el estado del monitor. ¿Está corriendo el servidor (INICIAR.bat)?";
+  }
+}
+
+function renderMonitor() {
+  if (!monitorState) return;
+  const toggle = $("monitorToggle");
+  toggle.textContent = monitorState.enabled ? "Monitor activo — tocar para pausar" : "Activar monitor";
+  toggle.classList.toggle("primary", !monitorState.enabled);
+  const parts = [];
+  if (monitorState.enabled) parts.push("Monitor activo");
+  else parts.push("Monitor inactivo");
+  if (monitorState.solo_listar) parts.push("modo prueba: solo listar");
+  if (monitorState.enviar_whatsapp) parts.push("whatsapp auto");
+  if (monitorState.cycle_running) parts.push("revisando bandejas…");
+  if (monitorState.bot_running) parts.push("pausado: hay un bot corriendo");
+  $("monitorDryRun").checked = !!monitorState.solo_listar;
+  $("monitorWhatsapp").checked = !!monitorState.enviar_whatsapp;
+  if (monitorState.paused_reason) {
+    const reason = MONITOR_PAUSE_LABELS[monitorState.paused_reason]
+      || (monitorState.paused_reason.startsWith("error:") ? `último ciclo con error (${monitorState.paused_reason.slice(6)})` : monitorState.paused_reason);
+    parts.push(monitorState.enabled ? reason : reason.replace("pausado: ", "último ciclo: "));
+  }
+  if (monitorState.last_cycle_at) {
+    const when = new Date(monitorState.last_cycle_at);
+    if (!isNaN(when)) parts.push(`última revisión ${when.toLocaleTimeString("es-AR")}`);
+  }
+  $("monitorStatus").textContent = parts.join(" · ");
+  if (!bandejasDirty) renderBandejas();
+  if (!scheduleDirty) renderSchedule();
+  if (!equipoDirty) renderEquipo();
+  renderMonitorTable();
+  syncMonitorConfigDetails();
+}
+
+// El bloque de configuración arranca abierto solo si falta una bandeja;
+// después respeta cómo lo dejó la persona (localStorage).
+function syncMonitorConfigDetails() {
+  const details = $("monitorConfig");
+  if (!details) return;
+  const saved = localStorage.getItem("monitorConfigOpen");
+  if (saved !== null) { details.open = saved === "1"; return; }
+  const configured = (monitorState.bandejas || []).some(b => b.enabled && b.url);
+  details.open = !configured;
+}
+
+function renderBandejas() {
+  const container = $("monitorBandejas");
+  container.innerHTML = "";
+  const saved = new Map((monitorState.bandejas || []).map(b => [b.code, b]));
+  BANDEJA_DEFS.forEach(def => {
+    const current = saved.get(def.code) || {};
+    const row = document.createElement("div");
+    row.className = "bandeja-row";
+    row.dataset.code = def.code;
+    const flag = document.createElement("span");
+    flag.className = `country-flag ${def.flag}`;
+    const name = document.createElement("span");
+    name.className = "bandeja-name";
+    name.textContent = def.name;
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.className = "bandeja-enabled";
+    check.checked = !!current.enabled;
+    check.title = "Monitorear esta bandeja";
+    const url = document.createElement("input");
+    url.type = "url";
+    url.className = "bandeja-url";
+    url.placeholder = "URL del reporte de Salesforce (https://…)";
+    url.value = current.url || "";
+    const owner = document.createElement("input");
+    owner.type = "text";
+    owner.className = "bandeja-url owner-input";
+    owner.placeholder = "Propietario sin asignar";
+    owner.title = "Nombre del propietario que marca los leads disponibles en esta bandeja";
+    owner.value = current.unassigned_owner || def.owner;
+    const offset = document.createElement("select");
+    offset.className = "bandeja-offset";
+    offset.title = "Diferencia horaria del país del lead respecto a Colombia — se usa para documentar los intentos (ej. AR +2h: si acá son 9:00, queda 11:00)";
+    for (let hours = -3; hours <= 3; hours++) {
+      const option = document.createElement("option");
+      option.value = String(hours);
+      option.textContent = hours === 0 ? "±0 h" : `${hours > 0 ? "+" : ""}${hours} h`;
+      offset.appendChild(option);
+    }
+    offset.value = String(current.tz_offset ?? def.tz ?? 0);
+    row.append(check, flag, name, url, owner, offset);
+    container.appendChild(row);
+  });
+}
+
+async function saveBandejas() {
+  const msg = $("bandejasMsg");
+  const bandejas = [...document.querySelectorAll("#monitorBandejas .bandeja-row")].map(row => ({
+    code: row.dataset.code,
+    enabled: row.querySelector(".bandeja-enabled").checked,
+    url: row.querySelector(".bandeja-url").value.trim(),
+    unassigned_owner: row.querySelector(".owner-input").value.trim(),
+    tz_offset: parseInt(row.querySelector(".bandeja-offset").value, 10),
+  }));
+  try {
+    await monitorApi("/api/monitor/config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bandejas }),
+    });
+    msg.textContent = "Bandejas guardadas.";
+    bandejasDirty = false;
+    await loadMonitorState();
+  } catch (error) {
+    msg.textContent = `No se pudo guardar: ${error.message}`;
+  }
+}
+
+function renderSchedule() {
+  const container = $("monitorSchedule");
+  container.innerHTML = "";
+  if (!monitorDraftSchedule.length) {
+    const hint = document.createElement("span");
+    hint.className = "hint";
+    hint.textContent = "Sin franjas: el monitor no toma leads a tu nombre — solo corren las franjas del equipo.";
+    container.appendChild(hint);
+    return;
+  }
+  monitorDraftSchedule.forEach((slot, index) => {
+    const chip = document.createElement("span");
+    chip.className = "sched-chip";
+    chip.textContent = `${slot.start} – ${slot.end} `;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.title = "Quitar franja";
+    remove.addEventListener("click", () => {
+      monitorDraftSchedule.splice(index, 1);
+      renderSchedule();
+      saveSchedule();
+    });
+    chip.appendChild(remove);
+    container.appendChild(chip);
+  });
+}
+
+function scheduleError(slots) {
+  const toMin = v => { const [h, m] = v.split(":").map(Number); return h * 60 + m; };
+  const parsed = [];
+  for (const slot of slots) {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.end)) {
+      return "Formato inválido: usá hh:mm.";
+    }
+    const [start, end] = [toMin(slot.start), toMin(slot.end)];
+    if (start >= end) return `La franja ${slot.start}–${slot.end} empieza después de terminar.`;
+    parsed.push([start, end]);
+  }
+  parsed.sort((a, b) => a[0] - b[0]);
+  for (let i = 1; i < parsed.length; i++) {
+    if (parsed[i][0] < parsed[i - 1][1]) return "Las franjas no pueden solaparse.";
+  }
+  return "";
+}
+
+async function saveSchedule() {
+  const msg = $("scheduleMsg");
+  const error = scheduleError(monitorDraftSchedule);
+  if (error) { msg.textContent = error; return; }
+  try {
+    await monitorApi("/api/monitor/schedule", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ schedule: monitorDraftSchedule }),
+    });
+    msg.textContent = "Horario guardado.";
+    scheduleDirty = false;
+    await loadMonitorState();
+  } catch (error) {
+    msg.textContent = `No se pudo guardar: ${error.message}`;
+  }
+}
+
+function renderEquipo() {
+  const container = $("monitorEquipo");
+  container.innerHTML = "";
+  if (!monitorDraftEquipo.length) {
+    const hint = document.createElement("span");
+    hint.className = "hint";
+    hint.textContent = "Sin personas: los leads quedan con el usuario logueado (flujo actual).";
+    container.appendChild(hint);
+    return;
+  }
+  monitorDraftEquipo.forEach((member, index) => {
+    const box = document.createElement("div");
+    box.className = "equipo-member";
+
+    const head = document.createElement("div");
+    head.className = "bandeja-row";
+    const nombre = document.createElement("input");
+    nombre.type = "text";
+    nombre.className = "bandeja-url";
+    nombre.placeholder = "Nombre exacto en Salesforce";
+    nombre.title = "Tal como aparece en el lookup 'Buscar Usuarios' del modal Cambiar propietario";
+    nombre.value = member.nombre || "";
+    nombre.addEventListener("input", () => { member.nombre = nombre.value; equipoDirty = true; });
+    nombre.addEventListener("change", saveEquipo);
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "btn small";
+    remove.textContent = "×";
+    remove.title = "Quitar persona";
+    remove.addEventListener("click", () => {
+      monitorDraftEquipo.splice(index, 1);
+      equipoDirty = true;
+      renderEquipo();
+      saveEquipo();
+    });
+    head.append(nombre, remove);
+    box.appendChild(head);
+
+    const slots = document.createElement("div");
+    slots.className = "equipo-franjas";
+    (member.franjas || []).forEach((slot, slotIndex) => {
+      const chip = document.createElement("span");
+      chip.className = "sched-chip";
+      chip.textContent = `${slot.start} – ${slot.end} `;
+      const drop = document.createElement("button");
+      drop.type = "button";
+      drop.textContent = "×";
+      drop.title = "Quitar franja";
+      drop.addEventListener("click", () => {
+        member.franjas.splice(slotIndex, 1);
+        equipoDirty = true;
+        renderEquipo();
+        saveEquipo();
+      });
+      chip.appendChild(drop);
+      slots.appendChild(chip);
+    });
+    const from = document.createElement("input");
+    from.type = "time";
+    from.value = "09:00";
+    const to = document.createElement("input");
+    to.type = "time";
+    to.value = "10:00";
+    // Franja "pendiente": el par desde/hasta queda como borrador hasta
+    // confirmarlo con "+ franja" (que agrega y guarda al instante). Si se
+    // tecleó sin confirmar, cualquier guardado la incorpora igual.
+    for (const input of [from, to]) {
+      input.addEventListener("input", () => {
+        box.dataset.pendingTouched = "1";
+      });
+    }
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "btn small";
+    add.textContent = "+ franja";
+    add.title = "Agregar franja horaria a esta persona";
+    add.addEventListener("click", () => {
+      member.franjas = member.franjas || [];
+      member.franjas.push({ start: from.value, end: to.value });
+      equipoDirty = true;
+      renderEquipo();
+      saveEquipo();
+    });
+    slots.append(from, document.createTextNode("–"), to, add);
+    box.appendChild(slots);
+    container.appendChild(box);
+  });
+}
+
+function equipoError(members) {
+  for (const member of members) {
+    if (!(member.nombre || "").trim()) return "Cada persona necesita el nombre exacto de Salesforce.";
+    const error = scheduleError(member.franjas);
+    if (error) return `${member.nombre}: ${error}`;
+  }
+  return "";
+}
+
+async function saveEquipo() {
+  const msg = $("equipoMsg");
+  // Incorpora las franjas pendientes: pares desde/hasta que el usuario
+  // tocó pero nunca confirmó con "+ franja".
+  const rows = [...document.querySelectorAll("#monitorEquipo .equipo-member")];
+  const equipo = monitorDraftEquipo.map((m, index) => {
+    const franjas = [...(m.franjas || [])];
+    const row = rows[index];
+    if (row && row.dataset.pendingTouched === "1") {
+      const inputs = row.querySelectorAll(".equipo-franjas input[type=time]");
+      franjas.push({ start: inputs[0].value, end: inputs[1].value });
+    }
+    return { nombre: (m.nombre || "").trim(), franjas };
+  });
+  const error = equipoError(equipo);
+  if (error) { msg.textContent = error; return; }
+  try {
+    await monitorApi("/api/monitor/equipo", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ equipo }),
+    });
+    msg.textContent = "Equipo guardado.";
+    equipoDirty = false;
+    await loadMonitorState();
+  } catch (saveError) {
+    msg.textContent = `No se pudo guardar: ${saveError.message}`;
+  }
+}
+
+const MONITOR_LINK_KEYS = new Set(["nombre", "apellido"]);
+// Todas las columnas de la tabla en orden por defecto. El usuario puede
+// ocultarlas, reordenarlas (arrastre de encabezado) y cambiar el ancho
+// (agarradera del borde): queda en monitorColsV1 de localStorage.
+const MONITOR_ALL_COLS = [
+  ["num", "#"],
+  ...MONITOR_COLUMNS,
+  ["hace", "⏱"],
+  ["resultado", "Resultado"],
+];
+const MONITOR_COL_TITLES = {
+  num: "Numeración de la lista",
+  hace: "Minutos desde que el lead entró a la lista",
+};
+let monitorColCfg = loadJSON("monitorColsV1", {});
+
+function monitorSaveCols() {
+  try { localStorage.setItem("monitorColsV1", JSON.stringify(monitorColCfg)); } catch { /* sin persistencia */ }
+}
+
+function monitorColOrder() {
+  const all = MONITOR_ALL_COLS.map(([key]) => key);
+  const saved = (monitorColCfg.order || []).filter(key => all.includes(key));
+  return [...saved, ...all.filter(key => !saved.includes(key))];
+}
+
+function monitorColLabel(key) {
+  return (MONITOR_ALL_COLS.find(([k]) => k === key) || [key, key])[1];
+}
+
+function monitorStartResize(ev, key, th) {
+  ev.preventDefault();
+  ev.stopPropagation();
+  const startX = ev.clientX;
+  const startW = th.getBoundingClientRect().width;
+  const colIndex = [...th.parentNode.cells].indexOf(th);
+  const apply = width => {
+    th.style.width = `${width}px`;
+    [...$("monitorTable").rows].forEach(r => {
+      const cell = r.cells[colIndex] && r.cells[colIndex].querySelector(".cell");
+      if (cell) cell.style.maxWidth = `${width - 14}px`;
+    });
+  };
+  const move = e => apply(Math.max(36, startW + e.clientX - startX));
+  const up = e => {
+    document.removeEventListener("mousemove", move);
+    document.removeEventListener("mouseup", up);
+    const width = Math.max(36, startW + e.clientX - startX);
+    apply(width);
+    monitorColCfg.widths = { ...(monitorColCfg.widths || {}), [key]: width };
+    monitorSaveCols();
+  };
+  document.addEventListener("mousemove", move);
+  document.addEventListener("mouseup", up);
+}
+
+function monitorMoveColumn(fromKey, toKey) {
+  if (!fromKey || fromKey === toKey) return;
+  const order = monitorColOrder();
+  const fromIndex = order.indexOf(fromKey);
+  if (fromIndex < 0) return;
+  order.splice(order.indexOf(toKey), 0, order.splice(fromIndex, 1)[0]);
+  monitorColCfg.order = order;
+  monitorSaveCols();
+  renderMonitorTable();
+  renderColsPanel();
+}
+
+function monitorHeaderCell(key) {
+  const th = document.createElement("th");
+  th.textContent = monitorColLabel(key);
+  if (MONITOR_COL_TITLES[key]) th.title = MONITOR_COL_TITLES[key];
+  const width = (monitorColCfg.widths || {})[key];
+  if (width) th.style.width = `${width}px`;
+  th.draggable = true;
+  th.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", key));
+  th.addEventListener("dragover", e => { e.preventDefault(); th.classList.add("over"); });
+  th.addEventListener("dragleave", () => th.classList.remove("over"));
+  th.addEventListener("drop", e => {
+    e.preventDefault();
+    th.classList.remove("over");
+    monitorMoveColumn(e.dataTransfer.getData("text/plain"), key);
+  });
+  const grip = document.createElement("span");
+  grip.className = "col-resize";
+  grip.title = "Arrastrá para cambiar el ancho";
+  grip.addEventListener("mousedown", e => monitorStartResize(e, key, th));
+  th.appendChild(grip);
+  return th;
+}
+
+function monitorCell(entry, index, total, key) {
+  const td = document.createElement("td");
+  const wrap = document.createElement("div");
+  wrap.className = "cell";
+  const width = (monitorColCfg.widths || {})[key];
+  if (width) wrap.style.maxWidth = `${width - 14}px`;
+  const details = entry.details || {};
+  if (key === "num") {
+    td.className = "hint";
+    wrap.textContent = total - index;
+  } else if (key === "hace") {
+    td.className = "hint";
+    wrap.textContent = monitorHace(entry.at);
+  } else if (key === "resultado") {
+    const badge = document.createElement("span");
+    const ok = entry.status === "tomado";
+    badge.className = `badge ${ok ? "st-bot" : entry.status === "error" ? "st-error" : "st-parcial"}`;
+    badge.textContent = MONITOR_STATUS_LABELS[entry.status] || entry.status;
+    wrap.appendChild(badge);
+    if (entry.asignado_a) {
+      const who = document.createElement("span");
+      who.className = "asignado";
+      who.textContent = ` → ${entry.asignado_a.replace(/\s*(vista previa|preview)\s*$/i, "")}`;
+      wrap.appendChild(who);
+      wrap.title = entry.asignado_a;
+    }
+  } else {
+    const value = key === "lead_id" ? entry.lead_id : details[key];
+    const text = value || NO_DISPONIBLE;
+    if (value) wrap.title = String(value);
+    if (MONITOR_LINK_KEYS.has(key) && value && entry.lead_id) {
+      const link = document.createElement("a");
+      link.href = `${sfBase}${entry.lead_id}`;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.className = "lead-link";
+      link.textContent = text;
+      wrap.appendChild(link);
+    } else {
+      wrap.textContent = text;
+    }
+  }
+  td.appendChild(wrap);
+  return td;
+}
+
+function monitorHace(at) {
+  const t = Date.parse(at || "");
+  if (!Number.isFinite(t)) return NO_DISPONIBLE;
+  const mins = Math.max(0, Math.floor((Date.now() - t) / 60000));
+  if (mins < 60) return `${mins} min`;
+  return `${Math.floor(mins / 60)} h ${mins % 60} min`;
+}
+
+function monitorBeep() {
+  try {
+    monitorAudioCtx = monitorAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = monitorAudioCtx;
+    if (ctx.state === "suspended") ctx.resume();
+    [880, 1175].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const t = ctx.currentTime + i * 0.18;
+      osc.frequency.value = freq;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.25);
+    });
+  } catch { /* sin audio disponible */ }
+}
+
+function monitorNotify(freshIds) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const fresh = (monitorState.results || []).filter(e => freshIds.includes(e.lead_id));
+  const names = fresh
+    .map(e => [e.details?.nombre, e.details?.apellido].filter(Boolean).join(" "))
+    .filter(Boolean)
+    .slice(0, 4)
+    .join(", ");
+  const body = names
+    ? `${freshIds.length} lead${freshIds.length === 1 ? "" : "s"} nuevo${freshIds.length === 1 ? "" : "s"}: ${names}`
+    : `${freshIds.length} lead${freshIds.length === 1 ? "" : "s"} nuevo${freshIds.length === 1 ? "" : "s"} en la bandeja`;
+  try {
+    const notification = new Notification("Monitor de Bandeja — lead nuevo", { body, tag: "monitor-leads" });
+    notification.onclick = () => { window.focus(); notification.close(); };
+  } catch { /* notificación no disponible */ }
+}
+
+function renderMonitorTable() {
+  const table = $("monitorTable");
+  table.innerHTML = "";
+  const visible = monitorColOrder().filter(key => !(monitorColCfg.hidden || []).includes(key));
+  const head = document.createElement("tr");
+  visible.forEach(key => head.appendChild(monitorHeaderCell(key)));
+  table.appendChild(head);
+  const results = [...(monitorState.results || [])].reverse();
+  if (!results.length) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = visible.length || 1;
+    cell.className = "hint";
+    cell.textContent = "Todavía no se detectaron leads.";
+    row.appendChild(cell);
+    table.appendChild(row);
+    return;
+  }
+  const freshIds = [];
+  results.forEach((entry, index) => {
+    const row = document.createElement("tr");
+    if (!monitorSeenIds.has(entry.lead_id)) {
+      freshIds.push(entry.lead_id);
+      if (!monitorFirstRender) row.classList.add("nuevo");
+    }
+    visible.forEach(key => row.appendChild(monitorCell(entry, index, results.length, key)));
+    table.appendChild(row);
+  });
+  monitorSeenIds = new Set(results.map(entry => entry.lead_id).filter(Boolean));
+  if (!monitorFirstRender && freshIds.length) {
+    if ($("monitorSound")?.checked) monitorBeep();
+    if ($("monitorNotify")?.checked) monitorNotify(freshIds);
+  }
+  monitorFirstRender = false;
+}
+
+function renderColsPanel() {
+  const panel = $("monitorColsPanel");
+  if (!panel) return;
+  panel.innerHTML = "";
+  const hint = document.createElement("div");
+  hint.className = "hint";
+  hint.style.margin = "0 0 6px";
+  hint.textContent = "Desmarcá para ocultar. Para reordenar, arrastrá el encabezado de la tabla; para el ancho, su borde derecho.";
+  panel.appendChild(hint);
+  monitorColOrder().forEach(key => {
+    const row = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !(monitorColCfg.hidden || []).includes(key);
+    cb.addEventListener("change", () => {
+      const hidden = new Set(monitorColCfg.hidden || []);
+      if (cb.checked) hidden.delete(key); else hidden.add(key);
+      monitorColCfg.hidden = [...hidden];
+      monitorSaveCols();
+      renderMonitorTable();
+    });
+    row.appendChild(cb);
+    row.appendChild(document.createTextNode(` ${monitorColLabel(key)}`));
+    panel.appendChild(row);
+  });
+  const reset = document.createElement("button");
+  reset.type = "button";
+  reset.className = "btn small";
+  reset.style.marginTop = "8px";
+  reset.textContent = "Restablecer vista";
+  reset.title = "Vuelve a mostrar todas las columnas en el orden y ancho originales";
+  reset.addEventListener("click", () => {
+    monitorColCfg = {};
+    monitorSaveCols();
+    renderMonitorTable();
+    renderColsPanel();
+  });
+  panel.appendChild(reset);
+}
+
+async function toggleMonitor() {
+  try {
+    await monitorApi("/api/monitor/toggle", { method: "POST" });
+    await loadMonitorState();
+  } catch (error) {
+    alert(`No se pudo cambiar el estado del monitor.\n\n${error.message}`);
+  }
+}
+
+// Revisión manual: corre un ciclo ya, sin importar toggle ni franja horaria.
+async function checkMonitorNow() {
+  const button = $("monitorCheck");
+  button.disabled = true;
+  $("monitorStatus").textContent = "Revisión manual en curso — puede tardar hasta 1 minuto…";
+  try {
+    await monitorApi("/api/monitor/check", { method: "POST" });
+  } catch (error) {
+    $("monitorStatus").textContent = `No se pudo iniciar la revisión: ${error.message}`;
+  } finally {
+    setTimeout(() => { button.disabled = false; }, 5000);
+  }
+}
+
+async function toggleDryRun() {
+  const checked = $("monitorDryRun").checked;
+  try {
+    await monitorApi("/api/monitor/dry-run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ solo_listar: checked }),
+    });
+    await loadMonitorState();
+  } catch (error) {
+    $("monitorDryRun").checked = !checked;
+    alert(`No se pudo cambiar el modo prueba.\n\n${error.message}`);
+  }
+}
+
+async function toggleWhatsapp() {
+  const checked = $("monitorWhatsapp").checked;
+  try {
+    await monitorApi("/api/monitor/whatsapp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enviar_whatsapp: checked }),
+    });
+    await loadMonitorState();
+  } catch (error) {
+    $("monitorWhatsapp").checked = !checked;
+    alert(`No se pudo cambiar el envío automático de WhatsApp.\n\n${error.message}`);
+  }
+}
+
+async function clearMonitorResults() {
+  const confirmed = confirm(
+    "Esto borrará solo la lista local del monitor; no modifica Salesforce ni la configuración. "
+      + "Los QUALIF actuales pueden volver a aparecer en la próxima revisión. ¿Continuar?",
+  );
+  if (!confirmed) return;
+
+  const button = $("monitorClearResults");
+  button.disabled = true;
+  try {
+    const result = await monitorApi("/api/monitor/clear-results", { method: "POST" });
+    await loadMonitorState();
+    showMonitorBanner(`Lista limpiada: ${result.removed || 0} registro(s) eliminado(s).`);
+  } catch (error) {
+    alert(`No se pudo limpiar la lista.\n\n${error.message}`);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// Beep corto con Web Audio: no hace falta ningún archivo de sonido.
+function monitorBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.6);
+  } catch { /* sin audio disponible */ }
+}
+
+function showMonitorBanner(text) {
+  const banner = $("monitorBanner");
+  banner.textContent = text;
+  banner.classList.remove("hidden");
+}
+
+// Canal de eventos del servidor: una conexión EventSource reemplaza al polling.
+// Solo se actualiza la página cuando el servidor empuja una novedad real.
+async function connectBotEvents() {
+  if (botEvents) return;
+  let endpoint;
+  try {
+    endpoint = await monitorEndpoint();
+  } catch { return; }
+  const events = new EventSource(`${endpoint.base}/api/events?token=${endpoint.token}`);
+  botEvents = events;
+  events.onopen = () => $("connLost").classList.add("hidden");
+  events.onerror = () => $("connLost").classList.remove("hidden"); // EventSource reintenta solo
+  events.onmessage = message => {
+    let event;
+    try { event = JSON.parse(message.data); } catch { return; }
+    if (event.type === "run_finished") {
+      // pollBotResults → notifyBotCompletion confirma el estado y muestra el
+      // resumen final; no tocar botRunInProgress acá o salta el aviso.
+      pollBotResults();
+      return;
+    }
+    if (event.type === "monitor_state") {
+      if (monitorState) {
+        if (event.enabled !== undefined) monitorState.enabled = event.enabled;
+        if (event.solo_listar !== undefined) monitorState.solo_listar = event.solo_listar;
+        if (event.enviar_whatsapp !== undefined) monitorState.enviar_whatsapp = event.enviar_whatsapp;
+        if (event.equipo !== undefined && !equipoDirty) {
+          monitorState.equipo = event.equipo;
+          monitorDraftEquipo = (event.equipo || []).map(m => ({ ...m, franjas: (m.franjas || []).map(f => ({ ...f })) }));
+        }
+        renderMonitor();
+      }
+      return;
+    }
+    if (event.type !== "monitor") return;
+    if (event.status === "cycle_start") {
+      monitorCycleRunning = true;
+      updateQueueMonitorAlert();
+      if (monitorState) { monitorState.cycle_running = true; renderMonitor(); }
+      return;
+    }
+    if (event.status === "cycle_end") {
+      monitorCycleRunning = false;
+      updateQueueMonitorAlert();
+      if (monitorState) monitorState.cycle_running = false;
+      loadMonitorState();
+      return;
+    }
+    if (event.status === "tomado") {
+      monitorBeep();
+      showMonitorBanner("Se asignó un lead a tu usuario — revisá Salesforce.");
+    }
+    loadMonitorState();
+  };
+}
+
+// Banner en la vista del bot: avisa que un ciclo del monitor ocupa el navegador.
+function updateQueueMonitorAlert() {
+  const alertBox = $("queueMonitorAlert");
+  if (alertBox) alertBox.classList.toggle("hidden", !monitorCycleRunning);
+}
+
+function openMonitorView() {
+  showView("viewMonitor");
+  // Recordatorio de sesión: aparece cada vez que se abre la vista.
+  $("monitorLoginAlert").classList.remove("hidden");
+  connectBotEvents();
+  loadMonitorState();
 }
 
 // Dispara el bot a través del servidor local (ui_server.py). En modo servidor
@@ -1673,7 +2630,20 @@ async function checkServerVersion() {
 async function openQueueView() {
   showView("viewQueue");
   checkServerVersion();
+  connectBotEvents();
   renderCountryBar();
+  // Si la página se recargó a mitad de un run, retomar el seguimiento en vivo.
+  if (SERVER_MODE) {
+    try {
+      const status = await botApi("/status");
+      monitorCycleRunning = !!status.monitor_cycle;
+      if (!botRunInProgress && status.running) {
+        botRunInProgress = true;
+        closeRunInProgress = status.operation === "cierre";
+      }
+    } catch { /* servidor no disponible */ }
+  }
+  updateQueueMonitorAlert();
   if (!SERVER_MODE && !botDirHandle) {
     try { botDirHandle = (await idbGet("botDir")) || null; } catch { botDirHandle = null; }
   }
@@ -1685,10 +2655,15 @@ async function openQueueView() {
 
 // ---------- UI ----------
 const $ = s => document.getElementById(s);
-const VIEW_IDS = ["viewHome", "viewPrepare", "viewDocumentar", "viewQueue"];
+const VIEW_IDS = ["viewHome", "viewPrepare", "viewDocumentar", "viewQueue", "viewMonitor"];
 
 function showView(id) {
   VIEW_IDS.forEach(viewId => $(viewId).classList.toggle("hidden", viewId !== id));
+  // El monitor usa toda la pantalla: las demás vistas quedan centradas.
+  const container = $("appContainer");
+  if (container) container.classList.toggle("monitor-wide", id === "viewMonitor");
+  // F5 vuelve a esta misma vista.
+  try { localStorage.setItem("dp_view", id); } catch { /* modo archivo sin storage */ }
 }
 
 $("openPrepare").addEventListener("click", () => showView("viewPrepare"));
@@ -1716,6 +2691,66 @@ $("exportSelection").addEventListener("click", () => {
   downloadBotQueue(selectedIds);
 });
 $("openQueue").addEventListener("click", openQueueView);
+$("openMonitor").addEventListener("click", openMonitorView);
+$("backFromMonitor").addEventListener("click", () => showView("viewHome"));
+$("monitorToggle").addEventListener("click", toggleMonitor);
+$("monitorCheck").addEventListener("click", checkMonitorNow);
+$("monitorLoginAlert").addEventListener("click", () => $("monitorLoginAlert").classList.add("hidden"));
+$("monitorDryRun").addEventListener("change", toggleDryRun);
+$("monitorWhatsapp").addEventListener("change", toggleWhatsapp);
+$("monitorSound").checked = localStorage.getItem("monitorSound") !== "0";
+$("monitorSound").addEventListener("change", event => {
+  try { localStorage.setItem("monitorSound", event.target.checked ? "1" : "0"); } catch { /* sin persistencia */ }
+});
+$("monitorNotify").checked = localStorage.getItem("monitorNotify") !== "0";
+$("monitorNotify").addEventListener("change", async event => {
+  if (event.target.checked && "Notification" in window && Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
+  try { localStorage.setItem("monitorNotify", event.target.checked ? "1" : "0"); } catch { /* sin persistencia */ }
+});
+$("equipoAdd").addEventListener("click", () => {
+  monitorDraftEquipo.push({ nombre: "", franjas: [] });
+  equipoDirty = true;
+  renderEquipo();
+});
+$("monitorSaveEquipo").addEventListener("click", saveEquipo);
+$("monitorRefresh").addEventListener("click", loadMonitorState);
+$("monitorClearResults").addEventListener("click", clearMonitorResults);
+$("monitorColsBtn").addEventListener("click", ev => {
+  ev.stopPropagation();
+  renderColsPanel();
+  $("monitorColsPanel").classList.toggle("hidden");
+});
+document.addEventListener("click", ev => {
+  const panel = $("monitorColsPanel");
+  if (panel && !panel.classList.contains("hidden") && !panel.contains(ev.target) && ev.target !== $("monitorColsBtn")) {
+    panel.classList.add("hidden");
+  }
+});
+$("monitorConfig").addEventListener("toggle", () => {
+  localStorage.setItem("monitorConfigOpen", $("monitorConfig").open ? "1" : "0");
+});
+$("monitorBanner").addEventListener("click", () => $("monitorBanner").classList.add("hidden"));
+$("monitorSaveBandejas").addEventListener("click", saveBandejas);
+$("monitorSaveSchedule").addEventListener("click", saveSchedule);
+// Delegación: cualquier edición en los campos marca el borrador como sucio,
+// así un refresco entrante no borra lo que el usuario está escribiendo.
+$("monitorBandejas").addEventListener("input", () => { bandejasDirty = true; });
+$("monitorBandejas").addEventListener("change", () => { bandejasDirty = true; });
+$("monitorSchedule").addEventListener("click", () => { scheduleDirty = true; });
+$("schedAdd").addEventListener("click", () => {
+  const start = $("schedStart").value;
+  const end = $("schedEnd").value;
+  if (!start || !end) return;
+  scheduleDirty = true;
+  monitorDraftSchedule.push({ start, end });
+  $("scheduleMsg").textContent = scheduleError(monitorDraftSchedule);
+  renderSchedule();
+  // Guardado automático: la franja persiste en el servidor al instante,
+  // sin exigir el botón "Guardar horario" (que queda como respaldo).
+  if (!scheduleError(monitorDraftSchedule)) saveSchedule();
+});
 $("runBot").addEventListener("click", runBot);
 $("countryMode").addEventListener("change", event => setCountryMode(event.target.value));
 $("countryFix").addEventListener("click", () => setCountryMode($("countryFix").dataset.mode));
@@ -1754,7 +2789,7 @@ if (SERVER_MODE) {
 
 // Reinicia el Edge dedicado del bot a través del servidor local. La propia
 // pestaña de la app vive en ese navegador, así que se cierra y se reabre sola.
-$("restartBotBrowser").addEventListener("click", async () => {
+async function restartBotBrowser() {
   if (!SERVER_MODE) {
     alert("Este botón solo funciona cuando la app se abre desde el servidor local (http://127.0.0.1:8765).");
     return;
@@ -1782,7 +2817,9 @@ $("restartBotBrowser").addEventListener("click", async () => {
   } catch {
     // La pestaña puede cerrarse antes de recibir la respuesta: es lo esperado.
   }
-});
+}
+$("restartBotBrowser").addEventListener("click", restartBotBrowser);
+$("monitorRestartBrowser").addEventListener("click", restartBotBrowser);
 $("closureScope").addEventListener("change", event => {
   const scope = event.target.value;
   queuedLeads().forEach(lead => {
@@ -2221,10 +3258,17 @@ document.addEventListener("keydown", e => {
 
 $("appVersion").textContent = "v" + APP_VERSION;
 
+// Se lee ANTES de la recuperación: loadCSVContent cambia la vista a
+// viewDocumentar y pisaría el valor guardado.
+const lastView = localStorage.getItem("dp_view");
 const recovery = loadJSON(SESSION_KEY, null);
 if (recovery?.text && recovery?.name && typeof recovery.size === "number") {
   loadCSVContent(recovery.text, recovery.name, recovery.size, false);
 }
+// Volver a la vista donde estaba la persona al recargar (F5).
+if (lastView === "viewMonitor") openMonitorView();
+else if (lastView === "viewQueue") openQueueView();
+else if (VIEW_IDS.includes(lastView) && lastView !== "viewDocumentar") showView(lastView);
 </script>
 </body>
 </html>

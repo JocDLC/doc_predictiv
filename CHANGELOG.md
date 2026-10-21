@@ -11,6 +11,67 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.4.0] — 2026-10-21
+
+### Agregado
+
+- **Equipo del monitor**: sección con personas auxiliares (nombre + franjas
+  horarias). Con una franja del equipo vigente, el lead se toma con el usuario
+  central y se **reasigna** a la persona de turno (lookup del propietario con
+  verificación). Sin franja propia ni del equipo no hay turno: nada se toca.
+- **Horario estricto**: los leads solo se toman dentro de una franja vigente.
+  "Revisar ahora" fuera de turno corre en modo prueba: lista los leads como
+  `detectado` sin abrirlos, y quedan reprocesables al asignar una franja.
+- **WhatsApp automático** (opcional): leads de Argentina con preferencia
+  WhatsApp reciben el primer mensaje tras el Pick Up verificado; "Otra
+  información" registra `N INT Se envía WhatsApp dd/mm/YYYY HH:MM`.
+- **Gestor de columnas** en la lista del monitor: ocultar, reordenar
+  (arrastrando el encabezado) y redimensionar columnas; persiste en el
+  navegador con "Restablecer vista". Filas compactas (~20 px), columna `⏱`
+  con minutos desde la detección y número de orden descendente.
+- **Click en nombre/apellido/ID** del lead abre el registro de Salesforce en
+  otra pestaña.
+- **Notificaciones de lead nuevo**: sonido opcional, resaltado de la fila y
+  notificación del navegador (checkbox "Notificar"); el toast de Windows
+  existente sigue avisando los leads tomados.
+- **Auto-recuperación del navegador**: tras 3 ciclos seguidos sin conectar al
+  navegador dedicado, el servidor lo reinicia solo (cooldown de 10 minutos,
+  sin interferir con runs del bot). Tras el relanzado se cierra la pestaña
+  `about:blank` inicial que quedaba huérfana.
+- Franjas del equipo se **autoguardan** al agregar/quitar; la franja propia
+  también al agregarla.
+
+### Corregido
+
+- `navegador_trabado` crónico: el attach WebDriver al perfil dedicado tarda
+  ~37 s; el timeout de sesión subió de 15 s a 60 s.
+- "Revisar ahora" ya no toma leads fuera de horario (modelo estricto).
+- El autoguardado de franjas ya no agrega la franja mientras se teclea la
+  hora: se agrega con "+ franja" y se persiste al instante.
+- La ventana del monitor se adopta tras un reinicio en vez de duplicarse, y
+  la pestaña temporal de trabajo no queda abierta.
+
+## [1.3.0] — 2026-10-09
+
+### Agregado
+
+- **Monitor de Bandeja**: vista nueva que revisa las bandejas habilitadas cada
+  ~1 minuto, detecta leads con el propietario "sin asignar" configurado y
+  estado `Nuevo`, abre el registro y ejecuta `Pick Up` con verificación del
+  propietario antes y después del clic. Nunca repite un Pick Up no confirmado.
+- Bandejas por país (Argentina / Colombia / México) con URL del reporte y
+  propietario "sin asignar" editables y persistidos; activación por bandeja.
+- Franjas horarias `hh:mm` configurables; sin franjas el monitor corre siempre
+  que esté activo.
+- Notificaciones: banner + beep en la UI y toast nativo de Windows al asignar
+  leads; el estado del monitor y los leads detectados llegan por SSE.
+- Canal de eventos `GET /api/events` (SSE): la UI deja de releer el servidor
+  cada 3 segundos; solo se actualiza cuando hay una novedad real.
+- `server_guardian.py`: supervisa `ui_server.py`, lo reinicia con espera
+  creciente si se cae o deja de responder, guarda `logs/server_crash_*.log`
+  por caída y frena tras 5 caídas en 10 minutos con un marcador fatal.
+  `INICIAR.bat` del paquete ahora lanza el guardián.
+
 ## [1.2.1] — 2026-10-07
 
 ### Corregido

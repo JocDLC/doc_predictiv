@@ -16,6 +16,11 @@ SALESFORCE_ID_PATTERN = re.compile(r"(?<![A-Za-z0-9])([A-Za-z0-9]{15}(?:[A-Za-z0
 DATE_VALUE_PATTERN = re.compile(r"(?<!\d)(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}[/-]\d{1,2}[/-]\d{1,2})(?!\d)")
 REPORT_CANDIDATE_SELECTOR = "table, [role='grid'], [role='treegrid'], lightning-datatable, lightning-base-datatable"
 HEADER_SELECTOR = "thead th, [role='columnheader']"
+# Los reportes virtualizados de Lightning renderizan los encabezados como th en
+# la primera fila, sin thead ni rol ARIA: se prueba esa variante como respaldo.
+HEADER_FALLBACK_SELECTOR = "tr:first-of-type th, tr:first-child th"
+HEADER_ACTION_TEXT_PATTERN = re.compile(r"\s*(?:acciones de col\w*|column actions?).*$", re.IGNORECASE)
+MIN_HEADER_PREFIX_LENGTH = 4
 HTML_ROW_SELECTOR = "tbody tr"
 ARIA_ROW_SELECTOR = "[role='row']"
 ROW_CELL_SELECTOR = "th[scope='row'], td, [role='gridcell']"
@@ -152,6 +157,7 @@ def read_full_report(
     diagnostics: list[dict[str, object]],
     max_vertical_passes: int = 80,
     max_horizontal_passes: int = 20,
+    unassigned_owner: str = UNASSIGNED_OWNER,
 ) -> tuple[int, list[VisibleLead]]:
     """Recorre la bandeja de arriba hacia abajo y de izquierda a derecha, sin abrir Leads.
 
@@ -166,7 +172,12 @@ def read_full_report(
         known_ids = {lead.lead_id for lead in collected}
         for _ in range(max_horizontal_passes):
             visible_rows, leads = read_visible_unassigned_leads(
-                driver, timeout_seconds, record_object_api_name, field_aliases, diagnostics
+                driver,
+                timeout_seconds,
+                record_object_api_name,
+                field_aliases,
+                diagnostics,
+                unassigned_owner,
             )
             total_rows_seen = max(total_rows_seen, visible_rows)
             collected.extend(leads)
@@ -186,10 +197,16 @@ def normalize_label(value: str) -> str:
 
 def find_header_index(headers: list[str], expected_header: str) -> int | None:
     normalized = [normalize_label(header) for header in headers]
+    expected = normalize_label(expected_header)
     try:
-        return normalized.index(normalize_label(expected_header))
+        return normalized.index(expected)
     except ValueError:
-        return None
+        pass
+    # Los encabezados de Lightning empiezan con el nombre de la columna y pueden
+    # continuar ("Fecha de creación por el cliente"): se acepta el prefijo.
+    if len(expected) >= MIN_HEADER_PREFIX_LENGTH:
+        return next((index for index, header in enumerate(normalized) if header.startswith(expected)), None)
+    return None
 
 
 def find_owner_header_index(headers: list[str]) -> int | None:
@@ -229,8 +246,9 @@ def unmapped_columns(headers: list[str], values: list[str], field_indexes: dict[
     return columns
 
 
-def is_unassigned_owner(value: str) -> bool:
-    return re.sub(r"\s+", "", str(value or "")) == UNASSIGNED_OWNER
+def is_unassigned_owner(value: str, unassigned_owner: str = UNASSIGNED_OWNER) -> bool:
+    compact = re.sub(r"\s+", "", str(unassigned_owner or ""))
+    return re.sub(r"\s+", "", str(value or "")) == compact
 
 
 def is_visible_element(element) -> bool:
@@ -243,10 +261,10 @@ def is_visible_element(element) -> bool:
         return False
 
 
-def row_has_unassigned_owner(values: list[str], row_text: str) -> bool:
-    if any(is_unassigned_owner(value) for value in values):
+def row_has_unassigned_owner(values: list[str], row_text: str, unassigned_owner: str = UNASSIGNED_OWNER) -> bool:
+    if any(is_unassigned_owner(value, unassigned_owner) for value in values):
         return True
-    return any(is_unassigned_owner(line) for line in str(row_text or "").splitlines())
+    return any(is_unassigned_owner(line, unassigned_owner) for line in str(row_text or "").splitlines())
 
 
 def find_elements(driver, root, selector: str):
@@ -326,10 +344,23 @@ def row_values(row_element, driver=None) -> list[str]:
     return [cell.text.strip() for cell in cells]
 
 
+def clean_header_text(text: str) -> str:
+    """Quita el rótulo del menú de columna ("Acciones de columna") que Lightning
+    concatena al texto visible del encabezado."""
+    return HEADER_ACTION_TEXT_PATTERN.sub("", str(text or "")).strip()
+
+
 def header_labels(table_element, driver=None) -> list[str]:
     search_driver = driver or table_element
     headers = find_elements(search_driver, table_element, HEADER_SELECTOR)
-    return [header.text.strip() for header in headers if header.text.strip()]
+    if not headers:
+        headers = find_elements(search_driver, table_element, HEADER_FALLBACK_SELECTOR)
+    labels = []
+    for header in headers:
+        label = clean_header_text(header.text)
+        if label:
+            labels.append(label)
+    return labels
 
 
 def report_header_labels(table_element, driver) -> list[str]:
@@ -422,6 +453,15 @@ def report_accessibility_summary(driver) -> dict[str, object]:
     }
 
 
+def max_row_cell_count(driver, rows: list, sample: int = 30) -> int:
+    """Celdas de la fila más densa: distingue la grilla de datos de la de índice
+    '#' que Lightning renderiza en paralelo con la misma cantidad de filas."""
+    return max(
+        (len(find_elements(driver, row, ROW_CELL_SELECTOR)) for row in rows[:sample]),
+        default=0,
+    )
+
+
 def select_report_table(driver, require_owner_header: bool):
     ranked_candidates = []
     for table in find_elements(driver, driver, REPORT_CANDIDATE_SELECTOR):
@@ -429,12 +469,13 @@ def select_report_table(driver, require_owner_header: bool):
         owner_header_found = find_owner_header_index(headers) is not None
         if require_owner_header and not owner_header_found:
             continue
-        row_count = len(find_report_rows(driver, table))
-        if owner_header_found or row_count > 0:
-            ranked_candidates.append((row_count, table))
+        rows = find_report_rows(driver, table)
+        if not owner_header_found and not rows:
+            continue
+        ranked_candidates.append((max_row_cell_count(driver, rows), len(rows), table))
     if not ranked_candidates:
         return None
-    return max(ranked_candidates, key=lambda candidate: candidate[0])[1]
+    return max(ranked_candidates, key=lambda candidate: (candidate[0], candidate[1]))[2]
 
 
 def find_report_table(driver, timeout_seconds: int):
@@ -477,6 +518,7 @@ def read_visible_unassigned_leads(
     record_object_api_name: str = DEFAULT_RECORD_OBJECT_API_NAME,
     field_aliases: dict[str, list[str]] | None = None,
     diagnostics: list[dict[str, object]] | None = None,
+    unassigned_owner: str = UNASSIGNED_OWNER,
 ) -> tuple[int, list[VisibleLead]]:
     table = find_report_table(driver, timeout_seconds)
     headers = report_header_labels(table, driver)
@@ -499,7 +541,7 @@ def read_visible_unassigned_leads(
     visible_rows = []
     for grid_position, row in enumerate(data_rows, start=1):
         raw_values = row_values(row, driver)
-        owner_found = row_has_unassigned_owner(raw_values, row.text)
+        owner_found = row_has_unassigned_owner(raw_values, row.text, unassigned_owner)
         values = aligned_values(raw_values, column_offset(headers, raw_values), len(headers)) if headers else raw_values
         lead_id = extract_lead_id(row, driver, record_object_api_name) if owner_found else ""
         if owner_found and not lead_id:

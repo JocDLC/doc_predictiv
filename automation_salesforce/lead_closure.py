@@ -424,7 +424,12 @@ for (const dialog of dialogs) {
         return 'clicked';
     }
     if (buttons.length > 1) {
-        return 'ambiguous';
+        // El host lightning-button y el <button> de su shadow DOM llevan
+        // ambos la etiqueta: se prefiere el <button> real (el clic del
+        // host puede no llegar al control interno).
+        const real = buttons.filter(el => el.matches('button'));
+        (real[0] || buttons[buttons.length - 1]).click();
+        return 'clicked';
     }
 }
 return 'not_found';

@@ -463,6 +463,12 @@ editor.focus();
 editor.value = text;
 editor.dispatchEvent(new Event('input', {bubbles: true}));
 editor.dispatchEvent(new Event('change', {bubbles: true}));
+// Lightning confirma el valor del campo al perder el foco (blur/focusout);
+// el clic JS sobre Guardar no lo genera y sin esto el formulario persiste
+// el valor anterior en silencio (bug verificado en leads reales).
+editor.blur();
+editor.dispatchEvent(new FocusEvent('blur', {bubbles: true}));
+editor.dispatchEvent(new FocusEvent('focusout', {bubbles: true}));
 """
 
 

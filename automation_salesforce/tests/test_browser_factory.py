@@ -113,6 +113,18 @@ class BrowserFactoryTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "navegador persistente"):
                 create_driver("edge", Path("msedge.exe"), Path("perfil"), "127.0.0.1:9222")
 
+    def test_create_driver_fails_fast_when_dedicated_browser_is_down(self):
+        """Sin listener en el puerto configurado no se lanza un Edge fantasma:
+        el driver lo abriría con --remote-debugging-port=0 y sin las flags
+        anti-suspensión, invisible para el reinicio del monitor."""
+        with (
+            patch("browser_factory.debugger_is_listening", return_value=False),
+            patch("selenium.webdriver.Edge") as edge_ctor,
+            self.assertRaisesRegex(RuntimeError, "no está escuchando"),
+        ):
+            create_driver("edge", Path("msedge.exe"), Path("perfil"), "127.0.0.1:9222")
+        edge_ctor.assert_not_called()
+
     def test_tab_urls_returns_only_page_targets(self):
         payload = json.dumps(
             [

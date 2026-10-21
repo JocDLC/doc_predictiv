@@ -1517,6 +1517,51 @@ class MonitorTickTests(unittest.TestCase):
         self.assertIsNone(ui_server.monitor_driver)
         self.assertIsNone(ui_server.monitor_window_handle)
 
+    def test_restart_browser_kills_dedicated_profile_when_no_listener(self):
+        """Un Edge del perfil con --remote-debugging-port=0 no escucha el
+        puerto esperado: sin buscarlo por user-data-dir el relanzamiento
+        chocaría con el lock del perfil."""
+        import ui_server
+
+        config = {
+            "browser": "edge",
+            "debugger_address": "127.0.0.1:9222",
+            "profile_directory": "perfil",
+            "salesforce_url": "https://sf.example",
+        }
+        calls = []
+        with (
+            patch("ui_server.find_listening_pid", return_value=None),
+            patch("ui_server.dedicated_profile_pids", return_value=["4242"]),
+            patch("ui_server.subprocess.run", side_effect=lambda *a, **k: calls.append(a[0])),
+            patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
+            patch("ui_server.launch_persistent_browser") as launch,
+            patch("ui_server.wait_for_debugger", return_value=False),
+        ):
+            ui_server.restart_browser(config)
+        self.assertTrue(any("4242" in call for call in calls))
+        launch.assert_called_once()
+
+    def test_dedicated_profile_pids_matches_user_data_dir(self):
+        """El listado por proceso reconoce el perfil dedicado con y sin
+        comillas, y no confunde perfiles hermanos ni otros ejecutables."""
+        import types
+        import ui_server
+
+        output = "\n".join(
+            [
+                '111|"C:\\Edge\\msedge.exe" --user-data-dir="C:\\Perfil\\edge-profile" --remote-debugging-port=0',
+                "222|msedge.exe --user-data-dir=C:\\Otro\\perfil",
+                "333|msedge.exe --type=renderer",
+            ]
+        )
+        with patch(
+            "ui_server.subprocess.run",
+            return_value=types.SimpleNamespace(stdout=output),
+        ):
+            pids = ui_server.dedicated_profile_pids(Path("C:/Perfil/edge-profile"))
+        self.assertEqual(pids, ["111"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -516,6 +516,12 @@ def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
                 + (f" (finalización: {entry['finalizacion']})" if entry.get("finalizacion") else ""),
                 flush=True,
             )
+        elif event.get("type") == "bandeja_error":
+            # Hoy solo iba por SSE: sin log la bandeja caída era invisible.
+            print(
+                f"[monitor] {event.get('bandeja')} bandeja_error: {event.get('error')}",
+                flush=True,
+            )
         broadcast_event({"type": "monitor", **event})
     return events
 
@@ -609,6 +615,43 @@ def find_listening_pid(port: str) -> str | None:
     return None
 
 
+def dedicated_profile_pids(profile_directory: Path) -> list[str]:
+    """PIDs de msedge.exe/chrome.exe corriendo con el ``--user-data-dir`` dedicado.
+
+    Cubre el caso de un navegador del perfil vivo pero sin escuchar el puerto
+    esperado (p. ej. uno lanzado por WebDriver con ``--remote-debugging-port=0``):
+    la búsqueda por puerto no lo ve y el reinicio quedaría con dos instancias
+    sobre el mismo perfil (el segundo arranque falla por el lock).
+    """
+    script = (
+        "Get-CimInstance Win32_Process | "
+        "Where-Object { $_.CommandLine -and ($_.Name -eq 'msedge.exe' -or $_.Name -eq 'chrome.exe') } | "
+        "ForEach-Object { \"$($_.ProcessId)|$($_.CommandLine)\" }"
+    )
+    try:
+        output = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", script],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    needle = os.path.normcase(os.path.normpath(str(profile_directory)))
+    pids = []
+    marker = re.compile(r"--user-data-dir=(?:\"([^\"]+)\"|'([^']+)'|(\S+))")
+    for line in output.splitlines():
+        pid_text, _, command_line = line.partition("|")
+        match = marker.search(command_line)
+        if not match:
+            continue
+        raw_profile = next(group for group in match.groups() if group)
+        profile = os.path.normcase(os.path.normpath(raw_profile.strip()))
+        if profile == needle and pid_text.strip().isdigit():
+            pids.append(pid_text.strip())
+    return pids
+
+
 def _attach_session_once(config: dict, debugger_address: str) -> str:
     """Una sonda de adjunte: ``ok``, ``transient`` o ``wedged``.
 
@@ -663,19 +706,24 @@ def restart_browser(config: dict) -> None:
     # se va a matar: se descartan antes para que el próximo ciclo recree.
     _drop_monitor_driver()
     monitor_window_handle = None
+    _, executable = detect_browser(config["browser"])
+    profile_directory = local_path(config["profile_directory"])
     pid = find_listening_pid(port)
-    if pid:
+    # Sin proceso en el puerto puede seguir vivo un Edge del perfil lanzado
+    # con --remote-debugging-port=0: hay que tumbarlo por su user-data-dir
+    # o el relanzamiento falla sobre el mismo perfil.
+    pids = [pid] if pid else dedicated_profile_pids(profile_directory)
+    for target_pid in pids:
         subprocess.run(
-            ["taskkill", "/PID", pid, "/T", "/F"],
+            ["taskkill", "/PID", target_pid, "/T", "/F"],
             capture_output=True,
             timeout=30,
         )
+    if pids:
         deadline = time.monotonic() + 15
         while debugger_is_listening(debugger_address) and time.monotonic() < deadline:
             time.sleep(0.5)
     subprocess.run(["taskkill", "/IM", "msedgedriver.exe", "/F"], capture_output=True)
-    _, executable = detect_browser(config["browser"])
-    profile_directory = local_path(config["profile_directory"])
     launch_persistent_browser(executable, profile_directory, debugger_address)
     if not wait_for_debugger(debugger_address):
         return

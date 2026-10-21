@@ -414,3 +414,29 @@ si es la única (cerrarlo tumbaría el navegador).
 para ocultar, drag en el encabezado para reordenar, borde derecho para
 redimensionar; persistido en `localStorage` ("monitorColsV1") + botón
 "Restablecer vista". Columna `Hace` renombrada a `⏱`. Filas ~20 px.
+
+## Edge fantasma con --remote-debugging-port=0 (2026-10-21)
+
+Stopper real del día: el monitor "tomaba" AR pero MX daba `bandeja_error
+TimeoutException` invisible (los errores de bandeja solo iban por SSE, no al
+log). La cadena de causas:
+
+1. `create_driver(debugger_address)` con el puerto caído caía en la rama
+   "crear navegador nuevo": msedgedriver lanzaba Edge con el perfil dedicado
+   pero `--remote-debugging-port=0` (puerto aleatorio) y **sin las flags
+   anti-suspensión** → navegador fantasma que el reinicio no podía matar
+   (`find_listening_pid` busca por puerto) y cuyas pestañas Edge suspendía.
+   Fix: con `debugger_address` configurado y sin listener → RuntimeError
+   claro (el camino correcto es `launch_persistent_browser`).
+2. `restart_browser` solo mataba el PID que escucha el puerto → con port=0
+   no encontraba nada y el relanzado chocaba con el lock del perfil.
+   Fix: `dedicated_profile_pids()` (PowerShell Win32_Process +
+   `--user-data-dir`) como fallback cuando el puerto está vacío.
+3. Reporte con 0 registros: el visor dentro del iframe muestra "Sin
+   resultados / No se devolvió ningún registro" **sin renderizar la
+   grilla** → `find_report_table` quemaba el timeout entero por ciclo.
+   Fix: `ReportEmptyError` en `find_report_table` (chequea página+iframes);
+   `read_visible_unassigned_leads` devuelve `(0, [])` y `read_full_report`
+   corta limpio. `bandeja_error` ahora también se imprime al log.
+   Ojo: "Total de registros 0" no es marcador confiable durante la carga;
+   se usan "sin resultados"/"no se devolvio ningun registro"/"no results".

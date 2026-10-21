@@ -166,28 +166,31 @@ def read_full_report(
     """
     collected: list[VisibleLead] = []
     total_rows_seen = 0
-    for _ in range(max_vertical_passes):
-        table = find_report_table(driver, timeout_seconds)
-        scroll_table_right(driver, table, reset=True)
-        known_ids = {lead.lead_id for lead in collected}
-        for _ in range(max_horizontal_passes):
-            visible_rows, leads = read_visible_unassigned_leads(
-                driver,
-                timeout_seconds,
-                record_object_api_name,
-                field_aliases,
-                diagnostics,
-                unassigned_owner,
-            )
-            total_rows_seen = max(total_rows_seen, visible_rows)
-            collected.extend(leads)
+    try:
+        for _ in range(max_vertical_passes):
             table = find_report_table(driver, timeout_seconds)
-            if not scroll_table_right(driver, table, reset=False):
+            scroll_table_right(driver, table, reset=True)
+            known_ids = {lead.lead_id for lead in collected}
+            for _ in range(max_horizontal_passes):
+                visible_rows, leads = read_visible_unassigned_leads(
+                    driver,
+                    timeout_seconds,
+                    record_object_api_name,
+                    field_aliases,
+                    diagnostics,
+                    unassigned_owner,
+                )
+                total_rows_seen = max(total_rows_seen, visible_rows)
+                collected.extend(leads)
+                table = find_report_table(driver, timeout_seconds)
+                if not scroll_table_right(driver, table, reset=False):
+                    break
+            new_ids = {lead.lead_id for lead in collected} - known_ids
+            table = find_report_table(driver, timeout_seconds)
+            if not scroll_table_down(driver, table) and not new_ids:
                 break
-        new_ids = {lead.lead_id for lead in collected} - known_ids
-        table = find_report_table(driver, timeout_seconds)
-        if not scroll_table_down(driver, table) and not new_ids:
-            break
+    except ReportEmptyError:
+        pass
     return total_rows_seen, merge_visible_leads(collected)
 
 
@@ -478,6 +481,53 @@ def select_report_table(driver, require_owner_header: bool):
     return max(ranked_candidates, key=lambda candidate: (candidate[0], candidate[1]))[2]
 
 
+class ReportEmptyError(RuntimeError):
+    """El reporte terminó de cargar y declaró "sin resultados" (0 registros)."""
+
+
+# Textos que Lightning muestra cuando el reporte cargó con 0 registros: la
+# grilla nunca se renderiza (el contenido vive dentro del iframe del visor de
+# reportes), así que esperarla hasta el timeout solo quema el tiempo de ciclo
+# y reporta un error opaco.
+EMPTY_REPORT_MARKERS = (
+    "sin resultados",
+    "no se devolvio ningun registro",
+    "no results found",
+    "no records returned",
+)
+
+EMPTY_REPORT_TEXT_SCRIPT = "return document.body ? document.body.innerText : ''"
+
+
+def _context_reports_empty(driver) -> bool:
+    """El documento actual (página o iframe) muestra el estado "sin resultados"."""
+    try:
+        text = driver.execute_script(EMPTY_REPORT_TEXT_SCRIPT)
+    except (WebDriverException, AttributeError):
+        return False
+    normalized = normalize_label(text)
+    return any(marker in normalized for marker in EMPTY_REPORT_MARKERS)
+
+
+def _raise_if_report_empty(driver, frame_count: int) -> None:
+    """Detecta el reporte vacío en la página y en sus iframes (mismo origen)."""
+    try:
+        driver.switch_to.default_content()
+    except (WebDriverException, AttributeError):
+        return
+    if _context_reports_empty(driver):
+        raise ReportEmptyError()
+    for index in range(frame_count):
+        try:
+            driver.switch_to.default_content()
+            frames = driver.find_elements(By.CSS_SELECTOR, "iframe, frame")
+            driver.switch_to.frame(frames[index])
+        except (WebDriverException, AttributeError, IndexError):
+            continue
+        if _context_reports_empty(driver):
+            raise ReportEmptyError()
+
+
 def find_report_table(driver, timeout_seconds: int):
     def table_with_owner_header(current_driver):
         current_driver.switch_to.default_content()
@@ -506,6 +556,9 @@ def find_report_table(driver, timeout_seconds: int):
         table = select_report_table(current_driver, require_owner_header=False)
         if table is not None:
             return table
+        # Sin grilla: si el reporte ya declaró "sin resultados" no hay nada
+        # que esperar — la tabla vacía no se renderiza nunca.
+        _raise_if_report_empty(current_driver, len(frames))
         current_driver.switch_to.default_content()
         return False
 
@@ -520,7 +573,10 @@ def read_visible_unassigned_leads(
     diagnostics: list[dict[str, object]] | None = None,
     unassigned_owner: str = UNASSIGNED_OWNER,
 ) -> tuple[int, list[VisibleLead]]:
-    table = find_report_table(driver, timeout_seconds)
+    try:
+        table = find_report_table(driver, timeout_seconds)
+    except ReportEmptyError:
+        return 0, []
     headers = report_header_labels(table, driver)
     date_index = find_header_index(headers, DATE_HEADER)
     field_indexes = resolve_field_indexes(headers, field_aliases or {})

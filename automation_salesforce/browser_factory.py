@@ -330,6 +330,17 @@ def create_driver(browser: str, executable: Path, profile_directory: Path, debug
 
     options = EdgeOptions() if browser == "edge" else ChromeOptions()
     attached = bool(debugger_address) and debugger_is_listening(debugger_address)
+    if debugger_address and not attached:
+        # Con el puerto abajo, el driver lanzaría un Edge nuevo sobre el
+        # perfil dedicado con --remote-debugging-port=0 y sin las flags
+        # anti-suspensión: un navegador fantasma que el reinicio no
+        # encuentra y cuyas pestañas se suspenden. El camino correcto es
+        # launch_persistent_browser (restart): se falla claro y rápido.
+        raise RuntimeError(
+            f"El navegador dedicado no está escuchando en {debugger_address}. "
+            "Reiniciá el navegador del bot ('Reiniciar navegador del bot' "
+            "en la app o INICIAR.bat)."
+        )
     if attached:
         options.add_experimental_option("debuggerAddress", debugger_address)
     else:

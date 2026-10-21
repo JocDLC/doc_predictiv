@@ -1,10 +1,12 @@
 import unittest
 
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
 from report_reader import (
     HEADER_FALLBACK_SELECTOR,
     REPORT_CANDIDATE_SELECTOR,
+    ReportEmptyError,
     VisibleLead,
     aligned_values,
     clean_header_text,
@@ -461,6 +463,59 @@ class ReportReaderTests(unittest.TestCase):
             extract_row_details(["Ana", "ana@example.invalid", "AR_LEAD_QUALIF"], indexes),
             {"nombre": "Ana", "email": "ana@example.invalid", "vehiculo_interes": ""},
         )
+
+    def test_find_report_table_raises_empty_error_on_sin_resultados(self):
+        """El visor del reporte carga dentro de un iframe: "Sin resultados"
+        ahí corta la espera en vez de quemar el timeout buscando la grilla."""
+        driver = FakeEmptyReportDriver({0: "Sin resultados\nNo se devolvió ningún registro"})
+
+        with self.assertRaises(ReportEmptyError):
+            find_report_table(driver, timeout_seconds=2)
+
+    def test_find_report_table_also_detects_english_no_results(self):
+        driver = FakeEmptyReportDriver({"main": "No results found"})
+
+        with self.assertRaises(ReportEmptyError):
+            find_report_table(driver, timeout_seconds=2)
+
+    def test_read_visible_unassigned_leads_returns_empty_on_empty_report(self):
+        """Reporte cargado sin registros = bandeja vacía, no un error de bandeja."""
+        driver = FakeEmptyReportDriver({0: "Total de registros 0\nSin resultados\nNo se devolvió ningún registro"})
+
+        visible_rows, leads = read_visible_unassigned_leads(driver, timeout_seconds=2)
+
+        self.assertEqual(visible_rows, 0)
+        self.assertEqual(leads, [])
+
+    def test_find_report_table_still_times_out_without_empty_marker(self):
+        """Sin tabla ni texto "sin resultados" el comportamiento se mantiene:
+        esperar al timeout (reporte pesado aún cargando)."""
+        driver = FakeEmptyReportDriver({"main": "Cargando informe..."})
+
+        with self.assertRaises(TimeoutException):
+            find_report_table(driver, timeout_seconds=0.3)
+
+
+class FakeEmptyReportDriver:
+    """Driver con iframes cuyo contenido textual simula el visor de reportes."""
+
+    def __init__(self, body_texts):
+        self.body_texts = body_texts
+        self.frames = [FakeFrame(index) for index in body_texts if index != "main"]
+        self.context = "main"
+        self.switch_to = FakeSwitchTo(self)
+
+    def find_elements(self, by, selector):
+        if selector == "iframe, frame":
+            return self.frames if self.context == "main" else []
+        return []
+
+    def execute_script(self, script, *args):
+        # Solo el sondeo de "sin resultados" devuelve texto; el deep-selector
+        # y el resto de scripts devuelven listas vacías como en el DOM real.
+        if script == "return document.body ? document.body.innerText : ''":
+            return self.body_texts.get(self.context, "")
+        return []
 
 
 if __name__ == "__main__":

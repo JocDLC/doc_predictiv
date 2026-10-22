@@ -746,6 +746,48 @@ class UiServerMonitorTests(unittest.TestCase):
             saved = json.loads(self._state_file(tmp).read_text(encoding="utf-8"))
             self.assertEqual(saved["equipo"], equipo)
 
+    def test_ui_prefs_roundtrip(self):
+        """Las preferencias de UI persisten del lado del servidor: la vista
+        de columnas sobrevive aunque el usuario cambie de navegador o su
+        perfil borre el localStorage."""
+        with TemporaryDirectory() as tmp, patch(
+            "ui_server.ui_prefs_path", return_value=Path(tmp) / "ui_prefs.json"
+        ):
+            status, payload = self._request("GET", "/api/ui-prefs")
+            self.assertEqual(status, 200)
+            self.assertEqual(payload["prefs"], {})
+
+            cols = {"hidden": ["email"], "order": ["num", "hace"], "widths": {"num": 40}}
+            status, _ = self._request("PUT", "/api/ui-prefs", {"prefs": {"monitorColsV1": cols}})
+            self.assertEqual(status, 200)
+
+            status, payload = self._request("GET", "/api/ui-prefs")
+            self.assertEqual(payload["prefs"]["monitorColsV1"], cols)
+
+            # Un segundo PUT mergea sin borrar lo anterior.
+            status, _ = self._request("PUT", "/api/ui-prefs", {"prefs": {"monitorSound": False}})
+            self.assertEqual(status, 200)
+            status, payload = self._request("GET", "/api/ui-prefs")
+            self.assertEqual(payload["prefs"]["monitorColsV1"], cols)
+            self.assertIs(payload["prefs"]["monitorSound"], False)
+
+    def test_ui_prefs_validates_input(self):
+        with TemporaryDirectory() as tmp, patch(
+            "ui_server.ui_prefs_path", return_value=Path(tmp) / "ui_prefs.json"
+        ):
+            status, _ = self._request("PUT", "/api/ui-prefs", {"otro": {}})
+            self.assertEqual(status, 400)
+            status, _ = self._request("PUT", "/api/ui-prefs", {"prefs": {"../evil": 1}})
+            self.assertEqual(status, 400)
+            status, _ = self._request("PUT", "/api/ui-prefs", {"prefs": {"": 1}})
+            self.assertEqual(status, 400)
+
+    def test_ui_prefs_requires_token(self):
+        status, _ = self._request("GET", "/api/ui-prefs", token=None)
+        self.assertEqual(status, 403)
+        status, _ = self._request("PUT", "/api/ui-prefs", {"prefs": {"a": 1}}, token=None)
+        self.assertEqual(status, 403)
+
     def test_cycle_merge_preserves_user_changes_made_mid_cycle(self):
         """El ciclo lee el estado al arrancar: al escribir no debe pisar el
         toggle ni el "Limpiar lista" que el usuario hizo mientras corría."""
@@ -1268,6 +1310,44 @@ class MonitorTickTests(unittest.TestCase):
         toast.assert_called_once()
         lead_results = [c.args[0] for c in broadcast.call_args_list if c.args[0]["type"] == "lead_result"]
         self.assertEqual(lead_results, events_result)
+
+    def test_tick_toasts_once_per_fresh_detected_lead(self):
+        """El aviso "lead nuevo en bandeja" suena una vez por lead: un
+        detectado que ya figura en la lista no vuelve a tostar en cada ciclo."""
+        import ui_server
+        from monitor_store import record_result
+
+        detected = [
+            {
+                "type": "lead_result",
+                "bandeja": "AR",
+                "status": "detectado",
+                "entry": {"lead_id": "00Q000000000001AAA"},
+            }
+        ]
+
+        def _cycle(driver, config, state, timeout_seconds, diag_dir=None):
+            # Como el ciclo real: registra la entrada en state.results.
+            record_result(state, "00Q000000000001AAA", "AR", "detectado")
+            return list(detected)
+
+        with (
+            TemporaryDirectory() as tmp,
+            self._enabled_state(tmp),
+            patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
+            patch("ui_server.create_driver", return_value=object()),
+            patch("ui_server.ensure_monitor_window"),
+            patch("ui_server.release_driver"),
+            patch("ui_server.run_cycle", side_effect=_cycle),
+            patch("ui_server.windows_toast") as toast,
+            patch("ui_server.broadcast_event"),
+        ):
+            ui_server.monitor_tick(self._config(tmp))
+            self.assertEqual(toast.call_count, 1)
+            self.assertIn("nuevo", toast.call_args.args[1])
+
+            ui_server.monitor_tick(self._config(tmp))
+            self.assertEqual(toast.call_count, 1)
 
     def test_tick_cycle_error_waits_next_interval(self):
         import ui_server

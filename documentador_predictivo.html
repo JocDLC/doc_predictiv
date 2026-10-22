@@ -436,6 +436,7 @@
         <label class="hint" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" title="Muestra una notificación de Windows cuando aparece un lead nuevo — funciona aunque esta pestaña esté en segundo plano o minimizada">
           <input type="checkbox" id="monitorNotify"> Notificar &mdash; aviso de Windows al entrar un lead
         </label>
+        <button type="button" class="btn" id="monitorNotifyTest" style="padding:1px 10px;font-size:11px" title="Envía una notificación de prueba ahora para verificar que el aviso llega">Probar aviso</button>
       </div>
       <details class="monitor-config" id="monitorConfig">
         <summary>Configuraci&oacute;n &mdash; bandejas y horario <span class="hint" style="display:inline;font-weight:400">(plegable: queda guardado c&oacute;mo lo dejaste)</span></summary>
@@ -1824,6 +1825,59 @@ async function monitorApi(path, options = {}) {
   return payload;
 }
 
+// Preferencias de UI persistidas en el servidor (ui_prefs.json): la vista de
+// columnas y los toggles siguen al usuario aunque abra la app en otro
+// navegador o el perfil corporativo borre el localStorage al cerrar.
+let uiPrefsServer = {};
+
+function loadPref(key, fallback) {
+  if (Object.prototype.hasOwnProperty.call(uiPrefsServer, key)) return uiPrefsServer[key];
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    return JSON.parse(raw);
+  } catch { return fallback; }
+}
+
+function prefBool(key, fallback) {
+  const value = loadPref(key, fallback);
+  // Convive con el formato viejo ("1"/"0" crudos) y el nuevo (booleano JSON).
+  return value !== false && value !== 0 && value !== "0";
+}
+
+function saveUiPref(key, value) {
+  uiPrefsServer[key] = value;
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* sin localStorage */ }
+  monitorApi("/api/ui-prefs", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prefs: { [key]: value } }),
+  }).catch(() => { /* queda solo en este navegador */ });
+}
+
+async function loadUiPrefs() {
+  let prefs;
+  try {
+    prefs = (await monitorApi("/api/ui-prefs")).prefs || {};
+  } catch { return; }
+  uiPrefsServer = prefs;
+  const savedCols = prefs.monitorColsV1;
+  if (savedCols && typeof savedCols === "object" && Object.keys(savedCols).length) {
+    monitorColCfg = savedCols;
+  } else if (Object.keys(monitorColCfg).length) {
+    // Migra al servidor la vista que estaba solo en este navegador.
+    saveUiPref("monitorColsV1", monitorColCfg);
+  }
+  renderMonitorTable();
+  renderColsPanel();
+  ["monitorSound", "monitorNotify"].forEach(key => {
+    const el = $(key);
+    if (el && Object.prototype.hasOwnProperty.call(prefs, key)) {
+      el.checked = prefBool(key, true);
+    }
+  });
+}
+
 async function loadMonitorState() {
   try {
     monitorState = await monitorApi("/api/monitor");
@@ -2160,7 +2214,7 @@ const MONITOR_COL_TITLES = {
 let monitorColCfg = loadJSON("monitorColsV1", {});
 
 function monitorSaveCols() {
-  try { localStorage.setItem("monitorColsV1", JSON.stringify(monitorColCfg)); } catch { /* sin persistencia */ }
+  saveUiPref("monitorColsV1", monitorColCfg);
 }
 
 function monitorColOrder() {
@@ -2563,6 +2617,7 @@ function openMonitorView() {
   // Recordatorio de sesión: aparece cada vez que se abre la vista.
   $("monitorLoginAlert").classList.remove("hidden");
   connectBotEvents();
+  loadUiPrefs();
   loadMonitorState();
 }
 
@@ -2698,17 +2753,43 @@ $("monitorCheck").addEventListener("click", checkMonitorNow);
 $("monitorLoginAlert").addEventListener("click", () => $("monitorLoginAlert").classList.add("hidden"));
 $("monitorDryRun").addEventListener("change", toggleDryRun);
 $("monitorWhatsapp").addEventListener("change", toggleWhatsapp);
-$("monitorSound").checked = localStorage.getItem("monitorSound") !== "0";
+$("monitorSound").checked = prefBool("monitorSound", true);
 $("monitorSound").addEventListener("change", event => {
-  try { localStorage.setItem("monitorSound", event.target.checked ? "1" : "0"); } catch { /* sin persistencia */ }
+  saveUiPref("monitorSound", event.target.checked);
 });
-$("monitorNotify").checked = localStorage.getItem("monitorNotify") !== "0";
+$("monitorNotify").checked = prefBool("monitorNotify", true);
 $("monitorNotify").addEventListener("change", async event => {
   if (event.target.checked && "Notification" in window && Notification.permission === "default") {
     await Notification.requestPermission();
   }
-  try { localStorage.setItem("monitorNotify", event.target.checked ? "1" : "0"); } catch { /* sin persistencia */ }
+  saveUiPref("monitorNotify", event.target.checked);
 });
+$("monitorNotifyTest").addEventListener("click", async () => {
+  if (!("Notification" in window)) { alert("Este navegador no soporta notificaciones."); return; }
+  if (Notification.permission === "default") await Notification.requestPermission().catch(() => {});
+  if (Notification.permission !== "granted") {
+    alert("El navegador tiene las notificaciones bloqueadas para esta página.\nReactivarlas: candado en la barra de direcciones → Permisos → Notificaciones, y recargá la página.");
+    return;
+  }
+  try {
+    const note = new Notification("Monitor de Bandeja — prueba", { body: "Si ves este aviso, las notificaciones funcionan.", tag: "monitor-test" });
+    note.onclick = () => { window.focus(); note.close(); };
+  } catch (error) {
+    alert(`No se pudo mostrar la notificación: ${error.message}`);
+  }
+});
+// El permiso del navegador exige un gesto: la casilla viene tildada por
+// defecto, así que se pide en el primer clic sobre la página. Sin permiso
+// "granted" los avisos nunca salían aunque la casilla pareciera activa.
+document.addEventListener("click", () => {
+  if (!("Notification" in window) || Notification.permission !== "default") return;
+  if ($("monitorNotify")?.checked) Notification.requestPermission().catch(() => {});
+});
+if ("Notification" in window && Notification.permission === "denied" && $("monitorNotify")) {
+  $("monitorNotify").disabled = true;
+  $("monitorNotify").parentElement.title =
+    "El navegador bloqueó las notificaciones de esta página: reactivalas en el candado de la barra de direcciones.";
+}
 $("equipoAdd").addEventListener("click", () => {
   monitorDraftEquipo.push({ nombre: "", franjas: [] });
   equipoDirty = true;

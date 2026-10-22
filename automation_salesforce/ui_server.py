@@ -135,6 +135,32 @@ def monitor_state_path(config: dict) -> Path:
     return ROOT / config.get("ui_output_directory", "ui_output") / STATE_FILE_NAME
 
 
+def ui_prefs_path(config: dict) -> Path:
+    return ROOT / config.get("ui_output_directory", "ui_output") / "ui_prefs.json"
+
+
+PREF_KEY_PATTERN = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
+# Tope razonable para el archivo entero: solo guarda vistas de columnas y
+# toggles, no datos.
+UI_PREFS_MAX_BYTES = 64 * 1024
+
+
+def read_ui_prefs(config: dict) -> dict:
+    try:
+        data = json.loads(ui_prefs_path(config).read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def write_ui_prefs(config: dict, prefs: dict) -> None:
+    path = ui_prefs_path(config)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(".tmp")
+    temp_path.write_text(json.dumps(prefs, ensure_ascii=False), encoding="utf-8")
+    os.replace(temp_path, path)
+
+
 def acquire_instance_lock(ui_output_directory: Path):
     """Un solo ``ui_server`` por instalación.
 
@@ -504,9 +530,22 @@ def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
     if any(e.get("type") == PAUSE_SESSION_LOST for e in events):
         touch_cycle(state, PAUSE_SESSION_LOST)
     monitor_write_state(config, _merge_cycle_state(config, state, pre_results))
+    # Toast nativo: "asignados" por cada tomado (aunque el lead ya figurara
+    # detectado de antes) y "entró a la bandeja" solo por leads nuevos — los
+    # que ya estaban listados no vuelven a sonar en cada ciclo.
     taken = [e for e in events if e.get("status") == STATUS_TOMADO]
     if taken:
         windows_toast("Monitor de Bandeja", f"{len(taken)} lead(s) asignados a tu usuario.")
+    fresh = [
+        e
+        for e in events
+        if e.get("type") == "lead_result"
+        and (e.get("entry") or {}).get("lead_id")
+        and (e.get("entry") or {}).get("lead_id") not in pre_results
+        and e.get("status") != STATUS_TOMADO
+    ]
+    if fresh:
+        windows_toast("Monitor de Bandeja", f"{len(fresh)} lead(s) nuevo(s) en la bandeja — revisá el monitor.")
     for event in events:
         if event.get("type") == "lead_result":
             entry = event.get("entry") or {}
@@ -863,6 +902,12 @@ def make_handler(token: str, config: dict | None = None):
                     return
                 self._send(200, self._monitor_payload())
                 return
+            if route == "/api/ui-prefs":
+                if not self._authorized():
+                    self._send(403, {"error": "token inválido o ausente"})
+                    return
+                self._send(200, {"prefs": read_ui_prefs(config or load_config())})
+                return
             if route == "/status":
                 running = current_process is not None and current_process.poll() is None
                 self._send(
@@ -899,6 +944,38 @@ def make_handler(token: str, config: dict | None = None):
 
         def do_PUT(self) -> None:
             route = urlparse(self.path).path
+            if route == "/api/ui-prefs":
+                # Preferencias de UI (vista de columnas, toggles): persisten
+                # del lado del servidor para que sigan al usuario aunque
+                # cambie de navegador o el perfil borre el localStorage.
+                if not self._authorized():
+                    self._send(403, {"error": "token inválido o ausente"})
+                    return
+                payload = self._read_json_body()
+                if payload is None:
+                    return
+                incoming = payload.get("prefs") if isinstance(payload, dict) else None
+                if not isinstance(incoming, dict):
+                    self._send(400, {"error": "se esperaba un objeto 'prefs'"})
+                    return
+                bad_keys = [key for key in incoming if not isinstance(key, str) or not PREF_KEY_PATTERN.match(key)]
+                if bad_keys:
+                    self._send(400, {"error": f"claves de preferencia inválidas: {bad_keys[:3]}"})
+                    return
+                cfg = config or load_config()
+                prefs = read_ui_prefs(cfg)
+                prefs.update(incoming)
+                try:
+                    serialized = json.dumps(prefs, ensure_ascii=False)
+                except (TypeError, ValueError):
+                    self._send(400, {"error": "valores no serializables"})
+                    return
+                if len(serialized.encode("utf-8")) > UI_PREFS_MAX_BYTES:
+                    self._send(413, {"error": "preferencias demasiado grandes"})
+                    return
+                write_ui_prefs(cfg, prefs)
+                self._send(200, {"status": "guardado"})
+                return
             if route in ("/api/monitor/config", "/api/monitor/schedule", "/api/monitor/equipo"):
                 if not self._authorized():
                     self._send(403, {"error": "token inválido o ausente"})

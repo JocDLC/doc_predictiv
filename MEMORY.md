@@ -440,3 +440,33 @@ log). La cadena de causas:
    corta limpio. `bandeja_error` ahora también se imprime al log.
    Ojo: "Total de registros 0" no es marcador confiable durante la carga;
    se usan "sin resultados"/"no se devolvio ningun registro"/"no results".
+
+## Notificación de lead nuevo + prefs en servidor (2026-10-22)
+
+Dos bugs reportados: "no llega la notificación de Windows" y "la vista de
+columnas no se guarda al reabrir". Causas raíz encontradas:
+
+1. **Permiso del navegador nunca pedido**: la casilla "Notificar" venía
+   tildada por defecto pero `Notification.requestPermission()` solo se
+   llamaba al destildar/retildar → `permission: "default"` para siempre y
+   `monitorNotify()` salía en silencio. Fix: el permiso se pide en el
+   primer gesto del usuario sobre la página; si queda `denied`, la casilla
+   se deshabilita con tooltip. Además hay botón **"Probar aviso"** junto a
+   la casilla: dispara una Notification al instante para verificar la
+   cadena Edge→Windows sin esperar un lead.
+2. **localStorage no cruza navegadores**: verificado en vivo — el guardado
+   de `monitorColsV1` SÍ funcionaba en el Edge dedicado; el usuario abre la
+   app en otro navegador/perfil (el corporativo borra site data al cerrar)
+   donde arranca vacío. Fix: `PUT/GET /api/ui-prefs` persiste en
+   `ui_output/ui_prefs.json` (merge por clave, valida `^[A-Za-z0-9_.-]{1,64}$`,
+   tope 64 KB). Frontend: `saveUiPref()` escribe localStorage + servidor;
+   `loadUiPrefs()` corre en `openMonitorView` — el servidor gana si tiene
+   la clave, y si no, migra la config local una vez. Cubre `monitorColsV1`,
+   `monitorSound`, `monitorNotify` (toggles ahora como booleano JSON;
+   `prefBool()` convive con el "1"/"0" crudo viejo).
+3. **Toast del backend solo cubría `tomado`**: ahora también dispara por
+   lead_result **nuevo** que no sea tomado ("N lead(s) nuevo(s) en la
+   bandeja") — dedup por `pre_results` (los ya listados no re-suenan cada
+   ciclo). Ojo: el toast de PowerShell puede llegar al centro de
+   notificaciones (Win+N) sin banner si Windows lo suprime; el registro no
+   muestra bloqueo global ni por app, verificado.

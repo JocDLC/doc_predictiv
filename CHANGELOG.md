@@ -11,6 +11,35 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [1.4.1] — 2026-10-22
+
+### Corregido
+
+- **Bandeja MX**: ya toma leads — estaba deshabilitada y vacía en el estado
+  persistido. Además el reporte con 0 registros mostraba "Sin resultados"
+  dentro del iframe del visor sin renderizar la grilla → quemaba el timeout
+  de 30 s por ciclo con un `bandeja_error` invisible (solo iba por SSE).
+  Ahora `ReportEmptyError` devuelve bandeja vacía al instante y los errores
+  de bandeja quedan en el log.
+- **Edge fantasma**: cuando el debugger estaba caído, `create_driver`
+  lanzaba un Edge oculto con `--remote-debugging-port=0` (puerto aleatorio)
+  y sin las flags anti-suspensión; el reinicio no podía matarlo porque
+  buscaba el PID por puerto. Ahora el attach falla con error claro y
+  `restart_browser` localiza el Edge del perfil por `--user-data-dir`.
+- **Vista de columnas no persistía entre navegadores**: `localStorage` es
+  por perfil y el corporativo borra datos de sitio al cerrar. Nuevo
+  endpoint `/api/ui-prefs`: la vista de columnas y los toggles de
+  sonido/notificar se guardan en `ui_output/ui_prefs.json` del servidor y
+  siguen al usuario a cualquier navegador (migra lo local automáticamente).
+- **Notificación de Windows muda**: la casilla "Notificar" venía tildada
+  pero el permiso del navegador solo se pedía al retildar → quedaba en
+  `default` y el aviso salía en silencio. Ahora se pide en el primer gesto
+  sobre la página, la casilla avisa si quedó bloqueada, y hay botón
+  "Probar aviso" para verificar sin esperar un lead.
+- **Toast del backend solo cubría `tomado`**: ahora también avisa cuando
+  entra un lead nuevo a la bandeja (una vez por lead; los ya listados no
+  repiten en cada ciclo).
+
 ## [1.4.0] — 2026-10-21
 
 ### Agregado

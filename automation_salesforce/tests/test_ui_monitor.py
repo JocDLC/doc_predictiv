@@ -153,7 +153,13 @@ check('estado de candidato presente', columnKeys.includes('estado_candidato'));
 check('columna lead_id presente', columnKeys.includes('lead_id'));
 check('otra informacion presente', columnKeys.includes('otra_informacion'));
 
-// 2) Validación de franjas hh:mm en la UI.
+// 2) Validación de franjas hh:mm en la UI. Las franjas solo aceptan
+//    bandejas disponibles (habilitadas con link): AR y CO sí, MX no.
+monitorState = { bandejas: [
+  { code: 'AR', enabled: true, url: 'https://sf.example/r' },
+  { code: 'CO', enabled: true, url: 'https://sf.example/r' },
+  { code: 'MX', enabled: false, url: '' },
+] };
 check('sin franjas es válido', scheduleError([]) === '');
 check('franja válida aceptada', scheduleError([{ start: '08:00', end: '20:00' }]) === '');
 check('formato inválido rechazado', scheduleError([{ start: '8am', end: '20:00' }]) !== '');
@@ -180,6 +186,8 @@ check('franja todas pisa franja acotada',
     { start: '08:00', end: '13:00', bandejas: [] },
     { start: '12:00', end: '18:00', bandejas: ['AR'] },
   ]) !== '');
+check('franja en bandeja no disponible rechazada',
+  scheduleError([{ start: '08:00', end: '12:00', bandejas: ['MX'] }]) !== '');
 
 // 3) La tabla renderiza los leads del estado con sus columnas.
 monitorState = {

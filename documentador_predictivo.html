@@ -190,6 +190,8 @@
   .equipo-franjas { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
   .equipo-franjas input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
   .equipo-bandeja { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
+  .equipo-bandeja.bandeja-off { opacity: .45; cursor: not-allowed; }
+  .equipo-bandeja.bandeja-off input { cursor: not-allowed; }
   .contact-ico svg { width: 13px; height: 13px; vertical-align: -2px; }
   #viewMonitor .queue-panel { max-width: none; margin: 16px 0; }
   .monitor-config { border: 1px solid var(--border); border-radius: 14px; background: var(--card);
@@ -2014,20 +2016,13 @@ async function saveBandejas() {
 function renderSchedule() {
   const container = $("monitorSchedule");
   container.innerHTML = "";
-  // Checkboxes de bandeja de la franja a agregar: los códigos salen de
-  // las bandejas habilitadas — se redibujan acá para reflejar cambios.
+  // Checkboxes de bandeja de la franja a agregar: las 3 opciones siempre
+  // visibles; las no disponibles (sin link o deshabilitadas) se muestran
+  // apagadas y no se pueden tildar.
   const box = $("schedBandejas");
   box.innerHTML = "";
-  for (const code of monitorBandejaCodes()) {
-    const label = document.createElement("label");
-    label.className = "hint equipo-bandeja";
-    label.title = "La franja cubre esta bandeja — sin tildar ninguna, cubre todas";
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.className = "sched-bandeja-cb";
-    cb.value = code;
-    label.append(cb, document.createTextNode(code));
-    box.appendChild(label);
+  for (const { code, available } of monitorBandejaOptions()) {
+    box.appendChild(bandejaCheckbox("sched-bandeja-cb", code, available, true).label);
   }
   if (!monitorDraftSchedule.length) {
     const hint = document.createElement("span");
@@ -2058,6 +2053,7 @@ function renderSchedule() {
 
 function scheduleError(slots) {
   const toMin = v => { const [h, m] = v.split(":").map(Number); return h * 60 + m; };
+  const available = new Set(monitorBandejaCodes());
   const parsed = [];
   for (const slot of slots) {
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.end)) {
@@ -2065,6 +2061,10 @@ function scheduleError(slots) {
     }
     const [start, end] = [toMin(slot.start), toMin(slot.end)];
     if (start >= end) return `La franja ${slot.start}–${slot.end} empieza después de terminar.`;
+    const missing = (slot.bandejas || []).filter(code => !available.has(code));
+    if (missing.length) {
+      return `La franja ${slot.start}–${slot.end} apunta a bandejas no disponibles: ${missing.join(", ")}.`;
+    }
     parsed.push([start, end, slot]);
   }
   parsed.sort((a, b) => a[0] - b[0]);
@@ -2177,17 +2177,11 @@ function renderEquipo() {
       });
     }
     // Bandejas de la franja pendiente: una franja sin bandeja no cubre
-    // nada — hay que tildar al menos una.
-    const bandejaBoxes = monitorBandejaCodes().map(code => {
-      const label = document.createElement("label");
-      label.className = "hint equipo-bandeja";
-      label.title = "La franja cubre esta bandeja";
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.className = "equipo-bandeja-cb";
-      cb.value = code;
+    // nada — hay que tildar al menos una. Las no disponibles quedan
+    // apagadas y no se pueden tildar.
+    const bandejaBoxes = monitorBandejaOptions().map(({ code, available }) => {
+      const { label, cb } = bandejaCheckbox("equipo-bandeja-cb", code, available, false);
       cb.addEventListener("change", () => { box.dataset.pendingTouched = "1"; });
-      label.append(cb, document.createTextNode(code));
       return label;
     });
     const pendingBandejas = () =>
@@ -2210,12 +2204,38 @@ function renderEquipo() {
   });
 }
 
+function monitorBandejaOptions() {
+  // Las 3 bandejas configuradas: "disponible" = habilitada con link de
+  // reporte. Las no disponibles se muestran apagadas y no se pueden
+  // tildar — solo bandejas disponibles pueden llevar franja.
+  return (monitorState?.bandejas || []).map(b => ({
+    code: b.code,
+    available: !!(b.enabled && b.url),
+  }));
+}
+
 function monitorBandejaCodes() {
-  return (monitorState?.bandejas || []).filter(b => b.enabled).map(b => b.code);
+  return monitorBandejaOptions().filter(o => o.available).map(o => o.code);
+}
+
+function bandejaCheckbox(cbClass, code, available, todas) {
+  const label = document.createElement("label");
+  label.className = "hint equipo-bandeja" + (available ? "" : " bandeja-off");
+  label.title = available
+    ? `La franja cubre esta bandeja${todas ? " — sin tildar ninguna, cubre todas" : ""}`
+    : `${code} no está disponible: falta el link del reporte o está deshabilitada`;
+  const cb = document.createElement("input");
+  cb.type = "checkbox";
+  cb.className = cbClass;
+  cb.value = code;
+  cb.disabled = !available;
+  label.append(cb, document.createTextNode(code));
+  return { label, cb };
 }
 
 function equipoError(members) {
   const toMin = v => { const [h, m] = String(v).split(":").map(Number); return h * 60 + m; };
+  const available = new Set(monitorBandejaCodes());
   for (const member of members) {
     if (!(member.nombre || "").trim()) return "Cada persona necesita el nombre exacto de Salesforce.";
     for (const slot of member.franjas || []) {
@@ -2227,6 +2247,10 @@ function equipoError(members) {
       }
       if (!(slot.bandejas || []).length) {
         return `${member.nombre}: la franja ${slot.start}–${slot.end} no tiene bandeja — tildá al menos una.`;
+      }
+      const missing = (slot.bandejas || []).filter(code => !available.has(code));
+      if (missing.length) {
+        return `${member.nombre}: la franja ${slot.start}–${slot.end} apunta a bandejas no disponibles: ${missing.join(", ")}.`;
       }
     }
   }

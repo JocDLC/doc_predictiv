@@ -719,6 +719,29 @@ class UiServerMonitorTests(unittest.TestCase):
             )
             self.assertEqual(status, 400)
 
+    def test_schedule_franja_requiere_bandeja_disponible(self):
+        """Una franja propia solo puede apuntar a bandejas disponibles:
+        habilitada con link. Sin bandeja tildada (todas) siempre vale."""
+        bandejas = {"bandejas": [
+            {"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"},
+            {"code": "MX", "enabled": False, "url": ""},
+        ]}
+        with TemporaryDirectory() as tmp, patch("ui_server.monitor_state_path", return_value=self._state_file(tmp)):
+            status, _ = self._request("PUT", "/api/monitor/config", bandejas)
+            self.assertEqual(status, 200)
+            # MX no disponible (deshabilitada/sin link) -> 400.
+            status, _ = self._request(
+                "PUT", "/api/monitor/schedule",
+                {"schedule": [{"start": "08:00", "end": "12:00", "bandejas": ["MX"]}]},
+            )
+            self.assertEqual(status, 400)
+            # AR disponible -> 200.
+            status, _ = self._request(
+                "PUT", "/api/monitor/schedule",
+                {"schedule": [{"start": "08:00", "end": "12:00", "bandejas": ["AR"]}]},
+            )
+            self.assertEqual(status, 200)
+
     def test_monitor_equipo_validates_and_persists(self):
         equipo = [
             {
@@ -727,6 +750,13 @@ class UiServerMonitorTests(unittest.TestCase):
             }
         ]
         with TemporaryDirectory() as tmp, patch("ui_server.monitor_state_path", return_value=self._state_file(tmp)):
+            # La franja de equipo exige bandeja disponible: AR habilitada con link.
+            status, _ = self._request(
+                "PUT",
+                "/api/monitor/config",
+                {"bandejas": [{"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]},
+            )
+            self.assertEqual(status, 200)
             status, _ = self._request("PUT", "/api/monitor/equipo", {"equipo": equipo})
             self.assertEqual(status, 200)
             saved = json.loads(self._state_file(tmp).read_text(encoding="utf-8"))
@@ -742,6 +772,13 @@ class UiServerMonitorTests(unittest.TestCase):
                 "PUT",
                 "/api/monitor/equipo",
                 {"equipo": [{"nombre": "Ana", "franjas": [{"start": "18:00", "end": "09:00"}]}]},
+            )
+            self.assertEqual(status, 400)
+            # Franja en bandeja no configurada/disponible -> 400.
+            status, _ = self._request(
+                "PUT",
+                "/api/monitor/equipo",
+                {"equipo": [{"nombre": "Ana", "franjas": [{"start": "09:00", "end": "12:00", "bandejas": ["MX"]}]}]},
             )
             self.assertEqual(status, 400)
             # Ninguna inválida pisó el equipo válido.

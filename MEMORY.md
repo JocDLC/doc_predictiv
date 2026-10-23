@@ -549,3 +549,31 @@ Cambios:
   autosave persistió `[]` — se restauraron por API (08-10 y 14-15:59,
   bandejas [] = todas). `saveSchedule` solo corre por clic: quitar chip,
   "Guardar horario" o "+ franja" — no hay disparo automático.
+
+## Disponibilidad de bandejas para franjas (2026-10-23, tercera parte)
+
+Pedido: las opciones de bandeja al armar una franja mostraban solo las
+habilitadas — el usuario quiere ver las 3 siempre, pero que solo se
+pueda cargar franja sobre bandejas **disponibles** = habilitada + link
+de reporte. "Guardar bandejas" decide disponibilidad y el panel se
+refresca solo (loadMonitorState re-renderiza tras el save; la
+validación ya exigía URL para habilitar).
+
+- UI: `monitorBandejaOptions()` devuelve `{code, available}` de todas
+  las bandejas; `bandejaCheckbox()` pinta las 3 opciones y deja
+  `disabled`/apagadas (`.bandeja-off`) las no disponibles, con tooltip
+  "falta el link o está deshabilitada". `monitorBandejaCodes()` queda
+  como el subconjunto disponible.
+- `scheduleError` y `equipoError` rechazan franjas que apunten a
+  bandejas no disponibles (además del checkbox deshabilitado: cubre el
+  caso de datos viejos o editados a mano).
+- Backend: `_bandeja_codes_disponibles(state)` (enabled && url) y
+  `_franjas_con_bandeja_no_disponible` — `PUT /api/monitor/schedule` y
+  `/api/monitor/equipo` devuelven 400 si una franja apunta a bandeja no
+  disponible. El PUT de bandejas (`/api/monitor/config`) NO revalida
+  franjas existentes: deshabilitar una bandeja con franjas cargadas es
+  legal — quedan como cobertura muerta, no bloquean el guardado.
+- Franja propia `bandejas: []` (todas) nunca falla el chequeo: cubre
+  las que haya disponibles en cada momento.
+- En vivo: opciones AR:on, CO:off, MX:on (CO sin link); PUT franja o
+  equipo con CO -> 400 "Franjas apuntan a bandejas no disponibles: CO."

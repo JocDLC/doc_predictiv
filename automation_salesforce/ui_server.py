@@ -463,13 +463,33 @@ def _turno_propio_activo(state: dict, bandejas: set | None = None) -> bool:
     return within_schedule(schedule, bandeja=bandejas)
 
 
+def _bandeja_codes_disponibles(state: dict) -> set:
+    """Bandejas utilizables por una franja: habilitadas Y con link de
+    reporte. La validación de bandejas ya exige link para habilitar, pero
+    el chequeo de URL blinda estados viejos o escritos a mano."""
+    return {
+        b.get("code")
+        for b in state.get("bandejas") or []
+        if b.get("enabled") and b.get("url")
+    }
+
+
+def _franjas_con_bandeja_no_disponible(state: dict, franjas: list) -> set:
+    """Códigos de bandeja que las franjas pretenden cubrir pero que no
+    están disponibles: una franja solo puede cargarse sobre bandejas
+    habilitadas con link."""
+    return {
+        code for slot in franjas for code in slot.get("bandejas") or []
+    } - _bandeja_codes_disponibles(state)
+
+
 def _any_turno_activo(state: dict) -> bool:
     """Alguna franja permite tomar leads: la del monitor (a nombre del
     usuario logueado) o la de una persona del equipo cuya franja cubra
     alguna bandeja habilitada. Una franja sin cobertura sobre las bandejas
     encendidas —propia o de equipo— no habilita la toma en ellas.
     """
-    enabled_codes = {b.get("code") for b in state.get("bandejas") or [] if b.get("enabled")}
+    enabled_codes = _bandeja_codes_disponibles(state)
     if _turno_propio_activo(state, enabled_codes or None):
         return True
     if not enabled_codes:
@@ -1006,9 +1026,23 @@ def make_handler(token: str, config: dict | None = None):
                     if route == "/api/monitor/config":
                         state["bandejas"] = validate_bandejas(payload.get("bandejas"))
                     elif route == "/api/monitor/equipo":
-                        state["equipo"] = validate_equipo(payload.get("equipo"))
+                        equipo = validate_equipo(payload.get("equipo"))
+                        missing = _franjas_con_bandeja_no_disponible(
+                            state, [slot for member in equipo for slot in member["franjas"]]
+                        )
+                        if missing:
+                            raise ValueError(
+                                f"Franjas apuntan a bandejas no disponibles: {', '.join(sorted(missing))}."
+                            )
+                        state["equipo"] = equipo
                     else:
-                        state["schedule"] = validate_schedule(payload.get("schedule"))
+                        schedule = validate_schedule(payload.get("schedule"))
+                        missing = _franjas_con_bandeja_no_disponible(state, schedule)
+                        if missing:
+                            raise ValueError(
+                                f"Franjas apuntan a bandejas no disponibles: {', '.join(sorted(missing))}."
+                            )
+                        state["schedule"] = schedule
                 except ValueError as error:
                     self._send(400, {"error": str(error)})
                     return

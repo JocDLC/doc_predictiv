@@ -510,3 +510,42 @@ Reglas:
 - Migración hecha por API: `PUT /api/monitor/equipo` con `franjas: []`
   conservando los nombres (las franjas viejas no tenían bandeja
   asignable). El usuario recarga franjas desde la UI.
+
+## Franja propia también por bandeja (2026-10-23, segunda parte)
+
+Pedido: la opción de bandeja faltaba en "Horario del monitor" (la franja
+del usuario logueado) — solo existía en Equipo.
+
+Semántica distinta al equipo, por diseño:
+
+- Franja propia con `bandejas: []` o sin la clave = cubre TODAS las
+  bandejas. Es la compat: las franjas ya guardadas (sin bandeja) siguen
+  tomando todo — vaciar la cobertura habría apagado el monitor en
+  silencio. La UI muestra el chip `[todas]`.
+- Franja propia con bandejas = solo esas; un lead de otra bandeja cae al
+  equipo que la cubra o queda `detectado/sin_cobertura`. La prioridad
+  "franja propia gana" ahora es POR bandeja: AR propia no tapa al equipo
+  de MX.
+- Equipo sigue al revés: `bandejas: []` = no cubre nada (una persona sin
+  bandeja es configuración incompleta).
+
+Cambios:
+
+- `monitor_store`: `_validate_franjas(slots, nombre)` unifica el parseo
+  de franjas propias y de equipo (prefix de errores por nombre).
+  `validate_schedule` ahora normaliza `{start,end,bandejas}` y rechaza
+  solape solo en la misma bandeja (`_franjas_se_solapan`: `[]` propio =
+  todas = pisa todo). `within_schedule(slots, moment, bandeja)` acepta
+  código o iterable; `slot.get("bandejas")` vacío/ausente cubre todo.
+- `lead_monitor.run_bandeja_cycle`: `propio_activo` exige que la franja
+  vigente cubra `bandeja["code"]`.
+- `ui_server._turno_propio_activo(state, bandejas)`: mismo filtro;
+  `_any_turno_activo` pasa las bandejas habilitadas.
+- UI: checkboxes de bandejas habilitadas junto a los inputs desde/hasta
+  del horario propio (`sched-bandeja-cb` en `#schedBandejas`, render en
+  `renderSchedule`); sin tildar ninguna = todas. `scheduleError` valida
+  solape por bandeja igual que el backend.
+- Incidente: el usuario borró sus franjas propias probando la UI y el
+  autosave persistió `[]` — se restauraron por API (08-10 y 14-15:59,
+  bandejas [] = todas). `saveSchedule` solo corre por clic: quitar chip,
+  "Guardar horario" o "+ franja" — no hay disparo automático.

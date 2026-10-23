@@ -895,6 +895,39 @@ class RunBandejaCycleTests(unittest.TestCase):
         self.assertEqual(events[0]["status"], "detectado")
         self.assertEqual(events[0]["entry"]["motivo"], "sin_cobertura")
 
+    def test_franja_propia_por_bandeja_deja_pasar_al_equipo(self):
+        """La franja propia vigente es de AR pero el ciclo corre sobre MX:
+        el lead NO es del usuario logueado — se reasigna a quien cubre MX."""
+        state = self._state()
+        state["schedule"] = [{"start": "00:00", "end": "23:59", "bandejas": ["AR"]}]
+        equipo = [{"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["MX"]}]}]
+        state["equipo"] = equipo
+        with (
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, [lead()])),
+            patch("lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Ana", "x/reasignado", "")) as take,
+        ):
+            run_bandeja_cycle(object(), CONFIG, bandeja("MX"), state, 5)
+        take.assert_called_once()
+        self.assertEqual(take.call_args.kwargs["equipo"], equipo)
+
+    def test_franja_propia_por_bandeja_sin_cobertura(self):
+        """Franja propia de AR, bandeja MX y nadie del equipo la cubre:
+        el lead queda detectado 'sin cobertura', no lo toma el usuario."""
+        state = self._state()
+        state["schedule"] = [{"start": "00:00", "end": "23:59", "bandejas": ["AR"]}]
+        with (
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, [lead()])),
+            patch("lead_monitor.take_lead") as take,
+        ):
+            events = run_bandeja_cycle(object(), CONFIG, bandeja("MX"), state, 5)
+        take.assert_not_called()
+        self.assertEqual(events[0]["status"], "detectado")
+        self.assertEqual(events[0]["entry"]["motivo"], "sin_cobertura")
+
     def test_franja_multi_bandeja_cubre_ambas(self):
         """Una franja con varias bandejas habilita la toma en cualquiera."""
         state = self._state()

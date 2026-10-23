@@ -452,21 +452,26 @@ def _drop_monitor_driver() -> None:
         release_driver(driver, close_tab=False)
 
 
-def _turno_propio_activo(state: dict) -> bool:
+def _turno_propio_activo(state: dict, bandejas: set | None = None) -> bool:
     """La franja del monitor (del usuario logueado) cubre ahora. Vacía NO
-    cuenta: los leads solo se toman dentro de franjas configuradas."""
-    return bool(state.get("schedule")) and within_schedule(state["schedule"])
+    cuenta: los leads solo se toman dentro de franjas configuradas.
+    ``bandejas`` exige además que la franja cubra alguna de esas bandejas
+    — una franja sin bandejas tildadas vale para todas."""
+    schedule = state.get("schedule")
+    if not schedule:
+        return False
+    return within_schedule(schedule, bandeja=bandejas)
 
 
 def _any_turno_activo(state: dict) -> bool:
     """Alguna franja permite tomar leads: la del monitor (a nombre del
     usuario logueado) o la de una persona del equipo cuya franja cubra
-    alguna bandeja habilitada. Una franja de equipo sin bandejas —o de una
-    bandeja apagada— no habilita la toma: el lead quedaría "sin cobertura".
+    alguna bandeja habilitada. Una franja sin cobertura sobre las bandejas
+    encendidas —propia o de equipo— no habilita la toma en ellas.
     """
-    if _turno_propio_activo(state):
-        return True
     enabled_codes = {b.get("code") for b in state.get("bandejas") or [] if b.get("enabled")}
+    if _turno_propio_activo(state, enabled_codes or None):
+        return True
     if not enabled_codes:
         # Sin bandejas encendidas el pause sin_bandejas decide después.
         return _encargada_activa(state.get("equipo")) is not None

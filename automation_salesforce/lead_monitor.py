@@ -1180,15 +1180,19 @@ def run_bandeja_cycle(
     solo_listar = bool(state.get("solo_listar"))
     enviar_whatsapp = bool(state.get("enviar_whatsapp"))
     # La franja del monitor (del usuario logueado) tiene prioridad sobre el
-    # equipo: dentro de su turno los leads son suyos y no se delegan.
+    # equipo, pero solo para las bandejas que cubre: una franja propia
+    # vigente de AR no impide que el equipo reciba los leads de MX.
+    # Franja propia sin bandejas tildadas = cubre todas, como siempre.
     equipo = state.get("equipo")
-    propio_activo = bool(state.get("schedule")) and within_schedule(state["schedule"])
+    propio_activo = bool(state.get("schedule")) and within_schedule(
+        state["schedule"], bandeja=bandeja["code"]
+    )
     if propio_activo:
         equipo = None
-    # Cobertura por bandeja: sin franja propia, solo la persona del equipo
-    # cuya franja activa cubre ESTA bandeja habilita la toma. Un lead MX
-    # con franja AR vigente queda detectado "sin cobertura" — nunca se le
-    # reasigna a alguien de otra bandeja.
+    # Cobertura por bandeja: sin franja propia que cubra ESTA bandeja, solo
+    # la persona del equipo cuya franja activa la cubre habilita la toma.
+    # Un lead MX con franja AR vigente queda detectado "sin cobertura" —
+    # nunca se le reasigna a alguien de otra bandeja.
     covered = propio_activo or _encargada_activa(equipo, bandeja=bandeja["code"]) is not None
     for lead in leads:
         if not lead.lead_id or not should_process(state, lead.lead_id):

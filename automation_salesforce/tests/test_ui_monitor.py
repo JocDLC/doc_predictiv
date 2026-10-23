@@ -163,6 +163,23 @@ check('franjas solapadas rechazadas',
   scheduleError([{ start: '08:00', end: '12:00' }, { start: '11:00', end: '14:00' }]) !== '');
 check('franjas contiguas aceptadas',
   scheduleError([{ start: '08:00', end: '12:00' }, { start: '12:00', end: '14:00' }]) === '');
+// Solape por bandeja: distintas bandejas sí pueden cruzarse, la misma no;
+// una franja sin bandejas (todas) pisa cualquier solape.
+check('solape en misma bandeja rechazado',
+  scheduleError([
+    { start: '10:00', end: '12:00', bandejas: ['AR'] },
+    { start: '11:00', end: '13:00', bandejas: ['AR'] },
+  ]) !== '');
+check('solape en bandejas distintas aceptado',
+  scheduleError([
+    { start: '10:00', end: '12:00', bandejas: ['AR'] },
+    { start: '11:00', end: '13:00', bandejas: ['CO'] },
+  ]) === '');
+check('franja todas pisa franja acotada',
+  scheduleError([
+    { start: '08:00', end: '13:00', bandejas: [] },
+    { start: '12:00', end: '18:00', bandejas: ['AR'] },
+  ]) !== '');
 
 // 3) La tabla renderiza los leads del estado con sus columnas.
 monitorState = {

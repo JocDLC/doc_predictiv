@@ -100,7 +100,54 @@ class ScheduleValidationTests(unittest.TestCase):
 
     def test_valid_slots_sorted(self):
         result = validate_schedule([{"start": "14:00", "end": "18:00"}, {"start": "08:00", "end": "12:00"}])
-        self.assertEqual(result, [{"start": "08:00", "end": "12:00"}, {"start": "14:00", "end": "18:00"}])
+        self.assertEqual(
+            result,
+            [
+                {"start": "08:00", "end": "12:00", "bandejas": []},
+                {"start": "14:00", "end": "18:00", "bandejas": []},
+            ],
+        )
+
+    def test_slots_keep_bandejas(self):
+        result = validate_schedule(
+            [{"start": "08:00", "end": "12:00", "bandejas": ["AR", "MX", "AR"]}]
+        )
+        self.assertEqual(result, [{"start": "08:00", "end": "12:00", "bandejas": ["AR", "MX"]}])
+
+    def test_overlap_same_bandeja_rejected(self):
+        with self.assertRaises(ValueError):
+            validate_schedule(
+                [
+                    {"start": "08:00", "end": "13:00", "bandejas": ["AR"]},
+                    {"start": "12:00", "end": "18:00", "bandejas": ["AR"]},
+                ]
+            )
+
+    def test_overlap_distinct_bandejas_allowed(self):
+        result = validate_schedule(
+            [
+                {"start": "10:00", "end": "12:00", "bandejas": ["AR"]},
+                {"start": "11:00", "end": "13:00", "bandejas": ["CO"]},
+            ]
+        )
+        self.assertEqual(len(result), 2)
+
+    def test_overlap_with_todas_rejected(self):
+        # Una franja sin bandejas cubre todas: pisa cualquier franja que
+        # la solape, tenga o no bandejas propias.
+        with self.assertRaises(ValueError):
+            validate_schedule(
+                [
+                    {"start": "08:00", "end": "13:00"},
+                    {"start": "12:00", "end": "18:00", "bandejas": ["AR"]},
+                ]
+            )
+
+    def test_rejects_bad_bandeja_payload(self):
+        with self.assertRaises(ValueError):
+            validate_schedule([{"start": "08:00", "end": "12:00", "bandejas": "AR"}])
+        with self.assertRaises(ValueError):
+            validate_schedule([{"start": "08:00", "end": "12:00", "bandejas": [""]}])
 
     def test_rejects_bad_format(self):
         for bad in ("8:00", "24:00", "aa:bb", "12:60", ""):
@@ -135,6 +182,25 @@ class WithinScheduleTests(unittest.TestCase):
         slots = [{"start": "08:00", "end": "12:00"}, {"start": "14:00", "end": "18:00"}]
         self.assertTrue(within_schedule(slots, datetime(2026, 10, 8, 15, 0)))
         self.assertFalse(within_schedule(slots, datetime(2026, 10, 8, 13, 0)))
+
+    def test_bandeja_filter(self):
+        slots = [{"start": "08:00", "end": "20:00", "bandejas": ["AR"]}]
+        moment = datetime(2026, 10, 8, 10, 0)
+        self.assertTrue(within_schedule(slots, moment, bandeja="AR"))
+        self.assertFalse(within_schedule(slots, moment, bandeja="MX"))
+        # Sin filtro sigue comportándose como antes.
+        self.assertTrue(within_schedule(slots, moment))
+
+    def test_bandeja_set_and_todas(self):
+        slots = [
+            {"start": "08:00", "end": "12:00", "bandejas": ["AR"]},
+            {"start": "14:00", "end": "18:00"},  # sin bandejas = todas
+        ]
+        # Franja con otra bandeja no cuenta; la "todas" sí.
+        self.assertFalse(within_schedule(slots, datetime(2026, 10, 8, 10, 0), bandeja="MX"))
+        self.assertTrue(within_schedule(slots, datetime(2026, 10, 8, 15, 0), bandeja="MX"))
+        # Conjunto de códigos: basta que una franja cubra alguno.
+        self.assertTrue(within_schedule(slots, datetime(2026, 10, 8, 10, 0), bandeja={"AR", "MX"}))
 
 
 class MonitorStateTests(unittest.TestCase):

@@ -128,68 +128,37 @@ def _parse_hhmm(value: object, label: str) -> int:
     return int(match.group(1)) * 60 + int(text[3:5])
 
 
-def validate_schedule(slots: object) -> list[dict[str, str]]:
-    """Valida franjas ``HH:MM–HH:MM`` ordenadas y sin solapes."""
-    if slots is None:
-        return []
-    if not isinstance(slots, list):
-        raise ValueError("Se esperaba una lista de franjas horarias.")
-    normalized = []
-    for index, slot in enumerate(slots):
-        if not isinstance(slot, dict):
-            raise ValueError(f"La franja {index} debe ser un objeto con 'start' y 'end'.")
-        start_minutes = _parse_hhmm(slot.get("start"), f"franja {index} start")
-        end_minutes = _parse_hhmm(slot.get("end"), f"franja {index} end")
-        if start_minutes >= end_minutes:
-            raise ValueError(f"La franja {index} empieza después de que termina.")
-        normalized.append(
-            {
-                "start": slot["start"].strip(),
-                "end": slot["end"].strip(),
-                "_start_minutes": start_minutes,
-                "_end_minutes": end_minutes,
-            }
-        )
-    normalized.sort(key=lambda item: item["_start_minutes"])
-    for previous, current in zip(normalized, normalized[1:]):
-        if current["_start_minutes"] < previous["_end_minutes"]:
-            raise ValueError(
-                f"Las franjas {previous['start']}–{previous['end']} y {current['start']}–{current['end']} se solapan."
-            )
-    return [{"start": item["start"], "end": item["end"]} for item in normalized]
+def _validate_franjas(slots: object, nombre: str) -> list[dict]:
+    """Franjas ``HH:MM–HH:MM`` más ``bandejas`` (códigos, opcionales).
 
-
-def _validate_equipo_franjas(slots: object, nombre: str) -> list[dict]:
-    """Franjas de una persona: ``HH:MM–HH:MM`` más ``bandejas`` (códigos).
-
-    A diferencia de la franja propia, dos franjas de equipo SÍ pueden
-    solaparse en el tiempo si cubren bandejas distintas (una persona
-    atiende AR 10–12 y CO 11–13). El solape prohibido es dentro de la
-    misma bandeja — se valida en ``_check_bandeja_overlaps``.
+    ``nombre`` prefija los errores ("Micaela: ..."); vacío para el
+    horario propio ("La franja 0 ..."). No chequea solapes — eso lo
+    decide cada caller con su propia regla.
     ``_start_minutes``/``_end_minutes`` se devuelven para ese chequeo y
     luego se descartan.
     """
+    prefix = f"{nombre}: " if nombre else ""
     if slots is None:
         return []
     if not isinstance(slots, list):
-        raise ValueError(f"{nombre}: se esperaba una lista de franjas horarias.")
+        raise ValueError(f"{prefix}Se esperaba una lista de franjas horarias.")
     normalized = []
     for index, slot in enumerate(slots):
         if not isinstance(slot, dict):
-            raise ValueError(f"{nombre}: la franja {index} debe ser un objeto con 'start' y 'end'.")
-        start_minutes = _parse_hhmm(slot.get("start"), f"{nombre} franja {index} start")
-        end_minutes = _parse_hhmm(slot.get("end"), f"{nombre} franja {index} end")
+            raise ValueError(f"{prefix}La franja {index} debe ser un objeto con 'start' y 'end'.")
+        start_minutes = _parse_hhmm(slot.get("start"), f"{prefix}franja {index} start")
+        end_minutes = _parse_hhmm(slot.get("end"), f"{prefix}franja {index} end")
         if start_minutes >= end_minutes:
-            raise ValueError(f"{nombre}: la franja {index} empieza después de que termina.")
+            raise ValueError(f"{prefix}La franja {index} empieza después de que termina.")
         raw_codes = slot.get("bandejas")
         bandejas = []
         if raw_codes is not None:
             if not isinstance(raw_codes, list):
-                raise ValueError(f"{nombre}: 'bandejas' de la franja {index} debe ser una lista de códigos.")
+                raise ValueError(f"{prefix}'bandejas' de la franja {index} debe ser una lista de códigos.")
             for raw_code in raw_codes:
                 code = str(raw_code or "").strip()
                 if not code:
-                    raise ValueError(f"{nombre}: código de bandeja vacío en la franja {index}.")
+                    raise ValueError(f"{prefix}Código de bandeja vacío en la franja {index}.")
                 if code not in bandejas:
                     bandejas.append(code)
         normalized.append(
@@ -203,6 +172,51 @@ def _validate_equipo_franjas(slots: object, nombre: str) -> list[dict]:
         )
     normalized.sort(key=lambda item: item["_start_minutes"])
     return normalized
+
+
+def _franjas_se_solapan(first: dict, second: dict) -> bool:
+    """Solape prohibido: mismo rango horario y MISMA bandeja. Una franja
+    sin bandejas ('todas' en horario propio / 'ninguna' en equipo) pisa
+    todo lo que la solape."""
+    if second["_start_minutes"] >= first["_end_minutes"]:
+        return False
+    return (
+        not first["bandejas"]
+        or not second["bandejas"]
+        or bool(set(first["bandejas"]) & set(second["bandejas"]))
+    )
+
+
+def validate_schedule(slots: object) -> list[dict]:
+    """Franjas propias ``HH:MM–HH:MM`` ordenadas, con ``bandejas``
+    opcionales. ``bandejas`` vacía o ausente = la franja cubre TODAS las
+    bandejas — las franjas viejas sin el campo siguen tomando todo.
+    Dos franjas SÍ pueden solaparse si cubren bandejas distintas
+    (AR 10–12 + CO 11–13); el solape prohibido es dentro de la misma
+    bandeja — o con una franja "todas", que las cubre todas."""
+    normalized = _validate_franjas(slots, "")
+    for index, current in enumerate(normalized):
+        for previous in normalized[:index]:
+            if _franjas_se_solapan(previous, current):
+                raise ValueError(
+                    f"Las franjas {previous['start']}–{previous['end']} y "
+                    f"{current['start']}–{current['end']} se solapan en la misma bandeja."
+                )
+    return [
+        {"start": item["start"], "end": item["end"], "bandejas": item["bandejas"]}
+        for item in normalized
+    ]
+
+
+def _validate_equipo_franjas(slots: object, nombre: str) -> list[dict]:
+    """Franjas de una persona del equipo: misma forma que las propias.
+
+    Dos franjas de equipo SÍ pueden solaparse en el tiempo si cubren
+    bandejas distintas (una persona atiende AR 10–12 y CO 11–13). El
+    solape prohibido es dentro de la misma bandeja — se valida en
+    ``_check_bandeja_overlaps``.
+    """
+    return _validate_franjas(slots, nombre)
 
 
 def _check_bandeja_overlaps(validated: list[dict]) -> None:
@@ -265,13 +279,29 @@ def validate_equipo(members: object) -> list[dict]:
     ]
 
 
-def within_schedule(slots: list[dict[str, str]], moment: datetime | None = None) -> bool:
-    """Lista vacía = siempre dentro de horario; con franjas, exige estar en una."""
+def within_schedule(
+    slots: list[dict[str, str]],
+    moment: datetime | None = None,
+    bandeja: str | object | None = None,
+) -> bool:
+    """Lista vacía = siempre dentro de horario; con franjas, exige estar en una.
+
+    ``bandeja`` (un código o un iterable de códigos) exige además que la
+    franja vigente la cubra: una franja sin ``bandejas`` vale para todas.
+    """
     if not slots:
         return True
+    wanted = None
+    if bandeja is not None:
+        wanted = {bandeja} if isinstance(bandeja, str) else set(bandeja)
     current = moment or datetime.now().astimezone()
     now_minutes = current.hour * 60 + current.minute
-    return any(_parse_hhmm(slot["start"], "start") <= now_minutes < _parse_hhmm(slot["end"], "end") for slot in slots)
+    for slot in slots:
+        if wanted is not None and slot.get("bandejas") and not wanted & set(slot["bandejas"]):
+            continue
+        if _parse_hhmm(slot["start"], "start") <= now_minutes < _parse_hhmm(slot["end"], "end"):
+            return True
+    return False
 
 
 def default_state() -> dict:

@@ -450,10 +450,11 @@
         </div>
         <div class="prepare-card">
           <h3>Horario del monitor — leads a tu nombre</h3>
-          <div class="hint">Franjas en formato hh:mm: dentro de ellas el monitor toma los leads <strong>a nombre del usuario logueado</strong> en Salesforce. Fuera de toda franja —propia o del equipo— <strong>no se toma nada</strong>: el lead espera en la cola al pr&oacute;ximo turno. Las franjas no pueden solaparse. El bot&oacute;n <strong>Revisar ahora</strong> funciona siempre, pero sin franja vigente corre en <strong>modo prueba</strong>: lista los leads como <em>detectado</em> sin tomarlos.</div>
+          <div class="hint">Franjas en formato hh:mm: dentro de ellas el monitor toma los leads <strong>a nombre del usuario logueado</strong> en Salesforce. <strong>Cada franja puede limitarse a sus bandejas</strong> (AR/CO/MX): un lead de otra bandeja cae al equipo o queda <em>detectado sin cobertura</em>; sin tildar ninguna, la franja cubre <strong>todas</strong>. Fuera de toda franja —propia o del equipo— <strong>no se toma nada</strong>: el lead espera en la cola al pr&oacute;ximo turno. Dos franjas pueden solaparse solo si cubren bandejas distintas. El bot&oacute;n <strong>Revisar ahora</strong> funciona siempre, pero sin franja vigente corre en <strong>modo prueba</strong>: lista los leads como <em>detectado</em> sin tomarlos.</div>
           <div id="monitorSchedule"></div>
           <div class="sched-add">
             <input type="time" id="schedStart" value="08:00"> &ndash; <input type="time" id="schedEnd" value="20:00">
+            <span id="schedBandejas"></span>
             <button class="btn small" id="schedAdd">Agregar franja</button>
             <button class="btn" id="monitorSaveSchedule">Guardar horario</button>
             <span class="hint" id="scheduleMsg"></span>
@@ -2013,6 +2014,21 @@ async function saveBandejas() {
 function renderSchedule() {
   const container = $("monitorSchedule");
   container.innerHTML = "";
+  // Checkboxes de bandeja de la franja a agregar: los códigos salen de
+  // las bandejas habilitadas — se redibujan acá para reflejar cambios.
+  const box = $("schedBandejas");
+  box.innerHTML = "";
+  for (const code of monitorBandejaCodes()) {
+    const label = document.createElement("label");
+    label.className = "hint equipo-bandeja";
+    label.title = "La franja cubre esta bandeja — sin tildar ninguna, cubre todas";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "sched-bandeja-cb";
+    cb.value = code;
+    label.append(cb, document.createTextNode(code));
+    box.appendChild(label);
+  }
   if (!monitorDraftSchedule.length) {
     const hint = document.createElement("span");
     hint.className = "hint";
@@ -2023,7 +2039,9 @@ function renderSchedule() {
   monitorDraftSchedule.forEach((slot, index) => {
     const chip = document.createElement("span");
     chip.className = "sched-chip";
-    chip.textContent = `${slot.start} – ${slot.end} `;
+    const codes = (slot.bandejas || []).join(",");
+    chip.textContent = `${slot.start} – ${slot.end} [${codes || "todas"}] `;
+    if (!codes) chip.title = "Sin bandeja tildada = cubre todas las bandejas.";
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "×";
@@ -2047,11 +2065,22 @@ function scheduleError(slots) {
     }
     const [start, end] = [toMin(slot.start), toMin(slot.end)];
     if (start >= end) return `La franja ${slot.start}–${slot.end} empieza después de terminar.`;
-    parsed.push([start, end]);
+    parsed.push([start, end, slot]);
   }
   parsed.sort((a, b) => a[0] - b[0]);
+  // Solape prohibido solo dentro de la misma bandeja: franjas de bandejas
+  // distintas pueden cruzarse (AR 10–12 + CO 11–13). Una franja sin
+  // bandejas tildadas cubre todas — pisa cualquier otra que la solape.
   for (let i = 1; i < parsed.length; i++) {
-    if (parsed[i][0] < parsed[i - 1][1]) return "Las franjas no pueden solaparse.";
+    const [curStart, , cur] = parsed[i];
+    for (let j = 0; j < i; j++) {
+      const [, prevEnd, prev] = parsed[j];
+      if (curStart >= prevEnd) continue;
+      const shared = (prev.bandejas || []).filter(code => (cur.bandejas || []).includes(code));
+      if (!(prev.bandejas || []).length || !(cur.bandejas || []).length || shared.length) {
+        return `Las franjas se solapan en la misma bandeja${shared.length ? ` (${shared.join(", ")})` : ""}.`;
+      }
+    }
   }
   return "";
 }
@@ -2906,7 +2935,8 @@ $("schedAdd").addEventListener("click", () => {
   const end = $("schedEnd").value;
   if (!start || !end) return;
   scheduleDirty = true;
-  monitorDraftSchedule.push({ start, end });
+  const bandejas = [...document.querySelectorAll("#schedBandejas .sched-bandeja-cb:checked")].map(cb => cb.value);
+  monitorDraftSchedule.push({ start, end, bandejas });
   $("scheduleMsg").textContent = scheduleError(monitorDraftSchedule);
   renderSchedule();
   // Guardado automático: la franja persiste en el servidor al instante,

@@ -708,7 +708,9 @@ class UiServerMonitorTests(unittest.TestCase):
             )
             self.assertEqual(status, 200)
             saved = json.loads(self._state_file(tmp).read_text(encoding="utf-8"))
-            self.assertEqual(saved["schedule"], [{"start": "08:00", "end": "20:00"}])
+            self.assertEqual(
+                saved["schedule"], [{"start": "08:00", "end": "20:00", "bandejas": []}]
+            )
 
             status, payload = self._request(
                 "PUT",
@@ -809,6 +811,22 @@ class UiServerMonitorTests(unittest.TestCase):
                 {"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"},
             ]
         )
+        self.assertTrue(ui_server._any_turno_activo(state))
+
+    def test_any_turno_activo_franja_propia_por_bandeja(self):
+        """La franja propia también se filtra por bandeja: turno propio de
+        AR con solo MX encendida no habilita el ciclo."""
+        import ui_server
+        from monitor_store import default_state, validate_bandejas
+
+        state = default_state()
+        state["schedule"] = [{"start": "00:00", "end": "23:59", "bandejas": ["AR"]}]
+        state["bandejas"] = validate_bandejas(
+            [{"code": "MX", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]
+        )
+        self.assertFalse(ui_server._any_turno_activo(state))
+        # Franja propia sin bandejas = todas: habilita cualquier bandeja.
+        state["schedule"] = [{"start": "00:00", "end": "23:59", "bandejas": []}]
         self.assertTrue(ui_server._any_turno_activo(state))
 
     def test_cycle_merge_preserves_user_changes_made_mid_cycle(self):
@@ -947,7 +965,7 @@ class UiServerMonitorTests(unittest.TestCase):
                     }
                 ]
             )
-            state["schedule"] = [{"start": "08:00", "end": "20:00"}]
+            state["schedule"] = [{"start": "08:00", "end": "20:00", "bandejas": []}]
             record_result(state, "00Q000000000001AAA", "AR", STATUS_DETECTADO)
             save_state(self._state_file(tmp), state)
 

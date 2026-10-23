@@ -783,6 +783,9 @@ class RunBandejaCycleTests(unittest.TestCase):
     def _state(self):
         state = default_state()
         state["bandejas"] = validate_bandejas([bandeja()])
+        # En producción el ciclo solo corre con turno vigente: la franja
+        # propia de todo el día reproduce esa cobertura en los tests.
+        state["schedule"] = [{"start": "00:00", "end": "23:59"}]
         return state
 
     def test_takes_visible_new_leads(self):
@@ -859,7 +862,7 @@ class RunBandejaCycleTests(unittest.TestCase):
         toma para que el lead se reasigne a la persona en turno."""
         state = self._state()
         state["schedule"] = []
-        equipo = [{"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59"}]}]
+        equipo = [{"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR"]}]}]
         state["equipo"] = equipo
         with (
             patch("lead_monitor.open_report"),
@@ -870,6 +873,43 @@ class RunBandejaCycleTests(unittest.TestCase):
             run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         take.assert_called_once()
         self.assertEqual(take.call_args.kwargs["equipo"], equipo)
+
+    def test_bandeja_sin_cobertura_no_toma_el_lead(self):
+        """La franja de equipo vigente es de OTRA bandeja (AR activa, lead
+        MX): el lead queda detectado "sin cobertura" — nunca se toma ni se
+        reasigna a quien no la cubre."""
+        state = self._state()
+        state["schedule"] = []
+        state["equipo"] = [
+            {"nombre": "Andres Antelo", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR"]}]}
+        ]
+        mx_bandeja = bandeja("MX")
+        with (
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, [lead()])),
+            patch("lead_monitor.take_lead") as take,
+        ):
+            events = run_bandeja_cycle(object(), CONFIG, mx_bandeja, state, 5)
+        take.assert_not_called()
+        self.assertEqual(events[0]["status"], "detectado")
+        self.assertEqual(events[0]["entry"]["motivo"], "sin_cobertura")
+
+    def test_franja_multi_bandeja_cubre_ambas(self):
+        """Una franja con varias bandejas habilita la toma en cualquiera."""
+        state = self._state()
+        state["schedule"] = []
+        state["equipo"] = [
+            {"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR", "MX"]}]}
+        ]
+        with (
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, [lead()])),
+            patch("lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Ana", "x/reasignado", "")) as take,
+        ):
+            run_bandeja_cycle(object(), CONFIG, bandeja("MX"), state, 5)
+        take.assert_called_once()
 
     def test_session_lost_event(self):
         state = self._state()
@@ -1008,6 +1048,26 @@ class ReassignOwnerTests(unittest.TestCase):
         self.assertIsNone(_encargada_activa(equipo, datetime(2026, 10, 15, 20, 0)))
         self.assertIsNone(_encargada_activa([]))
         self.assertIsNone(_encargada_activa([{"nombre": "Ana", "franjas": []}]))
+
+    def test_encargada_activa_filtra_por_bandeja(self):
+        """La encargada solo vale para las bandejas que cubre su franja:
+        franja AR no recibe leads MX (el bug de la reasignación cruzada)."""
+        from datetime import datetime
+
+        from lead_monitor import _encargada_activa
+
+        equipo = [
+            {"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR"]}]},
+            {"nombre": "Beto", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR", "MX"]}]},
+            {"nombre": "Ceci", "franjas": [{"start": "00:00", "end": "23:59"}]},
+        ]
+        momento = datetime(2026, 10, 15, 10, 0)
+        self.assertEqual(_encargada_activa(equipo, momento, bandeja="AR")["nombre"], "Ana")
+        # MX salta a Beto: Ana no cubre MX y la franja de Ceci no tiene bandeja.
+        self.assertEqual(_encargada_activa(equipo, momento, bandeja="MX")["nombre"], "Beto")
+        self.assertIsNone(_encargada_activa(equipo, momento, bandeja="CO"))
+        # Set de bandejas = "cualquiera de estas" (gate del ciclo).
+        self.assertIsNotNone(_encargada_activa(equipo, momento, bandeja={"MX", "CO"}))
 
     def test_encargada_para_lead_salta_al_propio_usuario(self):
         from lead_monitor import _encargada_para_lead

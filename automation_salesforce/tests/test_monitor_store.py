@@ -22,6 +22,7 @@ from monitor_store import (
     touch_cycle,
     validate_bandeja,
     validate_bandejas,
+    validate_equipo,
     validate_schedule,
     within_schedule,
 )
@@ -275,6 +276,69 @@ class ResultTrackingTests(unittest.TestCase):
             save_state(Path(tmp) / "s.json", state)
             self.assertTrue(load_state(Path(tmp) / "s.json")["solo_listar"])
         self.assertFalse(default_state()["solo_listar"])
+
+
+class ValidateEquipoTests(unittest.TestCase):
+    """Franjas del equipo con bandejas: solape solo prohibido en la misma
+    bandeja; bandejas distintas pueden cruzarse en el tiempo."""
+
+    def test_franjas_conservan_bandejas(self):
+        equipo = validate_equipo(
+            [
+                {
+                    "nombre": "Roger",
+                    "franjas": [
+                        {"start": "10:00", "end": "12:00", "bandejas": ["AR"]},
+                        {"start": "11:00", "end": "13:00", "bandejas": ["CO"]},
+                    ],
+                }
+            ]
+        )
+        self.assertEqual(equipo[0]["franjas"][0]["bandejas"], ["AR"])
+        self.assertEqual(equipo[0]["franjas"][1]["bandejas"], ["CO"])
+
+    def test_franja_sin_bandejas_es_tolerada_pero_inerte(self):
+        # Franjas viejas sin el campo: no cubren nada pero no rompen la carga.
+        equipo = validate_equipo([{"nombre": "Ana", "franjas": [{"start": "09:00", "end": "10:00"}]}])
+        self.assertEqual(equipo[0]["franjas"][0]["bandejas"], [])
+
+    def test_solape_misma_bandeja_rechazado(self):
+        with self.assertRaises(ValueError):
+            validate_equipo(
+                [
+                    {"nombre": "Ana", "franjas": [{"start": "10:00", "end": "12:00", "bandejas": ["AR"]}]},
+                    {"nombre": "Beto", "franjas": [{"start": "11:00", "end": "13:00", "bandejas": ["AR"]}]},
+                ]
+            )
+
+    def test_solape_misma_bandeja_misma_persona_rechazado(self):
+        with self.assertRaises(ValueError):
+            validate_equipo(
+                [
+                    {
+                        "nombre": "Ana",
+                        "franjas": [
+                            {"start": "10:00", "end": "12:00", "bandejas": ["AR"]},
+                            {"start": "11:30", "end": "13:00", "bandejas": ["AR"]},
+                        ],
+                    }
+                ]
+            )
+
+    def test_solape_en_bandejas_distintas_es_legal(self):
+        equipo = validate_equipo(
+            [
+                {"nombre": "Roger", "franjas": [{"start": "10:00", "end": "12:00", "bandejas": ["AR"]}]},
+                {"nombre": "Ana", "franjas": [{"start": "11:00", "end": "13:00", "bandejas": ["MX"]}]},
+            ]
+        )
+        self.assertEqual(len(equipo), 2)
+
+    def test_franja_multi_bandeja_valida(self):
+        equipo = validate_equipo(
+            [{"nombre": "Ana", "franjas": [{"start": "09:00", "end": "13:00", "bandejas": ["AR", "MX"]}]}]
+        )
+        self.assertEqual(equipo[0]["franjas"][0]["bandejas"], ["AR", "MX"])
 
 
 class PrivacyTests(unittest.TestCase):

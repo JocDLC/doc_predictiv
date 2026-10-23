@@ -721,7 +721,7 @@ class UiServerMonitorTests(unittest.TestCase):
         equipo = [
             {
                 "nombre": "Micaela Caetano",
-                "franjas": [{"start": "09:00", "end": "12:00"}],
+                "franjas": [{"start": "09:00", "end": "12:00", "bandejas": ["AR"]}],
             }
         ]
         with TemporaryDirectory() as tmp, patch("ui_server.monitor_state_path", return_value=self._state_file(tmp)):
@@ -787,6 +787,29 @@ class UiServerMonitorTests(unittest.TestCase):
         self.assertEqual(status, 403)
         status, _ = self._request("PUT", "/api/ui-prefs", {"prefs": {"a": 1}}, token=None)
         self.assertEqual(status, 403)
+
+    def test_any_turno_activo_exige_cobertura_de_bandeja_habilitada(self):
+        """El gate del ciclo solo lo abre una franja de equipo que cubra una
+        bandeja habilitada: turno AR con solo MX encendida no habilita nada."""
+        import ui_server
+        from monitor_store import default_state, validate_bandejas
+
+        state = default_state()
+        state["schedule"] = []
+        state["equipo"] = [
+            {"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR"]}]}
+        ]
+        state["bandejas"] = validate_bandejas(
+            [{"code": "MX", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]
+        )
+        self.assertFalse(ui_server._any_turno_activo(state))
+        state["bandejas"] = validate_bandejas(
+            [
+                {"code": "MX", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"},
+                {"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"},
+            ]
+        )
+        self.assertTrue(ui_server._any_turno_activo(state))
 
     def test_cycle_merge_preserves_user_changes_made_mid_cycle(self):
         """El ciclo lee el estado al arrancar: al escribir no debe pisar el

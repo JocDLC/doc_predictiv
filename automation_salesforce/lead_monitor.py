@@ -732,16 +732,26 @@ def _reasignacion_mark(details: dict | None) -> str:
     return f"Asignado - {metodo}"
 
 
-def _encargada_activa(equipo: list[dict] | None, moment: datetime | None = None) -> dict | None:
-    """Primera persona cuya franja cubre la hora actual (misma regla que
-    ``within_schedule`` pero por persona). Sin franja propia, una persona
-    no recibe nada — las franjas definen el turno."""
+def _encargada_activa(
+    equipo: list[dict] | None,
+    moment: datetime | None = None,
+    bandeja: str | set[str] | None = None,
+) -> dict | None:
+    """Primera persona cuya franja cubre la hora actual — y la ``bandeja``
+    cuando se pide. Una franja sin ``bandejas`` no cubre nada; varias
+    bandejas (str o set) significan "cualquiera de estas".
+    """
     if not equipo:
         return None
+    wanted = None
+    if bandeja is not None:
+        wanted = {bandeja} if isinstance(bandeja, str) else set(bandeja)
     now = moment or datetime.now().astimezone()
     minutes = now.hour * 60 + now.minute
     for member in equipo:
         for slot in member.get("franjas") or []:
+            if wanted is not None and not (set(slot.get("bandejas") or []) & wanted):
+                continue
             try:
                 start = int(str(slot["start"])[:2]) * 60 + int(str(slot["start"])[3:5])
                 end = int(str(slot["end"])[:2]) * 60 + int(str(slot["end"])[3:5])
@@ -752,14 +762,15 @@ def _encargada_activa(equipo: list[dict] | None, moment: datetime | None = None)
     return None
 
 
-def _encargada_para_lead(equipo: list[dict] | None, owner: str) -> dict | None:
+def _encargada_para_lead(equipo: list[dict] | None, owner: str, bandeja: str | None = None) -> dict | None:
     """Encargada del lead si la franja activa NO es del usuario logueado.
 
     ``owner`` es el propietario post-pickup (siempre el usuario de la
     sesión): si coincide con el nombre de la encargada, la franja es del
-    propio usuario y el flujo sigue normal.
+    propio usuario y el flujo sigue normal. La ``bandeja`` restringe a la
+    persona que cubre ESA bandeja en su franja activa.
     """
-    member = _encargada_activa(equipo)
+    member = _encargada_activa(equipo, bandeja=bandeja)
     if not member:
         return None
     nombre = normalized_key(member.get("nombre") or "")
@@ -1073,7 +1084,7 @@ def take_lead(
             if got and wanted and not (wanted in got or got in wanted):
                 return STATUS_TOMADO_POR_OTRO, owner, "", ""
     new_owner = read_record_owner(driver) or owner
-    encargada = _encargada_para_lead(equipo, new_owner)
+    encargada = _encargada_para_lead(equipo, new_owner, bandeja=bandeja.get("code"))
     diagnostic = f"encargada: {encargada['nombre']}" if encargada else ""
     finalize, diag = finalize_pick_up(
         driver,
@@ -1171,8 +1182,14 @@ def run_bandeja_cycle(
     # La franja del monitor (del usuario logueado) tiene prioridad sobre el
     # equipo: dentro de su turno los leads son suyos y no se delegan.
     equipo = state.get("equipo")
-    if state.get("schedule") and within_schedule(state["schedule"]):
+    propio_activo = bool(state.get("schedule")) and within_schedule(state["schedule"])
+    if propio_activo:
         equipo = None
+    # Cobertura por bandeja: sin franja propia, solo la persona del equipo
+    # cuya franja activa cubre ESTA bandeja habilita la toma. Un lead MX
+    # con franja AR vigente queda detectado "sin cobertura" — nunca se le
+    # reasigna a alguien de otra bandeja.
+    covered = propio_activo or _encargada_activa(equipo, bandeja=bandeja["code"]) is not None
     for lead in leads:
         if not lead.lead_id or not should_process(state, lead.lead_id):
             continue
@@ -1184,10 +1201,16 @@ def run_bandeja_cycle(
         assigned_to = ""
         finalize = ""
         diagnostic = ""
+        motivo = ""
         if solo_listar:
             # Modo prueba: solo listar los QUALIF detectados; no abrir el
             # registro ni tocar Pick Up. El estado `detectado` es reprocesable.
             status = STATUS_DETECTADO
+        elif not covered:
+            # La bandeja no tiene turno vigente que la cubra: el lead se
+            # lista como detectado "sin cobertura" para reasignarlo a mano.
+            status = STATUS_DETECTADO
+            motivo = "sin_cobertura"
         else:
             try:
                 status, assigned_to, finalize, diagnostic = take_lead(
@@ -1210,6 +1233,8 @@ def run_bandeja_cycle(
             # en la relectura tras refresh.
             state["bot_owner"] = assigned_to
         extra = {}
+        if motivo:
+            extra["motivo"] = motivo
         if assigned_to:
             extra["asignado_a"] = assigned_to
         if finalize:

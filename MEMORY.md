@@ -470,3 +470,43 @@ columnas no se guarda al reabrir". Causas raíz encontradas:
    ciclo). Ojo: el toast de PowerShell puede llegar al centro de
    notificaciones (Win+N) sin banner si Windows lo suprime; el registro no
    muestra bloqueo global ni por app, verificado.
+
+## Franjas de equipo por bandeja (2026-10-23)
+
+Bug real reportado: "dejé la bandeja MX para Argentina y el monitor tomó
+leads de México y se los reasignó a Andres (AR)". Causa raíz:
+`_encargada_activa(equipo)` elegía persona **solo por horario** — la
+bandeja del lead no participaba de la decisión.
+
+Modelo nuevo: cada franja del equipo lleva `bandejas: ["AR","MX",...]`
+(lista de códigos de las bandejas habilitadas). Una persona puede cubrir
+varias bandejas con franjas distintas (Roger: AR 10-12 + CO 11-13) o la
+misma franja con varias bandejas (`["AR","MX"]`).
+
+Reglas:
+
+- `_encargada_activa(equipo, moment=None, bandeja=None)`: con `bandeja`
+  (str o set de códigos) filtra a quien tenga una franja vigente que la
+  incluya. Sin `bandeja` conserva el comportamiento viejo (compat con
+  llamadas posicionales existentes).
+- `run_bandeja_cycle`: si solo hay cobertura de equipo, el lead se toma y
+  reasigna **únicamente** si alguna franja vigente cubre la bandeja del
+  lead. Bandeja sin cobertura → `detectado` + `motivo: sin_cobertura`,
+  sin abrir el lead (la UI muestra "sin cobertura" en Resultado). Franja
+  propia vigente → toma cualquier bandeja, como antes.
+- `validate_equipo`: normaliza franjas a `{start, end, bandejas}` —
+  franja vieja sin `bandejas` queda `[]` = **no cubre nada** (decisión
+  del usuario: no asumir "todas"). Rechaza solape horario **en la misma
+  bandeja** (misma persona o entre personas); solapes en bandejas
+  distintas son legales.
+- `_any_turno_activo(state)`: una franja de equipo solo habilita el ciclo
+  si cubre alguna bandeja **habilitada**; franja sin bandejas no
+  habilita nada. Sin bandejas encendidas se delega al pause
+  `sin_bandejas`.
+- UI: checkboxes AR/CO/MX por franja (solo bandejas habilitadas) con
+  `equipo-bandeja-cb`, chips por franja muestran los códigos. Columna
+  "Contactar por" (antes "Contacto preferido") con SVG inline: logo
+  WhatsApp / auricular llamada / vacío.
+- Migración hecha por API: `PUT /api/monitor/equipo` con `franjas: []`
+  conservando los nombres (las franjas viejas no tenían bandeja
+  asignable). El usuario recarga franjas desde la UI.

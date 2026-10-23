@@ -460,8 +460,17 @@ def _turno_propio_activo(state: dict) -> bool:
 
 def _any_turno_activo(state: dict) -> bool:
     """Alguna franja permite tomar leads: la del monitor (a nombre del
-    usuario logueado) o la de una persona del equipo (reasignación)."""
-    return _turno_propio_activo(state) or _encargada_activa(state.get("equipo")) is not None
+    usuario logueado) o la de una persona del equipo cuya franja cubra
+    alguna bandeja habilitada. Una franja de equipo sin bandejas —o de una
+    bandeja apagada— no habilita la toma: el lead quedaría "sin cobertura".
+    """
+    if _turno_propio_activo(state):
+        return True
+    enabled_codes = {b.get("code") for b in state.get("bandejas") or [] if b.get("enabled")}
+    if not enabled_codes:
+        # Sin bandejas encendidas el pause sin_bandejas decide después.
+        return _encargada_activa(state.get("equipo")) is not None
+    return _encargada_activa(state.get("equipo"), bandeja=enabled_codes) is not None
 
 
 def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:

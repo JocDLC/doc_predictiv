@@ -159,14 +159,81 @@ def validate_schedule(slots: object) -> list[dict[str, str]]:
     return [{"start": item["start"], "end": item["end"]} for item in normalized]
 
 
+def _validate_equipo_franjas(slots: object, nombre: str) -> list[dict]:
+    """Franjas de una persona: ``HH:MM–HH:MM`` más ``bandejas`` (códigos).
+
+    A diferencia de la franja propia, dos franjas de equipo SÍ pueden
+    solaparse en el tiempo si cubren bandejas distintas (una persona
+    atiende AR 10–12 y CO 11–13). El solape prohibido es dentro de la
+    misma bandeja — se valida en ``_check_bandeja_overlaps``.
+    ``_start_minutes``/``_end_minutes`` se devuelven para ese chequeo y
+    luego se descartan.
+    """
+    if slots is None:
+        return []
+    if not isinstance(slots, list):
+        raise ValueError(f"{nombre}: se esperaba una lista de franjas horarias.")
+    normalized = []
+    for index, slot in enumerate(slots):
+        if not isinstance(slot, dict):
+            raise ValueError(f"{nombre}: la franja {index} debe ser un objeto con 'start' y 'end'.")
+        start_minutes = _parse_hhmm(slot.get("start"), f"{nombre} franja {index} start")
+        end_minutes = _parse_hhmm(slot.get("end"), f"{nombre} franja {index} end")
+        if start_minutes >= end_minutes:
+            raise ValueError(f"{nombre}: la franja {index} empieza después de que termina.")
+        raw_codes = slot.get("bandejas")
+        bandejas = []
+        if raw_codes is not None:
+            if not isinstance(raw_codes, list):
+                raise ValueError(f"{nombre}: 'bandejas' de la franja {index} debe ser una lista de códigos.")
+            for raw_code in raw_codes:
+                code = str(raw_code or "").strip()
+                if not code:
+                    raise ValueError(f"{nombre}: código de bandeja vacío en la franja {index}.")
+                if code not in bandejas:
+                    bandejas.append(code)
+        normalized.append(
+            {
+                "start": str(slot["start"]).strip(),
+                "end": str(slot["end"]).strip(),
+                "bandejas": bandejas,
+                "_start_minutes": start_minutes,
+                "_end_minutes": end_minutes,
+            }
+        )
+    normalized.sort(key=lambda item: item["_start_minutes"])
+    return normalized
+
+
+def _check_bandeja_overlaps(validated: list[dict]) -> None:
+    """Rechaza franjas que se solapan en la MISMA bandeja — entre personas
+    distintas o dentro de la misma persona. En bandejas distintas el solape
+    es legal (Roger cubre AR 10–12 y CO 11–13 a la vez).
+    """
+    coverage: dict[str, list[tuple[int, int, str]]] = {}
+    for member in validated:
+        for slot in member["franjas"]:
+            label = f"{member['nombre']} {slot['start']}–{slot['end']}"
+            for code in slot["bandejas"]:
+                coverage.setdefault(code, []).append(
+                    (slot["_start_minutes"], slot["_end_minutes"], label)
+                )
+    for code, intervals in coverage.items():
+        intervals.sort(key=lambda item: item[0])
+        for previous, current in zip(intervals, intervals[1:]):
+            if current[0] < previous[1]:
+                raise ValueError(
+                    f"Franjas de {code} solapadas: {previous[2]} y {current[2]}."
+                )
+
+
 def validate_equipo(members: object) -> list[dict]:
     """Valida la lista de personas destinatarias de leads reasignados.
 
     Cada entrada: ``nombre`` exacto como en el lookup de Salesforce y
-    ``franjas`` con la misma regla de ``validate_schedule`` (por persona —
-    no se exige que no se solapen entre personas distintas: si solapan,
-    gana la primera de la lista). Claves extra (p. ej. ``metodo`` de
-    versiones anteriores) se ignoran.
+    ``franjas`` ``HH:MM–HH:MM`` con ``bandejas`` (códigos de las bandejas
+    que esa franja cubre). Una franja sin ``bandejas`` no cubre nada —
+    las franjas viejas sin el campo quedan inertes hasta re-cargarlas.
     """
     if members is None:
         return []
@@ -182,10 +249,20 @@ def validate_equipo(members: object) -> list[dict]:
         validated.append(
             {
                 "nombre": nombre,
-                "franjas": validate_schedule(member.get("franjas")),
+                "franjas": _validate_equipo_franjas(member.get("franjas"), nombre),
             }
         )
-    return validated
+    _check_bandeja_overlaps(validated)
+    return [
+        {
+            "nombre": member["nombre"],
+            "franjas": [
+                {"start": slot["start"], "end": slot["end"], "bandejas": slot["bandejas"]}
+                for slot in member["franjas"]
+            ],
+        }
+        for member in validated
+    ]
 
 
 def within_schedule(slots: list[dict[str, str]], moment: datetime | None = None) -> bool:

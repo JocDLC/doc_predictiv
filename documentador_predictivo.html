@@ -189,6 +189,8 @@
 
   .equipo-franjas { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
   .equipo-franjas input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+  .equipo-bandeja { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
+  .contact-ico svg { width: 13px; height: 13px; vertical-align: -2px; }
   #viewMonitor .queue-panel { max-width: none; margin: 16px 0; }
   .monitor-config { border: 1px solid var(--border); border-radius: 14px; background: var(--card);
     padding: 0 18px; margin-bottom: 16px; }
@@ -459,7 +461,7 @@
         </div>
         <div class="prepare-card">
           <h3>Equipo — reasignación por turno</h3>
-          <div class="hint">Personas que reciben los leads tomados dentro de <strong>sus franjas</strong>: en su turno el lead se toma y se les reasigna. El <strong>nombre debe ser exacto</strong> como aparece en Salesforce (ej. "Micaela Caetano"). Una persona sin franjas no recibe leads. Si también hay franja propia vigente (Horario del monitor), esa gana y los leads son del usuario logueado; si la franja es de otra persona, se le cambia el propietario — <strong>nunca se le envía WhatsApp automático</strong>. <strong>Las franjas se guardan solas</strong>: escribí desde/hasta y tocá <strong>+ franja</strong> — queda guardada al instante, sin Guardar.</div>
+          <div class="hint">Personas que reciben los leads tomados dentro de <strong>sus franjas</strong>: en su turno el lead se toma y se les reasigna. El <strong>nombre debe ser exacto</strong> como aparece en Salesforce (ej. "Micaela Caetano"). <strong>Cada franja lleva su bandeja</strong> (AR/CO/MX): una persona solo recibe leads de las bandejas que tilda — un lead de otra bandeja queda <em>detectado sin cobertura</em>, nunca reasignado por error. Una persona puede cubrir varias bandejas en horarios distintos o cruzados; lo que no se permite son dos franjas solapadas en la <strong>misma</strong> bandeja. Si también hay franja propia vigente (Horario del monitor), esa gana y los leads son del usuario logueado; si la franja es de otra persona, se le cambia el propietario — <strong>nunca se le envía WhatsApp automático</strong>. <strong>Las franjas se guardan solas</strong>: escribí desde/hasta, tildá la bandeja y tocá <strong>+ franja</strong> — queda guardada al instante, sin Guardar.</div>
           <div id="monitorEquipo"></div>
           <div class="actions">
             <button class="btn small" id="equipoAdd">Agregar persona</button>
@@ -1763,7 +1765,7 @@ const MONITOR_COLUMNS = [
   ["fecha_creacion", "Fecha creación"],
   ["estado_candidato", "Estado"],
   ["campana", "Campaña"],
-  ["preferencia_contacto", "Contacto preferido"],
+  ["preferencia_contacto", "Contactar por"],
   ["propietario_candidato", "Propietario"],
   ["subtipo_interes", "Sub-tipo interés"],
   ["nombre", "Nombre"],
@@ -1775,6 +1777,9 @@ const MONITOR_COLUMNS = [
   ["lead_id", "Lead ID"],
   ["otra_informacion", "Otra información"],
 ];
+// Iconos SVG inline para la columna "Contactar por" (WhatsApp / llamada).
+const ICONO_WHATSAPP = '<svg viewBox="0 0 24 24" role="img" aria-label="WhatsApp"><path fill="#25D366" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.895 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>';
+const ICONO_LLAMADA = '<svg viewBox="0 0 24 24" role="img" aria-label="Llamada"><path fill="#4a6fa5" d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>';
 const MONITOR_STATUS_LABELS = {
   tomado: "asignado", tomado_por_otro: "tomado por otro",
   no_verificado: "sin verificar", error: "error", session_lost: "sesión caída",
@@ -2112,7 +2117,9 @@ function renderEquipo() {
     (member.franjas || []).forEach((slot, slotIndex) => {
       const chip = document.createElement("span");
       chip.className = "sched-chip";
-      chip.textContent = `${slot.start} – ${slot.end} `;
+      const codes = (slot.bandejas || []).join(",");
+      chip.textContent = `${slot.start} – ${slot.end}${codes ? ` [${codes}]` : " [sin bandeja]"} `;
+      if (!(slot.bandejas || []).length) chip.title = "Franja sin bandeja: no cubre nada — quitála y cargala de nuevo con su bandeja.";
       const drop = document.createElement("button");
       drop.type = "button";
       drop.textContent = "×";
@@ -2140,6 +2147,22 @@ function renderEquipo() {
         box.dataset.pendingTouched = "1";
       });
     }
+    // Bandejas de la franja pendiente: una franja sin bandeja no cubre
+    // nada — hay que tildar al menos una.
+    const bandejaBoxes = monitorBandejaCodes().map(code => {
+      const label = document.createElement("label");
+      label.className = "hint equipo-bandeja";
+      label.title = "La franja cubre esta bandeja";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.className = "equipo-bandeja-cb";
+      cb.value = code;
+      cb.addEventListener("change", () => { box.dataset.pendingTouched = "1"; });
+      label.append(cb, document.createTextNode(code));
+      return label;
+    });
+    const pendingBandejas = () =>
+      [...box.querySelectorAll(".equipo-bandeja-cb:checked")].map(cb => cb.value);
     const add = document.createElement("button");
     add.type = "button";
     add.className = "btn small";
@@ -2147,22 +2170,55 @@ function renderEquipo() {
     add.title = "Agregar franja horaria a esta persona";
     add.addEventListener("click", () => {
       member.franjas = member.franjas || [];
-      member.franjas.push({ start: from.value, end: to.value });
+      member.franjas.push({ start: from.value, end: to.value, bandejas: pendingBandejas() });
       equipoDirty = true;
       renderEquipo();
       saveEquipo();
     });
-    slots.append(from, document.createTextNode("–"), to, add);
+    slots.append(from, document.createTextNode("–"), to, ...bandejaBoxes, add);
     box.appendChild(slots);
     container.appendChild(box);
   });
 }
 
+function monitorBandejaCodes() {
+  return (monitorState?.bandejas || []).filter(b => b.enabled).map(b => b.code);
+}
+
 function equipoError(members) {
+  const toMin = v => { const [h, m] = String(v).split(":").map(Number); return h * 60 + m; };
   for (const member of members) {
     if (!(member.nombre || "").trim()) return "Cada persona necesita el nombre exacto de Salesforce.";
-    const error = scheduleError(member.franjas);
-    if (error) return `${member.nombre}: ${error}`;
+    for (const slot of member.franjas || []) {
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(slot.end)) {
+        return `${member.nombre}: formato inválido, usá hh:mm.`;
+      }
+      if (toMin(slot.start) >= toMin(slot.end)) {
+        return `${member.nombre}: la franja ${slot.start}–${slot.end} empieza después de terminar.`;
+      }
+      if (!(slot.bandejas || []).length) {
+        return `${member.nombre}: la franja ${slot.start}–${slot.end} no tiene bandeja — tildá al menos una.`;
+      }
+    }
+  }
+  // Solape dentro de la MISMA bandeja (entre personas o de la misma):
+  // cubrir dos bandejas en horarios cruzados sí está permitido.
+  const coverage = {};
+  for (const member of members) {
+    for (const slot of member.franjas || []) {
+      for (const code of slot.bandejas || []) {
+        coverage[code] = coverage[code] || [];
+        coverage[code].push([toMin(slot.start), toMin(slot.end), `${member.nombre} ${slot.start}–${slot.end}`]);
+      }
+    }
+  }
+  for (const [code, intervals] of Object.entries(coverage)) {
+    intervals.sort((a, b) => a[0] - b[0]);
+    for (let i = 1; i < intervals.length; i++) {
+      if (intervals[i][0] < intervals[i - 1][1]) {
+        return `Franjas de ${code} solapadas: ${intervals[i - 1][2]} y ${intervals[i][2]}.`;
+      }
+    }
   }
   return "";
 }
@@ -2177,7 +2233,8 @@ async function saveEquipo() {
     const row = rows[index];
     if (row && row.dataset.pendingTouched === "1") {
       const inputs = row.querySelectorAll(".equipo-franjas input[type=time]");
-      franjas.push({ start: inputs[0].value, end: inputs[1].value });
+      const codes = [...row.querySelectorAll(".equipo-bandeja-cb:checked")].map(cb => cb.value);
+      franjas.push({ start: inputs[0].value, end: inputs[1].value, bandejas: codes });
     }
     return { nombre: (m.nombre || "").trim(), franjas };
   });
@@ -2307,12 +2364,36 @@ function monitorCell(entry, index, total, key) {
     badge.className = `badge ${ok ? "st-bot" : entry.status === "error" ? "st-error" : "st-parcial"}`;
     badge.textContent = MONITOR_STATUS_LABELS[entry.status] || entry.status;
     wrap.appendChild(badge);
+    if (entry.motivo === "sin_cobertura") {
+      const warn = document.createElement("span");
+      warn.className = "asignado";
+      warn.textContent = " ⚠ sin cobertura";
+      warn.title = "Nadie cubre esta bandeja en el horario actual — queda para reasignar a mano";
+      wrap.appendChild(warn);
+    }
     if (entry.asignado_a) {
       const who = document.createElement("span");
       who.className = "asignado";
       who.textContent = ` → ${entry.asignado_a.replace(/\s*(vista previa|preview)\s*$/i, "")}`;
       wrap.appendChild(who);
       wrap.title = entry.asignado_a;
+    }
+  } else if (key === "preferencia_contacto") {
+    // Icono según el medio: WhatsApp verde, llamada azul; vacío queda vacío.
+    const pref = String(details[key] || "").trim();
+    const low = pref.toLowerCase();
+    const icono = low.includes("whatsapp")
+      ? ICONO_WHATSAPP
+      : (/llamad|llamar|phone|tel[eé]fono/.test(low) ? ICONO_LLAMADA : "");
+    if (icono) {
+      const badge = document.createElement("span");
+      badge.className = "contact-ico";
+      badge.innerHTML = icono;
+      wrap.append(badge, document.createTextNode(` ${pref}`));
+      wrap.title = pref;
+    } else {
+      wrap.textContent = pref;
+      if (pref) wrap.title = pref;
     }
   } else {
     const value = key === "lead_id" ? entry.lead_id : details[key];

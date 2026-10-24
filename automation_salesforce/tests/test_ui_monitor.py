@@ -161,14 +161,16 @@ monitorState = { bandejas: [
   { code: 'MX', enabled: false, url: '' },
 ] };
 check('sin franjas es válido', scheduleError([]) === '');
-check('franja válida aceptada', scheduleError([{ start: '08:00', end: '20:00' }]) === '');
-check('formato inválido rechazado', scheduleError([{ start: '8am', end: '20:00' }]) !== '');
-check('hora fuera de rango rechazada', scheduleError([{ start: '25:00', end: '20:00' }]) !== '');
-check('inicio después del fin rechazado', scheduleError([{ start: '18:00', end: '09:00' }]) !== '');
+check('franja válida aceptada', scheduleError([{ start: '08:00', end: '20:00', bandejas: ['AR'] }]) === '');
+check('franja sin bandeja rechazada', scheduleError([{ start: '08:00', end: '20:00' }]) !== '');
+check('franja sin bandeja rechazada (lista vacía)', scheduleError([{ start: '08:00', end: '20:00', bandejas: [] }]) !== '');
+check('formato inválido rechazado', scheduleError([{ start: '8am', end: '20:00', bandejas: ['AR'] }]) !== '');
+check('hora fuera de rango rechazada', scheduleError([{ start: '25:00', end: '20:00', bandejas: ['AR'] }]) !== '');
+check('inicio después del fin rechazado', scheduleError([{ start: '18:00', end: '09:00', bandejas: ['AR'] }]) !== '');
 check('franjas solapadas rechazadas',
-  scheduleError([{ start: '08:00', end: '12:00' }, { start: '11:00', end: '14:00' }]) !== '');
+  scheduleError([{ start: '08:00', end: '12:00', bandejas: ['AR'] }, { start: '11:00', end: '14:00', bandejas: ['AR'] }]) !== '');
 check('franjas contiguas aceptadas',
-  scheduleError([{ start: '08:00', end: '12:00' }, { start: '12:00', end: '14:00' }]) === '');
+  scheduleError([{ start: '08:00', end: '12:00', bandejas: ['AR'] }, { start: '12:00', end: '14:00', bandejas: ['AR'] }]) === '');
 // Solape por bandeja: distintas bandejas sí pueden cruzarse, la misma no;
 // una franja sin bandejas (todas) pisa cualquier solape.
 check('solape en misma bandeja rechazado',
@@ -181,10 +183,10 @@ check('solape en bandejas distintas aceptado',
     { start: '10:00', end: '12:00', bandejas: ['AR'] },
     { start: '11:00', end: '13:00', bandejas: ['CO'] },
   ]) === '');
-check('franja todas pisa franja acotada',
+check('solape parcial por bandeja compartida rechazado',
   scheduleError([
-    { start: '08:00', end: '13:00', bandejas: [] },
-    { start: '12:00', end: '18:00', bandejas: ['AR'] },
+    { start: '08:00', end: '13:00', bandejas: ['AR', 'CO'] },
+    { start: '12:00', end: '18:00', bandejas: ['CO'] },
   ]) !== '');
 check('franja en bandeja no disponible rechazada',
   scheduleError([{ start: '08:00', end: '12:00', bandejas: ['MX'] }]) !== '');
@@ -324,19 +326,33 @@ check('limpiar usa el endpoint dedicado',
 check('limpiar refresca la tabla vacía', monitorState.results.length === 0);
 
 // 12) Agregar una franja la persiste sola: sin esperar "Guardar horario"
-//     (si quedaba solo en el borrador, un F5 la borraba).
+//     (si quedaba solo en el borrador, un F5 la borraba). La franja
+//     exige bandeja: sin checkbox tildado no entra al borrador ni hace PUT.
 __fetchCalls.length = 0;
 monitorDraftSchedule = [];
 scheduleDirty = false;
 // El servidor devolvería la franja ya persistida tras el PUT.
-__fetchPayload = { ...__fetchPayload, schedule: [{ start: '08:00', end: '20:00' }] };
+__fetchPayload = { ...__fetchPayload, schedule: [{ start: '08:00', end: '20:00', bandejas: ['AR'] }] };
 document.getElementById('schedStart').value = '08:00';
 document.getElementById('schedEnd').value = '20:00';
+const qsaBackup = document.querySelectorAll;
+document.querySelectorAll = sel =>
+  sel.includes('sched-bandeja-cb:checked') ? [{ value: 'AR' }] : qsaBackup(sel);
 document.getElementById('schedAdd').listeners['click']();
+document.querySelectorAll = qsaBackup;
 for (let i = 0; i < 20; i++) await Promise.resolve();
 check('agregar franja hace PUT al schedule',
   __fetchCalls.some(c => c.url.includes('/api/monitor/schedule') && c.options.method === 'PUT'));
 check('franja persistida queda visible', monitorDraftSchedule.length === 1);
+
+// 12b) Sin bandeja tildada la franja no entra al borrador ni se envía.
+__fetchCalls.length = 0;
+monitorDraftSchedule = [];
+document.getElementById('schedAdd').listeners['click']();
+for (let i = 0; i < 20; i++) await Promise.resolve();
+check('franja sin bandeja no hace PUT',
+  !__fetchCalls.some(c => c.url.includes('/api/monitor/schedule') && c.options.method === 'PUT'));
+check('franja sin bandeja no entra al borrador', monitorDraftSchedule.length === 0);
 
 // 13) El resultado muestra a quién quedó asignado el lead.
 monitorState.results = [{

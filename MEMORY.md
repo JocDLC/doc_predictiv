@@ -577,3 +577,42 @@ validación ya exigía URL para habilitar).
   las que haya disponibles en cada momento.
 - En vivo: opciones AR:on, CO:off, MX:on (CO sin link); PUT franja o
   equipo con CO -> 400 "Franjas apuntan a bandejas no disponibles: CO."
+
+## Distribución de leads no hábiles (distribuir-leads-desde-archivo, 2026-10-24)
+
+Módulo "Distribuir leads" en el selector de inicio: sube la BD de leads
+nocturnos (`.xlsx`/`.csv` export Salesforce, ej. `QUALIF 24-10.xlsx` con la
+persona destino en `Otra información`), mapea hoja+columnas, preview editable
+por fila y ejecuta la reasignación en lote.
+
+- `distribucion_loader.py`: `parse_archivo` (openpyxl server-side, archivo
+  nunca se persiste) + `validate_distribucion_queue`/`load_distribucion_queue`.
+- `run_distribucion_queue.py`: por lead abre registro y resuelve propietario —
+  destino → `ya_asignado`; `SKIP_OWNERS` (AR_LEAD_COLD, AR_LEAD_EXPORT_GETLEAD,
+  AR_LEAD_LEADIT_EXPORT) → `cola_excluida`; cola de ingreso (`unassigned_owner`
+  de las bandejas del monitor) → Pick Up + panel best-effort + reassign;
+  otro → reassign directo. Nunca escribe `Otra información`.
+- `save_contact_panel_if_present` extraído en lead_monitor (orden inicial→
+  marca→tardío preservado: el chequeo tardío va DESPUÉS de la marca porque su
+  escritura le da tiempo al panel tardío a aparecer — test de regresión).
+- Endpoints: `POST /api/distribucion/parse`, `PUT /api/distribucion-queue`
+  (warning `monitor_activo`), `GET /api/distribucion-results`,
+  `POST /run-distribucion` (misma exclusión mutua que /run y /run-close).
+- Pendiente: prueba visual del preview en la UI y prueba real acotada con 1
+  lead en vivo (usuario pidió no tocar Salesforce todavía).
+
+## Verificadores de franja/bandeja (2026-10-24)
+
+1. Franja sin bandeja: ahora es obligatoria en AMBOS editores (antes el
+   horario propio permitía `[]` = todas). `scheduleError` la rechaza;
+   `schedAdd` valida ANTES de agregar — la franja inválida no entra al
+   borrador. Los PUT `/api/monitor/schedule` y `/equipo` devuelven 400
+   "Cada franja debe indicar al menos una bandeja". Los datos viejos
+   persistidos con `bandejas: []` siguen cargando (todas) — el bloqueo
+   es solo en la escritura nueva; el usuario migró sus franjas a AR
+   explícita a mano.
+2. Bandeja sin link: el checkbox "habilitada" queda `disabled` hasta
+   que el campo URL tenga texto (`syncEnabledLock` en renderBandejas);
+   si se borra el link con la bandeja prendida, se destilda sola.
+   `saveBandejas` corta antes del PUT con mensaje propio; el backend ya
+   rechazaba `enabled && !url` (400).

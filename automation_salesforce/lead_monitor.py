@@ -918,6 +918,64 @@ def _save_panel_in_other_handles(driver) -> str | None:
     return None
 
 
+def _save_contact_panel_initial(driver, timeout_seconds: int) -> str:
+    """Ventana inicial del panel "Contact Client": espera y pulsa su Save."""
+    outcome = "sin_panel"
+    try:
+        deadline = time.monotonic() + PANEL_WAIT_SECONDS
+        while time.monotonic() < deadline:
+            if execute_in_any_frame(driver, PANEL_PRESENT_SCRIPT) == "found":
+                outcome = "panel_sin_save"
+                break
+            time.sleep(POLL_SECONDS)
+        if outcome == "panel_sin_save":
+            if execute_in_any_frame(driver, PANEL_SAVE_CLICK_SCRIPT) == "clicked":
+                outcome = "panel_guardado"
+                time.sleep(SAVE_SETTLE_SECONDS)
+                # El Save del panel recarga la ficha: sin este settle el
+                # campo se lee/edita contra un DOM en plena reconstrucción.
+                wait_for_lightning_ready(driver, timeout_seconds)
+    except WebDriverException:
+        outcome = "panel_error"
+    return outcome
+
+
+def _save_contact_panel_late(driver) -> str:
+    """Chequeo tardío del panel + barrido por otros handles (subtabs de la
+    consola): el barrido de frames solo cubre la pestaña activa."""
+    outcome = "sin_panel"
+    try:
+        deadline = time.monotonic() + LATE_PANEL_WAIT_SECONDS
+        while time.monotonic() < deadline:
+            if execute_in_any_frame(driver, PANEL_PRESENT_SCRIPT) == "found":
+                outcome = "panel_tardio_sin_save"
+                if execute_in_any_frame(driver, PANEL_SAVE_CLICK_SCRIPT) == "clicked":
+                    outcome = "panel_tardio_guardado"
+                break
+            time.sleep(POLL_SECONDS)
+    except WebDriverException:
+        pass
+    if outcome == "sin_panel":
+        cross = _save_panel_in_other_handles(driver)
+        if cross:
+            outcome = cross
+    return outcome
+
+
+def save_contact_panel_if_present(driver, timeout_seconds: int) -> str:
+    """Espera el panel "Contact Client" post-Pick-Up y pulsa solo su Save.
+
+    Cubre la ventana inicial, el chequeo tardío y los otros handles. No
+    escribe nada en el registro — sirve para la toma del monitor y para la
+    distribución por lote, que no documenta comentarios. Devuelve el
+    outcome ``panel_*``/``sin_panel``/``panel_error``.
+    """
+    outcome = _save_contact_panel_initial(driver, timeout_seconds)
+    if outcome == "sin_panel":
+        outcome = _save_contact_panel_late(driver)
+    return outcome
+
+
 def finalize_pick_up(
     driver,
     timeout_seconds: int,
@@ -943,24 +1001,8 @@ def finalize_pick_up(
     visibles, la cadena DOM de los botones Save/SendEmail y el nombre del
     screenshot volcado en ``diag_dir`` para ajustar la detección.
     """
-    outcome = "sin_panel"
+    outcome = _save_contact_panel_initial(driver, timeout_seconds)
     diagnostic = ""
-    try:
-        deadline = time.monotonic() + PANEL_WAIT_SECONDS
-        while time.monotonic() < deadline:
-            if execute_in_any_frame(driver, PANEL_PRESENT_SCRIPT) == "found":
-                outcome = "panel_sin_save"
-                break
-            time.sleep(POLL_SECONDS)
-        if outcome == "panel_sin_save":
-            if execute_in_any_frame(driver, PANEL_SAVE_CLICK_SCRIPT) == "clicked":
-                outcome = "panel_guardado"
-                time.sleep(SAVE_SETTLE_SECONDS)
-                # El Save del panel recarga la ficha: sin este settle el
-                # campo se lee/edita contra un DOM en plena reconstrucción.
-                wait_for_lightning_ready(driver, timeout_seconds)
-    except WebDriverException:
-        outcome = "panel_error"
     # La evidencia de la toma tiene que quedar en "Otra información" aunque
     # el panel no exista: `Asignado` o, en la rama WhatsApp, la línea de
     # intento `1 INT Se envía WhatsApp ...` — va ANTES del envío, como hacen
@@ -983,23 +1025,7 @@ def finalize_pick_up(
             mark = f"marca_error:{type(error).__name__}"
     # Chequeo tardío: el panel puede aparecer pasada la ventana inicial.
     if outcome == "sin_panel":
-        try:
-            deadline = time.monotonic() + LATE_PANEL_WAIT_SECONDS
-            while time.monotonic() < deadline:
-                if execute_in_any_frame(driver, PANEL_PRESENT_SCRIPT) == "found":
-                    outcome = "panel_tardio_sin_save"
-                    if execute_in_any_frame(driver, PANEL_SAVE_CLICK_SCRIPT) == "clicked":
-                        outcome = "panel_tardio_guardado"
-                    break
-                time.sleep(POLL_SECONDS)
-        except WebDriverException:
-            pass
-    # El panel puede estar en otra pestaña/ventana del navegador (subtabs de
-    # la consola): el barrido de frames solo cubre la pestaña activa.
-    if outcome == "sin_panel":
-        cross = _save_panel_in_other_handles(driver)
-        if cross:
-            outcome = cross
+        outcome = _save_contact_panel_late(driver)
     if outcome == "sin_panel":
         try:
             findings = execute_in_any_frame(driver, PANEL_DIAGNOSTIC_SCRIPT)

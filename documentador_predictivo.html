@@ -203,6 +203,10 @@
   .monitor-table { border-collapse: collapse; font-size: 11.5px; min-width: 100%; width: 100%; }
   .monitor-table th, .monitor-table td { border: 1px solid var(--border); border-top: none; padding: 2px 6px; text-align: left; vertical-align: middle; line-height: 1.25; }
   .monitor-table td { line-height: 0; }
+  .dist-table { border-collapse: collapse; font-size: 12px; width: 100%; }
+  .dist-table th, .dist-table td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: middle; }
+  .dist-table tr.dist-excluded td { opacity: .45; }
+  .dist-persona { width: 100%; box-sizing: border-box; }
   .monitor-table td .cell { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
   .monitor-table td.hint { font-size: inherit; margin-top: 0; }
   .monitor-table td a.lead-link { color: #1a5fb4; font-weight: 600; text-decoration: none; }
@@ -256,6 +260,12 @@
         <h3>Monitor de Bandeja</h3>
         <p>Revisa las bandejas de Salesforce cada minuto y asigna a tu usuario los leads nuevos con Pick Up.</p>
         <span class="module-action">Abrir monitor &rarr;</span>
+      </button>
+      <button class="module-card" id="openDistribuir">
+        <svg class="module-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <h3>Distribuir leads</h3>
+        <p>Repartí los leads que entraron en horario no hábil entre las personas que trabajan hoy.</p>
+        <span class="module-action">Distribuir base &rarr;</span>
       </button>
     </div>
     <p class="hint"><strong>Para documentar con el bot:</strong> inici&aacute; sesi&oacute;n en <strong>Salesforce</strong> (con 2FA si lo pide) en la pesta&ntilde;a de al lado. El bot solo puede escribir mientras la sesi&oacute;n est&eacute; activa.</p>
@@ -452,7 +462,7 @@
         </div>
         <div class="prepare-card">
           <h3>Horario del monitor — leads a tu nombre</h3>
-          <div class="hint">Franjas en formato hh:mm: dentro de ellas el monitor toma los leads <strong>a nombre del usuario logueado</strong> en Salesforce. <strong>Cada franja puede limitarse a sus bandejas</strong> (AR/CO/MX): un lead de otra bandeja cae al equipo o queda <em>detectado sin cobertura</em>; sin tildar ninguna, la franja cubre <strong>todas</strong>. Fuera de toda franja —propia o del equipo— <strong>no se toma nada</strong>: el lead espera en la cola al pr&oacute;ximo turno. Dos franjas pueden solaparse solo si cubren bandejas distintas. El bot&oacute;n <strong>Revisar ahora</strong> funciona siempre, pero sin franja vigente corre en <strong>modo prueba</strong>: lista los leads como <em>detectado</em> sin tomarlos.</div>
+          <div class="hint">Franjas en formato hh:mm: dentro de ellas el monitor toma los leads <strong>a nombre del usuario logueado</strong> en Salesforce. <strong>Cada franja lleva su bandeja</strong> (AR/CO/MX): hay que tildar al menos una —para cubrir todas, tildalas todas— y un lead de otra bandeja cae al equipo o queda <em>detectado sin cobertura</em>. Fuera de toda franja —propia o del equipo— <strong>no se toma nada</strong>: el lead espera en la cola al pr&oacute;ximo turno. Dos franjas pueden solaparse solo si cubren bandejas distintas. El bot&oacute;n <strong>Revisar ahora</strong> funciona siempre, pero sin franja vigente corre en <strong>modo prueba</strong>: lista los leads como <em>detectado</em> sin tomarlos.</div>
           <div id="monitorSchedule"></div>
           <div class="sched-add">
             <input type="time" id="schedStart" value="08:00"> &ndash; <input type="time" id="schedEnd" value="20:00">
@@ -486,6 +496,46 @@
       </div>
       <div class="actions" style="margin-top:16px">
         <button class="btn" id="backFromMonitor">Inicio</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="viewDistribuir" class="hidden">
+    <div class="prepare-app">
+      <div class="prepare-header">
+        <h2>Distribuir leads</h2>
+        <button class="btn" id="backFromDistribuir">Inicio</button>
+        <p>Cargá la base de leads del horario no hábil (.xlsx o .csv), revisá a quién va cada uno y ejecutá la reasignación en Salesforce. No escribe comentarios: solo cambia el propietario.</p>
+      </div>
+      <div class="prepare-card" id="distUploadCard">
+        <h3>1. Cargar base de leads</h3>
+        <div class="prepare-dropzone" id="distDropzone"><strong>Arrastrá aquí el archivo</strong><span>o hacé clic para seleccionarlo (.xlsx o .csv). El archivo se procesa solo en esta máquina.</span><input type="file" id="distFileInput" accept=".xlsx,.csv" class="hidden"></div>
+      </div>
+      <div id="distSetup" class="hidden">
+        <div class="prepare-card">
+          <h3>2. Elegir hoja y columnas</h3>
+          <div class="hint">La app propone las columnas del archivo; confirmalas o corregilas antes de la vista previa.</div>
+          <div class="prepare-fields">
+            <div class="field" id="distSheetField"><label for="distSheet">Hoja del archivo</label><select id="distSheet"></select></div>
+            <div class="field"><label for="mapDistId">Lead ID *</label><select id="mapDistId"></select></div>
+            <div class="field"><label for="mapDistPersona">Persona destino *</label><select id="mapDistPersona"></select></div>
+            <div class="field"><label for="mapDistNombre">Nombre del lead (opcional, solo para revisar)</label><select id="mapDistNombre"></select></div>
+          </div>
+          <div class="actions"><button class="btn primary" id="distPreview">Ver vista previa</button><button class="btn" id="distOtherFile">Cargar otro archivo</button></div>
+        </div>
+        <div class="prepare-card hidden" id="distPreviewCard">
+          <h3>3. Vista previa y ejecución</h3>
+          <div class="hint">Revisá los destinos: podés editar cualquier persona antes de ejecutar. Las filas sin Lead ID válido quedan excluidas solas.</div>
+          <div id="distSummary" class="hint" style="margin:8px 0"></div>
+          <div class="monitor-table-wrap"><table class="dist-table" id="distTable"></table></div>
+          <div class="actions" style="margin-top:12px"><button class="btn primary" id="distRun">Ejecutar distribución</button></div>
+        </div>
+        <div class="prepare-card hidden" id="distResultsCard">
+          <h3>Resultados</h3>
+          <div id="distRunState" class="hint"></div>
+          <div class="monitor-table-wrap"><table class="dist-table" id="distResultsTable"></table></div>
+          <div class="actions" style="margin-top:12px"><button class="btn" id="distRefresh">Actualizar resultados</button></div>
+        </div>
       </div>
     </div>
   </section>
@@ -1963,12 +2013,20 @@ function renderBandejas() {
     check.type = "checkbox";
     check.className = "bandeja-enabled";
     check.checked = !!current.enabled;
-    check.title = "Monitorear esta bandeja";
+    check.title = "Monitorear esta bandeja — requiere el link del reporte";
     const url = document.createElement("input");
     url.type = "url";
     url.className = "bandeja-url";
     url.placeholder = "URL del reporte de Salesforce (https://…)";
     url.value = current.url || "";
+    // Sin link no se puede habilitar: el checkbox queda bloqueado y, si
+    // se borra el link con la bandeja prendida, se destilda sola.
+    const syncEnabledLock = () => {
+      check.disabled = !url.value.trim();
+      if (check.disabled) check.checked = false;
+    };
+    url.addEventListener("input", syncEnabledLock);
+    syncEnabledLock();
     const owner = document.createElement("input");
     owner.type = "text";
     owner.className = "bandeja-url owner-input";
@@ -1999,6 +2057,11 @@ async function saveBandejas() {
     unassigned_owner: row.querySelector(".owner-input").value.trim(),
     tz_offset: parseInt(row.querySelector(".bandeja-offset").value, 10),
   }));
+  const sinLink = bandejas.find(b => b.enabled && !b.url);
+  if (sinLink) {
+    msg.textContent = `La bandeja ${sinLink.code} está habilitada pero no tiene link del reporte.`;
+    return;
+  }
   try {
     await monitorApi("/api/monitor/config", {
       method: "PUT",
@@ -2022,7 +2085,7 @@ function renderSchedule() {
   const box = $("schedBandejas");
   box.innerHTML = "";
   for (const { code, available } of monitorBandejaOptions()) {
-    box.appendChild(bandejaCheckbox("sched-bandeja-cb", code, available, true).label);
+    box.appendChild(bandejaCheckbox("sched-bandeja-cb", code, available).label);
   }
   if (!monitorDraftSchedule.length) {
     const hint = document.createElement("span");
@@ -2061,6 +2124,9 @@ function scheduleError(slots) {
     }
     const [start, end] = [toMin(slot.start), toMin(slot.end)];
     if (start >= end) return `La franja ${slot.start}–${slot.end} empieza después de terminar.`;
+    if (!(slot.bandejas || []).length) {
+      return `La franja ${slot.start}–${slot.end} no tiene bandeja — tildá al menos una.`;
+    }
     const missing = (slot.bandejas || []).filter(code => !available.has(code));
     if (missing.length) {
       return `La franja ${slot.start}–${slot.end} apunta a bandejas no disponibles: ${missing.join(", ")}.`;
@@ -2180,7 +2246,7 @@ function renderEquipo() {
     // nada — hay que tildar al menos una. Las no disponibles quedan
     // apagadas y no se pueden tildar.
     const bandejaBoxes = monitorBandejaOptions().map(({ code, available }) => {
-      const { label, cb } = bandejaCheckbox("equipo-bandeja-cb", code, available, false);
+      const { label, cb } = bandejaCheckbox("equipo-bandeja-cb", code, available);
       cb.addEventListener("change", () => { box.dataset.pendingTouched = "1"; });
       return label;
     });
@@ -2218,11 +2284,11 @@ function monitorBandejaCodes() {
   return monitorBandejaOptions().filter(o => o.available).map(o => o.code);
 }
 
-function bandejaCheckbox(cbClass, code, available, todas) {
+function bandejaCheckbox(cbClass, code, available) {
   const label = document.createElement("label");
   label.className = "hint equipo-bandeja" + (available ? "" : " bandeja-off");
   label.title = available
-    ? `La franja cubre esta bandeja${todas ? " — sin tildar ninguna, cubre todas" : ""}`
+    ? "La franja cubre esta bandeja"
     : `${code} no está disponible: falta el link del reporte o está deshabilitada`;
   const cb = document.createElement("input");
   cb.type = "checkbox";
@@ -2703,6 +2769,8 @@ async function connectBotEvents() {
       // pollBotResults → notifyBotCompletion confirma el estado y muestra el
       // resumen final; no tocar botRunInProgress acá o salta el aviso.
       pollBotResults();
+      distRunning = false;
+      loadDistribucionResults();
       return;
     }
     if (event.type === "monitor_state") {
@@ -2844,7 +2912,7 @@ async function openQueueView() {
 
 // ---------- UI ----------
 const $ = s => document.getElementById(s);
-const VIEW_IDS = ["viewHome", "viewPrepare", "viewDocumentar", "viewQueue", "viewMonitor"];
+const VIEW_IDS = ["viewHome", "viewPrepare", "viewDocumentar", "viewQueue", "viewMonitor", "viewDistribuir"];
 
 function showView(id) {
   VIEW_IDS.forEach(viewId => $(viewId).classList.toggle("hidden", viewId !== id));
@@ -2882,6 +2950,8 @@ $("exportSelection").addEventListener("click", () => {
 $("openQueue").addEventListener("click", openQueueView);
 $("openMonitor").addEventListener("click", openMonitorView);
 $("backFromMonitor").addEventListener("click", () => showView("viewHome"));
+$("openDistribuir").addEventListener("click", openDistribuirView);
+$("backFromDistribuir").addEventListener("click", () => showView("viewHome"));
 $("monitorToggle").addEventListener("click", toggleMonitor);
 $("monitorCheck").addEventListener("click", checkMonitorNow);
 $("monitorLoginAlert").addEventListener("click", () => $("monitorLoginAlert").classList.add("hidden"));
@@ -2958,14 +3028,18 @@ $("schedAdd").addEventListener("click", () => {
   const start = $("schedStart").value;
   const end = $("schedEnd").value;
   if (!start || !end) return;
-  scheduleDirty = true;
   const bandejas = [...document.querySelectorAll("#schedBandejas .sched-bandeja-cb:checked")].map(cb => cb.value);
+  // Valida ANTES de agregar: una franja sin bandeja (o inválida) no entra
+  // al borrador — queda el mensaje explicando qué falta.
+  const error = scheduleError([...monitorDraftSchedule, { start, end, bandejas }]);
+  $("scheduleMsg").textContent = error;
+  if (error) return;
+  scheduleDirty = true;
   monitorDraftSchedule.push({ start, end, bandejas });
-  $("scheduleMsg").textContent = scheduleError(monitorDraftSchedule);
   renderSchedule();
   // Guardado automático: la franja persiste en el servidor al instante,
   // sin exigir el botón "Guardar horario" (que queda como respaldo).
-  if (!scheduleError(monitorDraftSchedule)) saveSchedule();
+  saveSchedule();
 });
 $("runBot").addEventListener("click", runBot);
 $("countryMode").addEventListener("change", event => setCountryMode(event.target.value));
@@ -3473,6 +3547,185 @@ document.addEventListener("keydown", e => {
 });
 
 $("appVersion").textContent = "v" + APP_VERSION;
+
+// ---------- Distribuir leads desde archivo ----------
+// La BD de leads (export .xlsx/.csv de Salesforce) la parsea el servidor
+// local; la vista previa editable es lo que se encola — nada más.
+const DIST_FIELDS = [
+  ["id", "Lead ID", ["lead id", "id", "id del candidato", "leadid"]],
+  ["persona", "Persona destino", ["otra informacion", "distribucion", "agente", "asignado a", "propietario"]],
+  ["nombre", "Nombre del lead", ["nombre"]],
+];
+const SF_ID_RE = /^[A-Za-z0-9]{15}(?:[A-Za-z0-9]{3})?$/;
+const DIST_STATUS_LABELS = {
+  reasignado: "reasignado", ya_asignado: "ya estaba asignado", cola_excluida: "cola excluida (frío/export)",
+  pickup_error: "error al tomar", lead_inaccesible: "lead inaccesible", error: "error",
+};
+let distSheets = [];
+let distSheetIndex = 0;
+let distMapping = {};
+let distFileName = "";
+let distPreviewRows = [];
+let distRunning = false;
+let distPollTimer = null;
+
+function openDistribuirView() {
+  showView("viewDistribuir");
+  connectBotEvents();
+  loadDistribucionResults();
+}
+
+function currentDistSheet() {
+  return distSheets[distSheetIndex] || null;
+}
+
+function distFileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+async function loadDistribFile(file) {
+  let parsed;
+  try {
+    const content_b64 = await distFileToBase64(file);
+    parsed = await monitorApi("/api/distribucion/parse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, content_b64 }),
+    });
+  } catch (error) {
+    alert(`No se pudo leer el archivo: ${error.message || error}\n\nEl parseo lo hace el servidor del bot: verificá que esté corriendo (INICIAR.bat).`);
+    return;
+  }
+  distFileName = file.name;
+  distSheets = parsed.sheets || [];
+  distSheetIndex = 0;
+  $("distSetup").classList.remove("hidden");
+  $("distPreviewCard").classList.add("hidden");
+  $("distResultsCard").classList.add("hidden");
+  renderDistSheetPicker();
+  renderDistMapping();
+}
+
+function renderDistSheetPicker() {
+  const field = $("distSheetField");
+  const select = $("distSheet");
+  field.classList.toggle("hidden", distSheets.length <= 1);
+  select.innerHTML = distSheets.map((sheet, i) => `<option value="${i}">${escapeHTML(sheet.name)} (${sheet.rows.length} filas)</option>`).join("");
+  select.value = String(distSheetIndex);
+}
+
+function renderDistMapping() {
+  const sheet = currentDistSheet();
+  if (!sheet) return;
+  const headers = sheet.headers;
+  distMapping = Object.fromEntries(DIST_FIELDS.map(([key, , aliases]) => [key, detectColumn(headers, aliases)]));
+  DIST_FIELDS.forEach(([key]) => {
+    const select = $("mapDist" + key[0].toUpperCase() + key.slice(1));
+    select.innerHTML = `<option value="">No usar</option>` + headers.map(h => `<option value="${escapeHTML(h)}" ${distMapping[key] === h ? "selected" : ""}>${escapeHTML(h)}</option>`).join("");
+    select.onchange = event => { distMapping[key] = event.target.value; };
+  });
+}
+
+function buildDistPreview() {
+  const sheet = currentDistSheet();
+  if (!sheet) return;
+  if (!distMapping.id || !distMapping.persona) { alert("Seleccioná las columnas obligatorias: Lead ID y Persona destino."); return; }
+  distPreviewRows = sheet.rows.map(row => {
+    const leadId = (row[distMapping.id] || "").trim();
+    return {
+      leadId,
+      valid: SF_ID_RE.test(leadId),
+      nombre: distMapping.nombre ? (row[distMapping.nombre] || "") : "",
+      persona: (row[distMapping.persona] || "").trim(),
+      include: SF_ID_RE.test(leadId),
+    };
+  });
+  const valid = distPreviewRows.filter(r => r.valid).length;
+  $("distSummary").textContent = `${distPreviewRows.length} filas leídas · ${valid} con Lead ID válido · ${distPreviewRows.length - valid} excluidas`;
+  $("distTable").innerHTML = `<thead><tr><th></th><th>Lead ID</th><th>Nombre</th><th>Persona destino</th></tr></thead><tbody>` +
+    distPreviewRows.map((row, i) => `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="dist-inc" data-i="${i}" ${row.include ? "checked" : ""} ${row.valid ? "" : "disabled"}></td><td>${escapeHTML(row.leadId || "—")}</td><td>${escapeHTML(row.nombre)}</td><td><input class="dist-persona" data-i="${i}" value="${escapeHTML(row.persona)}" ${row.valid ? "" : "disabled"}></td></tr>`).join("") +
+    `</tbody>`;
+  $("distPreviewCard").classList.remove("hidden");
+}
+
+function distQueuePayload() {
+  const leads = [];
+  document.querySelectorAll(".dist-inc").forEach(box => {
+    if (!box.checked) return;
+    const i = Number(box.dataset.i);
+    const persona = (document.querySelector(`.dist-persona[data-i="${i}"]`).value || "").trim();
+    if (persona) leads.push({ lead_id: distPreviewRows[i].leadId, persona });
+  });
+  return {
+    operation: "distribuir_leads",
+    generated_at: new Date().toISOString(),
+    source_file: distFileName,
+    leads,
+  };
+}
+
+async function runDistribucion() {
+  const queue = distQueuePayload();
+  if (!queue.leads.length) { alert("No hay leads con persona destino para distribuir."); return; }
+  const confirmed = confirm(
+    `Vas a reasignar ${queue.leads.length} lead${queue.leads.length === 1 ? "" : "s"} en Salesforce.\n\n` +
+    `En cada uno el bot solo cambia el propietario: sin comentarios ni otros campos. Los leads en colas de frío/export quedan fuera.\n\n¿Confirmás la distribución?`
+  );
+  if (!confirmed) return;
+  try {
+    const saved = await monitorApi("/api/distribucion-queue", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(queue),
+    });
+    if (saved.monitor_activo && !confirm("El Monitor de Bandeja está activo y puede tomar los mismos leads mientras corre el lote.\n\n¿Continuar igual? (podés pausarlo desde la vista Monitor)")) return;
+    await monitorApi("/run-distribucion", { method: "POST" });
+    distRunning = true;
+    $("distResultsCard").classList.remove("hidden");
+    $("distRunState").textContent = "Distribución en curso…";
+    loadDistribucionResults();
+    clearInterval(distPollTimer);
+    distPollTimer = setInterval(() => { if (distRunning) loadDistribucionResults(); else clearInterval(distPollTimer); }, 4000);
+  } catch (error) {
+    alert(`No se pudo iniciar la distribución: ${error.message || error}`);
+  }
+}
+
+const DIST_STATUS_ORDER = ["reasignado", "ya_asignado", "cola_excluida"];
+
+async function loadDistribucionResults() {
+  let entries;
+  try { entries = await monitorApi("/api/distribucion-results"); } catch { return; }
+  if (!Array.isArray(entries) || !entries.length) return;
+  const rows = distPreviewRows.length ? distPreviewRows : entries.map(e => ({ leadId: e.lead_id, nombre: "", persona: e.persona }));
+  const byId = Object.fromEntries(entries.map(e => [e.lead_id, e]));
+  $("distResultsCard").classList.remove("hidden");
+  $("distRunState").textContent = distRunning
+    ? `Distribución en curso… ${entries.length} procesados.`
+    : `Distribución terminada — ${entries.length} procesados.`;
+  $("distResultsTable").innerHTML = `<thead><tr><th>Lead ID</th><th>Persona</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>` +
+    rows.map(row => {
+      const entry = byId[row.leadId];
+      const status = entry ? (DIST_STATUS_LABELS[entry.status] || entry.status) : (distRunning ? "pendiente" : "sin procesar");
+      const detail = entry ? [entry.propietario_observado ? `propietario: ${entry.propietario_observado}` : "", entry.detalle || ""].filter(Boolean).join(" · ") : "";
+      return `<tr><td>${escapeHTML(row.leadId)}</td><td>${escapeHTML(entry ? entry.persona : row.persona || "")}</td><td>${escapeHTML(status)}</td><td>${escapeHTML(detail)}</td></tr>`;
+    }).join("") + `</tbody>`;
+}
+
+$("distDropzone").addEventListener("click", () => $("distFileInput").click());
+$("distDropzone").addEventListener("dragover", event => event.preventDefault());
+$("distDropzone").addEventListener("drop", event => { event.preventDefault(); const [file] = event.dataTransfer.files; if (file) loadDistribFile(file); });
+$("distFileInput").addEventListener("change", event => { const [file] = event.target.files; if (file) loadDistribFile(file); event.target.value = ""; });
+$("distSheet").addEventListener("change", event => { distSheetIndex = Number(event.target.value); renderDistMapping(); });
+$("distPreview").addEventListener("click", buildDistPreview);
+$("distOtherFile").addEventListener("click", () => { $("distSetup").classList.add("hidden"); distSheets = []; distPreviewRows = []; });
+$("distRun").addEventListener("click", runDistribucion);
+$("distRefresh").addEventListener("click", loadDistribucionResults);
 
 // Se lee ANTES de la recuperación: loadCSVContent cambia la vista a
 // viewDocumentar y pisaría el valor guardado.

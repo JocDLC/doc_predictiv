@@ -8,6 +8,7 @@ arbitrarios. Todo queda en la máquina local.
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import queue as queue_module
@@ -39,6 +40,7 @@ from browser_factory import (
 )
 from closure_store import validate_close_queue
 from country_fields import normalize_country
+from distribucion_loader import parse_archivo, validate_distribucion_queue
 from lead_monitor import _encargada_activa, run_cycle
 from local_audit import mask_lead_id
 from monitor_store import (
@@ -80,6 +82,8 @@ def local_path(value: str) -> Path:
 SERVER_PORT = 8765
 ACTIVE_QUEUE = "cola_activa.json"
 ACTIVE_CLOSE_QUEUE = "cola_cierre_activa.json"
+ACTIVE_DISTRIBUCION_QUEUE = "cola_distribucion_activa.json"
+PARSE_MAX_BYTES = 30 * 1024 * 1024  # body base64 de la BD de leads (~22 MB de archivo)
 SESSION_FILE = "bot_session.json"
 UI_PAGE = ROOT.parent / "documentador_predictivo.html"
 TOKEN_PLACEHOLDER = "__BOT_SERVER_TOKEN__"
@@ -93,8 +97,10 @@ API_FILES = {
     "/api/snapshots": ROOT / "ui_output" / "cola_activa.snapshots.json",
     "/api/close-queue": ROOT / "queues" / "cola_cierre_activa.json",
     "/api/close-results": ROOT / "queues" / "cola_cierre_activa.resultado.json",
+    "/api/distribucion-queue": ROOT / "queues" / "cola_distribucion_activa.json",
+    "/api/distribucion-results": ROOT / "queues" / "cola_distribucion_activa.resultado.json",
 }
-WRITABLE_API = {"/api/queue", "/api/close-queue"}
+WRITABLE_API = {"/api/queue", "/api/close-queue", "/api/distribucion-queue"}
 
 current_process: subprocess.Popen | None = None
 # Identifica qué runner tiene la exclusión mutua: la UI muestra la operación
@@ -670,6 +676,15 @@ def freeze_active_close_queue(queue_directory: Path, run_id: str) -> Path:
     )
 
 
+def freeze_active_distribucion_queue(queue_directory: Path, run_id: str) -> Path:
+    """Congela la cola de distribución activa (``cola_distribucion_activa.json``)."""
+    return freeze_queue(
+        queue_directory / ACTIVE_DISTRIBUCION_QUEUE,
+        queue_directory / f"distribucion_{run_id}.json",
+        run_id,
+    )
+
+
 def find_listening_pid(port: str) -> str | None:
     """Devuelve el PID que escucha en el puerto local indicado, si existe."""
     try:
@@ -1027,9 +1042,15 @@ def make_handler(token: str, config: dict | None = None):
                         state["bandejas"] = validate_bandejas(payload.get("bandejas"))
                     elif route == "/api/monitor/equipo":
                         equipo = validate_equipo(payload.get("equipo"))
-                        missing = _franjas_con_bandeja_no_disponible(
-                            state, [slot for member in equipo for slot in member["franjas"]]
+                        franjas = [slot for member in equipo for slot in member["franjas"]]
+                        sin_bandeja = next(
+                            (f"{m['nombre']} {s['start']}–{s['end']}"
+                             for m in equipo for s in m["franjas"] if not s["bandejas"]),
+                            None,
                         )
+                        if sin_bandeja:
+                            raise ValueError(f"Cada franja debe indicar al menos una bandeja ({sin_bandeja}).")
+                        missing = _franjas_con_bandeja_no_disponible(state, franjas)
                         if missing:
                             raise ValueError(
                                 f"Franjas apuntan a bandejas no disponibles: {', '.join(sorted(missing))}."
@@ -1037,6 +1058,12 @@ def make_handler(token: str, config: dict | None = None):
                         state["equipo"] = equipo
                     else:
                         schedule = validate_schedule(payload.get("schedule"))
+                        sin_bandeja = next(
+                            (f"{s['start']}–{s['end']}" for s in schedule if not s["bandejas"]),
+                            None,
+                        )
+                        if sin_bandeja:
+                            raise ValueError(f"Cada franja debe indicar al menos una bandeja ({sin_bandeja}).")
                         missing = _franjas_con_bandeja_no_disponible(state, schedule)
                         if missing:
                             raise ValueError(
@@ -1075,16 +1102,52 @@ def make_handler(token: str, config: dict | None = None):
                 except ValueError as error:
                     self._send(400, {"error": str(error)})
                     return
+            elif urlparse(self.path).path == "/api/distribucion-queue":
+                try:
+                    validate_distribucion_queue(payload)
+                except ValueError as error:
+                    self._send(400, {"error": str(error)})
+                    return
             target = API_FILES[urlparse(self.path).path]
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-            self._send(200, {"status": "guardada", "leads": len(payload["leads"])})
+            response = {"status": "guardada", "leads": len(payload["leads"])}
+            if urlparse(self.path).path == "/api/distribucion-queue":
+                # Advertencia (no bloqueo): un monitor activo puede tomar los
+                # mismos leads de la bandeja mientras corre el lote.
+                try:
+                    response["monitor_activo"] = bool(monitor_read_state(config or load_config()).get("enabled"))
+                except (OSError, ValueError):
+                    response["monitor_activo"] = False
+            self._send(200, response)
 
         def do_POST(self) -> None:
             global current_process
             route = urlparse(self.path).path
             if not self._authorized():
                 self._send(403, {"error": "token inválido o ausente"})
+                return
+            if route == "/api/distribucion/parse":
+                # El archivo de la BD de leads se parsea en memoria y nunca
+                # se persiste: la respuesta trae hojas/encabezados/filas.
+                body_length = int(self.headers.get("Content-Length") or 0)
+                if body_length > PARSE_MAX_BYTES:
+                    self._send(413, {"error": "archivo demasiado grande"})
+                    return
+                payload = self._read_json_body()
+                if not isinstance(payload, dict):
+                    return
+                filename = str(payload.get("filename") or "").strip()
+                content_b64 = payload.get("content_b64")
+                if not filename or not isinstance(content_b64, str) or not content_b64:
+                    self._send(400, {"error": "se esperaba filename y content_b64"})
+                    return
+                try:
+                    parsed = parse_archivo(filename, base64.b64decode(content_b64, validate=True))
+                except ValueError as error:
+                    self._send(400, {"error": str(error)})
+                    return
+                self._send(200, parsed)
                 return
             if route == "/api/monitor/clear-results":
                 if not cycle_lock.acquire(blocking=False):
@@ -1169,7 +1232,7 @@ def make_handler(token: str, config: dict | None = None):
                 self._send(202, {"status": "reiniciando el navegador del bot"})
                 threading.Thread(target=restart_browser, args=(config or load_config(),), daemon=True).start()
                 return
-            if route not in ("/run", "/run-close"):
+            if route not in ("/run", "/run-close", "/run-distribucion"):
                 self._send(404, {"error": "ruta desconocida"})
                 return
             with run_lock:
@@ -1220,12 +1283,17 @@ def make_handler(token: str, config: dict | None = None):
                 run_id = "run_" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + secrets.token_hex(3)
                 if route == "/run-close":
                     started = self._start_close_run(cfg, queue_directory, run_id)
+                elif route == "/run-distribucion":
+                    started = self._start_distribucion_run(cfg, queue_directory, run_id)
                 else:
                     started = self._start_document_run(cfg, queue_directory, run_id)
                 if not started:
                     # La respuesta de error ya la envió el helper.
                     return
-            queue_name = ACTIVE_CLOSE_QUEUE if route == "/run-close" else ACTIVE_QUEUE
+            queue_name = {
+                "/run-close": ACTIVE_CLOSE_QUEUE,
+                "/run-distribucion": ACTIVE_DISTRIBUCION_QUEUE,
+            }.get(route, ACTIVE_QUEUE)
             self._send(202, {"status": "iniciado", "queue": queue_name, "run_id": run_id})
 
         def _start_document_run(self, cfg: dict, queue_directory: Path, run_id: str) -> bool:
@@ -1283,6 +1351,35 @@ def make_handler(token: str, config: dict | None = None):
                     run_id,
                     "--results",
                     str(queue_directory / "cola_cierre_activa.resultado.json"),
+                    str(frozen_path),
+                ],
+                cwd=str(ROOT),
+            )
+            return True
+
+        def _start_distribucion_run(self, cfg: dict, queue_directory: Path, run_id: str) -> bool:
+            global current_process, current_operation
+            active_path = queue_directory / ACTIVE_DISTRIBUCION_QUEUE
+            try:
+                validate_distribucion_queue(json.loads(active_path.read_text(encoding="utf-8")))
+            except (OSError, json.JSONDecodeError, ValueError) as error:
+                self._send(400, {"error": f"Cola de distribución inválida: {error}"})
+                return False
+            try:
+                frozen_path = freeze_active_distribucion_queue(queue_directory, run_id)
+            except OSError:
+                self._send(500, {"error": "no se pudo congelar la cola de distribución"})
+                return False
+            current_operation = "distribucion"
+            current_process = subprocess.Popen(
+                [
+                    sys.executable,
+                    str(ROOT / "run_distribucion_queue.py"),
+                    "--auto",
+                    "--run-id",
+                    run_id,
+                    "--results",
+                    str(queue_directory / "cola_distribucion_activa.resultado.json"),
                     str(frozen_path),
                 ],
                 cwd=str(ROOT),

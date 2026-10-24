@@ -616,3 +616,14 @@ por fila y ejecuta la reasignación en lote.
    si se borra el link con la bandeja prendida, se destilda sola.
    `saveBandejas` corta antes del PUT con mensaje propio; el backend ya
    rechazaba `enabled && !url` (400).
+
+## Bloqueo de alta + pop-up de advertencia (2026-10-24)
+
+- `+ franja` del equipo ahora valida ANTES de agregar (equipoError sobre
+  un probe del draft): la franja sin bandeja ya no entra al borrador —
+  antes sí entraba y solo fallaba al guardar.
+- Las acciones explícitas muestran `alert()`: "+ franja", "Agregar
+  franja", "Guardar horario" (saveSchedule(true)) y "Guardar equipo"
+  (saveEquipo(true)) — errores de validación y rechazos del servidor.
+  Los auto-guardados (quitar chip, cambiar nombre) siguen solo pintando
+  el mensaje rojo, para no spamear pop-ups.

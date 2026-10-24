@@ -531,6 +531,7 @@
           <div class="hint">Revisá los destinos: podés editar cualquier persona antes de ejecutar. Las filas sin Lead ID válido quedan excluidas solas.</div>
           <div id="distSummary" class="hint" style="margin:8px 0"></div>
           <div class="monitor-table-wrap"><table class="dist-table" id="distTable"></table></div>
+          <datalist id="distPersonasData"></datalist>
           <div class="actions" style="margin-top:12px"><button class="btn primary" id="distRun">Ejecutar distribución</button></div>
         </div>
         <div class="prepare-card hidden" id="distResultsCard">
@@ -2071,6 +2072,7 @@ async function saveBandejas() {
   const sinLink = bandejas.find(b => b.enabled && !b.url);
   if (sinLink) {
     setConfigMsg(msg, `La bandeja ${sinLink.code} está habilitada pero no tiene link del reporte.`, true);
+    alert(`La bandeja ${sinLink.code} está habilitada pero no tiene link del reporte.`);
     return;
   }
   try {
@@ -2084,6 +2086,7 @@ async function saveBandejas() {
     await loadMonitorState();
   } catch (error) {
     setConfigMsg(msg, `No se pudo guardar: ${error.message}`, true);
+    alert(`No se pudo guardar: ${error.message}`);
   }
 }
 
@@ -2170,10 +2173,10 @@ function scheduleError(slots) {
   return "";
 }
 
-async function saveSchedule() {
+async function saveSchedule(popup = false) {
   const msg = $("scheduleMsg");
   const error = scheduleError(monitorDraftSchedule);
-  if (error) { setConfigMsg(msg, error, true); return; }
+  if (error) { setConfigMsg(msg, error, true); if (popup) alert(error); return; }
   try {
     await monitorApi("/api/monitor/schedule", {
       method: "PUT",
@@ -2185,6 +2188,7 @@ async function saveSchedule() {
     await loadMonitorState();
   } catch (error) {
     setConfigMsg(msg, `No se pudo guardar: ${error.message}`, true);
+    if (popup) alert(`No se pudo guardar: ${error.message}`);
   }
 }
 
@@ -2280,8 +2284,15 @@ function renderEquipo() {
     add.textContent = "+ franja";
     add.title = "Agregar franja horaria a esta persona";
     add.addEventListener("click", () => {
-      member.franjas = member.franjas || [];
-      member.franjas.push({ start: from.value, end: to.value, bandejas: pendingBandejas() });
+      const candidate = { start: from.value, end: to.value, bandejas: pendingBandejas() };
+      // Valida ANTES de entrar al borrador: una franja sin bandeja (o
+      // inválida) no se agrega — el pop-up avisa al instante.
+      const probe = monitorDraftEquipo.map((m, i) =>
+        i === index ? { ...m, franjas: [...(m.franjas || []), candidate] } : m);
+      const error = equipoError(probe);
+      setConfigMsg($("equipoMsg"), error, !!error);
+      if (error) { alert(error); return; }
+      member.franjas.push(candidate);
       equipoDirty = true;
       renderEquipo();
       saveEquipo();
@@ -2369,7 +2380,7 @@ function equipoError(members) {
   return "";
 }
 
-async function saveEquipo() {
+async function saveEquipo(popup = false) {
   const msg = $("equipoMsg");
   // Incorpora las franjas pendientes: pares desde/hasta que el usuario
   // tocó pero nunca confirmó con "+ franja".
@@ -2385,7 +2396,7 @@ async function saveEquipo() {
     return { nombre: (m.nombre || "").trim(), franjas };
   });
   const error = equipoError(equipo);
-  if (error) { setConfigMsg(msg, error, true); return; }
+  if (error) { setConfigMsg(msg, error, true); if (popup) alert(error); return; }
   try {
     await monitorApi("/api/monitor/equipo", {
       method: "PUT",
@@ -2397,6 +2408,7 @@ async function saveEquipo() {
     await loadMonitorState();
   } catch (saveError) {
     setConfigMsg(msg, `No se pudo guardar: ${saveError.message}`, true);
+    if (popup) alert(`No se pudo guardar: ${saveError.message}`);
   }
 }
 
@@ -3026,7 +3038,7 @@ $("equipoAdd").addEventListener("click", () => {
   equipoDirty = true;
   renderEquipo();
 });
-$("monitorSaveEquipo").addEventListener("click", saveEquipo);
+$("monitorSaveEquipo").addEventListener("click", () => saveEquipo(true));
 $("monitorRefresh").addEventListener("click", loadMonitorState);
 $("monitorClearResults").addEventListener("click", clearMonitorResults);
 $("monitorColsBtn").addEventListener("click", ev => {
@@ -3045,7 +3057,7 @@ $("monitorConfig").addEventListener("toggle", () => {
 });
 $("monitorBanner").addEventListener("click", () => $("monitorBanner").classList.add("hidden"));
 $("monitorSaveBandejas").addEventListener("click", saveBandejas);
-$("monitorSaveSchedule").addEventListener("click", saveSchedule);
+$("monitorSaveSchedule").addEventListener("click", () => saveSchedule(true));
 // Delegación: cualquier edición en los campos marca el borrador como sucio,
 // así un refresco entrante no borra lo que el usuario está escribiendo.
 $("monitorBandejas").addEventListener("input", () => { bandejasDirty = true; });
@@ -3060,7 +3072,7 @@ $("schedAdd").addEventListener("click", () => {
   // al borrador — queda el mensaje explicando qué falta.
   const error = scheduleError([...monitorDraftSchedule, { start, end, bandejas }]);
   setConfigMsg($("scheduleMsg"), error, !!error);
-  if (error) return;
+  if (error) { alert(error); return; }
   scheduleDirty = true;
   monitorDraftSchedule.push({ start, end, bandejas });
   renderSchedule();
@@ -3674,8 +3686,12 @@ function buildDistPreview() {
   });
   const valid = distPreviewRows.filter(r => r.valid).length;
   $("distSummary").textContent = `${distPreviewRows.length} filas leídas · ${valid} con Lead ID válido · ${distPreviewRows.length - valid} excluidas`;
+  // El destino se elige de la lista de personas del archivo, pero queda
+  // editable para asignar a alguien que no aparezca en la columna.
+  const personas = [...new Set(distPreviewRows.map(row => row.persona).filter(Boolean))];
+  $("distPersonasData").innerHTML = personas.map(p => `<option value="${escapeHTML(p)}"></option>`).join("");
   $("distTable").innerHTML = `<thead><tr><th></th><th>Lead ID</th><th>Nombre</th><th>Persona destino</th></tr></thead><tbody>` +
-    distPreviewRows.map((row, i) => `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="dist-inc" data-i="${i}" ${row.include ? "checked" : ""} ${row.valid ? "" : "disabled"}></td><td>${escapeHTML(row.leadId || "—")}</td><td>${escapeHTML(row.nombre)}</td><td><input class="dist-persona" data-i="${i}" value="${escapeHTML(row.persona)}" ${row.valid ? "" : "disabled"}></td></tr>`).join("") +
+    distPreviewRows.map((row, i) => `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="dist-inc" data-i="${i}" ${row.include ? "checked" : ""} ${row.valid ? "" : "disabled"}></td><td>${escapeHTML(row.leadId || "—")}</td><td>${escapeHTML(row.nombre)}</td><td><input class="dist-persona" data-i="${i}" list="distPersonasData" value="${escapeHTML(row.persona)}" ${row.valid ? "" : "disabled"}></td></tr>`).join("") +
     `</tbody>`;
   $("distPreviewCard").classList.remove("hidden");
 }

@@ -183,6 +183,9 @@
   .sched-chip { display: inline-flex; align-items: center; gap: 6px; background: #eef4fa;
     border: 1px solid var(--border); border-radius: 8px; padding: 4px 9px; margin: 5px 6px 0 0; font-size: 12px; }
   .sched-chip button { border: none; background: none; cursor: pointer; color: #c62828; font-weight: 700; font-size: 13px; }
+  .sched-chip-bad { background: #fdecea; border-color: #d32f2f; color: #b71c1c; font-weight: 600; }
+  .msg-error { color: #b71c1c; font-weight: 600; }
+  .msg-ok { color: #1b7a3d; }
   .sched-add { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .sched-add input { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
   .equipo-member { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
@@ -2048,6 +2051,14 @@ function renderBandejas() {
   });
 }
 
+// Mensajes del panel de configuración: error en rojo, ok en verde —
+// la advertencia tiene que saltar a la vista.
+function setConfigMsg(el, text, isError) {
+  el.textContent = text;
+  el.classList.toggle("msg-error", !!isError);
+  el.classList.toggle("msg-ok", !isError && !!text);
+}
+
 async function saveBandejas() {
   const msg = $("bandejasMsg");
   const bandejas = [...document.querySelectorAll("#monitorBandejas .bandeja-row")].map(row => ({
@@ -2059,7 +2070,7 @@ async function saveBandejas() {
   }));
   const sinLink = bandejas.find(b => b.enabled && !b.url);
   if (sinLink) {
-    msg.textContent = `La bandeja ${sinLink.code} está habilitada pero no tiene link del reporte.`;
+    setConfigMsg(msg, `La bandeja ${sinLink.code} está habilitada pero no tiene link del reporte.`, true);
     return;
   }
   try {
@@ -2068,11 +2079,11 @@ async function saveBandejas() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bandejas }),
     });
-    msg.textContent = "Bandejas guardadas.";
+    setConfigMsg(msg, "Bandejas guardadas.", false);
     bandejasDirty = false;
     await loadMonitorState();
   } catch (error) {
-    msg.textContent = `No se pudo guardar: ${error.message}`;
+    setConfigMsg(msg, `No se pudo guardar: ${error.message}`, true);
   }
 }
 
@@ -2098,8 +2109,11 @@ function renderSchedule() {
     const chip = document.createElement("span");
     chip.className = "sched-chip";
     const codes = (slot.bandejas || []).join(",");
-    chip.textContent = `${slot.start} – ${slot.end} [${codes || "todas"}] `;
-    if (!codes) chip.title = "Sin bandeja tildada = cubre todas las bandejas.";
+    chip.textContent = `${slot.start} – ${slot.end} [${codes || "sin bandeja"}] `;
+    if (!codes) {
+      chip.classList.add("sched-chip-bad");
+      chip.title = "Franja vieja sin bandeja: cubre todas, pero no se puede volver a guardar así — recreala tildando su bandeja.";
+    }
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "×";
@@ -2112,6 +2126,11 @@ function renderSchedule() {
     chip.appendChild(remove);
     container.appendChild(chip);
   });
+  // La advertencia se ve en vivo, no solo al intentar guardar.
+  const liveError = scheduleError(monitorDraftSchedule);
+  const msg = $("scheduleMsg");
+  if (liveError) setConfigMsg(msg, liveError, true);
+  else if (msg.classList.contains("msg-error")) setConfigMsg(msg, "", false);
 }
 
 function scheduleError(slots) {
@@ -2154,18 +2173,18 @@ function scheduleError(slots) {
 async function saveSchedule() {
   const msg = $("scheduleMsg");
   const error = scheduleError(monitorDraftSchedule);
-  if (error) { msg.textContent = error; return; }
+  if (error) { setConfigMsg(msg, error, true); return; }
   try {
     await monitorApi("/api/monitor/schedule", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ schedule: monitorDraftSchedule }),
     });
-    msg.textContent = "Horario guardado.";
+    setConfigMsg(msg, "Horario guardado.", false);
     scheduleDirty = false;
     await loadMonitorState();
   } catch (error) {
-    msg.textContent = `No se pudo guardar: ${error.message}`;
+    setConfigMsg(msg, `No se pudo guardar: ${error.message}`, true);
   }
 }
 
@@ -2214,7 +2233,10 @@ function renderEquipo() {
       chip.className = "sched-chip";
       const codes = (slot.bandejas || []).join(",");
       chip.textContent = `${slot.start} – ${slot.end}${codes ? ` [${codes}]` : " [sin bandeja]"} `;
-      if (!(slot.bandejas || []).length) chip.title = "Franja sin bandeja: no cubre nada — quitála y cargala de nuevo con su bandeja.";
+      if (!(slot.bandejas || []).length) {
+        chip.classList.add("sched-chip-bad");
+        chip.title = "Franja sin bandeja: no cubre nada — quitála y cargala de nuevo con su bandeja.";
+      }
       const drop = document.createElement("button");
       drop.type = "button";
       drop.textContent = "×";
@@ -2268,6 +2290,11 @@ function renderEquipo() {
     box.appendChild(slots);
     container.appendChild(box);
   });
+  // La advertencia se ve en vivo, no solo al intentar guardar.
+  const liveError = equipoError(monitorDraftEquipo);
+  const msg = $("equipoMsg");
+  if (liveError) setConfigMsg(msg, liveError, true);
+  else if (msg.classList.contains("msg-error")) setConfigMsg(msg, "", false);
 }
 
 function monitorBandejaOptions() {
@@ -2358,18 +2385,18 @@ async function saveEquipo() {
     return { nombre: (m.nombre || "").trim(), franjas };
   });
   const error = equipoError(equipo);
-  if (error) { msg.textContent = error; return; }
+  if (error) { setConfigMsg(msg, error, true); return; }
   try {
     await monitorApi("/api/monitor/equipo", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ equipo }),
     });
-    msg.textContent = "Equipo guardado.";
+    setConfigMsg(msg, "Equipo guardado.", false);
     equipoDirty = false;
     await loadMonitorState();
   } catch (saveError) {
-    msg.textContent = `No se pudo guardar: ${saveError.message}`;
+    setConfigMsg(msg, `No se pudo guardar: ${saveError.message}`, true);
   }
 }
 
@@ -3032,7 +3059,7 @@ $("schedAdd").addEventListener("click", () => {
   // Valida ANTES de agregar: una franja sin bandeja (o inválida) no entra
   // al borrador — queda el mensaje explicando qué falta.
   const error = scheduleError([...monitorDraftSchedule, { start, end, bandejas }]);
-  $("scheduleMsg").textContent = error;
+  setConfigMsg($("scheduleMsg"), error, !!error);
   if (error) return;
   scheduleDirty = true;
   monitorDraftSchedule.push({ start, end, bandejas });

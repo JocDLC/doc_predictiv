@@ -644,3 +644,11 @@ tomado_por_otro, 🔔 agregado de detectados nuevos; 💬 WhatsApp /
 - Pipe a PowerShell ahora es **UTF-8** (`encoding="utf-8"` +
   `[Console]::InputEncoding=UTF8`): los emoji rompían cp1252 con
   UnicodeEncodeError silenciado por el except.
+
+## Toast urgente + leads nombrados (2026-10-24, cierre)
+
+- `scenario="urgent"` en el XML del toast: atraviesa el "No molestar"
+  de Windows — el banner salta igual (verificado en vivo).
+- Los detectados nuevos ya no van agregados ("N lead(s) nuevo(s)"): una
+  línea por lead `🔔 nombre — nuevo en BANDEJA · contacto`, para que el
+  toast identifique quién entró sin abrir la app.

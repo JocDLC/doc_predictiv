@@ -254,6 +254,8 @@ def windows_toast(title: str, message: str) -> None:
         " ContentType = WindowsRuntime] | Out-Null;"
         "$t=[Windows.UI.Notifications.ToastTemplateType]::ToastText04;"
         "$x=[Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent($t);"
+        # Urgente: atraviesa 'No molestar' de Windows (banner + centro).
+        "$x.DocumentElement.SetAttribute('scenario','urgent');"
         "$n=$x.GetElementsByTagName('text');"
         "0..3 | ForEach-Object {"
         " $n.Item($_).AppendChild($x.CreateTextNode([Console]::In.ReadLine())) | Out-Null };"
@@ -293,11 +295,10 @@ def _lead_toast_lines(events: list, pre_results: dict) -> list:
 
     ✅ tomado — a quién quedó asignado (el toast no admite color de texto;
     el emoji es el indicador verde/rojo); ❌/⚠️ errores de la toma;
-    🔔 detectados nuevos en una línea agregada. Los resultados sin
+    🔔 detectado nuevo con nombre y bandeja. Los resultados sin
     cambio respecto del ciclo anterior no vuelven a sonar.
     """
     lines = []
-    fresh = 0
     for event in events:
         if event.get("type") != "lead_result":
             continue
@@ -328,9 +329,8 @@ def _lead_toast_lines(events: list, pre_results: dict) -> list:
         elif status == STATUS_TOMADO_POR_OTRO:
             lines.append(f"👤 {nombre} — lo tomó otra persona{extra}")
         else:
-            fresh += 1
-    if fresh:
-        lines.append(f"🔔 {fresh} lead(s) nuevo(s) en la bandeja — revisá el monitor.")
+            # Detectado nuevo: una línea por lead con nombre y bandeja.
+            lines.append(f"🔔 {nombre} — nuevo en {event.get('bandeja')}{extra}")
     return lines
 
 

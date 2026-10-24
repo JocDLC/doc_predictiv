@@ -34,6 +34,7 @@ PREDICTIVOS/
 
 # Configuración local
 .devin/config.local.json
+.devin/mcp_config.local.json
 automation_salesforce/config.json
 automation_salesforce/logs/
 automation_salesforce/screenshots/

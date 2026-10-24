@@ -209,7 +209,7 @@
   .dist-table { border-collapse: collapse; font-size: 12px; width: 100%; }
   .dist-table th, .dist-table td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: middle; }
   .dist-table tr.dist-excluded td { opacity: .45; }
-  .dist-persona { width: 100%; box-sizing: border-box; }
+  .dist-persona, .dist-persona-sel { width: 100%; box-sizing: border-box; }
   .monitor-table td .cell { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
   .monitor-table td.hint { font-size: inherit; margin-top: 0; }
   .monitor-table td a.lead-link { color: #1a5fb4; font-weight: 600; text-decoration: none; }
@@ -531,7 +531,6 @@
           <div class="hint">Revisá los destinos: podés editar cualquier persona antes de ejecutar. Las filas sin Lead ID válido quedan excluidas solas.</div>
           <div id="distSummary" class="hint" style="margin:8px 0"></div>
           <div class="monitor-table-wrap"><table class="dist-table" id="distTable"></table></div>
-          <datalist id="distPersonasData"></datalist>
           <div class="actions" style="margin-top:12px"><button class="btn primary" id="distRun">Ejecutar distribución</button></div>
         </div>
         <div class="prepare-card hidden" id="distResultsCard">
@@ -3686,13 +3685,26 @@ function buildDistPreview() {
   });
   const valid = distPreviewRows.filter(r => r.valid).length;
   $("distSummary").textContent = `${distPreviewRows.length} filas leídas · ${valid} con Lead ID válido · ${distPreviewRows.length - valid} excluidas`;
-  // El destino se elige de la lista de personas del archivo, pero queda
-  // editable para asignar a alguien que no aparezca en la columna.
+  // El destino se elige del desplegable con las personas del archivo;
+  // "Otro (escribir)…" habilita el campo libre para quien no aparezca.
   const personas = [...new Set(distPreviewRows.map(row => row.persona).filter(Boolean))];
-  $("distPersonasData").innerHTML = personas.map(p => `<option value="${escapeHTML(p)}"></option>`).join("");
   $("distTable").innerHTML = `<thead><tr><th></th><th>Lead ID</th><th>Nombre</th><th>Persona destino</th></tr></thead><tbody>` +
-    distPreviewRows.map((row, i) => `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="dist-inc" data-i="${i}" ${row.include ? "checked" : ""} ${row.valid ? "" : "disabled"}></td><td>${escapeHTML(row.leadId || "—")}</td><td>${escapeHTML(row.nombre)}</td><td><input class="dist-persona" data-i="${i}" list="distPersonasData" value="${escapeHTML(row.persona)}" ${row.valid ? "" : "disabled"}></td></tr>`).join("") +
-    `</tbody>`;
+    distPreviewRows.map((row, i) => {
+      const inList = personas.includes(row.persona);
+      const dis = row.valid ? "" : "disabled";
+      const select = `<select class="dist-persona-sel" data-i="${i}" ${dis}>` +
+        personas.map(p => `<option value="${escapeHTML(p)}" ${p === row.persona ? "selected" : ""}>${escapeHTML(p)}</option>`).join("") +
+        `<option value="__otro__" ${inList ? "" : "selected"}>Otro (escribir)…</option></select>`;
+      const input = `<input class="dist-persona ${inList ? "hidden" : ""}" data-i="${i}" value="${escapeHTML(row.persona)}" placeholder="Nombre exacto en Salesforce" ${dis}>`;
+      return `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="dist-inc" data-i="${i}" ${row.include ? "checked" : ""} ${dis}></td><td>${escapeHTML(row.leadId || "—")}</td><td>${escapeHTML(row.nombre)}</td><td>${select}${input}</td></tr>`;
+    }).join("") + `</tbody>`;
+  document.querySelectorAll(".dist-persona-sel").forEach(sel => sel.addEventListener("change", () => {
+    const input = document.querySelector(`.dist-persona[data-i="${sel.dataset.i}"]`);
+    const custom = sel.value === "__otro__";
+    input.classList.toggle("hidden", !custom);
+    if (custom) input.focus();
+    else input.value = sel.value;
+  }));
   $("distPreviewCard").classList.remove("hidden");
 }
 
@@ -3701,7 +3713,9 @@ function distQueuePayload() {
   document.querySelectorAll(".dist-inc").forEach(box => {
     if (!box.checked) return;
     const i = Number(box.dataset.i);
-    const persona = (document.querySelector(`.dist-persona[data-i="${i}"]`).value || "").trim();
+    const sel = document.querySelector(`.dist-persona-sel[data-i="${i}"]`);
+    const input = document.querySelector(`.dist-persona[data-i="${i}"]`);
+    const persona = (sel.value === "__otro__" ? input.value : sel.value).trim();
     if (persona) leads.push({ lead_id: distPreviewRows[i].leadId, persona });
   });
   return {

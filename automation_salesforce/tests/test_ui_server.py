@@ -1393,7 +1393,18 @@ class MonitorTickTests(unittest.TestCase):
     def test_tick_runs_cycle_and_toasts_on_taken(self):
         import ui_server
 
-        events_result = [{"type": "lead_result", "bandeja": "AR", "status": "tomado", "entry": {}}]
+        events_result = [
+            {
+                "type": "lead_result",
+                "bandeja": "AR",
+                "status": "tomado",
+                "entry": {
+                    "lead_id": "00Q000000000001AAA",
+                    "asignado_a": "Roger Velasco",
+                    "details": {"nombre": "Ana", "apellido": "Prueba", "preferencia_contacto": "vía whatsapp"},
+                },
+            }
+        ]
         with (
             TemporaryDirectory() as tmp,
             self._enabled_state(tmp),
@@ -1410,8 +1421,46 @@ class MonitorTickTests(unittest.TestCase):
         create.assert_called_once()
         release.assert_not_called()  # la sesión del monitor sobrevive al ciclo
         toast.assert_called_once()
+        # El toast dice a quién se asignó y el método de contacto.
+        self.assertIn("Roger Velasco", toast.call_args.args[1])
+        self.assertIn("WhatsApp", toast.call_args.args[1])
         lead_results = [c.args[0] for c in broadcast.call_args_list if c.args[0]["type"] == "lead_result"]
         self.assertEqual(lead_results, events_result)
+
+    def test_tick_toasts_error_status(self):
+        """Un lead con error de toma avisa en el toast (❌), una sola vez."""
+        import ui_server
+        from monitor_store import record_result
+
+        def _cycle(driver, config, state, timeout_seconds, diag_dir=None):
+            record_result(state, "00Q000000000001AAA", "AR", "error")
+            return [
+                {
+                    "type": "lead_result",
+                    "bandeja": "AR",
+                    "status": "error",
+                    "entry": {"lead_id": "00Q000000000001AAA", "details": {"nombre": "Ana"}},
+                }
+            ]
+
+        with (
+            TemporaryDirectory() as tmp,
+            self._enabled_state(tmp),
+            patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
+            patch("ui_server.create_driver", return_value=object()),
+            patch("ui_server.ensure_monitor_window"),
+            patch("ui_server.release_driver"),
+            patch("ui_server.run_cycle", side_effect=_cycle),
+            patch("ui_server.windows_toast") as toast,
+            patch("ui_server.broadcast_event"),
+        ):
+            ui_server.monitor_tick(self._config(tmp))
+            self.assertEqual(toast.call_count, 1)
+            self.assertIn("Ana", toast.call_args.args[1])
+            self.assertIn("error", toast.call_args.args[1])
+            # Segundo ciclo: el error ya estaba registrado — no re-suena.
+            ui_server.monitor_tick(self._config(tmp))
+            self.assertEqual(toast.call_count, 1)
 
     def test_tick_toasts_once_per_fresh_detected_lead(self):
         """El aviso "lead nuevo en bandeja" suena una vez por lead: un

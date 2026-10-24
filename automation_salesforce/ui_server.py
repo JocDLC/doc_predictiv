@@ -49,7 +49,10 @@ from monitor_store import (
     PAUSE_RUN_ACTIVO,
     PAUSE_SESSION_LOST,
     PAUSE_SIN_BANDEJAS,
+    STATUS_ERROR,
+    STATUS_NO_VERIFICADO,
     STATUS_TOMADO,
+    STATUS_TOMADO_POR_OTRO,
     STATE_FILE_NAME,
     clear_results,
     load_state,
@@ -242,30 +245,93 @@ def broadcast_event(payload: dict) -> None:
 def windows_toast(title: str, message: str) -> None:
     """Toast nativo de Windows vía PowerShell; fire-and-forget, sin dependencias.
 
-    Título y mensaje viajan por stdin para evitar problemas de quoting.
+    ToastText04: título + hasta 3 líneas de cuerpo — una por lead.
+    Título y líneas viajan por stdin para evitar problemas de quoting.
     """
     script = (
+        "[Console]::InputEncoding=[System.Text.Encoding]::UTF8;"
         "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications,"
         " ContentType = WindowsRuntime] | Out-Null;"
-        "$t=[Windows.UI.Notifications.ToastTemplateType]::ToastText02;"
+        "$t=[Windows.UI.Notifications.ToastTemplateType]::ToastText04;"
         "$x=[Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent($t);"
         "$n=$x.GetElementsByTagName('text');"
-        "$n.Item(0).AppendChild($x.CreateTextNode([Console]::In.ReadLine())) | Out-Null;"
-        "$n.Item(1).AppendChild($x.CreateTextNode([Console]::In.ReadLine())) | Out-Null;"
+        "0..3 | ForEach-Object {"
+        " $n.Item($_).AppendChild($x.CreateTextNode([Console]::In.ReadLine())) | Out-Null };"
         "$app='{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe';"
         "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($app)"
         ".Show([Windows.UI.Notifications.ToastNotification]::new($x));"
     )
     try:
+        lines = message.split("\n")[:3]
+        lines += [""] * (3 - len(lines))
         subprocess.Popen(
             ["powershell", "-NoProfile", "-Command", script],
             stdin=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             text=True,
-        ).communicate(input=f"{title}\n{message}\n", timeout=10)
+            encoding="utf-8",  # los emoji del toast no entran en cp1252
+        ).communicate(
+            input=f"{title}\n" + "\n".join(lines) + "\n", timeout=10
+        )
     except (OSError, subprocess.SubprocessError):
         pass  # el toast es best-effort: nunca debe frenar el ciclo
+
+
+def _toast_contacto(details: dict) -> str:
+    """Método de contacto elegido por el lead, para el toast."""
+    pref = str((details or {}).get("preferencia_contacto") or "").strip().lower()
+    if "whatsapp" in pref:
+        return "💬 WhatsApp"
+    if any(key in pref for key in ("llamad", "llamar", "phone", "tel")):
+        return "📞 Llamada"
+    return ""
+
+
+def _lead_toast_lines(events: list, pre_results: dict) -> list:
+    """Una línea por lead relevante del ciclo.
+
+    ✅ tomado — a quién quedó asignado (el toast no admite color de texto;
+    el emoji es el indicador verde/rojo); ❌/⚠️ errores de la toma;
+    🔔 detectados nuevos en una línea agregada. Los resultados sin
+    cambio respecto del ciclo anterior no vuelven a sonar.
+    """
+    lines = []
+    fresh = 0
+    for event in events:
+        if event.get("type") != "lead_result":
+            continue
+        entry = event.get("entry") or {}
+        status = event.get("status")
+        lead_id = entry.get("lead_id")
+        details = entry.get("details") or {}
+        nombre = " ".join(
+            part
+            for part in (
+                str(details.get("nombre") or "").strip(),
+                str(details.get("apellido") or "").strip(),
+            )
+            if part
+        ) or mask_lead_id(lead_id)
+        contacto = _toast_contacto(details)
+        extra = f" · {contacto}" if contacto else ""
+        changed = lead_id and (pre_results.get(lead_id) or {}).get("status") != status
+        if status == STATUS_TOMADO:
+            asignado = str(entry.get("asignado_a") or "").strip() or "tu usuario"
+            lines.append(f"✅ {nombre} → {asignado}{extra}")
+        elif not lead_id or not changed:
+            continue
+        elif status == STATUS_ERROR:
+            lines.append(f"❌ {nombre} — error{extra}")
+        elif status == STATUS_NO_VERIFICADO:
+            lines.append(f"⚠️ {nombre} — no verificado{extra}")
+        elif status == STATUS_TOMADO_POR_OTRO:
+            lines.append(f"👤 {nombre} — lo tomó otra persona{extra}")
+        else:
+            fresh += 1
+    if fresh:
+        lines.append(f"🔔 {fresh} lead(s) nuevo(s) en la bandeja — revisá el monitor.")
+    return lines
 
 
 def monitor_tick(config: dict, force: bool = False) -> list[dict]:
@@ -570,22 +636,13 @@ def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
     if any(e.get("type") == PAUSE_SESSION_LOST for e in events):
         touch_cycle(state, PAUSE_SESSION_LOST)
     monitor_write_state(config, _merge_cycle_state(config, state, pre_results))
-    # Toast nativo: "asignados" por cada tomado (aunque el lead ya figurara
-    # detectado de antes) y "entró a la bandeja" solo por leads nuevos — los
-    # que ya estaban listados no vuelven a sonar en cada ciclo.
-    taken = [e for e in events if e.get("status") == STATUS_TOMADO]
-    if taken:
-        windows_toast("Monitor de Bandeja", f"{len(taken)} lead(s) asignados a tu usuario.")
-    fresh = [
-        e
-        for e in events
-        if e.get("type") == "lead_result"
-        and (e.get("entry") or {}).get("lead_id")
-        and (e.get("entry") or {}).get("lead_id") not in pre_results
-        and e.get("status") != STATUS_TOMADO
-    ]
-    if fresh:
-        windows_toast("Monitor de Bandeja", f"{len(fresh)} lead(s) nuevo(s) en la bandeja — revisá el monitor.")
+    # Toast nativo: una línea por lead — ✅ a quién quedó asignado,
+    # ❌/⚠️ si hubo error, 🔔 detectados nuevos — con el método de
+    # contacto elegido cuando el lead lo declara. Sin cambio no re-suena.
+    lines = _lead_toast_lines(events, pre_results)
+    if lines:
+        shown = lines if len(lines) <= 3 else lines[:2] + [f"… y {len(lines) - 2} lead(s) más"]
+        windows_toast("Monitor de Bandeja", "\n".join(shown))
     for event in events:
         if event.get("type") == "lead_result":
             entry = event.get("entry") or {}

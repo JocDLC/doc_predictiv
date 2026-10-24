@@ -627,3 +627,20 @@ por fila y ejecuta la reasignación en lote.
   (saveEquipo(true)) — errores de validación y rechazos del servidor.
   Los auto-guardados (quitar chip, cambiar nombre) siguen solo pintando
   el mensaje rojo, para no spamear pop-ups.
+
+## Toast de Windows con asignado + contacto (2026-10-24)
+
+Pedido: que la notificación diga a quién quedó asignado el lead (en
+verde) y el método de contacto elegido, avisando errores. Los toasts no
+admiten color de texto — el indicador es emoji: ✅ tomado (con
+`asignado_a` o "tu usuario"), ❌ error, ⚠️ no verificado, 👤
+tomado_por_otro, 🔔 agregado de detectados nuevos; 💬 WhatsApp /
+📞 Llamada desde `details.preferencia_contacto` (`_toast_contacto`).
+
+- `windows_toast` pasó de ToastText02 a **ToastText04** (título + 3
+  líneas: una por lead, "… y N más" si hay más). `_lead_toast_lines`
+  dedup: los resultados sin cambio de status no re-sonan; error solo
+  suena cuando el status cambia.
+- Pipe a PowerShell ahora es **UTF-8** (`encoding="utf-8"` +
+  `[Console]::InputEncoding=UTF8`): los emoji rompían cp1252 con
+  UnicodeEncodeError silenciado por el except.

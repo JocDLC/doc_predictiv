@@ -652,3 +652,15 @@ tomado_por_otro, 🔔 agregado de detectados nuevos; 💬 WhatsApp /
 - Los detectados nuevos ya no van agregados ("N lead(s) nuevo(s)"): una
   línea por lead `🔔 nombre — nuevo en BANDEJA · contacto`, para que el
   toast identifique quién entró sin abrir la app.
+
+## Foco de Windows / notebook de una pantalla (2026-10-26)
+
+Queja: en una sola pantalla la ventana del bot salía al frente cada
+ciclo. Causa: `switch_to.window` en ChromeDriver ejecuta
+`Page.bringToFront` — `ensure_monitor_window` lo llamaba SIEMPRE aunque
+el handle activo ya fuera el del monitor, más switch+close para limpiar
+la pestaña de trabajo. Fix: switch solo cuando el handle activo difiere
+del monitor, y la pestaña de trabajo se cierra por CDP
+(`Target.closeTarget` vía `_close_tab_without_focus`) sin activarla.
+NO minimizar la ventana (la grilla virtual da 0 filas) pero oculta
+detrás de otras sí rinde por las flags anti-occlusion.

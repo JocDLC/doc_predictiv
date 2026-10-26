@@ -424,12 +424,32 @@ def _adopt_restored_monitor_window(driver, debugger_address: str | None, adopt_u
     return None
 
 
+def _close_tab_without_focus(driver, handle: str, debugger_address: str | None) -> bool:
+    """Cierra una pestaña por CDP (``Target.closeTarget``) sin activarla.
+
+    La vía clásica ``switch_to.window`` + ``close`` dispara
+    ``Page.bringToFront`` y le roba el foco de Windows al usuario cada
+    ciclo — el problema reportado en notebooks de una sola pantalla.
+    """
+    if not debugger_address:
+        return False
+    target_id = handle.removeprefix("CDwindow-")
+    try:
+        for target in debugger_tab_targets(debugger_address):
+            if target.get("id") == target_id:
+                driver.execute_cdp_cmd("Target.closeTarget", {"targetId": target_id})
+                return True
+    except (WebDriverException, AttributeError, KeyError, TypeError):
+        pass
+    return False
+
+
 def ensure_monitor_window(
     driver,
     adopt_urls: list[str] | None = None,
     debugger_address: str | None = None,
 ) -> str:
-    """Devuelve la ventana dedicada del monitor y la deja activa.
+    """Devuelve la ventana dedicada del monitor, activa solo si hace falta.
 
     El ciclo navega con ``driver.get`` sobre la ventana seleccionada: con una
     ventana propia el usuario puede seguir usando las demás pestañas del
@@ -438,6 +458,11 @@ def ensure_monitor_window(
     adopta la ventana restaurada por la sesión en vez de abrir una duplicada.
     La pestaña en blanco que abre ``create_driver`` al adjuntarse se cierra
     para no acumularlas.
+
+    Foco de Windows: cada ``switch_to.window`` dispara ``Page.bringToFront``
+    y saca la ventana al frente — en notebooks de una pantalla era cansador.
+    Por eso el switch solo se hace cuando el handle activo NO es el del
+    monitor, y las pestañas auxiliares se cierran por CDP sin activarlas.
     """
     global monitor_window_handle
     work_tab = getattr(driver, "bot_work_tab_handle", None)
@@ -445,7 +470,8 @@ def ensure_monitor_window(
         adopted = _adopt_restored_monitor_window(driver, debugger_address, adopt_urls or [])
         monitor_window_handle = adopted
     if monitor_window_handle and monitor_window_handle in driver.window_handles:
-        driver.switch_to.window(monitor_window_handle)
+        if driver.current_window_handle != monitor_window_handle:
+            driver.switch_to.window(monitor_window_handle)
     else:
         try:
             driver.switch_to.new_window("window")
@@ -459,9 +485,20 @@ def ensure_monitor_window(
         except WebDriverException:
             pass
     if work_tab and work_tab != monitor_window_handle and work_tab in driver.window_handles:
-        driver.switch_to.window(work_tab)
-        driver.close()
-        driver.switch_to.window(monitor_window_handle)
+        if not _close_tab_without_focus(driver, work_tab, debugger_address):
+            try:
+                driver.switch_to.window(work_tab)
+                driver.close()
+            except WebDriverException:
+                pass
+        # Tras cerrar pestañas el handle activo puede quedar huérfano; solo
+        # se vuelve al monitor si el switch es realmente necesario.
+        try:
+            on_monitor = driver.current_window_handle == monitor_window_handle
+        except WebDriverException:
+            on_monitor = False
+        if not on_monitor:
+            driver.switch_to.window(monitor_window_handle)
     return monitor_window_handle
 
 

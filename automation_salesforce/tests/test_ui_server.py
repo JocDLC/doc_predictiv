@@ -1572,11 +1572,13 @@ class MonitorTickTests(unittest.TestCase):
         try:
             self.assertEqual(ui_server.ensure_monitor_window(driver), "monitor-win")
             driver.switch_to.new_window.assert_called_once_with("window")
-            # Segundo ciclo: la ventana ya existe, solo hay que activarla.
+            # Segundo ciclo: la ventana ya existe y el handle activo ES el
+            # del monitor — no hay switch (cada switch_to.window dispara
+            # Page.bringToFront y le robaría el foco al usuario).
             driver.switch_to.new_window.reset_mock()
             ui_server.ensure_monitor_window(driver)
             driver.switch_to.new_window.assert_not_called()
-            driver.switch_to.window.assert_called_with("monitor-win")
+            driver.switch_to.window.assert_not_called()
         finally:
             ui_server.monitor_window_handle = None
 

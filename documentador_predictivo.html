@@ -522,7 +522,8 @@
             <div class="field" id="distSheetField"><label for="distSheet">Hoja del archivo</label><select id="distSheet"></select></div>
             <div class="field"><label for="mapDistId">Lead ID *</label><select id="mapDistId"></select></div>
             <div class="field"><label for="mapDistPersona">Persona destino *</label><select id="mapDistPersona"></select></div>
-            <div class="field"><label for="mapDistNombre">Nombre del lead (opcional, solo para revisar)</label><select id="mapDistNombre"></select></div>
+            <div class="field"><label for="mapDistNombre">Nombre del lead (opcional)</label><select id="mapDistNombre"></select></div>
+            <div class="field"><label for="mapDistApellido">Apellido del lead (opcional)</label><select id="mapDistApellido"></select></div>
           </div>
           <div class="actions"><button class="btn primary" id="distPreview">Ver vista previa</button><button class="btn" id="distOtherFile">Cargar otro archivo</button></div>
         </div>
@@ -3589,10 +3590,13 @@ $("appVersion").textContent = "v" + APP_VERSION;
 // ---------- Distribuir leads desde archivo ----------
 // La BD de leads (export .xlsx/.csv de Salesforce) la parsea el servidor
 // local; la vista previa editable es lo que se encola — nada más.
+// Misma BD que "Preparar campaña predictiva": los alias de detección son
+// los de PREPARE_FIELDS para las columnas compartidas.
 const DIST_FIELDS = [
-  ["id", "Lead ID", ["lead id", "id", "id del candidato", "leadid"]],
+  ["id", "Lead ID", ["lead id", "id"]],
   ["persona", "Persona destino", ["otra informacion", "distribucion", "agente", "asignado a", "propietario"]],
-  ["nombre", "Nombre del lead", ["nombre"]],
+  ["nombre", "Nombre", ["nombre"]],
+  ["apellido", "Apellido", ["apellidos", "apellido"]],
 ];
 const SF_ID_RE = /^[A-Za-z0-9]{15}(?:[A-Za-z0-9]{3})?$/;
 const DIST_STATUS_LABELS = {
@@ -3678,7 +3682,8 @@ function buildDistPreview() {
     return {
       leadId,
       valid: SF_ID_RE.test(leadId),
-      nombre: distMapping.nombre ? (row[distMapping.nombre] || "") : "",
+      nombre: [row[distMapping.nombre], row[distMapping.apellido]]
+        .map(v => (v || "").trim()).filter(Boolean).join(" "),
       persona: (row[distMapping.persona] || "").trim(),
       include: SF_ID_RE.test(leadId),
     };

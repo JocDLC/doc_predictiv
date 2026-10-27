@@ -29,6 +29,15 @@
   (b) `navegador_trabado` residual: una pestaña del usuario cargando sin
   commit también cuelga NEW_SESSION — si vuelve a pasar, evaluar reload
   del target por CDP o aislar la ventana del monitor en un Edge aparte.
+- **PENDIENTE — renombre y rediseño (pedido 2026-10-26)**: el proyecto pasa
+  a llamarse **"Automatización Gestión de Leads"** (sin mencionar IA hasta
+  definir dónde va). Etapa 1 (cambio `renombrar-ui-gestion-leads`): solo
+  textos de la UI + visual "moderno claro" liviana (sin carga de CPU).
+  Después, cuando todo funcione y esté documentado:
+  (a) renombre completo: `documentador_predictivo.html`,
+  `dist/DocumentadorPredictivo`, ZIP, `INICIAR.bat`, `verificar_pc.py`,
+  `open_persistent_browser.py`, `entregables/generar_docs.py`;
+  (b) migrar la UI a un layout con **sidebar**.
 - Plantilla base funcional.
 - `graphify` instalado; `openspec` disponible vía `npx @fission-ai/openspec@1.6.0`
   (Node portátil en `~/Downloads/_dev/tools/node-v24.21.0-win-x64/`).

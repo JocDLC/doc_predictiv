@@ -196,6 +196,11 @@
   .equipo-bandeja.bandeja-off { opacity: .45; cursor: not-allowed; }
   .equipo-bandeja.bandeja-off input { cursor: not-allowed; }
   .contact-ico svg { width: 13px; height: 13px; vertical-align: -2px; }
+  .bandeja-chip { display:inline-block; padding:0 7px; border-radius:9px; font-size:10px; font-weight:700; letter-spacing:.5px; border:1px solid; line-height:16px; }
+  .bandeja-AR { background:#e3f2fd; border-color:#90caf9; color:#0d47a1; }
+  .bandeja-CO { background:#fff8e1; border-color:#ffe082; color:#e65100; }
+  .bandeja-MX { background:#e8f5e9; border-color:#a5d6a7; color:#1b5e20; }
+  .bandeja-XX { background:#eceff1; border-color:#b0bec5; color:#37474f; }
   #viewMonitor .queue-panel { max-width: none; margin: 16px 0; }
   .monitor-config { border: 1px solid var(--border); border-radius: 14px; background: var(--card);
     padding: 0 18px; margin-bottom: 16px; }
@@ -1819,6 +1824,7 @@ const BANDEJA_DEFS = [
   { code: "MX", name: "México", flag: "flag-mexico", owner: "MX_LEAD_QUALIF", tz: -1 },
 ];
 const MONITOR_COLUMNS = [
+  ["bandeja", "Bandeja"],
   ["fecha_creacion", "Fecha creación"],
   ["estado_candidato", "Estado"],
   ["campana", "Campaña"],
@@ -2536,6 +2542,14 @@ function monitorCell(entry, index, total, key) {
       wrap.appendChild(who);
       wrap.title = entry.asignado_a;
     }
+  } else if (key === "bandeja") {
+    // Chip de color por bandeja: AR celeste, CO amarillo, MX verde.
+    const b = String(entry.bandeja || "").toUpperCase();
+    const chip = document.createElement("span");
+    chip.className = `bandeja-chip bandeja-${b || "XX"}`;
+    chip.textContent = b || "—";
+    wrap.appendChild(chip);
+    wrap.title = { AR: "Argentina", CO: "Colombia", MX: "México" }[b] || "Sin bandeja";
   } else if (key === "preferencia_contacto") {
     // Icono según el medio: WhatsApp verde, llamada azul; vacío queda vacío.
     const pref = String(details[key] || "").trim();

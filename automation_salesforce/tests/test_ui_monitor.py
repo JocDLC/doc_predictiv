@@ -146,7 +146,7 @@ SCENARIO_JS = r"""
 // 1) La tabla del monitor tiene las 14 columnas pedidas, sin '#'; el
 //    estado del candidato SÍ se muestra (se agregó para distinguir los
 //    Nuevo de los En curso en modo prueba).
-check('14 columnas de lead', MONITOR_COLUMNS.length === 14);
+check('15 columnas de lead', MONITOR_COLUMNS.length === 15);
 const columnKeys = MONITOR_COLUMNS.map(([k]) => k);
 check('sin columna de orden #', !columnKeys.includes('#'));
 check('estado de candidato presente', columnKeys.includes('estado_candidato'));
@@ -205,17 +205,20 @@ monitorDraftSchedule = [];
 renderMonitor();
 const table = __elements['monitorTable'];
 check('tabla tiene encabezado + 2 filas', table.children.length === 3);
-// Orden visible por defecto: # + 14 columnas + ⏱ (hace) + resultado = 17.
+// Orden visible por defecto: # + 15 columnas + ⏱ (hace) + resultado = 18.
 // Cada celda lleva el contenido dentro de un div .cell.
 const newestRow = table.children[1];
-check('17 celdas por fila', newestRow.children.length === 17);
+check('18 celdas por fila', newestRow.children.length === 18);
+// La columna bandeja va primera tras el #: chip AR para el lead de AR.
+check('chip bandeja AR', newestRow.children[1].children[0].children[0].textContent === 'AR'
+  && newestRow.children[1].children[0].children[0].className.includes('bandeja-AR'));
 // results se muestran del más nuevo al más viejo: BBBBB primero.
-check('lead_id en su columna', newestRow.children[13].children[0].textContent === '00Q0000000000BBBBB');
-check('columna ausente dice No disponible', newestRow.children[5].children[0].textContent === 'No disponible en bandeja');
-check('resultado tomado_por_otro etiquetado', newestRow.children[16].children[0].children[0].textContent === 'tomado por otro');
+check('lead_id en su columna', newestRow.children[14].children[0].textContent === '00Q0000000000BBBBB');
+check('columna ausente dice No disponible', newestRow.children[6].children[0].textContent === 'No disponible en bandeja');
+check('resultado tomado_por_otro etiquetado', newestRow.children[17].children[0].children[0].textContent === 'tomado por otro');
 const secondRow = table.children[2];
-check('nombre del lead en la fila', secondRow.children[7].children[0].children[0].textContent === 'Ana');
-check('estado del candidato visible', secondRow.children[2].children[0].textContent === 'Nuevo');
+check('nombre del lead en la fila', secondRow.children[8].children[0].children[0].textContent === 'Ana');
+check('estado del candidato visible', secondRow.children[3].children[0].textContent === 'Nuevo');
 
 // 4) El toggle refleja el estado y el motivo de pausa se muestra.
 check('toggle dice pausar cuando activo', __elements['monitorToggle'].textContent.includes('pausar'));
@@ -360,7 +363,7 @@ monitorState.results = [{
   asignado_a: 'Maria Perez', details: {},
 }];
 renderMonitorTable();
-const assignedCell = __elements['monitorTable'].children[1].children[16];
+const assignedCell = __elements['monitorTable'].children[1].children[17];
 check('asignado a visible en la tabla',
   assignedCell.children[0].children.some(td => td.textContent.includes('Maria Perez')));
 """

@@ -56,6 +56,7 @@ from salesforce_session import is_authenticated, wait_for_lightning_ready
 PICK_UP_LABELS = ("pick up", "pickup", "recoger")
 OWNER_FIELD_TIMEOUT_SECONDS = 10
 OWNER_VERIFY_TIMEOUT_SECONDS = 15
+OWNER_DIALOG_OPEN_WAIT_SECONDS = 8
 POLL_SECONDS = 0.5
 
 # Devolución a la cola: acción y confirmación del diálogo "Cambiar propietario",
@@ -833,15 +834,16 @@ def _confirm_owner_dialog(driver, timeout_seconds: float) -> bool:
     return False
 
 
-def reassign_owner(driver, nombre: str, timeout_seconds: int) -> str:
-    """Reasigna el lead a ``nombre`` vía el diálogo "Cambiar propietario".
+def _owner_matches(owner: str, nombre: str) -> bool:
+    """True si el propietario releído corresponde a ``nombre``."""
+    actual = normalized_key(owner or "")
+    wanted = normalized_key(nombre)
+    return bool(actual and wanted and (wanted in actual or actual in wanted))
 
-    Reutiliza la maquinaria de devolución a cola (mismo modal): el scope
-    por defecto ya es Usuarios, no hace falta conmutar a Colas. Devuelve
-    ``reasignado`` solo si la relectura del propietario coincide; ante
-    cualquier fallo el lead queda con el usuario del bot y el paso que
-    falló queda en el outcome (``reasignacion_error:<paso>``).
-    """
+
+def _reassign_attempt(driver, nombre: str, timeout_seconds: int) -> str:
+    """Un intento completo de reasignación: modal → búsqueda → opción →
+    confirmar → verificación por relectura del propietario."""
     if not open_change_owner_dialog(driver, timeout_seconds):
         return "reasignacion_error:modal"
     search_input = _wait_owner_search_input(driver, timeout_seconds)
@@ -857,12 +859,34 @@ def reassign_owner(driver, nombre: str, timeout_seconds: int) -> str:
     deadline = time.monotonic() + OWNER_VERIFY_TIMEOUT_SECONDS
     while time.monotonic() < deadline:
         owner = read_record_owner(driver)
-        actual = normalized_key(owner or "")
-        wanted = normalized_key(nombre)
-        if actual and wanted and (wanted in actual or actual in wanted):
+        if _owner_matches(owner, nombre):
             return "reasignado"
         time.sleep(POLL_SECONDS)
     return "reasignacion_error:verificacion"
+
+
+def reassign_owner(driver, nombre: str, timeout_seconds: int) -> str:
+    """Reasigna el lead a ``nombre`` vía el diálogo "Cambiar propietario".
+
+    Flujo aprobado: (1) intento de reasignación; si no quedó ``reasignado``
+    se relee el propietario tras un refresh — el modal pudo confirmar y la
+    verificación fallar por timing del re-render—; si el nombre coincide se
+    da por buena, y solo si el lead siguió sin cambiar de dueño se corre
+    (2) un segundo intento completo. Reutiliza la maquinaria de devolución
+    a cola (mismo modal): el scope por defecto ya es Usuarios, no hace
+    falta conmutar a Colas. Devuelve ``reasignado`` solo si la relectura
+    del propietario coincide; ante cualquier fallo el lead queda con el
+    usuario del bot y el paso que falló queda en el outcome
+    (``reasignacion_error:<paso>``).
+    """
+    outcome = _reassign_attempt(driver, nombre, timeout_seconds)
+    if outcome == "reasignado":
+        return outcome
+    # Verificar a nombre de quién quedó antes de reintentar.
+    owner = _reread_owner_after_refresh(driver, timeout_seconds)
+    if _owner_matches(owner, nombre):
+        return "reasignado"
+    return _reassign_attempt(driver, nombre, timeout_seconds)
 
 
 def send_whatsapp(driver) -> str:
@@ -1130,19 +1154,40 @@ def take_lead(
 
 
 def open_change_owner_dialog(driver, timeout_seconds: int) -> bool:
-    """Clic en la acción Cambiar propietario y espera a que el diálogo abra."""
-    outcome = execute_in_any_frame(driver, RECORD_ACTION_SCRIPT, list(CHANGE_OWNER_ACTION_LABELS))
-    if outcome != "clicked":
-        if execute_in_any_frame(driver, OPEN_OVERFLOW_MENU_SCRIPT, list(OVERFLOW_MENU_LABELS)) == "clicked":
-            time.sleep(POLL_SECONDS)
-            outcome = execute_in_any_frame(driver, RECORD_ACTION_SCRIPT, list(CHANGE_OWNER_ACTION_LABELS))
-    if outcome != "clicked":
-        return False
+    """Clic en la acción Cambiar propietario y espera a que el diálogo abra.
+
+    El registro suele venir de un re-render (Save del panel Contact
+    Client): el botón puede tardar un momento en aparecer, así que el
+    intento de clic —acción directa y, si no está, menú de overflow— se
+    repite hasta el deadline. Tras cada clic se espera el diálogo por un
+    máximo de ``OWNER_DIALOG_OPEN_WAIT_SECONDS`` (o lo que quede del
+    deadline); si no abrió se cancela el modal por si quedó a medio abrir
+    y se permite un segundo clic (máximo 2 por llamada).
+    """
     deadline = time.monotonic() + timeout_seconds
-    while time.monotonic() < deadline:
-        if execute_in_any_frame(driver, OWNER_DIALOG_OPEN_SCRIPT) == "open":
-            return True
-        time.sleep(POLL_SECONDS)
+    clicks = 0
+    while time.monotonic() < deadline and clicks < 2:
+        outcome = execute_in_any_frame(
+            driver, RECORD_ACTION_SCRIPT, list(CHANGE_OWNER_ACTION_LABELS)
+        )
+        if outcome != "clicked":
+            if execute_in_any_frame(
+                driver, OPEN_OVERFLOW_MENU_SCRIPT, list(OVERFLOW_MENU_LABELS)
+            ) == "clicked":
+                time.sleep(POLL_SECONDS)
+                outcome = execute_in_any_frame(
+                    driver, RECORD_ACTION_SCRIPT, list(CHANGE_OWNER_ACTION_LABELS)
+                )
+        if outcome != "clicked":
+            time.sleep(POLL_SECONDS)
+            continue
+        clicks += 1
+        open_deadline = min(deadline, time.monotonic() + OWNER_DIALOG_OPEN_WAIT_SECONDS)
+        while time.monotonic() < open_deadline:
+            if execute_in_any_frame(driver, OWNER_DIALOG_OPEN_SCRIPT) == "open":
+                return True
+            time.sleep(POLL_SECONDS)
+        _dismiss_owner_dialog(driver)
     return False
 
 

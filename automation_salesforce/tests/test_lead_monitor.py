@@ -1207,8 +1207,18 @@ class ReassignOwnerTests(unittest.TestCase):
     def test_reassign_owner_modal_missing(self):
         from lead_monitor import reassign_owner
 
-        with patch("lead_monitor.execute_in_any_frame", return_value="not_found"):
-            self.assertEqual(reassign_owner(object(), "Micaela Caetano", 0.1), "reasignacion_error:modal")
+        with (
+            patch("lead_monitor.execute_in_any_frame", return_value="not_found"),
+            patch(
+                "lead_monitor._reread_owner_after_refresh",
+                return_value="Jose Manuel de la Colina",
+            ),
+            patch("lead_monitor.time.sleep"),
+        ):
+            self.assertEqual(
+                reassign_owner(unittest.mock.Mock(), "Micaela Caetano", 0.1),
+                "reasignacion_error:modal",
+            )
 
     def test_reassign_owner_option_missing_dismisses(self):
         from lead_closure import MODAL_CONFIRM_SCRIPT, RECORD_ACTION_SCRIPT
@@ -1228,11 +1238,18 @@ class ReassignOwnerTests(unittest.TestCase):
         }
         with (
             patch("lead_monitor.execute_in_any_frame", side_effect=lambda _d, s, *a: responses[s]),
+            patch(
+                "lead_monitor._reread_owner_after_refresh",
+                return_value="Jose Manuel de la Colina",
+            ),
             patch("lead_monitor.QUEUE_SEARCH_TIMEOUT_SECONDS", 0.01),
             patch("lead_monitor.POLL_SECONDS", 0.01),
             patch("lead_monitor.time.sleep"),
         ):
-            self.assertEqual(reassign_owner(object(), "Inexistente", 5), "reasignacion_error:opcion")
+            self.assertEqual(
+                reassign_owner(unittest.mock.Mock(), "Inexistente", 5),
+                "reasignacion_error:opcion",
+            )
 
     def test_reassign_owner_verify_fail(self):
         from lead_closure import MODAL_CONFIRM_SCRIPT, RECORD_ACTION_SCRIPT
@@ -1253,11 +1270,18 @@ class ReassignOwnerTests(unittest.TestCase):
         with (
             patch("lead_monitor.execute_in_any_frame", side_effect=lambda _d, s, *a: responses[s]),
             patch("lead_monitor.read_record_owner", return_value="Jose Manuel de la Colina"),
+            patch(
+                "lead_monitor._reread_owner_after_refresh",
+                return_value="Jose Manuel de la Colina",
+            ),
             patch("lead_monitor.OWNER_VERIFY_TIMEOUT_SECONDS", 0.01),
             patch("lead_monitor.POLL_SECONDS", 0.01),
             patch("lead_monitor.time.sleep"),
         ):
-            self.assertEqual(reassign_owner(object(), "Micaela Caetano", 5), "reasignacion_error:verificacion")
+            self.assertEqual(
+                reassign_owner(unittest.mock.Mock(), "Micaela Caetano", 5),
+                "reasignacion_error:verificacion",
+            )
 
     def test_finalize_con_encargada_no_comenta_y_reasigna(self):
         """Lead con encargada distinta: sin comentario en Otra información
@@ -1295,6 +1319,131 @@ class ReassignOwnerTests(unittest.TestCase):
         self.assertEqual(_reasignacion_mark({"preferencia_contacto": "correo"}), "Asignado - Gestionarlo")
         self.assertEqual(_reasignacion_mark({}), "Asignado - Gestionarlo")
         self.assertEqual(_reasignacion_mark(None), "Asignado - Gestionarlo")
+
+    def test_reassign_owner_action_button_appears_late(self):
+        """El botón Cambiar propietario llega tarde por el re-render tras
+        Save: se reintenta el clic hasta que aparece, sin releer el
+        propietario porque el intento sale ``reasignado``."""
+        from lead_closure import MODAL_CONFIRM_SCRIPT, RECORD_ACTION_SCRIPT
+        from lead_monitor import (
+            OWNER_DIALOG_OPEN_SCRIPT,
+            OWNER_SEARCH_INPUT_SCRIPT,
+            PICK_QUEUE_RESULT_SCRIPT,
+            reassign_owner,
+        )
+
+        clicks = iter(["not_found", "not_found", "clicked"])
+        responses = {
+            OWNER_DIALOG_OPEN_SCRIPT: "open",
+            OWNER_SEARCH_INPUT_SCRIPT: unittest.mock.Mock(),
+            PICK_QUEUE_RESULT_SCRIPT: "clicked",
+            MODAL_CONFIRM_SCRIPT: "clicked",
+        }
+        def fake_exec(_driver, script, *args):
+            if script == RECORD_ACTION_SCRIPT:
+                return next(clicks)
+            return responses.get(script, "not_found")
+
+        with (
+            patch("lead_monitor.execute_in_any_frame", side_effect=fake_exec),
+            patch("lead_monitor.read_record_owner", return_value="Micaela Caetano"),
+            patch("lead_monitor._reread_owner_after_refresh") as reread,
+            patch("lead_monitor.POLL_SECONDS", 0.001),
+            patch("lead_monitor.time.sleep"),
+        ):
+            self.assertEqual(
+                reassign_owner(unittest.mock.Mock(), "Micaela Caetano", 5), "reasignado"
+            )
+        reread.assert_not_called()
+
+    def test_open_change_owner_dialog_second_click_opens(self):
+        """Si el modal no abre tras el primer clic, se permite un segundo
+        clic (máximo 2) antes de rendirse."""
+        from lead_closure import RECORD_ACTION_SCRIPT
+        from lead_monitor import (
+            OWNER_DIALOG_OPEN_SCRIPT,
+            open_change_owner_dialog,
+        )
+
+        state = {"clicks": 0}
+        def fake_exec(_driver, script, *args):
+            if script == RECORD_ACTION_SCRIPT:
+                state["clicks"] += 1
+                return "clicked"
+            if script == OWNER_DIALOG_OPEN_SCRIPT:
+                return "open" if state["clicks"] == 2 else "closed"
+            return "clicked"  # cancel del dismiss
+
+        with (
+            patch("lead_monitor.execute_in_any_frame", side_effect=fake_exec),
+            patch("lead_monitor.OWNER_DIALOG_OPEN_WAIT_SECONDS", 0.01),
+            patch("lead_monitor.POLL_SECONDS", 0.001),
+            patch("lead_monitor.time.sleep"),
+        ):
+            self.assertTrue(open_change_owner_dialog(unittest.mock.Mock(), 5))
+
+    def test_reassign_owner_reread_already_assigned(self):
+        """El intento falla pero la relectura muestra que el lead ya quedó
+        a nombre de la encargada → ``reasignado`` sin segundo intento."""
+        import lead_monitor
+
+        with (
+            patch(
+                "lead_monitor._reassign_attempt",
+                return_value="reasignacion_error:verificacion",
+            ) as attempt,
+            patch(
+                "lead_monitor._reread_owner_after_refresh",
+                return_value="Micaela Caetano",
+            ) as reread,
+        ):
+            self.assertEqual(
+                lead_monitor.reassign_owner(unittest.mock.Mock(), "Micaela Caetano", 5),
+                "reasignado",
+            )
+        self.assertEqual(attempt.call_count, 1)
+        reread.assert_called_once()
+
+    def test_reassign_owner_second_attempt_succeeds(self):
+        """La relectura muestra al usuario del bot → segundo intento."""
+        import lead_monitor
+
+        with (
+            patch(
+                "lead_monitor._reassign_attempt",
+                side_effect=["reasignacion_error:verificacion", "reasignado"],
+            ) as attempt,
+            patch(
+                "lead_monitor._reread_owner_after_refresh",
+                return_value="Jose Manuel de la Colina",
+            ),
+        ):
+            self.assertEqual(
+                lead_monitor.reassign_owner(unittest.mock.Mock(), "Micaela Caetano", 5),
+                "reasignado",
+            )
+        self.assertEqual(attempt.call_count, 2)
+
+    def test_reassign_owner_both_attempts_fail(self):
+        """Ambos intentos fallan → devuelve el outcome del segundo."""
+        import lead_monitor
+
+        with (
+            patch(
+                "lead_monitor._reassign_attempt",
+                side_effect=["reasignacion_error:modal", "reasignacion_error:opcion"],
+            ) as attempt,
+            patch(
+                "lead_monitor._reread_owner_after_refresh",
+                return_value="Jose Manuel de la Colina",
+            ) as reread,
+        ):
+            self.assertEqual(
+                lead_monitor.reassign_owner(unittest.mock.Mock(), "Micaela Caetano", 5),
+                "reasignacion_error:opcion",
+            )
+        self.assertEqual(attempt.call_count, 2)
+        reread.assert_called_once()
 
 
 class RunCycleTests(unittest.TestCase):

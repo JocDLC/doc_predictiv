@@ -114,7 +114,7 @@ current_operation: str | None = None
 run_lock = threading.Lock()
 
 # --- Monitor de Bandeja + canal de eventos ------------------------------------
-MONITOR_INTERVAL_SECONDS = 60
+MONITOR_INTERVAL_SECONDS = 120
 # Serializa lecturas/escrituras de monitor_state.json entre el hilo del monitor
 # y los endpoints de la UI.
 monitor_lock = threading.Lock()

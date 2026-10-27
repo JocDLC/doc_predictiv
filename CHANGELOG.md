@@ -11,6 +11,17 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+## [Sin liberar]
+
+### Cambiado
+
+- **Monitor de Bandeja — estado visible**: tarjeta de estado con semáforo
+  según el estado real (verde activo, ámbar en espera, rojo requiere atención,
+  gris apagado); ya no muestra "activo · pausado" a la vez. El botón "Monitor
+  activo — tocar para pausar" pasa a ser un interruptor Encendido/Apagado
+  dentro de la tarjeta. Las opciones se agrupan en dos columnas
+  (Comportamiento / Avisos). Intervalo del monitor: 120 s ("~2 minutos").
+
 ## [1.4.1] — 2026-10-22
 
 ### Corregido

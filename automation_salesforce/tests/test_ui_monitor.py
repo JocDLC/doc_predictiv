@@ -66,6 +66,9 @@ function makeEl(tag) {
     get: () => el._text,
     set: v => { el._text = String(v); el.children = []; },
   });
+  el._attrs = {};
+  el.setAttribute = (k, v) => { el._attrs[k] = String(v); };
+  el.getAttribute = k => (k in el._attrs ? el._attrs[k] : null);
   el.appendChild = child => { el.children.push(child); return child; };
   el.append = (...kids) => kids.forEach(k => el.children.push(k));
   el.addEventListener = (name, fn) => { el.listeners[name] = fn; };
@@ -220,18 +223,48 @@ const secondRow = table.children[2];
 check('nombre del lead en la fila', secondRow.children[8].children[0].children[0].textContent === 'Ana');
 check('estado del candidato visible', secondRow.children[3].children[0].textContent === 'Nuevo');
 
-// 4) El toggle refleja el estado y el motivo de pausa se muestra.
-check('toggle dice pausar cuando activo', __elements['monitorToggle'].textContent.includes('pausar'));
+// 4) El switch refleja enabled y el semáforo clasifica el estado real.
+check('switch aria-checked activo', __elements['monitorToggle'].getAttribute('aria-checked') === 'true');
+check('switch etiqueta Encendido', __elements['monitorToggleLabel'].textContent === 'Encendido');
+check('tarjeta en verde', __elements['monitorStateCard']._classes.has('state-ok'));
+check('estado ok', monitorVisualState({ enabled: true, paused_reason: null }).level === 'ok');
+check('espera fuera de horario', monitorVisualState({ enabled: true, paused_reason: 'fuera_de_horario' }).level === 'wait');
+check('espera run activo', monitorVisualState({ enabled: true, paused_reason: 'run_activo' }).level === 'wait');
+check('espera bot corriendo', monitorVisualState({ enabled: true, bot_running: true }).level === 'wait');
+check('alerta sesión caída', monitorVisualState({ enabled: true, paused_reason: 'session_lost' }).level === 'alert');
+check('alerta navegador trabado', monitorVisualState({ enabled: true, paused_reason: 'navegador_trabado' }).level === 'alert');
+check('alerta sin bandejas', monitorVisualState({ enabled: true, paused_reason: 'sin_bandejas' }).level === 'alert');
+check('alerta error de ciclo', monitorVisualState({ enabled: true, paused_reason: 'error:x' }).level === 'alert');
+const offState = monitorVisualState({ enabled: false, paused_reason: 'fuera_de_horario' });
+check('apagado en gris', offState.level === 'off');
+check('motivo de apagado pasa al detalle', offState.details.some(d => d.includes('último ciclo')));
+check('en espera no dice ACTIVO',
+  !monitorVisualState({ enabled: true, paused_reason: 'fuera_de_horario' }).title.includes('ACTIVO'));
 
-// 5) El estado desactivado muestra el botón de activación.
+// 5) El estado desactivado apaga el switch y la tarjeta queda gris.
 monitorState.enabled = false;
 renderMonitor();
-check('toggle ofrece activar', __elements['monitorToggle'].textContent === 'Activar monitor');
+check('switch aria-checked apagado', __elements['monitorToggle'].getAttribute('aria-checked') === 'false');
+check('switch etiqueta Apagado', __elements['monitorToggleLabel'].textContent === 'Apagado');
+check('tarjeta apagada', __elements['monitorStateCard']._classes.has('state-off'));
 monitorState.enabled = true;
 monitorState.paused_reason = 'session_lost';
 renderMonitor();
 check('pausa por sesión visible', __elements['monitorStatus'].textContent.includes('sesión de Salesforce'));
+check('tarjeta en rojo', __elements['monitorStateCard']._classes.has('state-alert'));
+monitorState.paused_reason = 'fuera_de_horario';
+renderMonitor();
+check('tarjeta en ámbar', __elements['monitorStateCard']._classes.has('state-wait'));
 monitorState.paused_reason = null;
+monitorState.solo_listar = true;
+monitorState.enviar_whatsapp = true;
+renderMonitor();
+const detailText = __elements['monitorStatusDetail'].textContent;
+check('detalle modo prueba', detailText.includes('modo prueba'));
+check('detalle whatsapp auto', detailText.includes('WhatsApp auto'));
+check('detalle última revisión', detailText.includes('última revisión'));
+monitorState.solo_listar = false;
+monitorState.enviar_whatsapp = false;
 renderMonitor();
 
 // 6) Bandejas renderizadas con defaults por país.

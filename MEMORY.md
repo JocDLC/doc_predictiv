@@ -29,6 +29,18 @@
   (b) `navegador_trabado` residual: una pestaña del usuario cargando sin
   commit también cuelga NEW_SESSION — si vuelve a pasar, evaluar reload
   del target por CDP o aislar la ventana del monitor en un Edge aparte.
+- **Repo vs dist (2026-10-27)**: el `INICIAR.bat` de
+  `dist\DocumentadorPredictivo` corre su propia copia de la app
+  (`dist\...\app\documentador_predictivo.html` + `app\automation_salesforce\`).
+  `dist/` está en `.gitignore` y no hay script que lo regenere. Para probar un
+  cambio del repo en la app que corre, copiar los archivos tocados al `dist`
+  (con F5 alcanza si solo cambia el HTML; el `no-store` hace que se relea en
+  cada pedido).
+- **Intervalo del monitor (2026-10-27)**: `MONITOR_INTERVAL_SECONDS = 120` en
+  `automation_salesforce/ui_server.py`. La UI NO lo lee por API: el texto
+  "~2 minutos" está fijo en `documentador_predictivo.html` (tarjeta de estado y
+  texto explicativo del Monitor). Si se cambia el intervalo, actualizar esos
+  textos a mano (cambio `mejorar-ui-estado-monitor`).
 - **PENDIENTE — renombre y rediseño (pedido 2026-10-26)**: el proyecto pasa
   a llamarse **"Automatización Gestión de Leads"** (sin mencionar IA hasta
   definir dónde va). Etapa 1 (cambio `renombrar-ui-gestion-leads`): solo

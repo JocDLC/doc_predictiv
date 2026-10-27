@@ -114,6 +114,8 @@ current_operation: str | None = None
 run_lock = threading.Lock()
 
 # --- Monitor de Bandeja + canal de eventos ------------------------------------
+# Si cambia, actualizar el texto fijo "~2 minutos" de documentador_predictivo.html
+# (tarjeta de estado y texto explicativo del Monitor). Ver MEMORY.md.
 MONITOR_INTERVAL_SECONDS = 120
 # Serializa lecturas/escrituras de monitor_state.json entre el hilo del monitor
 # y los endpoints de la UI.

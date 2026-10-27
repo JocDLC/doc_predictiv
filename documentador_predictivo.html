@@ -170,7 +170,36 @@
     border-radius: 10px; padding: 12px 16px; font-weight: 600; margin: 10px 0; cursor: pointer; }
   .monitor-banner.monitor-info { background: #fff8e1; border-color: #f9a825; color: #6d4c00;
     font-weight: 500; }
-  .monitor-status-line { font-size: 13px; color: var(--muted); margin: 6px 0; }
+  .monitor-state-card { display: flex; align-items: center; gap: 12px; border: 1px solid var(--border);
+    border-left: 5px solid var(--muted); border-radius: 10px; background: #f3f4f6;
+    padding: 12px 16px; margin: 10px 0; }
+  .monitor-state-card.state-ok { border-left-color: var(--accent2); background: #e8f5ee; }
+  .monitor-state-card.state-wait { border-left-color: #b45309; background: #fdf3e3; }
+  .monitor-state-card.state-alert { border-left-color: #b91c1c; background: #fdecea; }
+  .monitor-state-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .state-ok .monitor-state-dot { background: var(--accent2); }
+  .state-wait .monitor-state-dot { background: #b45309; }
+  .state-alert .monitor-state-dot { background: #b91c1c; }
+  .monitor-state-text { flex: 1; min-width: 0; }
+  .monitor-status-line { font-size: 16px; font-weight: 700; }
+  .monitor-status-detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .switch { display: inline-flex; align-items: center; gap: 8px; border: none; background: none;
+    cursor: pointer; font: inherit; padding: 4px; }
+  .switch .switch-track { width: 40px; height: 22px; border-radius: 11px; background: #9ca3af;
+    position: relative; transition: background .2s; flex-shrink: 0; }
+  .switch .switch-thumb { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+    border-radius: 50%; background: #fff; transition: left .2s; }
+  .switch[aria-checked="true"] .switch-track { background: var(--accent2); }
+  .switch[aria-checked="true"] .switch-thumb { left: 21px; }
+  .switch .switch-label { font-size: 13px; font-weight: 600; }
+  .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  .monitor-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+  .monitor-options fieldset { border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 12px 12px; margin: 0; }
+  .monitor-options legend { font-size: 12px; font-weight: 700; color: var(--muted); padding: 0 4px; }
+  .monitor-option { display: flex; align-items: center; gap: 6px; cursor: pointer;
+    font-size: 12px; color: var(--muted); margin-top: 6px; }
+  @media (max-width: 720px) { .monitor-options { grid-template-columns: 1fr; } }
   .bandeja-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     padding: 9px 0; border-bottom: 1px solid var(--border); }
   .bandeja-row:last-child { border-bottom: none; }
@@ -435,31 +464,45 @@
   <section id="viewMonitor" class="hidden">
     <div class="queue-panel">
       <h2>Monitor de Bandeja</h2>
-      <p class="hint">Revisa las bandejas habilitadas cada ~2 minutos. Cuando aparece un lead <strong>nuevo sin asignar</strong>, abre el registro, pulsa <strong>Pick Up</strong> y verifica que quede a nombre de tu usuario. Trabaja en su propia ventana del navegador del bot: pod&eacute;s minimizarla y seguir usando las dem&aacute;s pesta&ntilde;as. Se pausa solo mientras el bot de documentaci&oacute;n o cierre est&aacute; trabajando.</p>
+      <div class="monitor-state-card state-off" id="monitorStateCard">
+        <span class="monitor-state-dot"></span>
+        <div class="monitor-state-text">
+          <div class="monitor-status-line" id="monitorStatus">Estado del monitor: consultando…</div>
+          <div class="monitor-status-detail" id="monitorStatusDetail"></div>
+        </div>
+        <button type="button" class="switch" id="monitorToggle" role="switch" aria-checked="false"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label" id="monitorToggleLabel">Apagado</span></button>
+      </div>
       <div class="monitor-banner monitor-info hidden" id="monitorLoginAlert" title="Tocá para cerrar el aviso">
         &#9888; El monitor usa el navegador del bot: ten&eacute;s que estar <strong>logueado en Salesforce</strong> ah&iacute;. Si la sesi&oacute;n expir&oacute;, el monitor se pausa y avisa.
       </div>
       <div class="monitor-banner hidden" id="monitorBanner" title="Tocá para cerrar el aviso"></div>
-      <div class="monitor-status-line" id="monitorStatus">Estado del monitor: consultando…</div>
       <div class="actions">
-        <button class="btn primary" id="monitorToggle">Activar monitor</button>
         <button class="btn" id="monitorCheck" title="Revisa las bandejas ahora. Sin franja vigente corre en modo prueba: lista los leads sin tomarlos">Revisar ahora</button>
         <button class="btn" id="monitorRefresh" title="Volver a leer el estado del monitor">Actualizar</button>
         <button class="btn" id="monitorRestartBrowser" title="Cierra y reabre el navegador dedicado del bot (incluida esta pestaña). Usalo si el monitor dice que el navegador no responde.">Reiniciar navegador del bot</button>
-        <label class="hint" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
-          <input type="checkbox" id="monitorDryRun"> Modo prueba &mdash; solo listar los QUALIF, no toma ninguno
-        </label>
-        <label class="hint" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" title="Tras tomar un lead AR cuya preferencia de contacto es WhatsApp, documenta '1 INT Envío WhatsApp' en Otra información y pulsa Send To Whatsapp automáticamente">
-          <input type="checkbox" id="monitorWhatsapp"> WhatsApp auto &mdash; env&iacute;a el primer mensaje a leads AR que pidieron WhatsApp
-        </label>
-        <label class="hint" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" title="Emite un aviso sonoro y resalta la fila cuando aparece un lead nuevo en la lista">
-          <input type="checkbox" id="monitorSound"> Sonido &mdash; avisa cuando entra un lead nuevo
-        </label>
-        <label class="hint" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" title="Muestra una notificación de Windows cuando aparece un lead nuevo — funciona aunque esta pestaña esté en segundo plano o minimizada">
-          <input type="checkbox" id="monitorNotify"> Notificar &mdash; aviso de Windows al entrar un lead
-        </label>
-        <button type="button" class="btn" id="monitorNotifyTest" style="padding:1px 10px;font-size:11px" title="Envía una notificación de prueba ahora para verificar que el aviso llega">Probar aviso</button>
       </div>
+      <div class="monitor-options">
+        <fieldset>
+          <legend>Comportamiento</legend>
+          <label class="monitor-option">
+            <input type="checkbox" id="monitorDryRun"> Modo prueba &mdash; solo listar los QUALIF, no toma ninguno
+          </label>
+          <label class="monitor-option" title="Tras tomar un lead AR cuya preferencia de contacto es WhatsApp, documenta '1 INT Envío WhatsApp' en Otra información y pulsa Send To Whatsapp automáticamente">
+            <input type="checkbox" id="monitorWhatsapp"> WhatsApp auto &mdash; env&iacute;a el primer mensaje a leads AR que pidieron WhatsApp
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Avisos</legend>
+          <label class="monitor-option" title="Emite un aviso sonoro y resalta la fila cuando aparece un lead nuevo en la lista">
+            <input type="checkbox" id="monitorSound"> Sonido &mdash; avisa cuando entra un lead nuevo
+          </label>
+          <label class="monitor-option" title="Muestra una notificación de Windows cuando aparece un lead nuevo — funciona aunque esta pestaña esté en segundo plano o minimizada">
+            <input type="checkbox" id="monitorNotify"> Notificar &mdash; aviso de Windows al entrar un lead
+          </label>
+          <button type="button" class="btn" id="monitorNotifyTest" style="padding:1px 10px;font-size:11px" title="Envía una notificación de prueba ahora para verificar que el aviso llega">Probar aviso</button>
+        </fieldset>
+      </div>
+      <p class="hint">Revisa las bandejas habilitadas cada ~2 minutos. Cuando aparece un lead <strong>nuevo sin asignar</strong>, abre el registro, pulsa <strong>Pick Up</strong> y verifica que quede a nombre de tu usuario. Trabaja en su propia ventana del navegador del bot: pod&eacute;s minimizarla y seguir usando las dem&aacute;s pesta&ntilde;as. Se pausa solo mientras el bot de documentaci&oacute;n o cierre est&aacute; trabajando.</p>
       <details class="monitor-config" id="monitorConfig">
         <summary>Configuraci&oacute;n &mdash; bandejas y horario <span class="hint" style="display:inline;font-weight:400">(plegable: queda guardado c&oacute;mo lo dejaste)</span></summary>
         <div class="prepare-card">
@@ -1855,6 +1898,8 @@ const MONITOR_PAUSE_LABELS = {
   session_lost: "pausado: la sesión de Salesforce expiró",
   navegador_trabado: "pausado: el navegador del bot no responde — tocá 'Reiniciar navegador del bot'",
 };
+const MONITOR_ALERT_REASONS = ["session_lost", "navegador_trabado", "sin_bandejas"];
+const MONITOR_WAIT_REASONS = ["fuera_de_horario", "run_activo"];
 const NO_DISPONIBLE = "No disponible en bandeja";
 
 let monitorState = null;
@@ -1960,33 +2005,61 @@ async function loadMonitorState() {
     $("monitorStatus").textContent = botSessionStale
       ? STALE_SESSION_MSG
       : "No se pudo leer el estado del monitor. ¿Está corriendo el servidor (INICIAR.bat)?";
+    $("monitorStatusDetail").textContent = "";
+    setMonitorCardLevel("alert");
   }
+}
+
+function setMonitorCardLevel(level) {
+  const card = $("monitorStateCard");
+  ["ok", "wait", "alert", "off"].forEach(name => card.classList.remove(`state-${name}`));
+  card.classList.add(`state-${level}`);
+}
+
+// Motivo de pausa sin el prefijo "pausado: " (para títulos y detalle).
+function monitorReasonLabel(reason) {
+  const label = MONITOR_PAUSE_LABELS[reason]
+    || (reason.startsWith("error:") ? `último ciclo con error (${reason.slice(6)})` : reason);
+  return label.replace("pausado: ", "");
+}
+
+// Semáforo de la tarjeta de estado: off > alert > wait > ok.
+function monitorVisualState(state) {
+  const details = [];
+  if (state.solo_listar) details.push("modo prueba: solo listar");
+  if (state.enviar_whatsapp) details.push("WhatsApp auto");
+  if (state.last_cycle_at) {
+    const when = new Date(state.last_cycle_at);
+    if (!isNaN(when)) details.push(`última revisión ${when.toLocaleTimeString("es-AR")}`);
+  }
+  const reason = state.paused_reason;
+  if (!state.enabled) {
+    if (reason) details.unshift(`último ciclo: ${monitorReasonLabel(reason)}`);
+    return { level: "off", title: "Monitor APAGADO", details };
+  }
+  if (reason && (MONITOR_ALERT_REASONS.includes(reason) || reason.startsWith("error:"))) {
+    return { level: "alert", title: `Requiere atención — ${monitorReasonLabel(reason)}`, details };
+  }
+  if ((reason && MONITOR_WAIT_REASONS.includes(reason)) || state.bot_running) {
+    const motive = reason ? monitorReasonLabel(reason) : monitorReasonLabel("run_activo");
+    return { level: "wait", title: `En espera — ${motive}`, details };
+  }
+  const title = state.cycle_running
+    ? "Monitor ACTIVO — revisando bandejas…"
+    : "Monitor ACTIVO — revisando cada ~2 minutos";
+  return { level: "ok", title, details };
 }
 
 function renderMonitor() {
   if (!monitorState) return;
-  const toggle = $("monitorToggle");
-  toggle.textContent = monitorState.enabled ? "Monitor activo — tocar para pausar" : "Activar monitor";
-  toggle.classList.toggle("primary", !monitorState.enabled);
-  const parts = [];
-  if (monitorState.enabled) parts.push("Monitor activo");
-  else parts.push("Monitor inactivo");
-  if (monitorState.solo_listar) parts.push("modo prueba: solo listar");
-  if (monitorState.enviar_whatsapp) parts.push("whatsapp auto");
-  if (monitorState.cycle_running) parts.push("revisando bandejas…");
-  if (monitorState.bot_running) parts.push("pausado: hay un bot corriendo");
+  const visual = monitorVisualState(monitorState);
+  setMonitorCardLevel(visual.level);
+  $("monitorStatus").textContent = visual.title;
+  $("monitorStatusDetail").textContent = visual.details.join(" · ");
+  $("monitorToggle").setAttribute("aria-checked", monitorState.enabled ? "true" : "false");
+  $("monitorToggleLabel").textContent = monitorState.enabled ? "Encendido" : "Apagado";
   $("monitorDryRun").checked = !!monitorState.solo_listar;
   $("monitorWhatsapp").checked = !!monitorState.enviar_whatsapp;
-  if (monitorState.paused_reason) {
-    const reason = MONITOR_PAUSE_LABELS[monitorState.paused_reason]
-      || (monitorState.paused_reason.startsWith("error:") ? `último ciclo con error (${monitorState.paused_reason.slice(6)})` : monitorState.paused_reason);
-    parts.push(monitorState.enabled ? reason : reason.replace("pausado: ", "último ciclo: "));
-  }
-  if (monitorState.last_cycle_at) {
-    const when = new Date(monitorState.last_cycle_at);
-    if (!isNaN(when)) parts.push(`última revisión ${when.toLocaleTimeString("es-AR")}`);
-  }
-  $("monitorStatus").textContent = parts.join(" · ");
   if (!bandejasDirty) renderBandejas();
   if (!scheduleDirty) renderSchedule();
   if (!equipoDirty) renderEquipo();

@@ -15,7 +15,8 @@ build/
 .archify/
 
 # Herramientas instaladas en el IDE (se reinstalan, no son código del proyecto)
-.devin/skills/
+.devin/skills/*
+!.devin/skills/tdd/
 
 # Artefacto de redirect accidental (nombre reservado de Windows)
 nul

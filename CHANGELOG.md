@@ -11,6 +11,22 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
+Los cambios hechos por la vía **TDD** (Fase 0.5 de `AGENTS.md`) se registran
+acá en `[Sin publicar]` — sin artefactos OpenSpec — nombrando el test que
+queda como regla permanente (no se borra ni se debilita sin autorización).
+
+## [Sin publicar]
+
+### Agregado
+
+- **Vía TDD para cambios chicos**: nueva Fase 0.5 en `AGENTS.md` clasifica
+  cada cambio (TDD vs SDD) con una checklist de 6 criterios confirmada por el
+  usuario. `harness.py` gana `tdd-red <test_id>` (exige que el test falle,
+  con aviso si falla por error y no por aserción) y `tdd-green <test_id>`
+  (test + suite `unit` + `ruff check .`). Nuevo skill `tdd`
+  (`.devin/skills/tdd/` + copias en `.windsurf/` y `.codex/`), reglas y
+  workflows `/tdd` por IDE. Test-regla: `tests.test_harness_tdd`.
+
 ## [1.4.2] — 2026-10-27
 
 ### Cambiado

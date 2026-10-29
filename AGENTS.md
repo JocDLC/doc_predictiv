@@ -13,7 +13,32 @@ de entender (nombres descriptivos, funciones pequeñas, sin duplicación).
 - Si estás en un agente que soporta slash commands, usa `/graphify .`.
 - Usa `/graphify query "..."` para entender el codebase antes de proponer cambios.
 
+## Fase 0.5 — Clasificación (TDD vs SDD)
+
+Todo cambio se clasifica antes de planificar. Va por **TDD** solo si TODAS se
+cumplen:
+
+1. Es un bugfix, un ajuste de regla o validación puntual, o un refactor con el
+   comportamiento cubierto por tests.
+2. Toca como máximo 3 archivos productivos, en un solo módulo o capa.
+3. No agrega endpoints, vistas de UI, formatos de cola/resultado/snapshot ni
+   contratos nuevos.
+4. No cambia la mecánica de Salesforce (selectores, flujo de pickup o
+   reasignación), seguridad ni privacidad.
+5. El comportamiento esperado se puede escribir en una sola frase sin ambigüedad.
+6. Se puede verificar con un test determinístico (sin navegador ni Salesforce
+   en vivo).
+
+Si alguna falla → **SDD** (Fases 1–7). El agente propone la vía y el usuario la
+confirma. El flujo TDD es T1–T5, detallado en el skill `tdd`
+(`.devin/skills/tdd/`): clasificar → `tdd-red` → `tdd-green` → refactor →
+cierre en CHANGELOG + Gantt. Si durante TDD aparece alcance nuevo, se escala a
+SDD con `/opsx:propose`.
+
 ## Fase 1 — Análisis de la propuesta
+
+Esta fase y las siguientes aplican a la vía **SDD**. La vía TDD va directo al
+flujo T1–T5 del skill `tdd` tras la confirmación de la Fase 0.5.
 
 - Usa `/opsx:explore` para analizar la idea con el usuario: objetivos, alcance,
   alternativas, riesgos y qué partes del sistema se ven afectadas (consulta el grafo).
@@ -69,7 +94,7 @@ Cada tarea debe ejecutarse como un loop con verificación determinística:
 1. **Goal**: la propuesta en `openspec/changes/<cambio>/`.
 2. **Tools**: terminal, tests, linter, `graphify query`, `openspec validate --changes`.
 3. **Context**: `AGENTS.md` + `MEMORY.md` + `graphify-out/GRAPH_REPORT.md`.
-4. **Termination**: `tasks.md` completado + tests/lint pasan + `openspec validate --changes` OK.
+4. **Termination**: SDD → `tasks.md` completado + tests/lint pasan + `openspec validate --changes` OK. TDD → `tdd-green` OK + entrada en CHANGELOG `[Sin publicar]` + `log` en Gantt.
 5. **Verification**: preferir verificadores determinísticos (tests, types, lint) sobre juicio del LLM.
 6. **Error handling**: si 3 iteraciones no avanzan, escalar al usuario. No repetir el mismo error.
 

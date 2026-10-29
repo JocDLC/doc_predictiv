@@ -141,8 +141,50 @@ def run_business_contract_graph() -> None:
     run(python_module(package, "candidate"), cwd=REPOSITORY_ROOT)
 
 
-def run_named_command(command: str) -> None:
-    if command == "format-check":
+def run_tdd_red(test_id: str) -> None:
+    """Verifica que el test nuevo falle antes de implementar (fase RED)."""
+
+    completed = subprocess.run(
+        python_module("unittest", test_id, "-v"),
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.stdout:
+        print(completed.stdout, end="", flush=True)
+    if completed.stderr:
+        print(completed.stderr, end="", file=sys.stderr, flush=True)
+    if completed.returncode == 0:
+        raise SystemExit(
+            "[tdd-red] El test pasa: no prueba comportamiento nuevo. "
+            "Ajustá el test antes de implementar."
+        )
+    output = completed.stdout + completed.stderr
+    if "failures=" in output:
+        print("[tdd-red] OK: el test falla como se esperaba. Pasá a GREEN.")
+    else:
+        print(
+            "[tdd-red] AVISO: el test falla por error (import/nombre/sintaxis), "
+            "no por aserción. Verificá que falle por la funcionalidad faltante."
+        )
+
+
+def run_tdd_green(test_id: str) -> None:
+    """Verifica que el test pase y que la suite y el lint sigan en verde."""
+
+    run(python_module("unittest", test_id, "-v"))
+    run_layer("unit")
+    run(python_module("ruff", "check", "."))
+    print("[tdd-green] OK: test, suite y lint en verde.")
+
+
+def run_named_command(command: str, test_id: str | None = None) -> None:
+    if command == "tdd-red":
+        run_tdd_red(test_id)
+    elif command == "tdd-green":
+        run_tdd_green(test_id)
+    elif command == "format-check":
         run(python_module("ruff", "format", "--check", "."))
     elif command == "lint":
         run(python_module("ruff", "check", "."))
@@ -165,6 +207,9 @@ def run_named_command(command: str) -> None:
         raise ValueError(f"Comando de arnés desconocido: {command}")
 
 
+TDD_COMMANDS = ("tdd-red", "tdd-green")
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     choices = (
         "format-check",
@@ -174,16 +219,21 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "coverage",
         "business-contracts",
         "verify",
+        *TDD_COMMANDS,
         *LAYER_MODULES,
     )
     parser = argparse.ArgumentParser(description="Arnés no destructivo de automation_salesforce")
     parser.add_argument("command", choices=choices)
-    return parser.parse_args(argv)
+    parser.add_argument("test_id", nargs="?")
+    args = parser.parse_args(argv)
+    if args.command in TDD_COMMANDS and not args.test_id:
+        parser.error(f"el comando {args.command} requiere un test_id (ej. tests.test_modulo)")
+    return args
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
-    run_named_command(args.command)
+    run_named_command(args.command, args.test_id)
     return 0
 
 

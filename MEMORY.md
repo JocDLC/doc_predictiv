@@ -11,6 +11,16 @@
 - **GitHub Template + scripts** como mecanismo de distribución multi-PC.
 - **AGENTS.md** como fuente de verdad universal; configs específicas por IDE son derivadas.
 - **OpenSpec** para Spec-Driven Development.
+- **SDD + TDD por clasificación (Fase 0.5, 2026-10-30)**: cada cambio se
+  clasifica con la checklist de `AGENTS.md`; los cambios chicos van por la vía
+  TDD (`harness.py tdd-red`/`tdd-green`, skill `tdd`) sin artefactos OpenSpec,
+  con trazabilidad en `CHANGELOG.md` `[Sin publicar]` + Gantt.
+- **`.devin/skills/tdd` es la fuente** del skill TDD: las copias en
+  `.windsurf/skills/tdd/` y `.codex/skills/tdd/` son idénticas y se
+  regeneran desde ahí (cambiar la fuente, no las copias).
+- **tdd-guard/Probity descartado por ahora** como enforcement externo: requiere
+  Node 22, pytest y un modelo Claude con costo, y no cubre Windsurf. Alternativa
+  futura si la verificación de `harness.py` no alcanza.
 - **Graphify** para context engineering y reducción de tokens.
 - **Loop Engineering** integrado en el workflow de 7 fases.
 

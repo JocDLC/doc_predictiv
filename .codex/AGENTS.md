@@ -9,7 +9,10 @@ Este proyecto usa `AGENTS.md` como fuente de verdad. Lee siempre:
 Flujo de trabajo:
 
 - Fase 0: `graphify update .` si el grafo está desactualizado.
-- Fase 1: `openspec` explore o discute con el usuario.
+- Fase 0.5: clasifica TDD vs SDD con la checklist de `AGENTS.md`; el usuario confirma la vía.
+  TDD: `python harness.py tdd-red <test_id>` → `tdd-green <test_id>` desde `automation_salesforce/`
+  (ver skill `tdd`); cierre en `CHANGELOG.md` `[Sin publicar]` + log en Gantt.
+- Fase 1 (SDD): `openspec` explore o discute con el usuario.
 - Fase 2: `openspec propose <cambio>` para plan.
 - Fase 3: verifica `verify-setup` y checklist del harness.
 - Fase 4: implementa una tarea a la vez.

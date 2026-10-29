@@ -83,6 +83,13 @@ def launch_persistent_browser(
             "--disable-background-timer-throttling",
             "--disable-backgrounding-occluded-windows",
             "--disable-renderer-backgrounding",
+            # Prompts de primer uso ("¿restaurar sesión?", default browser,
+            # bienvenida): en un perfil que se corrompió o en la primera
+            # máquina nueva cuelgan el arranque y el puerto nunca abre —
+            # el reinicio quedaba en loop silencioso.
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--disable-session-crashed-bubble",
             # Sin URL propia Edge >=148 abre el NTP online (ntp.msn.com): una
             # pestaña que se queda esperando headers (p. ej. tras el proxy)
             # bloquea la enumeración de targets al crear la sesión CDP.

@@ -267,6 +267,26 @@ monitorState.solo_listar = false;
 monitorState.enviar_whatsapp = false;
 renderMonitor();
 
+// 5b) Lista vacía: la fila de aviso usa la clase monitor-empty (alto legible).
+monitorState.results = [];
+renderMonitorTable();
+const emptyCell = __elements['monitorTable'].children[1].children[0];
+check('aviso de lista vacía', emptyCell.textContent === 'Todavía no se detectaron leads.');
+check('fila vacía con alto legible', emptyCell.className === 'monitor-empty');
+monitorState.results = [
+  { lead_id: '00Q0000000000AAAAA', status: 'tomado', bandeja: 'AR', details: {} },
+];
+renderMonitorTable();
+
+// 5c) La casilla Notificar refleja el flag del servidor (el toast lo emite
+// ui_server; la notificación gris del navegador se eliminó).
+monitorState.notificar = false;
+renderMonitor();
+check('notificar apagado destilda la casilla', __elements['monitorNotify'].checked === false);
+monitorState.notificar = true;
+renderMonitor();
+check('notificar encendido tilda la casilla', __elements['monitorNotify'].checked === true);
+
 // 6) Bandejas renderizadas con defaults por país.
 const bandejasEl = __elements['monitorBandejas'];
 check('tres bandejas AR/CO/MX', bandejasEl.children.length === 3);

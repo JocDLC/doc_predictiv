@@ -470,12 +470,14 @@ def read_bandeja_leads(
     timeout_seconds: int,
     record_object_api_name: str,
     field_aliases: dict[str, list[str]],
+    diagnostics: list | None = None,
 ):
     return read_visible_unassigned_leads(
         driver,
         timeout_seconds,
         record_object_api_name,
         field_aliases,
+        diagnostics,
         unassigned_owner=bandeja["unassigned_owner"],
     )
 
@@ -1240,14 +1242,33 @@ def run_bandeja_cycle(
     open_report(driver, bandeja, timeout_seconds)
     if report_session_lost(driver):
         return [{"type": "session_lost", "bandeja": bandeja["code"]}]
-    _, leads = read_bandeja_leads(
+    diagnostics: list[dict] = []
+    visible_rows, leads = read_bandeja_leads(
         driver,
         bandeja,
         timeout_seconds,
         config.get("record_object_api_name", "Lead"),
         config.get("lead_list_fields", {}),
+        diagnostics,
     )
     events = []
+    # Scan visible: sin esta línea un reporte leído con 0 coincidencias del
+    # propietario "sin asignar" es indistinguible de un reporte vacío —
+    # fue el caso de "abre la bandeja pero no toma ni lista nada".
+    owners_seen = next(
+        (d.get("owners_seen") for d in diagnostics if d.get("owners_seen")), []
+    )
+    events.append(
+        {
+            "type": "bandeja_scan",
+            "bandeja": bandeja["code"],
+            "rows": visible_rows,
+            "unassigned": len(leads),
+            "unassigned_owner": bandeja["unassigned_owner"],
+            "owners_seen": owners_seen,
+        }
+    )
+    skipped_status = 0
     solo_listar = bool(state.get("solo_listar"))
     enviar_whatsapp = bool(state.get("enviar_whatsapp"))
     # La franja del monitor (del usuario logueado) tiene prioridad sobre el
@@ -1272,6 +1293,7 @@ def run_bandeja_cycle(
             # El filtro de estado acota la TOMA real; en modo prueba se listan
             # todos los QUALIF visibles para revisar la bandeja completa.
             if not solo_listar:
+                skipped_status += 1
                 continue
         assigned_to = ""
         finalize = ""
@@ -1325,6 +1347,8 @@ def run_bandeja_cycle(
             extra=extra or None,
         )
         events.append({"type": "lead_result", "bandeja": bandeja["code"], "status": status, "entry": entry})
+    if skipped_status:
+        events[0]["skipped_status"] = skipped_status
     return events
 
 

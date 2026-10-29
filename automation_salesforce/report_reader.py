@@ -250,8 +250,8 @@ def unmapped_columns(headers: list[str], values: list[str], field_indexes: dict[
 
 
 def is_unassigned_owner(value: str, unassigned_owner: str = UNASSIGNED_OWNER) -> bool:
-    compact = re.sub(r"\s+", "", str(unassigned_owner or ""))
-    return re.sub(r"\s+", "", str(value or "")) == compact
+    compact = re.sub(r"\s+", "", str(unassigned_owner or "")).casefold()
+    return re.sub(r"\s+", "", str(value or "")).casefold() == compact
 
 
 def is_visible_element(element) -> bool:
@@ -582,23 +582,30 @@ def read_visible_unassigned_leads(
     field_indexes = resolve_field_indexes(headers, field_aliases or {})
     lead_id_index = field_indexes.get("lead_id")
     if diagnostics is not None:
-        diagnostics.append(
-            {
-                "headers": headers,
-                "resolved_fields": [name for name, index in field_indexes.items() if index is not None],
-            }
-        )
+        summary = {
+            "headers": headers,
+            "resolved_fields": [name for name, index in field_indexes.items() if index is not None],
+        }
+        diagnostics.append(summary)
+    else:
+        summary = None
     row_elements = find_report_rows(driver, table)
     data_rows = [
         row
         for row in row_elements
         if is_visible_element(row) and (row_values(row, driver) or str(row.text or "").strip())
     ]
+    owner_index = find_owner_header_index(headers)
+    owner_values: dict[str, int] = {}
     visible_rows = []
     for grid_position, row in enumerate(data_rows, start=1):
         raw_values = row_values(row, driver)
         owner_found = row_has_unassigned_owner(raw_values, row.text, unassigned_owner)
         values = aligned_values(raw_values, column_offset(headers, raw_values), len(headers)) if headers else raw_values
+        if owner_index is not None and owner_index < len(values):
+            owner_text = values[owner_index].strip()
+            if owner_text:
+                owner_values[owner_text] = owner_values.get(owner_text, 0) + 1
         lead_id = extract_lead_id(row, driver, record_object_api_name) if owner_found else ""
         if owner_found and not lead_id:
             lead_id = lead_id_from_values(values, lead_id_index) or lead_id_from_values(raw_values, None)
@@ -623,4 +630,8 @@ def read_visible_unassigned_leads(
                 details=details,
             )
         )
+    if summary is not None:
+        # Qué propietarios se vieron en la columna de owner: si ninguno
+        # coincide con el "sin asignar" configurado, el nombre está mal.
+        summary["owners_seen"] = sorted(owner_values, key=owner_values.get, reverse=True)[:8]
     return len(data_rows), deduplicate_visible_leads(visible_rows)

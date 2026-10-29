@@ -309,6 +309,7 @@ def default_state() -> dict:
         "enabled": False,
         "solo_listar": False,
         "enviar_whatsapp": False,
+        "notificar": True,
         "bandejas": [],
         "schedule": [],
         "equipo": [],
@@ -332,6 +333,7 @@ def load_state(state_path: Path) -> dict:
     state["enabled"] = bool(payload.get("enabled"))
     state["solo_listar"] = bool(payload.get("solo_listar"))
     state["enviar_whatsapp"] = bool(payload.get("enviar_whatsapp"))
+    state["notificar"] = bool(payload.get("notificar", True))
     try:
         state["bandejas"] = validate_bandejas(payload.get("bandejas") or [])
         state["schedule"] = validate_schedule(payload.get("schedule"))

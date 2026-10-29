@@ -1010,6 +1010,33 @@ class UiServerMonitorTests(unittest.TestCase):
             self.assertIn("enviar_whatsapp", payload)
             self.assertFalse(payload["enviar_whatsapp"])
 
+    def test_notify_endpoint_persists_flag(self):
+        with TemporaryDirectory() as tmp, patch("ui_server.monitor_state_path", return_value=self._state_file(tmp)):
+            status, payload = self._request("POST", "/api/monitor/notify", {"notificar": False})
+            self.assertEqual(status, 200)
+            self.assertFalse(payload["notificar"])
+            saved = json.loads(self._state_file(tmp).read_text(encoding="utf-8"))
+            self.assertFalse(saved["notificar"])
+            # Encendido por defecto y toggle sin body invierte el estado.
+            status, payload = self._request("POST", "/api/monitor/notify")
+            self.assertEqual(status, 200)
+            self.assertTrue(payload["notificar"])
+
+    def test_notify_requires_token(self):
+        status, _ = self._request("POST", "/api/monitor/notify", {"notificar": True}, token=None)
+        self.assertEqual(status, 403)
+
+    def test_notify_test_sends_windows_toast(self):
+        with patch("ui_server.windows_toast") as toast:
+            status, _ = self._request("POST", "/api/monitor/notify-test")
+            self.assertEqual(status, 200)
+            toast.assert_called_once()
+
+    def test_monitor_payload_includes_notificar(self):
+        with TemporaryDirectory() as tmp, patch("ui_server.monitor_state_path", return_value=self._state_file(tmp)):
+            _, payload = self._request("GET", "/api/monitor")
+            self.assertTrue(payload["notificar"])
+
     def test_clear_monitor_results_preserves_configuration(self):
         from monitor_store import STATUS_DETECTADO, default_state, record_result, save_state, validate_bandejas
 
@@ -1499,6 +1526,41 @@ class MonitorTickTests(unittest.TestCase):
 
             ui_server.monitor_tick(self._config(tmp))
             self.assertEqual(toast.call_count, 1)
+
+    def test_tick_no_toast_when_notificar_off(self):
+        """Con Notificar apagado el ciclo detecta pero no llama al toast."""
+        import ui_server
+        from monitor_store import record_result
+
+        detected = [
+            {
+                "type": "lead_result",
+                "bandeja": "AR",
+                "status": "detectado",
+                "entry": {"lead_id": "00Q000000000001AAA"},
+            }
+        ]
+
+        def _cycle(driver, config, state, timeout_seconds, diag_dir=None):
+            record_result(state, "00Q000000000001AAA", "AR", "detectado")
+            return list(detected)
+
+        with (
+            TemporaryDirectory() as tmp,
+            self._enabled_state(tmp),
+            patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
+            patch("ui_server.create_driver", return_value=object()),
+            patch("ui_server.ensure_monitor_window"),
+            patch("ui_server.release_driver"),
+            patch("ui_server.run_cycle", side_effect=_cycle),
+            patch("ui_server.windows_toast") as toast,
+            patch("ui_server.broadcast_event"),
+        ):
+            saved = json.loads(self._state_file(tmp).read_text(encoding="utf-8"))
+            saved["notificar"] = False
+            self._state_file(tmp).write_text(json.dumps(saved), encoding="utf-8")
+            ui_server.monitor_tick(self._config(tmp))
+            toast.assert_not_called()
 
     def test_tick_cycle_error_waits_next_interval(self):
         import ui_server

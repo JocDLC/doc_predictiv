@@ -246,6 +246,7 @@
   .dist-persona, .dist-persona-sel { width: 100%; box-sizing: border-box; }
   .monitor-table td .cell { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
   .monitor-table td.hint { font-size: inherit; margin-top: 0; }
+  .monitor-table td.monitor-empty { line-height: 1.4; padding: 24px 8px; text-align: center; color: var(--muted); font-size: 13px; }
   .monitor-table td a.lead-link { color: #1a5fb4; font-weight: 600; text-decoration: none; }
   .monitor-table td a.lead-link:hover { text-decoration: underline; }
   .monitor-table .badge { padding: 1px 7px; }
@@ -496,10 +497,10 @@
           <label class="monitor-option" title="Emite un aviso sonoro y resalta la fila cuando aparece un lead nuevo en la lista">
             <input type="checkbox" id="monitorSound"> Sonido &mdash; avisa cuando entra un lead nuevo
           </label>
-          <label class="monitor-option" title="Muestra una notificación de Windows cuando aparece un lead nuevo — funciona aunque esta pestaña esté en segundo plano o minimizada">
+          <label class="monitor-option" title="El servidor muestra un aviso nativo de Windows (el toast con colores) cuando entra un lead nuevo — funciona aunque esta pestaña esté cerrada">
             <input type="checkbox" id="monitorNotify"> Notificar &mdash; aviso de Windows al entrar un lead
           </label>
-          <button type="button" class="btn" id="monitorNotifyTest" style="padding:1px 10px;font-size:11px" title="Envía una notificación de prueba ahora para verificar que el aviso llega">Probar aviso</button>
+          <button type="button" class="btn" id="monitorNotifyTest" style="padding:1px 10px;font-size:11px" title="Envía el aviso nativo de Windows ahora para verificar que llega">Probar aviso</button>
         </fieldset>
       </div>
       <p class="hint">Revisa las bandejas habilitadas cada ~2 minutos. Cuando aparece un lead <strong>nuevo sin asignar</strong>, abre el registro, pulsa <strong>Pick Up</strong> y verifica que quede a nombre de tu usuario. Trabaja en su propia ventana del navegador del bot: pod&eacute;s minimizarla y seguir usando las dem&aacute;s pesta&ntilde;as. Se pausa solo mientras el bot de documentaci&oacute;n o cierre est&aacute; trabajando.</p>
@@ -631,7 +632,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.4.1";
+const APP_VERSION = "1.4.2";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -1983,7 +1984,7 @@ async function loadUiPrefs() {
   }
   renderMonitorTable();
   renderColsPanel();
-  ["monitorSound", "monitorNotify"].forEach(key => {
+  ["monitorSound"].forEach(key => {
     const el = $(key);
     if (el && Object.prototype.hasOwnProperty.call(prefs, key)) {
       el.checked = prefBool(key, true);
@@ -2060,6 +2061,7 @@ function renderMonitor() {
   $("monitorToggleLabel").textContent = monitorState.enabled ? "Encendido" : "Apagado";
   $("monitorDryRun").checked = !!monitorState.solo_listar;
   $("monitorWhatsapp").checked = !!monitorState.enviar_whatsapp;
+  $("monitorNotify").checked = monitorState.notificar !== false;
   if (!bandejasDirty) renderBandejas();
   if (!scheduleDirty) renderSchedule();
   if (!equipoDirty) renderEquipo();
@@ -2689,23 +2691,6 @@ function monitorBeep() {
   } catch { /* sin audio disponible */ }
 }
 
-function monitorNotify(freshIds) {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
-  const fresh = (monitorState.results || []).filter(e => freshIds.includes(e.lead_id));
-  const names = fresh
-    .map(e => [e.details?.nombre, e.details?.apellido].filter(Boolean).join(" "))
-    .filter(Boolean)
-    .slice(0, 4)
-    .join(", ");
-  const body = names
-    ? `${freshIds.length} lead${freshIds.length === 1 ? "" : "s"} nuevo${freshIds.length === 1 ? "" : "s"}: ${names}`
-    : `${freshIds.length} lead${freshIds.length === 1 ? "" : "s"} nuevo${freshIds.length === 1 ? "" : "s"} en la bandeja`;
-  try {
-    const notification = new Notification("Monitor de Bandeja — lead nuevo", { body, tag: "monitor-leads" });
-    notification.onclick = () => { window.focus(); notification.close(); };
-  } catch { /* notificación no disponible */ }
-}
-
 function renderMonitorTable() {
   const table = $("monitorTable");
   table.innerHTML = "";
@@ -2718,7 +2703,7 @@ function renderMonitorTable() {
     const row = document.createElement("tr");
     const cell = document.createElement("td");
     cell.colSpan = visible.length || 1;
-    cell.className = "hint";
+    cell.className = "monitor-empty";
     cell.textContent = "Todavía no se detectaron leads.";
     row.appendChild(cell);
     table.appendChild(row);
@@ -2737,7 +2722,6 @@ function renderMonitorTable() {
   monitorSeenIds = new Set(results.map(entry => entry.lead_id).filter(Boolean));
   if (!monitorFirstRender && freshIds.length) {
     if ($("monitorSound")?.checked) monitorBeep();
-    if ($("monitorNotify")?.checked) monitorNotify(freshIds);
   }
   monitorFirstRender = false;
 }
@@ -2817,6 +2801,20 @@ async function toggleDryRun() {
   } catch (error) {
     $("monitorDryRun").checked = !checked;
     alert(`No se pudo cambiar el modo prueba.\n\n${error.message}`);
+  }
+}
+
+async function toggleNotify() {
+  const checked = $("monitorNotify").checked;
+  try {
+    await monitorApi("/api/monitor/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notificar: checked }),
+    });
+  } catch (error) {
+    $("monitorNotify").checked = !checked;
+    alert(`No se pudo cambiar los avisos de Windows.\n\n${error.message}`);
   }
 }
 
@@ -3087,39 +3085,14 @@ $("monitorSound").checked = prefBool("monitorSound", true);
 $("monitorSound").addEventListener("change", event => {
   saveUiPref("monitorSound", event.target.checked);
 });
-$("monitorNotify").checked = prefBool("monitorNotify", true);
-$("monitorNotify").addEventListener("change", async event => {
-  if (event.target.checked && "Notification" in window && Notification.permission === "default") {
-    await Notification.requestPermission();
-  }
-  saveUiPref("monitorNotify", event.target.checked);
-});
+$("monitorNotify").addEventListener("change", toggleNotify);
 $("monitorNotifyTest").addEventListener("click", async () => {
-  if (!("Notification" in window)) { alert("Este navegador no soporta notificaciones."); return; }
-  if (Notification.permission === "default") await Notification.requestPermission().catch(() => {});
-  if (Notification.permission !== "granted") {
-    alert("El navegador tiene las notificaciones bloqueadas para esta página.\nReactivarlas: candado en la barra de direcciones → Permisos → Notificaciones, y recargá la página.");
-    return;
-  }
   try {
-    const note = new Notification("Monitor de Bandeja — prueba", { body: "Si ves este aviso, las notificaciones funcionan.", tag: "monitor-test" });
-    note.onclick = () => { window.focus(); note.close(); };
+    await monitorApi("/api/monitor/notify-test", { method: "POST" });
   } catch (error) {
-    alert(`No se pudo mostrar la notificación: ${error.message}`);
+    alert(`No se pudo enviar el aviso de prueba: ${error.message}`);
   }
 });
-// El permiso del navegador exige un gesto: la casilla viene tildada por
-// defecto, así que se pide en el primer clic sobre la página. Sin permiso
-// "granted" los avisos nunca salían aunque la casilla pareciera activa.
-document.addEventListener("click", () => {
-  if (!("Notification" in window) || Notification.permission !== "default") return;
-  if ($("monitorNotify")?.checked) Notification.requestPermission().catch(() => {});
-});
-if ("Notification" in window && Notification.permission === "denied" && $("monitorNotify")) {
-  $("monitorNotify").disabled = true;
-  $("monitorNotify").parentElement.title =
-    "El navegador bloqueó las notificaciones de esta página: reactivalas en el candado de la barra de direcciones.";
-}
 $("equipoAdd").addEventListener("click", () => {
   monitorDraftEquipo.push({ nombre: "", franjas: [] });
   equipoDirty = true;

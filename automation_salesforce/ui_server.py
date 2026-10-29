@@ -679,7 +679,7 @@ def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
     # ❌/⚠️ si hubo error, 🔔 detectados nuevos — con el método de
     # contacto elegido cuando el lead lo declara. Sin cambio no re-suena.
     lines = _lead_toast_lines(events, pre_results)
-    if lines:
+    if lines and state.get("notificar", True):
         shown = lines if len(lines) <= 3 else lines[:2] + [f"… y {len(lines) - 2} lead(s) más"]
         windows_toast("Monitor de Bandeja", "\n".join(shown))
     for event in events:
@@ -695,6 +695,19 @@ def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
             # Hoy solo iba por SSE: sin log la bandeja caída era invisible.
             print(
                 f"[monitor] {event.get('bandeja')} bandeja_error: {event.get('error')}",
+                flush=True,
+            )
+        elif event.get("type") == "bandeja_scan":
+            # Resumen de la lectura: si "sin asignar" queda en 0 con filas
+            # visibles, los propietarios vistos delatan un nombre de cola
+            # mal configurado (o que la bandeja no tiene QUALIF ahora).
+            owners = ", ".join(event.get("owners_seen") or [])
+            skipped = event.get("skipped_status")
+            print(
+                f"[monitor] {event.get('bandeja')} bandeja: {event.get('rows')} filas, "
+                f"{event.get('unassigned')} sin asignar ({event.get('unassigned_owner')})"
+                + (f" | propietarios vistos: {owners}" if not event.get("unassigned") and owners else "")
+                + (f" | {skipped} omitidos por estado" if skipped else ""),
                 flush=True,
             )
         broadcast_event({"type": "monitor", **event})
@@ -910,6 +923,13 @@ def restart_browser(config: dict) -> None:
     subprocess.run(["taskkill", "/IM", "msedgedriver.exe", "/F"], capture_output=True)
     launch_persistent_browser(executable, profile_directory, debugger_address)
     if not wait_for_debugger(debugger_address):
+        # Sin este log el reinicio "exitoso" que no levanta el puerto era
+        # invisible: el loop repetía navegador_trabado sin explicar por qué.
+        print(
+            f"[monitor] reinicio: el navegador no abrió el puerto de depuración "
+            f"({debugger_address}). Revisar que Edge del perfil dedicado abra a mano.",
+            flush=True,
+        )
         return
     # /json/version responde antes de que la restauración de sesión pueble
     # las pestañas: sin esta espera se abrirían la app y Salesforce duplicadas.
@@ -1023,6 +1043,7 @@ def make_handler(token: str, config: dict | None = None):
                 "enabled": state["enabled"],
                 "solo_listar": state["solo_listar"],
                 "enviar_whatsapp": state["enviar_whatsapp"],
+                "notificar": state.get("notificar", True),
                 "paused_reason": state["paused_reason"],
                 "last_cycle_at": state["last_cycle_at"],
                 "cycle_running": monitor_cycle_active,
@@ -1300,6 +1321,29 @@ def make_handler(token: str, config: dict | None = None):
                 monitor_write_state(cfg, state)
                 broadcast_event({"type": "monitor_state", "enviar_whatsapp": state["enviar_whatsapp"]})
                 self._send(200, {"enviar_whatsapp": state["enviar_whatsapp"]})
+                return
+            if route == "/api/monitor/notify":
+                # Activa/pausa el toast nativo de Windows (el aviso gris del
+                # navegador duplicaba este toast y se eliminó de la UI).
+                cfg = config or load_config()
+                state = monitor_read_state(cfg)
+                notificar = None
+                if int(self.headers.get("Content-Length") or 0):
+                    body = self._read_json_body()
+                    if body is None:
+                        return
+                    notificar = body.get("notificar") if isinstance(body, dict) else None
+                state["notificar"] = not state["notificar"] if notificar is None else bool(notificar)
+                monitor_write_state(cfg, state)
+                broadcast_event({"type": "monitor_state", "notificar": state["notificar"]})
+                self._send(200, {"notificar": state["notificar"]})
+                return
+            if route == "/api/monitor/notify-test":
+                windows_toast(
+                    "Monitor de Bandeja — prueba",
+                    "Si ves este aviso, las notificaciones de Windows funcionan.",
+                )
+                self._send(200, {"ok": True})
                 return
             if route == "/api/monitor/check":
                 # Revisión manual: corre ya, sin importar toggle ni franja horaria.

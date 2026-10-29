@@ -11,7 +11,7 @@ Esquema: [SemVer](https://semver.org/lang/es/) — `MAYOR.MENOR.PARCHE`.
 
 Cada versión liberada lleva un tag de Git `v<versión>`.
 
-## [Sin liberar]
+## [1.4.2] — 2026-10-27
 
 ### Cambiado
 
@@ -21,6 +21,24 @@ Cada versión liberada lleva un tag de Git `v<versión>`.
   activo — tocar para pausar" pasa a ser un interruptor Encendido/Apagado
   dentro de la tarjeta. Las opciones se agrupan en dos columnas
   (Comportamiento / Avisos). Intervalo del monitor: 120 s ("~2 minutos").
+- **Aviso único de Windows**: la casilla "Notificar" ahora enciende/apaga el
+  toast nativo con colores que emite el servidor (`/api/monitor/notify`) y
+  "Probar aviso" dispara ese mismo toast (`/api/monitor/notify-test`). Se
+  eliminó la notificación gris del navegador, que salía duplicada.
+
+### Corregido
+
+- **Monitor de Bandeja — detección invisible**: cuando el reporte se leía
+  pero ningún lead matcheaba el "propietario sin asignar" (nombre de cola
+  mal configurado, columna fuera de vista, estado distinto), el ciclo no
+  dejaba rastro: parecía que "el bot no toma ni lista nada". Ahora cada
+  ciclo loguea `[monitor] XX bandeja: N filas, M sin asignar`, lista los
+  propietarios vistos cuando hay 0 coincidencias, y cuenta los QUALIF
+  omitidos por estado ≠ al esperado. El match de propietario además es
+  insensible a mayúsculas.
+- **Monitor de Bandeja — lista vacía**: la fila "Todavía no se detectaron
+  leads" salía aplastada (`line-height: 0` de la tabla); ahora tiene clase
+  propia con alto y padding legibles.
 
 ## [1.4.1] — 2026-10-22
 

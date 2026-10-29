@@ -67,9 +67,13 @@ lado (apilados en pantallas angostas):
 - **Comportamiento**: Modo prueba, WhatsApp auto.
 - **Avisos**: Sonido, Notificar y el botón "Probar aviso".
 
-Los ids y el comportamiento de cada checkbox (`monitorDryRun`,
-`monitorWhatsapp`, `monitorSound`, `monitorNotify`, `monitorNotifyTest`) MUST
-mantenerse sin cambios.
+Los ids de los checkboxes (`monitorDryRun`, `monitorWhatsapp`, `monitorSound`,
+`monitorNotify`, `monitorNotifyTest`) MUST mantenerse. `monitorNotify`
+controla el toast nativo de Windows que emite el servidor
+(`POST /api/monitor/notify`, flag `notificar` del estado) y
+`monitorNotifyTest` dispara ese mismo toast (`POST /api/monitor/notify-test`);
+la notificación del navegador (gris, `new Notification`) MUST NOT existir
+porque duplicaba el toast nativo.
 
 #### Scenario: grupos visibles
 - **WHEN** se abre la vista Monitor
@@ -78,3 +82,7 @@ mantenerse sin cambios.
 #### Scenario: comportamiento intacto
 - **WHEN** el usuario tilda "Modo prueba"
 - **THEN** se llama al mismo endpoint que antes y el checkbox refleja `solo_listar`
+
+#### Scenario: aviso de Windows único
+- **WHEN** entra un lead nuevo y `notificar` está encendido
+- **THEN** solo sale el toast nativo de Windows del servidor; la UI no emite `new Notification`

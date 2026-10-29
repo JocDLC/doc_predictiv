@@ -799,8 +799,9 @@ class RunBandejaCycleTests(unittest.TestCase):
         ):
             events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         self.assertEqual(take.call_count, 2)
-        self.assertEqual(len(events), 2)
-        self.assertTrue(all(e["status"] == STATUS_TOMADO for e in events))
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(len(lead_events), 2)
+        self.assertTrue(all(e["status"] == STATUS_TOMADO for e in lead_events))
         self.assertEqual(len(state["results"]), 2)
 
     def test_skips_non_new_status(self):
@@ -814,7 +815,7 @@ class RunBandejaCycleTests(unittest.TestCase):
         ):
             events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         take.assert_not_called()
-        self.assertEqual(events, [])
+        self.assertEqual([e for e in events if e["type"] == "lead_result"], [])
 
     def test_terminal_lead_not_reprocessed(self):
         state = self._state()
@@ -827,7 +828,7 @@ class RunBandejaCycleTests(unittest.TestCase):
         ):
             run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
             events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
-        self.assertEqual(events, [])
+        self.assertEqual([e for e in events if e["type"] == "lead_result"], [])
         self.assertEqual(len(state["results"]), 1)
 
     def test_take_lead_failure_records_error(self):
@@ -839,7 +840,8 @@ class RunBandejaCycleTests(unittest.TestCase):
             patch("lead_monitor.take_lead", side_effect=ValueError("boom")),
         ):
             events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
-        self.assertEqual(events[0]["status"], STATUS_ERROR)
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(lead_events[0]["status"], STATUS_ERROR)
 
     def test_own_shift_disables_team_reassignment(self):
         """Dentro de la franja del monitor (usuario logueado) los leads son
@@ -892,8 +894,9 @@ class RunBandejaCycleTests(unittest.TestCase):
         ):
             events = run_bandeja_cycle(object(), CONFIG, mx_bandeja, state, 5)
         take.assert_not_called()
-        self.assertEqual(events[0]["status"], "detectado")
-        self.assertEqual(events[0]["entry"]["motivo"], "sin_cobertura")
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(lead_events[0]["status"], "detectado")
+        self.assertEqual(lead_events[0]["entry"]["motivo"], "sin_cobertura")
 
     def test_franja_propia_por_bandeja_deja_pasar_al_equipo(self):
         """La franja propia vigente es de AR pero el ciclo corre sobre MX:
@@ -925,8 +928,9 @@ class RunBandejaCycleTests(unittest.TestCase):
         ):
             events = run_bandeja_cycle(object(), CONFIG, bandeja("MX"), state, 5)
         take.assert_not_called()
-        self.assertEqual(events[0]["status"], "detectado")
-        self.assertEqual(events[0]["entry"]["motivo"], "sin_cobertura")
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(lead_events[0]["status"], "detectado")
+        self.assertEqual(lead_events[0]["entry"]["motivo"], "sin_cobertura")
 
     def test_franja_multi_bandeja_cubre_ambas(self):
         """Una franja con varias bandejas habilita la toma en cualquiera."""
@@ -968,8 +972,9 @@ class RunBandejaCycleTests(unittest.TestCase):
         ):
             events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         take.assert_not_called()
-        self.assertEqual(len(events), 2)
-        self.assertTrue(all(e["status"] == "detectado" for e in events))
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(len(lead_events), 2)
+        self.assertTrue(all(e["status"] == "detectado" for e in lead_events))
 
     def test_dry_run_lists_qualif_with_any_status(self):
         """Modo prueba: todos los QUALIF visibles se listan, no solo los
@@ -985,8 +990,9 @@ class RunBandejaCycleTests(unittest.TestCase):
         ):
             events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         take.assert_not_called()
-        self.assertEqual(len(events), 2)
-        self.assertTrue(all(e["status"] == "detectado" for e in events))
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(len(lead_events), 2)
+        self.assertTrue(all(e["status"] == "detectado" for e in lead_events))
 
     def test_dry_run_detected_lead_is_taken_when_mode_is_off(self):
         """Al apagar el modo prueba, un lead ya listado vuelve a procesarse."""
@@ -1005,7 +1011,42 @@ class RunBandejaCycleTests(unittest.TestCase):
             with patch("lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Maria Perez", "panel_guardado/marca_ok", "")) as take:
                 events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
             take.assert_called_once()
-        self.assertEqual(events[0]["status"], STATUS_TOMADO)
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(lead_events[0]["status"], STATUS_TOMADO)
+
+    def test_bandeja_scan_event_reports_rows_and_matches(self):
+        """El evento bandeja_scan deja en el log cuántas filas se leyeron y
+        cuántas matchearon el propietario sin asignar — el diagnóstico del
+        caso "abre la bandeja pero no toma ni lista nada"."""
+        state = self._state()
+        leads = [lead(LEAD_ID)]
+        with (
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(7, leads)),
+            patch("lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Maria Perez", "panel_guardado/marca_ok", "")),
+        ):
+            events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        scan = next(e for e in events if e["type"] == "bandeja_scan")
+        self.assertEqual(scan["rows"], 7)
+        self.assertEqual(scan["unassigned"], 1)
+        self.assertEqual(scan["unassigned_owner"], "AR_LEAD_QUALIF")
+        self.assertIn("owners_seen", scan)
+
+    def test_bandeja_scan_marks_status_skips(self):
+        """Los QUALIF omitidos por estado distinto quedan contados en el
+        evento de escaneo (antes se descartaban sin rastro)."""
+        state = self._state()
+        leads = [lead(LEAD_ID, estado="En curso"), lead(LEAD_ID_B, estado="Nuevo")]
+        with (
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(2, leads)),
+            patch("lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Maria Perez", "panel_guardado/marca_ok", "")),
+        ):
+            events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        scan = next(e for e in events if e["type"] == "bandeja_scan")
+        self.assertEqual(scan.get("skipped_status"), 1)
 
 
 class ReturnToQueueTests(unittest.TestCase):

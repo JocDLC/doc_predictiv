@@ -58,11 +58,6 @@ def check_python() -> None:
 
 
 def check_pip_and_selenium() -> None:
-    result = subprocess.run([sys.executable, "-m", "pip", "--version"], capture_output=True, text=True)
-    if result.returncode != 0:
-        log("FALLO", "pip disponible", result.stderr.strip().splitlines()[-1:] or "sin detalle")
-        return
-    log("OK", "pip disponible", result.stdout.strip())
     try:
         import selenium  # noqa: F401
 
@@ -70,6 +65,11 @@ def check_pip_and_selenium() -> None:
         return
     except ImportError:
         pass
+    result = subprocess.run([sys.executable, "-m", "pip", "--version"], capture_output=True, text=True)
+    if result.returncode != 0:
+        log("FALLO", "pip disponible", result.stderr.strip().splitlines()[-1:] or "sin detalle")
+        return
+    log("OK", "pip disponible", result.stdout.strip())
     print("       Instalando selenium (prueba el proxy corporativo, puede tardar 1-2 min)...")
     try:
         result = subprocess.run(

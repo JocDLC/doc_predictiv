@@ -21,6 +21,12 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ### Corregido
 
+- **INICIAR.bat en PCs nuevas**: espera al servidor hasta 60 s (antes 15 s;
+  el primer arranque con antivirus escaneando el Python portable superaba
+  el límite).
+- **verificar_pc sin falso fallo de pip**: con Selenium ya importable
+  (Python portable del paquete, sin pip) no se exige pip. Test-regla:
+  `tests.test_verificar_pc.PipSeleniumTests.test_no_exige_pip_si_selenium_importa`.
 - **Reasignación por hora de ingreso**: la encargada del lead se elige por
   la Fecha de creación del reporte (hora de entrada a la cola), no por la
   hora en que el bot lo toma — un lead ingresado minutos antes del cambio
@@ -39,6 +45,15 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ### Agregado
 
+- **Armado reproducible del paquete**: `packaging/` versiona INICIAR.bat,
+  LEEME.txt, RECOGER_DIAGNOSTICO.bat y VERIFICAR_PC.bat;
+  `packaging/build_zip.py` arma `dist/DocumentadorPredictivo_v<versión>.zip`
+  desde la fuente y lo valida.
+- **Paquete con verificación de PC**: `VERIFICAR_PC.bat` corre
+  `verificar_pc.py` con el Python del paquete (políticas de Edge, depuración
+  remota, adjunte de Selenium, acceso a Salesforce) y deja
+  `reporte_verificacion_pc.txt`. `RECOGER_DIAGNOSTICO.bat` suma
+  `navegador.log`, `guardian.log` y ese reporte al `diagnostico_bot.zip`.
 - **Vía TDD para cambios chicos**: nueva Fase 0.5 en `AGENTS.md` clasifica
   cada cambio (TDD vs SDD) con una checklist de 6 criterios confirmada por el
   usuario. `harness.py` gana `tdd-red <test_id>` (exige que el test falle,
@@ -46,11 +61,6 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
   (test + suite `unit` + `ruff check .`). Nuevo skill `tdd`
   (`.devin/skills/tdd/` + copias en `.windsurf/` y `.codex/`), reglas y
   workflows `/tdd` por IDE. Test-regla: `tests.test_harness_tdd`.
-- **Paquete con verificación de PC**: `VERIFICAR_PC.bat` corre
-  `verificar_pc.py` con el Python del paquete (políticas de Edge, depuración
-  remota, adjunte de Selenium, acceso a Salesforce) y deja
-  `reporte_verificacion_pc.txt`. `RECOGER_DIAGNOSTICO.bat` suma
-  `navegador.log`, `guardian.log` y ese reporte al `diagnostico_bot.zip`.
 
 ## [1.4.2] — 2026-10-27
 

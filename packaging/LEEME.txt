@@ -1,0 +1,111 @@
+============================================================
+ DOCUMENTADOR PREDICTIVO - Renault GBS Colombia
+ Guía rápida (2 minutos)
+============================================================
+
+QUÉ ES
+------
+Aplicación local para documentar los intentos de llamadas
+predictivas (Wolkvox) en Salesforce, manualmente o con el bot.
+Todo se procesa en TU equipo: ningún dato de clientes sale a
+servidores externos.
+
+
+PRIMERA VEZ (solo una vez)
+--------------------------
+1. Descarga el ZIP y haz clic derecho -> "Extraer todo".
+   IMPORTANTE: extrae TODO el contenido, no abras la app
+   desde dentro del ZIP.
+
+2. Doble clic en:  INICIAR.bat
+
+   Se abren automáticamente:
+     - Una ventana negra minimizada  -> el servidor del bot
+       (dejala abierta, podés ignorarla)
+     - Una ventana de Edge con DOS pestañas:
+         · Salesforce  -> iniciá sesión con tu usuario + 2FA
+         · La aplicación "Documentador Predictivo"
+
+3. En la pestaña de Salesforce entrá con tu usuario y contraseña
+   + doble factor.
+   SOLO LA PRIMERA VEZ: el perfil queda guardado y las próximas
+   veces ya estará logueado.
+
+   Si Windows muestra "Windows protegió su PC":
+   clic en "Más información" -> "Ejecutar de todas formas".
+   Es un aviso normal de archivos descargados.
+
+
+USO DIARIO
+----------
+1. Doble clic en INICIAR.bat. Se abre Edge con dos pestañas:
+   Salesforce (ya logueado si no es la primera vez) y la app.
+2. En la app, cargá el archivo que baja Wolkvox (CSV/XLSX).
+3. La app detecta el país de la tanda por los teléfonos y muestra
+   la bandera en la vista de cola. Si el selector "País/campos"
+   no coincide, la app te ofrece corregirlo: cada país escribe
+   en campos distintos de Salesforce.
+     · Argentina:      intentos en "Otra información"
+     · Colombia/México: intentos en "Comentario"
+   Una base que mezcla países se bloquea: Wolkvox arma tandas
+   de un solo país, así que un archivo mezclado está mal armado.
+4. Marcá "Cola" en los leads que quieras documentar.
+5. "Ir a cola del bot" -> "Ejecutar bot".
+6. El bot documenta cada lead y verifica el guardado.
+   Los resultados aparecen solos en la pantalla.
+
+CIERRE DE LEADS (opcional)
+--------------------------
+1. En la cola, marcá "Incluir en cierre" y elegí el motivo:
+   "Ilocalizable" o "Deja de interactuar".
+2. Revisá el resumen y confirmá con "Ejecutar cierre".
+3. El bot edita los campos del motivo, guarda y ejecuta la
+   conversión autorizada del Lead.
+
+   NO hace falta vincular ninguna carpeta: la app ya habla
+   directo con el servidor del bot.
+
+
+SI ALGO FALLA
+-------------
+- El bot no toma leads o no abre el navegador -> doble clic en
+  VERIFICAR_PC.bat; revisa Edge, políticas y conexión, y deja
+  reporte_verificacion_pc.txt en el Escritorio.
+- Para pedir soporte -> doble clic en RECOGER_DIAGNOSTICO.bat y enviá el
+  diagnostico_bot.zip que genera (no tiene contraseñas).
+- No cierres la ventana/pestaña de Edge que usa el bot (podés minimizarla);
+  si se cerró, tocá "Reiniciar navegador del bot" en la app.
+- El bot dice "corriendo" pero no abre pestañas de Salesforce ->
+  en la vista de cola tocá "Reiniciar navegador del bot" (cierra
+  y reabre el Edge del bot solo; la sesión no se pierde).
+- "El servidor local del bot dejó de responder" -> cerrá todo y
+  volvé a correr INICIAR.bat.
+- El .bat dice que el servidor no respondió -> volvé a extraer el
+  ZIP completo y ejecutá INICIAR.bat. Si continúa, compartí la
+  captura del error con soporte.
+- Salesforce pide login -> entrá normal en la ventana de Edge
+  del perfil dedicado.
+- Lead con "duplicado: verificar" -> es intencional, el bot lo
+  salta para revisión manual.
+- Cerraste todo y querés volver -> INICIAR.bat otra vez.
+
+
+DATOS Y SEGURIDAD
+-----------------
+- No guarda ni envía credenciales: el login es el tuyo, en TU Edge.
+- Los teléfonos se usan solo en tu PC para detectar el país de la
+  tanda; nunca se guardan en colas, resultados ni registros.
+- Documentación: Argentina escribe en "Otra información";
+  Colombia/México en "Comentario" (según el país de la tanda).
+- Cierre de Leads: solo al confirmarlo, escribe el motivo en el
+  campo del país (Argentina: "Comentario"; Colombia/México:
+  "Otra información", conservando el texto previo), edita
+  Cualificación y Sub-Cualificación, guarda y ejecuta
+  Convert Lead -> Yes.
+- Los archivos de cola, resultados y snapshots quedan dentro de
+  la carpeta del paquete (app\automation_salesforce\...).
+- Para actualizar: reemplazá la carpeta "app" por la nueva
+  versión. Tu sesión de Salesforce NO se pierde.
+
+
+Soporte: equipo Gestión de Campañas Predictivas - Renault GBS

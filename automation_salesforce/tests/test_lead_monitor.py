@@ -1155,6 +1155,34 @@ class ReassignOwnerTests(unittest.TestCase):
         with patch("lead_monitor._encargada_activa", return_value=None):
             self.assertIsNone(_encargada_para_lead([otra], "Jose Manuel de la Colina"))
 
+    def test_encargada_para_lead_usa_hora_de_ingreso(self):
+        """La encargada se elige por la hora de ingreso del lead a la
+        cola (Fecha de creación), no por la hora en que el bot lo toma:
+        el bot puede tardar minutos y caer en la franja siguiente."""
+        from lead_monitor import _encargada_para_lead
+
+        roger = {
+            "nombre": "ROGER FABIAN VELASCO CAMERO",
+            "franjas": [{"start": "11:00", "end": "12:39", "bandejas": ["AR"]}],
+        }
+        owner = "Jose Manuel de la Colina"
+        # Ingresó 10:57 (antes de la franja de Roger) aunque el bot lo
+        # tome a las 11:05: ninguna franja lo cubre -> sin reasignación.
+        self.assertIsNone(
+            _encargada_para_lead(
+                [roger], owner, bandeja="AR",
+                details={"fecha_creacion": "30/10/2026 10:57 AM"},
+            )
+        )
+        # Ingresó 11:15: sí cae en la franja -> Roger.
+        self.assertIs(
+            _encargada_para_lead(
+                [roger], owner, bandeja="AR",
+                details={"fecha_creacion": "30/10/2026 11:15 AM"},
+            ),
+            roger,
+        )
+
     def test_reassign_owner_full_flow(self):
         from lead_closure import MODAL_CONFIRM_SCRIPT, RECORD_ACTION_SCRIPT
         from lead_monitor import (

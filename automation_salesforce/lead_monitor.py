@@ -765,15 +765,33 @@ def _encargada_activa(
     return None
 
 
-def _encargada_para_lead(equipo: list[dict] | None, owner: str, bandeja: str | None = None) -> dict | None:
+def _lead_entry_moment(details: dict | None) -> datetime | None:
+    """Hora de ingreso del lead a la cola (Fecha de creación del reporte,
+    formato ``dd/mm/aaaa hh:MM AM/PM``). None si falta o no parsea."""
+    raw = ((details or {}).get("fecha_creacion") or "").strip()
+    try:
+        return datetime.strptime(raw, "%d/%m/%Y %I:%M %p")
+    except ValueError:
+        return None
+
+
+def _encargada_para_lead(
+    equipo: list[dict] | None,
+    owner: str,
+    bandeja: str | None = None,
+    details: dict | None = None,
+) -> dict | None:
     """Encargada del lead si la franja activa NO es del usuario logueado.
 
     ``owner`` es el propietario post-pickup (siempre el usuario de la
     sesión): si coincide con el nombre de la encargada, la franja es del
     propio usuario y el flujo sigue normal. La ``bandeja`` restringe a la
-    persona que cubre ESA bandeja en su franja activa.
+    persona que cubre ESA bandeja en su franja activa. La franja se
+    evalúa a la hora de INGRESO del lead a la cola (Fecha de creación):
+    el bot puede tardar minutos en tomarlo y caer en el turno siguiente;
+    sin ``details`` parseables, cae a la hora actual como antes.
     """
-    member = _encargada_activa(equipo, bandeja=bandeja)
+    member = _encargada_activa(equipo, moment=_lead_entry_moment(details), bandeja=bandeja)
     if not member:
         return None
     nombre = normalized_key(member.get("nombre") or "")
@@ -1136,7 +1154,7 @@ def take_lead(
             if got and wanted and not (wanted in got or got in wanted):
                 return STATUS_TOMADO_POR_OTRO, owner, "", ""
     new_owner = read_record_owner(driver) or owner
-    encargada = _encargada_para_lead(equipo, new_owner, bandeja=bandeja.get("code"))
+    encargada = _encargada_para_lead(equipo, new_owner, bandeja=bandeja.get("code"), details=details)
     diagnostic = f"encargada: {encargada['nombre']}" if encargada else ""
     finalize, diag = finalize_pick_up(
         driver,

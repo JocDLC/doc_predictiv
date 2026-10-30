@@ -2411,18 +2411,18 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L813",
-      "id": "lead_monitor_rationale_813",
       "community": 5,
-      "norm_label": "espera el input \"buscar ...\" del modal: el contenedor abre antes que     el lookup"
+      "norm_label": "espera el input \"buscar ...\" del modal: el contenedor abre antes que     el lookup",
+      "id": "lead_monitor_rationale_813"
     },
     {
       "label": "Tipea ``wanted`` en el lookup y elige la opci\u00f3n. Si el primer tipeo     cay\u00f3 ant",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L827",
-      "id": "lead_monitor_rationale_827",
       "community": 5,
-      "norm_label": "tipea ``wanted`` en el lookup y elige la opcion. si el primer tipeo     cayo ant"
+      "norm_label": "tipea ``wanted`` en el lookup y elige la opcion. si el primer tipeo     cayo ant",
+      "id": "lead_monitor_rationale_827"
     },
     {
       "label": "Abre el registro, re-verifica el propietario y pulsa Pick Up.      ``tomado`` ex",
@@ -2447,18 +2447,18 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L865",
-      "id": "lead_monitor_rationale_865",
       "community": 5,
-      "norm_label": "un intento completo de reasignacion: modal \u2192 busqueda \u2192 opcion \u2192     confirmar \u2192"
+      "norm_label": "un intento completo de reasignacion: modal \u2192 busqueda \u2192 opcion \u2192     confirmar \u2192",
+      "id": "lead_monitor_rationale_865"
     },
     {
       "label": "Reasigna el lead a ``nombre`` v\u00eda el di\u00e1logo \"Cambiar propietario\".      Flujo a",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L889",
-      "id": "lead_monitor_rationale_889",
       "community": 5,
-      "norm_label": "reasigna el lead a ``nombre`` via el dialogo \"cambiar propietario\".      flujo a"
+      "norm_label": "reasigna el lead a ``nombre`` via el dialogo \"cambiar propietario\".      flujo a",
+      "id": "lead_monitor_rationale_889"
     },
     {
       "label": "Devuelve el Lead a la cola ``queue_label`` v\u00eda el di\u00e1logo Cambiar     propietari",
@@ -2474,9 +2474,9 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L936",
-      "id": "lead_monitor_rationale_936",
       "community": 5,
-      "norm_label": "busca el panel en las demas pestanas/ventanas del navegador y lo guarda.      ``"
+      "norm_label": "busca el panel en las demas pestanas/ventanas del navegador y lo guarda.      ``",
+      "id": "lead_monitor_rationale_936"
     },
     {
       "label": "Espera el panel \"Contact Client\" post-Pick-Up y pulsa solo su Save.      Cubre l",
@@ -2492,18 +2492,18 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L988",
-      "id": "lead_monitor_rationale_988",
       "community": 5,
-      "norm_label": "chequeo tardio del panel + barrido por otros handles (subtabs de la     consola)"
+      "norm_label": "chequeo tardio del panel + barrido por otros handles (subtabs de la     consola)",
+      "id": "lead_monitor_rationale_988"
     },
     {
       "label": "Espera el panel \"Contact Client\" post-Pick-Up y pulsa solo su Save.      Cubre l",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L1010",
-      "id": "lead_monitor_rationale_1010",
       "community": 5,
-      "norm_label": "espera el panel \"contact client\" post-pick-up y pulsa solo su save.      cubre l"
+      "norm_label": "espera el panel \"contact client\" post-pick-up y pulsa solo su save.      cubre l",
+      "id": "lead_monitor_rationale_1010"
     },
     {
       "label": "Devuelve el Lead a la cola ``queue_label`` v\u00eda el di\u00e1logo Cambiar     propietari",
@@ -2528,45 +2528,45 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L1177",
-      "id": "lead_monitor_rationale_1177",
       "community": 5,
-      "norm_label": "clic en la accion cambiar propietario y espera a que el dialogo abra.      el re"
+      "norm_label": "clic en la accion cambiar propietario y espera a que el dialogo abra.      el re",
+      "id": "lead_monitor_rationale_1177"
     },
     {
       "label": "Dentro del di\u00e1logo: conmutador Usuarios\u2192Colas, b\u00fasqueda y selecci\u00f3n.",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L1215",
-      "id": "lead_monitor_rationale_1215",
       "community": 5,
-      "norm_label": "dentro del dialogo: conmutador usuarios\u2192colas, busqueda y seleccion."
+      "norm_label": "dentro del dialogo: conmutador usuarios\u2192colas, busqueda y seleccion.",
+      "id": "lead_monitor_rationale_1215"
     },
     {
       "label": "Devuelve el Lead a la cola ``queue_label`` v\u00eda el di\u00e1logo Cambiar     propietari",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L1228",
-      "id": "lead_monitor_rationale_1228",
       "community": 5,
-      "norm_label": "devuelve el lead a la cola ``queue_label`` via el dialogo cambiar     propietari"
+      "norm_label": "devuelve el lead a la cola ``queue_label`` via el dialogo cambiar     propietari",
+      "id": "lead_monitor_rationale_1228"
     },
     {
       "label": "Un ciclo sobre una bandeja: refresca, detecta y toma los leads visibles.",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L1259",
-      "id": "lead_monitor_rationale_1259",
       "community": 12,
-      "norm_label": "un ciclo sobre una bandeja: refresca, detecta y toma los leads visibles."
+      "norm_label": "un ciclo sobre una bandeja: refresca, detecta y toma los leads visibles.",
+      "id": "lead_monitor_rationale_1259"
     },
     {
       "label": "Itera las bandejas habilitadas; una ca\u00edda no frena a las dem\u00e1s.      Ante ``sess",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\lead_monitor.py",
       "source_location": "L1380",
-      "id": "lead_monitor_rationale_1380",
       "community": 6,
-      "norm_label": "itera las bandejas habilitadas; una caida no frena a las demas.      ante ``sess"
+      "norm_label": "itera las bandejas habilitadas; una caida no frena a las demas.      ante ``sess",
+      "id": "lead_monitor_rationale_1380"
     },
     {
       "label": "local_audit.py",
@@ -8729,90 +8729,90 @@
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1159",
-      "id": "test_lead_monitor_rationale_1159",
       "community": 5,
-      "norm_label": "la encargada se elige por la hora de ingreso del lead a la         cola (fecha"
+      "norm_label": "la encargada se elige por la hora de ingreso del lead a la         cola (fecha",
+      "id": "test_lead_monitor_rationale_1159"
     },
     {
       "label": "El input del lookup se monta despu\u00e9s del modal: si el primer         sondeo dev",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1212",
-      "id": "test_lead_monitor_rationale_1212",
       "community": 5,
-      "norm_label": "el input del lookup se monta despues del modal: si el primer         sondeo dev"
+      "norm_label": "el input del lookup se monta despues del modal: si el primer         sondeo dev",
+      "id": "test_lead_monitor_rationale_1212"
     },
     {
       "label": "Tras elegir el registro el footer del modal tarda en re-renderizar         el b",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1245",
-      "id": "test_lead_monitor_rationale_1245",
       "community": 5,
-      "norm_label": "tras elegir el registro el footer del modal tarda en re-renderizar         el b"
+      "norm_label": "tras elegir el registro el footer del modal tarda en re-renderizar         el b",
+      "id": "test_lead_monitor_rationale_1245"
     },
     {
       "label": "Lead con encargada distinta: sin comentario en Otra informaci\u00f3n         (pendie",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1356",
-      "id": "test_lead_monitor_rationale_1356",
       "community": 5,
-      "norm_label": "lead con encargada distinta: sin comentario en otra informacion         (pendie"
+      "norm_label": "lead con encargada distinta: sin comentario en otra informacion         (pendie",
+      "id": "test_lead_monitor_rationale_1356"
     },
     {
       "label": "El m\u00e9todo del comentario sale de preferencia_contacto del lead,         no de l",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1379",
-      "id": "test_lead_monitor_rationale_1379",
       "community": 5,
-      "norm_label": "el metodo del comentario sale de preferencia_contacto del lead,         no de l"
+      "norm_label": "el metodo del comentario sale de preferencia_contacto del lead,         no de l",
+      "id": "test_lead_monitor_rationale_1379"
     },
     {
       "label": "El bot\u00f3n Cambiar propietario llega tarde por el re-render tras         Save: se",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1393",
-      "id": "test_lead_monitor_rationale_1393",
       "community": 5,
-      "norm_label": "el boton cambiar propietario llega tarde por el re-render tras         save: se"
+      "norm_label": "el boton cambiar propietario llega tarde por el re-render tras         save: se",
+      "id": "test_lead_monitor_rationale_1393"
     },
     {
       "label": "Si el modal no abre tras el primer clic, se permite un segundo         clic (m\u00e1",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1429",
-      "id": "test_lead_monitor_rationale_1429",
       "community": 5,
-      "norm_label": "si el modal no abre tras el primer clic, se permite un segundo         clic (ma"
+      "norm_label": "si el modal no abre tras el primer clic, se permite un segundo         clic (ma",
+      "id": "test_lead_monitor_rationale_1429"
     },
     {
       "label": "El intento falla pero la relectura muestra que el lead ya qued\u00f3         a nombr",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1455",
-      "id": "test_lead_monitor_rationale_1455",
       "community": 5,
-      "norm_label": "el intento falla pero la relectura muestra que el lead ya quedo         a nombr"
+      "norm_label": "el intento falla pero la relectura muestra que el lead ya quedo         a nombr",
+      "id": "test_lead_monitor_rationale_1455"
     },
     {
       "label": "La relectura muestra al usuario del bot \u2192 segundo intento.",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1477",
-      "id": "test_lead_monitor_rationale_1477",
       "community": 5,
-      "norm_label": "la relectura muestra al usuario del bot \u2192 segundo intento."
+      "norm_label": "la relectura muestra al usuario del bot \u2192 segundo intento.",
+      "id": "test_lead_monitor_rationale_1477"
     },
     {
       "label": "Ambos intentos fallan \u2192 devuelve el outcome del segundo.",
       "file_type": "rationale",
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1497",
-      "id": "test_lead_monitor_rationale_1497",
       "community": 5,
-      "norm_label": "ambos intentos fallan \u2192 devuelve el outcome del segundo."
+      "norm_label": "ambos intentos fallan \u2192 devuelve el outcome del segundo.",
+      "id": "test_lead_monitor_rationale_1497"
     },
     {
       "label": "test_local_audit.py",
@@ -39195,8 +39195,8 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L1172",
       "weight": 1.0,
-      "_src": "test_lead_monitor_reassignownertests_test_encargada_para_lead_usa_hora_de_ingreso",
-      "_tgt": "lead_monitor_encargada_para_lead",
+      "_src": "lead_monitor_encargada_para_lead",
+      "_tgt": "test_lead_monitor_reassignownertests_test_encargada_para_lead_usa_hora_de_ingreso",
       "source": "lead_monitor_encargada_para_lead",
       "target": "test_lead_monitor_reassignownertests_test_encargada_para_lead_usa_hora_de_ingreso"
     },
@@ -45554,11 +45554,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1159",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1159",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1159",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1159"
     },
     {
       "relation": "uses",
@@ -45566,11 +45566,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1212",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1212",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1212",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1212"
     },
     {
       "relation": "uses",
@@ -45578,11 +45578,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1245",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1245",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1245",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1245"
     },
     {
       "relation": "uses",
@@ -45590,11 +45590,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1356",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1356",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1356",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1356"
     },
     {
       "relation": "uses",
@@ -45602,11 +45602,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1379",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1379",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1379",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1379"
     },
     {
       "relation": "uses",
@@ -45614,11 +45614,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1393",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1393",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1393",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1393"
     },
     {
       "relation": "uses",
@@ -45626,11 +45626,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1429",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1429",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1429",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1429"
     },
     {
       "relation": "uses",
@@ -45638,11 +45638,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1455",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1455",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1455",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1455"
     },
     {
       "relation": "uses",
@@ -45650,11 +45650,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1477",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1477",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1477",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1477"
     },
     {
       "relation": "uses",
@@ -45662,11 +45662,11 @@
       "source_file": "C:\\Users\\ax24611\\Downloads\\_dev\\Docuentar_predictivo\\automation_salesforce\\tests\\test_lead_monitor.py",
       "source_location": "L19",
       "weight": 0.8,
-      "_src": "test_lead_monitor_rationale_1497",
-      "_tgt": "report_reader_visiblelead",
+      "_src": "report_reader_visiblelead",
+      "_tgt": "test_lead_monitor_rationale_1497",
+      "confidence_score": 0.5,
       "source": "report_reader_visiblelead",
-      "target": "test_lead_monitor_rationale_1497",
-      "confidence_score": 0.5
+      "target": "test_lead_monitor_rationale_1497"
     },
     {
       "relation": "uses",

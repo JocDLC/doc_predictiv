@@ -1,7 +1,7 @@
 # Graph Report - C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo  (2026-10-30)
 
 ## Corpus Check
-- 86 files · ~762,178 words
+- 86 files · ~765,106 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -9389,11 +9389,11 @@ Nodes (1): Devuelve metadatos estructurales sin leer valores de filas ni encabez
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `VisibleLead` connect `Community 0` to `Community 2`, `Community 5`, `Community 6`, `Community 12`, `Community 23`?**
-  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+  _High betweenness centrality (0.075) - this node is a cross-community bridge._
 - **Why does `read_visible_unassigned_leads()` connect `Community 2` to `Community 0`, `Community 1`, `Community 3`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
-- **Why does `merge_visible_leads()` connect `Community 2` to `Community 0`, `Community 3`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `run()` connect `Community 8` to `Community 3`, `Community 17`, `Community 11`?**
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Are the 243 inferred relationships involving `VisibleLead` (e.g. with `LeadsUiTests` and `PredicatesTests`) actually correct?**
   _`VisibleLead` has 243 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 52 inferred relationships involving `ValueError` (e.g. with `favicon_link()` and `decorate_html()`) actually correct?**

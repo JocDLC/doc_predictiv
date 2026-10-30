@@ -20,7 +20,7 @@
 ## 4. Verificación y cierre
 
 - [x] 4.1 Ejecutar los tests y ruff: 539 tests OK, lint OK; contraste de texto/acento >= 4.5:1
-- [ ] 4.2 Verificación visual de Home, Preparar, Documentar, Monitor y Distribuir en el navegador
+- [x] 4.2 Verificación visual de Home, Preparar, Documentar, Monitor y Distribuir en el navegador
 - [x] 4.3 Sincronizar el HTML a `dist/DocumentadorPredictivo/app/` y verificar con `cmp`
 - [x] 4.4 Registrar en MEMORY.md los pendientes: renombre completo del proyecto y migración a sidebar
 

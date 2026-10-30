@@ -5,8 +5,8 @@ La UI es un único archivo `documentador_predictivo.html` (~3800 líneas): un `<
 ## Goals / Non-Goals
 
 **Goals:**
-- Nombre "Automatización Gestión de Leads" en `<title>` y `<h1>`; marca "RENAULT GROUP · LBS REC".
-- Visual moderna clara inspirada en la lámina AS IS: paleta azul `#1d4ed8` a violeta `#6d28d9`, acentos por módulo (azul, naranja, verde, violeta).
+- Nombre "Automatización Gestión de Leads" en `<title>` y `<h1>`; marca "RENAULT GROUP · GBS REC".
+- Base clara con fondo `#f6f7f9`, tarjetas blancas y acento `#486581` en reposo. Tras probarla, el usuario pidió recuperar el header azul-violeta y los colores originales del Monitor, y usar azul intenso `#1d4ed8` al pasar el mouse por las tarjetas.
 - Cambios concentrados en el `<style>`, salvo los mínimos del markup del header y de Home.
 
 **Non-Goals:**
@@ -18,10 +18,12 @@ La UI es un único archivo `documentador_predictivo.html` (~3800 líneas): un `<
 ## Decisions
 
 1. **Solo CSS + markup mínimo.** Se redefinen las variables `:root` (`--accent`, `--bg`, `--border`, radios, sombras) y se ajustan los selectores existentes. Alternativa descartada: reescribir el layout, porque tiene más riesgo con los tests y está fuera de alcance.
-2. **Números y colores de las tarjetas.** Se agrega `<span class="module-num">N</span>` dentro de cada `.module-card` y un modificador de color (`module-card--blue|orange|green|violet`) que fija una variable `--mod` para el ícono, el número y el hover. No se agregan IDs nuevos ni se cambian los existentes (`openPrepare`, `openDocument`, `openMonitor`, `openDistribuir`).
-3. **Header.** Degradado lineal estático (`linear-gradient(90deg, #1d4ed8, #6d28d9)`). Se agrega `<span class="brand-sub">LBS REC</span>` junto a `RENAULT GROUP`. Se conserva el `.sub` de "Procesamiento local".
+2. **Números y colores de las tarjetas.** Se mantienen números e IDs. En reposo son claras; hover y foco de teclado aplican fondo `#1d4ed8` con texto e iconos blancos, sin desplazamiento. El foco conserva contorno visible.
+3. **Header.** Se restaura el degradado `#1d4ed8` a `#6d28d9`, con marca, logo y textos blancos.
 4. **Rendimiento.** Fuentes del sistema (`Segoe UI`). Sin `backdrop-filter`, `blur`, `@import` ni animaciones infinitas. Las transiciones existentes se limitan a elementos interactivos (`.module-card`, `.btn`). Se mantiene la animación puntual `monitorFlash` (4 s, una vez). Se agrega un bloque `@media (prefers-reduced-motion: reduce)` que anula transiciones y animaciones.
 5. **Un único `<script>`.** No se agrega ningún `<script>` adicional: la regex greedy de los tests capturaría HTML intermedio.
+6. **Monitor.** Se restauran los fondos y bordes originales: verde activo, ámbar en espera, rojo requiere atención y gris apagado. También los avisos, switch verde y tabla. Las variables originales se aplican dentro de `#viewMonitor` para conservar el resto de la muestra. Se mantiene el espacio y legibilidad mejorados.
+7. **Sin librerías nuevas.** El usuario pospuso shadcn. Este ajuste se limita a CSS, mantiene fuentes del sistema y no agrega trabajo de JavaScript.
 
 ## Risks / Trade-offs
 

@@ -33,6 +33,12 @@
 
 ## Estado actual
 
+- **Revisión visual de la opción B** (`renombrar-ui-gestion-leads`): el usuario
+  encontró la muestra demasiado blanca y fría. Restaurar header con degradado
+  azul/violeta y colores originales del Monitor. Home conserva tarjetas claras,
+  con fondo azul intenso `#1d4ed8` y texto/iconos blancos en hover y foco.
+  Sin shadcn ni React por ahora. Pendiente: valoración visual de la revisión.
+
 - **PENDIENTE (recordar siempre)**: retomar lo antes posible —
   (a) Fase 2: app nativa con pywebview/WebView2 (elimina servidor HTTP,
   token y puerto por diseño; ver decisión en "Estabilidad del servidor");

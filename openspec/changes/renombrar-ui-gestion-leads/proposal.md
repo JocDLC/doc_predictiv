@@ -1,12 +1,13 @@
 ## Why
 
-El proyecto creció: ya no solo documenta el predictivo, también prepara campañas, monitorea bandejas, toma y reasigna leads y los distribuye. El nombre visible "Gestión de Campañas Predictivas" ya no lo representa. El nombre nuevo es **"Automatización Gestión de Leads"**. Además, la UI necesita una visual más moderna, alineada con la lámina "AS IS Process" (LBS REC). Todavía no se menciona IA: falta definir dónde va.
+El proyecto creció: ya no solo documenta el predictivo, también prepara campañas, monitorea bandejas, toma y reasigna leads y los distribuye. El nombre visible "Gestión de Campañas Predictivas" ya no lo representa. El nombre nuevo es **"Automatización Gestión de Leads"**. Además, la UI necesita una visual más moderna, alineada con la lámina "AS IS Process" (GBS REC). Todavía no se menciona IA: falta definir dónde va.
 
 ## What Changes
 
 - Título de pestaña y header de la UI: "Automatización Gestión de Leads".
-- Marca del header: "RENAULT GROUP" + "LBS REC".
-- Rediseño visual **"moderno claro"** solo con CSS: header con degradado azul a violeta, tarjetas de módulo con número, ícono de color propio por módulo, bordes redondeados y sombras suaves, botones y tablas más limpios.
+- Marca del header: "RENAULT GROUP" + "GBS REC".
+- Rediseño visual solo con CSS: header con el degradado azul-violeta original; tarjetas de módulo claras en reposo y fondo azul intenso `#1d4ed8` al pasar el mouse, con texto e iconos blancos. El monitor recupera sus colores originales de estados, avisos y tabla, según la revisión visual del usuario.
+- Sin shadcn, React ni dependencias nuevas. Primera muestra centrada en Home y Monitor, con paleta compartida de botones y encabezado.
 - Texto introductorio de la pantalla de inicio actualizado al alcance nuevo (preparar, documentar, monitorear, distribuir).
 - **Restricción de rendimiento**: sin fuentes externas, sin `backdrop-filter`/`filter: blur`, sin animaciones infinitas ni transiciones en filas de tablas. La UI no debe sumar carga de CPU al monitor.
 - Sin cambios en IDs, clases usadas por el JS, endpoints ni lógica.

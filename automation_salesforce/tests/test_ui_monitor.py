@@ -424,6 +424,11 @@ check('asignado a visible en la tabla',
 
 @unittest.skipUnless(node_executable(), "node no disponible para tests de UI")
 class UiMonitorViewTests(unittest.TestCase):
+    def test_header_brand_shows_gbs_rec(self):
+        html = UI_PAGE.read_text(encoding="utf-8")
+        self.assertIn("GBS REC", html)
+        self.assertNotIn("LBS REC", html)
+
     def test_clear_button_is_present_in_markup(self):
         html = UI_PAGE.read_text(encoding="utf-8")
         self.assertIn('id="monitorClearResults"', html)

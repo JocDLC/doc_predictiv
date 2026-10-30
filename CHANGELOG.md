@@ -17,6 +17,26 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ## [Sin publicar]
 
+## [1.4.3] — 2026-10-30
+
+### Corregido
+
+- **Reasignación por hora de ingreso**: la encargada del lead se elige por
+  la Fecha de creación del reporte (hora de entrada a la cola), no por la
+  hora en que el bot lo toma — un lead ingresado minutos antes del cambio
+  de turno ya no cae en la franja siguiente por la demora de toma.
+  Test-regla: `tests.test_lead_monitor.ReassignOwnerTests.test_encargada_para_lead_usa_hora_de_ingreso`.
+- **Marca del header**: "LBS REC" pasa a "GBS REC". Test-regla:
+  `tests.test_ui_monitor.UiMonitorViewTests.test_header_brand_shows_gbs_rec`.
+
+### Cambiado
+
+- **Revisión visual de Inicio y Monitor**: encabezado con el degradado
+  azul-violeta original; tarjetas claras que se vuelven azules con texto e
+  iconos blancos en hover y foco de teclado, sin desplazamiento. El monitor
+  conserva sus colores originales y opciones más legibles. Solo CSS;
+  sin shadcn ni nuevas dependencias.
+
 ### Agregado
 
 - **Vía TDD para cambios chicos**: nueva Fase 0.5 en `AGENTS.md` clasifica
@@ -26,6 +46,11 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
   (test + suite `unit` + `ruff check .`). Nuevo skill `tdd`
   (`.devin/skills/tdd/` + copias en `.windsurf/` y `.codex/`), reglas y
   workflows `/tdd` por IDE. Test-regla: `tests.test_harness_tdd`.
+- **Paquete con verificación de PC**: `VERIFICAR_PC.bat` corre
+  `verificar_pc.py` con el Python del paquete (políticas de Edge, depuración
+  remota, adjunte de Selenium, acceso a Salesforce) y deja
+  `reporte_verificacion_pc.txt`. `RECOGER_DIAGNOSTICO.bat` suma
+  `navegador.log`, `guardian.log` y ese reporte al `diagnostico_bot.zip`.
 
 ## [1.4.2] — 2026-10-27
 

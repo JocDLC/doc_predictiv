@@ -13,18 +13,26 @@ La UI SHALL mostrar "Automatización Gestión de Leads" como título de la pesta
 - **THEN** no aparece ninguna ocurrencia
 
 ### Requirement: Marca del header
-El header SHALL mostrar la marca "RENAULT GROUP" junto con "LBS REC".
+El header SHALL mostrar la marca "RENAULT GROUP" junto con "GBS REC".
 
 #### Scenario: Marca visible
 - **WHEN** el usuario ve cualquier vista de la aplicación
-- **THEN** el header muestra el logo de Renault, "RENAULT GROUP" y "LBS REC"
+- **THEN** el header muestra el logo de Renault, "RENAULT GROUP" y "GBS REC"
 
 ### Requirement: Visual moderna clara
-La UI SHALL usar un estilo moderno claro: header con degradado azul a violeta, tarjetas de módulo en Home con número de orden e ícono de color propio por módulo, esquinas redondeadas y sombras suaves. El cambio SHALL ser solo de presentación: los IDs, las clases que usa el JS y el comportamiento de cada vista no cambian.
+La UI SHALL mostrar un header con el degradado azul-violeta original. Las tarjetas de Home SHALL ser claras en reposo y usar fondo azul `#1d4ed8` con texto e iconos blancos en hover y foco de teclado. El hover SHALL conservar la posición de las tarjetas. El cambio SHALL ser solo de presentación: los IDs, las clases que usa el JS y el comportamiento de cada vista no cambian. No SHALL agregar shadcn ni nuevas dependencias.
 
 #### Scenario: Home con tarjetas numeradas
 - **WHEN** el usuario está en la pantalla de inicio
-- **THEN** ve las 4 tarjetas (Preparar, Documentar, Monitor, Distribuir) numeradas del 1 al 4, cada una con su color de acento
+- **THEN** ve las 4 tarjetas (Preparar, Documentar, Monitor, Distribuir) numeradas del 1 al 4, con el mismo acento azul apagado
+
+#### Scenario: Estado del monitor con sus colores originales
+- **WHEN** el monitor está activo, en espera, apagado o requiere atención
+- **THEN** mantiene el texto y el switch correspondientes, con punto, borde y fondos originales verde, ámbar, gris o rojo
+
+#### Scenario: Tarjeta resaltada al pasar el mouse
+- **WHEN** el usuario pasa el mouse sobre cualquiera de las cuatro tarjetas o le da foco con el teclado
+- **THEN** la tarjeta muestra fondo azul `#1d4ed8`, texto e iconos blancos y conserva su posición
 
 #### Scenario: Funcionalidad intacta
 - **WHEN** se ejecuta la suite de tests de UI existente

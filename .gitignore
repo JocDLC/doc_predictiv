@@ -31,6 +31,7 @@ graphify-out/converted/
 
 # Datos operativos y archivos de distribución
 PREDICTIVOS/
+ARCHIVOS_UTILES/
 *.zip
 
 # Configuración local

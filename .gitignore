@@ -32,6 +32,7 @@ graphify-out/converted/
 # Datos operativos y archivos de distribución
 PREDICTIVOS/
 ARCHIVOS_UTILES/
+reunion_estrategia_ia/
 *.zip
 
 # Configuración local

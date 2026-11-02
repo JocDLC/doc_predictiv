@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 from unittest.mock import Mock, patch
 
 import run_distribucion_queue
-from run_distribucion_queue import SKIP_OWNERS, distribute_one_lead
+from run_distribucion_queue import SKIP_OWNERS, distribute_one_lead, simulate_one_lead
 
 LEAD = {"lead_id": "00Q000000000001AAA", "persona": "Ana Perez"}
 CONFIG = {
@@ -80,6 +80,16 @@ class DistributeOneLeadTests(unittest.TestCase):
             patches["press_pick_up"].assert_not_called()
             patches["reassign_owner"].assert_not_called()
 
+    def test_other_country_managed_queues_are_never_touched(self):
+        # Listas viejas: un lead ya derivado al canal frío/export de MX o CO
+        # ya fue gestionado — no se toca aunque la fila diga otra cosa.
+        for owner in ("MX_LEAD_COLD", "MX_LEAD_EXPORT_GETLEAD", "CO_LEAD_COLD", "CO_LEAD_EXPORT_GETLEAD"):
+            entry, patches = self.run_lead([owner])
+            self.assertEqual(entry["status"], "cola_excluida")
+            self.assertEqual(entry["propietario_observado"], owner)
+            patches["press_pick_up"].assert_not_called()
+            patches["reassign_owner"].assert_not_called()
+
     def test_ingreso_queue_pickup_then_reassign(self):
         # Owner leído: cola; tras Pick Up pasa al usuario del bot; luego reassign.
         entry, patches = self.run_lead(["AR_LEAD_QUALIF", "AR_LEAD_QUALIF", "Usuario Bot"])
@@ -138,6 +148,111 @@ class DistributeOneLeadTests(unittest.TestCase):
         self.assertEqual(persisted[0]["lead_id"], LEAD["lead_id"])
         self.assertEqual(persisted[0]["persona"], "Ana Perez")
         self.assertEqual(persisted[0]["status"], "reasignado")
+
+
+class SimulateOneLeadTests(unittest.TestCase):
+    """Modo prueba: mismo recorrido de lectura/clasificación que la corrida
+    real, pero NUNCA escribe en Salesforce —ni Pick Up ni reasignar— y los
+    estados salen con prefijo ``prueba_``."""
+
+    def setUp(self):
+        self.temporary = TemporaryDirectory()
+        self.results_path = Path(self.temporary.name) / "cola_distribucion.resultado.json"
+        self.screenshots = Path(self.temporary.name) / "capturas"
+        self.driver = FakeDriver()
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def run_lead(self, owner, verify="opcion_ok"):
+        patches = {
+            "open_record": Mock(),
+            "wait_record_owner": Mock(return_value=owner),
+            "verify_persona_option": Mock(return_value=verify),
+            "press_pick_up": Mock(),
+            "reassign_owner": Mock(),
+            "save_contact_panel_if_present": Mock(),
+            "capture_failure": Mock(return_value=Path("cap.png")),
+        }
+        with patch.multiple(run_distribucion_queue, **patches):
+            entry = simulate_one_lead(
+                self.driver, LEAD, CONFIG, INGRESO, self.results_path, self.screenshots, Mock(), "run_x"
+            )
+        # Regla de oro del modo prueba: jamás se toca Salesforce.
+        patches["press_pick_up"].assert_not_called()
+        patches["reassign_owner"].assert_not_called()
+        patches["save_contact_panel_if_present"].assert_not_called()
+        return entry, patches
+
+    def test_owner_is_destino_does_nothing(self):
+        entry, patches = self.run_lead("Ana Perez")
+        self.assertEqual(entry["status"], "prueba_ok:ya_asignado")
+        patches["verify_persona_option"].assert_not_called()
+
+    def test_skipped_queues_are_never_touched(self):
+        for owner in SKIP_OWNERS:
+            entry, patches = self.run_lead(owner)
+            self.assertEqual(entry["status"], "prueba_ok:cola_excluida")
+            self.assertEqual(entry["propietario_observado"], owner)
+            patches["verify_persona_option"].assert_not_called()
+
+    def test_other_country_managed_queues_are_listed_only(self):
+        for owner in ("MX_LEAD_COLD", "MX_LEAD_EXPORT_GETLEAD", "CO_LEAD_COLD", "CO_LEAD_EXPORT_GETLEAD"):
+            entry, patches = self.run_lead(owner)
+            self.assertEqual(entry["status"], "prueba_ok:cola_excluida")
+            self.assertEqual(entry["propietario_observado"], owner)
+            patches["verify_persona_option"].assert_not_called()
+
+    def test_ingreso_queue_reports_pickup_y_reasignar(self):
+        entry, patches = self.run_lead("AR_LEAD_QUALIF")
+        self.assertEqual(entry["status"], "prueba_ok:pickup_y_reasignar")
+        patches["verify_persona_option"].assert_called_once_with(self.driver, "Ana Perez", 5)
+
+    def test_other_owner_reports_reasignar(self):
+        entry, _ = self.run_lead("Otra Persona")
+        self.assertEqual(entry["status"], "prueba_ok:reasignar")
+        self.assertEqual(entry["propietario_observado"], "Otra Persona")
+
+    def test_name_not_in_lookup_reports_nombre_no_encontrado(self):
+        for owner in ("AR_LEAD_QUALIF", "Otra Persona"):
+            entry, _ = self.run_lead(owner, verify="reasignacion_error:opcion")
+            self.assertEqual(entry["status"], "prueba_nombre_no_encontrado")
+            self.assertEqual(entry["propietario_observado"], owner)
+
+    def test_modal_failures_report_prueba_error_paso(self):
+        for outcome, expected in (
+            ("reasignacion_error:modal", "prueba_error:modal"),
+            ("reasignacion_error:busqueda", "prueba_error:busqueda"),
+        ):
+            entry, _ = self.run_lead("Otra Persona", verify=outcome)
+            self.assertEqual(entry["status"], expected)
+
+    def test_unreadable_owner_is_prueba_inaccesible(self):
+        entry, patches = self.run_lead("")
+        self.assertEqual(entry["status"], "prueba_inaccesible")
+        self.assertEqual(entry["detalle"], "propietario_ilegible")
+        patches["verify_persona_option"].assert_not_called()
+
+    def test_navigation_failure_records_prueba_inaccesible(self):
+        from selenium.common.exceptions import TimeoutException
+
+        with patch.multiple(
+            run_distribucion_queue,
+            open_record=Mock(side_effect=TimeoutException()),
+            capture_failure=Mock(return_value=Path("cap.png")),
+        ):
+            entry = simulate_one_lead(
+                self.driver, LEAD, CONFIG, INGRESO, self.results_path, self.screenshots, Mock(), "run_x"
+            )
+        self.assertEqual(entry["status"], "prueba_inaccesible")
+
+    def test_result_is_persisted_with_modo_prueba(self):
+        entry, _ = self.run_lead("Otra Persona")
+        self.assertEqual(entry["modo"], "prueba")
+        persisted = json.loads(self.results_path.read_text(encoding="utf-8"))
+        self.assertEqual(len(persisted), 1)
+        self.assertEqual(persisted[0]["status"], "prueba_ok:reasignar")
+        self.assertEqual(persisted[0]["modo"], "prueba")
 
 
 if __name__ == "__main__":

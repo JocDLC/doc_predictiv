@@ -17,6 +17,39 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ## [Sin publicar]
 
+### Agregado
+
+- **Distribuir leads — modo prueba**: casilla "Modo prueba" en la vista
+  previa (banner violeta, mismo estilo que el Monitor de Bandeja). Con la
+  casilla activa el botón pasa a "Probar (sin guardar)": el runner abre cada
+  lead, lee el propietario real y, para los que se reasignarían, verifica en
+  el modal "Cambiar propietario" que el nombre del auxiliar existe como
+  usuario — siempre cancela, nunca pulsa Pick Up ni confirma. Resultados
+  `prueba_*` en la tabla con banner "Simulación — nada se guardó".
+  Cambio OpenSpec `distribuir-leads-modo-prueba`.
+
+### Cambiado
+
+- **Distribuir leads — colas ya gestionadas (MX/CO)**: `SKIP_OWNERS` suma
+  `MX_LEAD_COLD`, `MX_LEAD_EXPORT_GETLEAD`, `CO_LEAD_COLD` y
+  `CO_LEAD_EXPORT_GETLEAD`: un lead ya derivado al canal frío/export de
+  cualquier país (lista vieja) no se toca — solo se lista, con la celda
+  "cola excluida" resaltada en ámbar. Tests-regla:
+  `tests.test_run_distribucion_queue.DistributeOneLeadTests.test_other_country_managed_queues_are_never_touched`,
+  `...SimulateOneLeadTests.test_other_country_managed_queues_are_listed_only`.
+
+### Corregido
+
+- **Reasignación por hora de ingreso (completa)**: el fix de 1.4.3 no
+  alcanzaba porque, con la franja propia vigente al momento de la toma, el
+  ciclo descartaba al equipo antes de mirar la hora de ingreso — un lead
+  de las 13:59 (turno de Andres) tomado a las 14:01 quedaba con el usuario
+  logueado. Ahora el destino se decide lead por lead con su Fecha de
+  creación (solo si es de hoy); la toma sigue exigiendo cobertura vigente.
+  Además el minuto final de la franja es inclusivo ("12:00–13:59" cubre
+  13:59). Test-regla:
+  `tests.test_lead_monitor.RunBandejaCycleTests.test_lead_ingresado_en_turno_del_equipo_se_reasigna`.
+
 ## [1.4.3] — 2026-10-30
 
 ### Corregido
@@ -34,6 +67,26 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
   Test-regla: `tests.test_lead_monitor.ReassignOwnerTests.test_encargada_para_lead_usa_hora_de_ingreso`.
 - **Marca del header**: "LBS REC" pasa a "GBS REC". Test-regla:
   `tests.test_ui_monitor.UiMonitorViewTests.test_header_brand_shows_gbs_rec`.
+- **Modo prueba del monitor resaltado**: con la casilla tildada, la tarjeta
+  de estado se tiñe de violeta, aparece el chip "⚠ MODO PRUEBA", un banner
+  bajo la tarjeta aclara que no se toma ningún lead y la casilla con su
+  sección "Comportamiento" quedan resaltadas. Test-regla:
+  `tests.test_ui_monitor.UiMonitorViewTests.test_dry_run_indicator_is_present_in_markup`.
+- **Chip "MODO PRUEBA" quitado**: redundante con la tarjeta violeta y el
+  banner; además su `display:inline-flex` pisaba la clase `hidden`.
+- **Tarjeta de estado congelada en "En espera"**: el servidor escribía
+  `paused_reason` pero no lo empujaba por SSE (la pausa no genera
+  `cycle_start/end`), así que la vista mostraba un motivo viejo mientras el
+  monitor ya tomaba leads. Ahora el tick emite `monitor_state` con
+  `paused_reason` y `last_cycle_at` tanto al pausar como al cerrar el ciclo,
+  y la UI los aplica al estado en vivo. Test-regla:
+  `tests.test_ui_server.MonitorTickTests.test_tick_pause_broadcasts_reason_to_sse`.
+- **Casilla "Notificar" que "saltaba"**: `toggleNotify` no releía el estado
+  y el evento SSE `monitor_state` no mapeaba `notificar`, así que tras el
+  broadcast la casilla volvía al valor viejo (parecía doble clic y podía
+  dejar los avisos de Windows apagados sin saberse). Ahora el toggle recarga
+  el estado y el SSE actualiza el flag. Además, si el toast nativo falla
+  queda registrado en el log del servidor en vez de fallar en silencio.
 
 ### Cambiado
 

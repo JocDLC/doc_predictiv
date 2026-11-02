@@ -299,7 +299,7 @@ def within_schedule(
     for slot in slots:
         if wanted is not None and slot.get("bandejas") and not wanted & set(slot["bandejas"]):
             continue
-        if _parse_hhmm(slot["start"], "start") <= now_minutes < _parse_hhmm(slot["end"], "end"):
+        if _parse_hhmm(slot["start"], "start") <= now_minutes <= _parse_hhmm(slot["end"], "end"):
             return True
     return False
 

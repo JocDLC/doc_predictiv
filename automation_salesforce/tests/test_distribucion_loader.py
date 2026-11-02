@@ -95,6 +95,29 @@ class DistribucionQueueTests(unittest.TestCase):
                 {"operation": "distribuir_leads", "leads": [{"lead_id": "00Q000000000001AAA", "persona": " "}]}
             )
 
+    def test_modo_prueba_validates_and_loads(self):
+        queue = {**VALID_QUEUE, "modo": "prueba"}
+        leads = validate_distribucion_queue(queue)
+        self.assertEqual(leads, [{"lead_id": "00Q000000000001AAA", "persona": "Ana Perez"}])
+        with TemporaryDirectory() as tmp:
+            queues = Path(tmp) / "queues"
+            queues.mkdir()
+            path = queues / "cola.json"
+            path.write_text(json.dumps(queue), encoding="utf-8")
+            self.assertEqual(load_distribucion_queue(str(path), queues)["modo"], "prueba")
+
+    def test_modo_missing_defaults_real_and_invalid_is_rejected(self):
+        with TemporaryDirectory() as tmp:
+            queues = Path(tmp) / "queues"
+            queues.mkdir()
+            path = queues / "cola.json"
+            path.write_text(json.dumps(VALID_QUEUE), encoding="utf-8")
+            self.assertEqual(load_distribucion_queue(str(path), queues)["modo"], "real")
+        with self.assertRaises(ValueError):
+            validate_distribucion_queue({**VALID_QUEUE, "modo": "demo"})
+        with self.assertRaises(ValueError):
+            validate_distribucion_queue({**VALID_QUEUE, "modo": 7})
+
     def test_load_queue_requires_queues_directory(self):
         with TemporaryDirectory() as tmp:
             queues = Path(tmp) / "queues"

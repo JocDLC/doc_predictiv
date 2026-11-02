@@ -948,6 +948,50 @@ class RunBandejaCycleTests(unittest.TestCase):
             run_bandeja_cycle(object(), CONFIG, bandeja("MX"), state, 5)
         take.assert_called_once()
 
+    def test_lead_ingresado_en_turno_del_equipo_se_reasigna(self):
+        """Bug de producción: turno propio activo AHORA (14:01) pero el
+        lead entró 13:59, dentro de la franja del equipo → se pasa el
+        equipo a take_lead para reasignarlo."""
+        from datetime import datetime
+
+        state = self._state()
+        state["schedule"] = [
+            {"start": "10:00", "end": "11:59"},
+            {"start": "14:00", "end": "15:59"},
+        ]
+        equipo = [
+            {
+                "nombre": "Andres Antelo",
+                "franjas": [
+                    {"start": "08:00", "end": "09:59", "bandejas": ["AR"]},
+                    {"start": "12:00", "end": "13:59", "bandejas": ["AR"]},
+                ],
+            }
+        ]
+        state["equipo"] = equipo
+        fixed = datetime(2026, 10, 31, 14, 1)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        leads = [lead(LEAD_ID, fecha_creacion="31/10/2026 01:59 PM")]
+        with (
+            patch("lead_monitor.datetime", FixedDatetime),
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, leads)),
+            patch(
+                "lead_monitor.take_lead",
+                return_value=(STATUS_TOMADO, "Andres Antelo", "x/reasignado", ""),
+            ) as take,
+        ):
+            run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        take.assert_called_once()
+        self.assertEqual(take.call_args.kwargs["equipo"], equipo)
+
     def test_session_lost_event(self):
         state = self._state()
         with (
@@ -1123,6 +1167,39 @@ class ReassignOwnerTests(unittest.TestCase):
         self.assertIsNone(_encargada_activa([]))
         self.assertIsNone(_encargada_activa([{"nombre": "Ana", "franjas": []}]))
 
+    def test_encargada_activa_fin_de_franja_inclusive(self):
+        """El usuario escribe 12:00–13:59 queriendo cubrir 13:59
+        inclusive; 14:00 ya queda fuera."""
+        from datetime import datetime
+
+        from lead_monitor import _encargada_activa
+
+        equipo = [{"nombre": "Ana", "franjas": [{"start": "12:00", "end": "13:59"}]}]
+        self.assertEqual(
+            _encargada_activa(equipo, datetime(2026, 10, 15, 13, 59))["nombre"], "Ana"
+        )
+        self.assertIsNone(_encargada_activa(equipo, datetime(2026, 10, 15, 14, 0)))
+
+    def test_encargada_para_lead_fecha_de_ayer_cae_a_hora_actual(self):
+        """Una fecha de creación de OTRO día no decide la reasignación:
+        cae al miembro cuya franja cubre la hora actual."""
+        from datetime import datetime
+
+        from lead_monitor import _encargada_para_lead
+
+        equipo = [
+            {"nombre": "Ana", "franjas": [{"start": "00:00", "end": "08:00", "bandejas": ["AR"]}]},
+            {"nombre": "Beto", "franjas": [{"start": "12:00", "end": "23:59", "bandejas": ["AR"]}]},
+        ]
+        now = datetime(2026, 10, 31, 14, 0)  # Beto cubre ahora; Ana cubría a las 07:00
+        details = {"fecha_creacion": "30/10/2026 07:00 AM"}
+        self.assertEqual(
+            _encargada_para_lead(equipo, "Jose Manuel", bandeja="AR", details=details, now=now)[
+                "nombre"
+            ],
+            "Beto",
+        )
+
     def test_encargada_activa_filtra_por_bandeja(self):
         """La encargada solo vale para las bandejas que cubre su franja:
         franja AR no recibe leads MX (el bug de la reasignación cruzada)."""
@@ -1159,6 +1236,8 @@ class ReassignOwnerTests(unittest.TestCase):
         """La encargada se elige por la hora de ingreso del lead a la
         cola (Fecha de creación), no por la hora en que el bot lo toma:
         el bot puede tardar minutos y caer en la franja siguiente."""
+        from datetime import datetime
+
         from lead_monitor import _encargada_para_lead
 
         roger = {
@@ -1166,19 +1245,24 @@ class ReassignOwnerTests(unittest.TestCase):
             "franjas": [{"start": "11:00", "end": "12:39", "bandejas": ["AR"]}],
         }
         owner = "Jose Manuel de la Colina"
-        # Ingresó 10:57 (antes de la franja de Roger) aunque el bot lo
-        # tome a las 11:05: ninguna franja lo cubre -> sin reasignación.
+        # El bot lo toma el MISMO día que la fecha de creación: una
+        # entrada de otro día no decide la reasignación.
+        # Ingresó 10:57 y el bot lo toma 10:58: ninguna franja cubre ni
+        # el ingreso ni la toma -> sin reasignación.
         self.assertIsNone(
             _encargada_para_lead(
                 [roger], owner, bandeja="AR",
                 details={"fecha_creacion": "30/10/2026 10:57 AM"},
+                now=datetime(2026, 10, 30, 10, 58),
             )
         )
-        # Ingresó 11:15: sí cae en la franja -> Roger.
+        # Ingresó 11:15: sí cae en la franja de Roger aunque el bot lo
+        # tome a las 12:50, ya fuera de la franja -> igual va a Roger.
         self.assertIs(
             _encargada_para_lead(
                 [roger], owner, bandeja="AR",
                 details={"fecha_creacion": "30/10/2026 11:15 AM"},
+                now=datetime(2026, 10, 30, 12, 50),
             ),
             roger,
         )
@@ -1513,6 +1597,136 @@ class ReassignOwnerTests(unittest.TestCase):
             )
         self.assertEqual(attempt.call_count, 2)
         reread.assert_called_once()
+
+    _SEARCH_PRESENT = object()
+
+    def _verify_persona_option(self, open_modal=True, search_input=_SEARCH_PRESENT, pick=True):
+        """Corre verify_persona_option con el modal mockeado y devuelve
+        (outcome, dismiss): la regla es que SIEMPRE cancela y NUNCA
+        confirma (se verifica en todos los caminos)."""
+        import lead_monitor
+
+        if search_input is self._SEARCH_PRESENT:
+            search_input = unittest.mock.Mock()
+        with (
+            patch("lead_monitor.open_change_owner_dialog", return_value=open_modal),
+            patch("lead_monitor._wait_owner_search_input", return_value=search_input),
+            patch("lead_monitor._pick_owner_option", return_value=pick),
+            patch("lead_monitor._dismiss_owner_dialog") as dismiss,
+            patch("lead_monitor._confirm_owner_dialog") as confirm,
+        ):
+            outcome = lead_monitor.verify_persona_option(unittest.mock.Mock(), "Ana Perez", 5)
+        confirm.assert_not_called()
+        return outcome, dismiss
+
+    def test_verify_persona_option_ok_always_dismisses(self):
+        """Nombre encontrado en el lookup → opcion_ok y el modal se
+        cancela igual: la simulación nunca confirma."""
+        outcome, dismiss = self._verify_persona_option(pick=True)
+        self.assertEqual(outcome, "opcion_ok")
+        dismiss.assert_called_once()
+
+    def test_verify_persona_option_modal_missing_no_dismiss(self):
+        """Si el modal no abrió no hay nada que cancelar."""
+        outcome, dismiss = self._verify_persona_option(open_modal=False)
+        self.assertEqual(outcome, "reasignacion_error:modal")
+        dismiss.assert_not_called()
+
+    def test_verify_persona_option_search_missing_dismisses(self):
+        """Sin input de búsqueda → reasignacion_error:busqueda y cancela."""
+        outcome, dismiss = self._verify_persona_option(search_input=None)
+        self.assertEqual(outcome, "reasignacion_error:busqueda")
+        dismiss.assert_called_once()
+
+    def test_verify_persona_option_option_missing_dismisses(self):
+        """El nombre no aparece en el lookup → reasignacion_error:opcion
+        y el modal se cancela (nunca queda abierto)."""
+        outcome, dismiss = self._verify_persona_option(pick=False)
+        self.assertEqual(outcome, "reasignacion_error:opcion")
+        dismiss.assert_called_once()
+
+
+class EquipoParaLeadTests(unittest.TestCase):
+    def _state(self):
+        state = default_state()
+        state["schedule"] = [
+            {"start": "10:00", "end": "11:59", "bandejas": ["AR"]},
+            {"start": "14:00", "end": "15:59", "bandejas": ["AR"]},
+        ]
+        state["equipo"] = [
+            {
+                "nombre": "Andres Antelo",
+                "franjas": [
+                    {"start": "08:00", "end": "09:59", "bandejas": ["AR"]},
+                    {"start": "12:00", "end": "13:59", "bandejas": ["AR"]},
+                ],
+            }
+        ]
+        return state
+
+    def test_entrada_en_franja_del_equipo_devuelve_equipo(self):
+        """Caso productivo: turno propio activo ahora (14:01) pero el lead
+        entró 13:59, en franja de Andres → reasignar al equipo."""
+        from datetime import datetime
+
+        from lead_monitor import _equipo_para_lead
+
+        state = self._state()
+        now = datetime.now().replace(hour=14, minute=1, second=0, microsecond=0)
+        details = {"fecha_creacion": now.strftime("%d/%m/%Y") + " 01:59 PM"}
+        self.assertEqual(_equipo_para_lead(state, "AR", details, now), state["equipo"])
+
+    def test_entrada_en_franja_propia_devuelve_none(self):
+        """El lead entró 14:30, dentro de la franja propia → queda con el
+        usuario logueado aunque ahora sea otra hora."""
+        from datetime import datetime
+
+        from lead_monitor import _equipo_para_lead
+
+        state = self._state()
+        now = datetime.now().replace(hour=16, minute=0, second=0, microsecond=0)
+        details = {"fecha_creacion": now.strftime("%d/%m/%Y") + " 02:30 PM"}
+        self.assertIsNone(_equipo_para_lead(state, "AR", details, now))
+
+    def test_entrada_de_ayer_cae_al_comportamiento_actual(self):
+        """Fecha de creación de otro día no decide: ahora (14:01) la
+        franja propia cubre → lead propio."""
+        from datetime import datetime, timedelta
+
+        from lead_monitor import _equipo_para_lead
+
+        state = self._state()
+        now = datetime.now().replace(hour=14, minute=1, second=0, microsecond=0)
+        yesterday = (now - timedelta(days=1)).strftime("%d/%m/%Y") + " 01:59 PM"
+        self.assertIsNone(
+            _equipo_para_lead(state, "AR", {"fecha_creacion": yesterday}, now)
+        )
+
+    def test_entrada_inparseable_cae_al_comportamiento_actual(self):
+        """Sin fecha usable vale la regla de siempre: franja propia
+        vigente ahora → lead propio."""
+        from datetime import datetime
+
+        from lead_monitor import _equipo_para_lead
+
+        state = self._state()
+        now = datetime.now().replace(hour=14, minute=1, second=0, microsecond=0)
+        self.assertIsNone(
+            _equipo_para_lead(state, "AR", {"fecha_creacion": "sin formato"}, now)
+        )
+        self.assertIsNone(_equipo_para_lead(state, "AR", None, now))
+
+    def test_entrada_sin_cobertura_cae_al_comportamiento_actual(self):
+        """Entrada 07:00 sin franja (ni propia ni de equipo) y ahora
+        13:00, fuera del turno propio → reasignar al equipo."""
+        from datetime import datetime
+
+        from lead_monitor import _equipo_para_lead
+
+        state = self._state()
+        now = datetime.now().replace(hour=13, minute=0, second=0, microsecond=0)
+        details = {"fecha_creacion": now.strftime("%d/%m/%Y") + " 07:00 AM"}
+        self.assertEqual(_equipo_para_lead(state, "AR", details, now), state["equipo"])
 
 
 class RunCycleTests(unittest.TestCase):

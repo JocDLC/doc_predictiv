@@ -1213,6 +1213,54 @@ class MonitorTickTests(unittest.TestCase):
             saved = json.loads(state_path.read_text(encoding="utf-8"))
             self.assertEqual(saved["paused_reason"], "fuera_de_horario")
 
+    def test_tick_pause_broadcasts_reason_to_sse(self):
+        """La pausa no emite cycle_start/end: sin este broadcast la tarjeta
+        de estado quedaba congelada mostrando un motivo viejo."""
+        import ui_server
+
+        with TemporaryDirectory() as tmp, self._enabled_state(tmp):
+            state_path = Path(tmp) / "monitor_state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["schedule"] = []
+            state["equipo"] = []
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+            with (
+                patch("ui_server.detect_browser"),
+                patch("ui_server.broadcast_event") as broadcast,
+            ):
+                ui_server.monitor_tick(self._config(tmp))
+        monitor_state_events = [
+            call.args[0]
+            for call in broadcast.call_args_list
+            if call.args[0].get("type") == "monitor_state"
+        ]
+        self.assertIn("fuera_de_horario", [e.get("paused_reason") for e in monitor_state_events])
+
+    def test_tick_cycle_broadcasts_cleared_pause(self):
+        """Tras un ciclo exitoso el broadcast empuja paused_reason=None para
+        que la vista salga de 'En espera' sin recargar la página."""
+        import ui_server
+
+        with TemporaryDirectory() as tmp, self._enabled_state(tmp):
+            with (
+                patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
+                patch("ui_server.create_driver", return_value=object()),
+                patch("ui_server.ensure_monitor_window"),
+                patch("ui_server.release_driver"),
+                patch("ui_server.run_cycle", return_value=[]),
+                patch("ui_server.broadcast_event") as broadcast,
+            ):
+                ui_server.monitor_tick(self._config(tmp))
+        monitor_state_events = [
+            call.args[0]
+            for call in broadcast.call_args_list
+            if call.args[0].get("type") == "monitor_state"
+        ]
+        self.assertTrue(monitor_state_events)
+        last = monitor_state_events[-1]
+        self.assertIsNone(last["paused_reason"])
+        self.assertIn("last_cycle_at", last)
+
     def test_tick_pauses_without_any_shift(self):
         """Sin franja propia ni del equipo no hay turno: el monitor no toma
         leads — esperan en la cola."""

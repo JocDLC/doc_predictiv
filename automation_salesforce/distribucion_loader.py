@@ -20,6 +20,8 @@ MAX_ROWS_PER_SHEET = 1000
 SNIFF_BYTES = 4096
 CSV_DELIMITERS = (";", ",", "\t")
 DISTRIBUCION_OPERATION = "distribuir_leads"
+DISTRIBUCION_MODOS = ("real", "prueba")
+DISTRIBUCION_MODO_DEFAULT = "real"
 
 
 def _cell_text(value: object) -> str:
@@ -124,6 +126,9 @@ def validate_distribucion_queue(payload: object) -> list[dict[str, str]]:
     """
     if not isinstance(payload, dict) or payload.get("operation") != DISTRIBUCION_OPERATION:
         raise ValueError(f"La cola de distribución no declara operation='{DISTRIBUCION_OPERATION}'.")
+    modo = payload.get("modo", DISTRIBUCION_MODO_DEFAULT)
+    if modo not in DISTRIBUCION_MODOS:
+        raise ValueError(f"modo de cola inválido: {modo!r} (válidos: {', '.join(DISTRIBUCION_MODOS)}).")
     leads = payload.get("leads")
     if not isinstance(leads, list) or not leads:
         raise ValueError("La cola de distribución no contiene Leads.")
@@ -157,6 +162,7 @@ def load_distribucion_queue(queue_path: str, queue_directory: Path) -> dict[str,
         raise ValueError(f"La cola de distribución no es un JSON válido: {error.msg}") from error
     return {
         "leads": validate_distribucion_queue(payload),
+        "modo": str(payload.get("modo") or DISTRIBUCION_MODO_DEFAULT),
         "run_id": str(payload.get("run_id") or "").strip(),
         "source_file": str(payload.get("source_file") or "").strip(),
     }

@@ -90,6 +90,24 @@ class UiDistribucionTests(unittest.TestCase):
             self.assertEqual(status, 400)
             self.assertFalse((Path(tmp) / "cola.json").exists())
 
+    def test_put_queue_accepts_and_persists_modo_prueba(self):
+        queue = {**QUEUE, "modo": "prueba"}
+        with TemporaryDirectory() as tmp, patch(
+            "ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}
+        ):
+            status, _ = self._call("PUT", "/api/distribucion-queue", queue)
+            self.assertEqual(status, 200)
+            written = json.loads((Path(tmp) / "cola.json").read_text(encoding="utf-8"))
+            self.assertEqual(written["modo"], "prueba")
+
+    def test_put_queue_rejects_modo_desconocido(self):
+        with TemporaryDirectory() as tmp, patch(
+            "ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}
+        ):
+            status, _ = self._call("PUT", "/api/distribucion-queue", {**QUEUE, "modo": "demo"})
+            self.assertEqual(status, 400)
+            self.assertFalse((Path(tmp) / "cola.json").exists())
+
     def test_results_reads_missing_file_as_empty(self):
         with TemporaryDirectory() as tmp, patch(
             "ui_server.API_FILES", {"/api/distribucion-results": Path(tmp) / "r.json"}

@@ -278,8 +278,10 @@ def windows_toast(title: str, message: str) -> None:
         ).communicate(
             input=f"{title}\n" + "\n".join(lines) + "\n", timeout=10
         )
-    except (OSError, subprocess.SubprocessError):
-        pass  # el toast es best-effort: nunca debe frenar el ciclo
+    except (OSError, subprocess.SubprocessError) as exc:
+        # El toast es best-effort, pero un fallo silencioso deja a la persona
+        # sin avisos y sin diagnóstico (caso "no llegan los avisos de Windows").
+        print(f"[monitor] no se pudo mostrar el aviso de Windows: {exc}", flush=True)
 
 
 def _toast_contacto(details: dict) -> str:
@@ -628,6 +630,9 @@ def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
     if pause_reason:
         touch_cycle(state, pause_reason)
         monitor_write_state(config, state)
+        # Sin broadcast la UI queda con la tarjeta de un estado viejo: la
+        # pausa no emite cycle_start/end, es el único aviso que recibe la vista.
+        broadcast_event({"type": "monitor_state", "paused_reason": pause_reason})
         return []
     if force and not turno_activo:
         # Revisión manual sin turno vigente: nunca toca leads — corre en
@@ -675,6 +680,15 @@ def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
     if any(e.get("type") == PAUSE_SESSION_LOST for e in events):
         touch_cycle(state, PAUSE_SESSION_LOST)
     monitor_write_state(config, _merge_cycle_state(config, state, pre_results))
+    # Empuja el resultado del ciclo (pausa limpiada o motivo nuevo) para que
+    # la tarjeta de estado se actualice sin esperar un reload de la página.
+    broadcast_event(
+        {
+            "type": "monitor_state",
+            "paused_reason": state.get("paused_reason"),
+            "last_cycle_at": state.get("last_cycle_at"),
+        }
+    )
     # Toast nativo: una línea por lead — ✅ a quién quedó asignado,
     # ❌/⚠️ si hubo error, 🔔 detectados nuevos — con el método de
     # contacto elegido cuando el lead lo declara. Sin cambio no re-suena.

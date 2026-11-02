@@ -287,6 +287,28 @@ monitorState.notificar = true;
 renderMonitor();
 check('notificar encendido tilda la casilla', __elements['monitorNotify'].checked === true);
 
+// 5d) Modo prueba resalta la tarjeta, un chip, un banner y la casilla.
+monitorState.solo_listar = true;
+renderMonitor();
+check('tarjeta con color propio en modo prueba',
+  __elements['monitorStateCard']._classes.has('dry-run'));
+check('banner de modo prueba visible',
+  !__elements['monitorDryRunBanner']._classes.has('hidden'));
+check('banner de modo prueba visible',
+  !__elements['monitorDryRunBanner']._classes.has('hidden'));
+check('casilla de modo prueba resaltada',
+  __elements['monitorDryRunLabel']._classes.has('option-on'));
+check('fieldset resaltado en modo prueba',
+  __elements['monitorOptsComportamiento']._classes.has('dry-run-on'));
+
+monitorState.solo_listar = false;
+renderMonitor();
+check('modo prueba apagado quita los resaltados',
+  !__elements['monitorStateCard']._classes.has('dry-run')
+  && __elements['monitorDryRunBanner']._classes.has('hidden')
+  && !__elements['monitorDryRunLabel']._classes.has('option-on')
+  && !__elements['monitorOptsComportamiento']._classes.has('dry-run-on'));
+
 // 6) Bandejas renderizadas con defaults por país.
 const bandejasEl = __elements['monitorBandejas'];
 check('tres bandejas AR/CO/MX', bandejasEl.children.length === 3);
@@ -299,6 +321,21 @@ await connectBotEvents();
 check('EventSource creado', __esInstances.length === 1);
 check('token va por query', __esInstances[0].url.includes('/api/events?token='));
 const es = __esInstances[0];
+// El broadcast monitor_state actualiza la casilla Notificar (antes se
+// quedaba con el valor viejo: la casilla "saltaba" al destildar).
+es.onmessage({ data: JSON.stringify({ type: 'monitor_state', notificar: false }) });
+check('SSE apaga la casilla notificar', __elements['monitorNotify'].checked === false);
+es.onmessage({ data: JSON.stringify({ type: 'monitor_state', notificar: true }) });
+check('SSE enciende la casilla notificar', __elements['monitorNotify'].checked === true);
+// El broadcast también transporta paused_reason: sin eso la tarjeta quedaba
+// "En espera" con la franja ya activa (el motivo quedaba congelado).
+es.onmessage({ data: JSON.stringify({ type: 'monitor_state', paused_reason: 'fuera_de_horario' }) });
+check('SSE muestra espera por horario',
+  __elements['monitorStateCard']._classes.has('state-wait')
+  && __elements['monitorStatus'].textContent.includes('horario'));
+es.onmessage({ data: JSON.stringify({ type: 'monitor_state', paused_reason: null, last_cycle_at: '2026-11-02T12:00:00+00:00' }) });
+check('SSE reactiva la tarjeta al reanudar',
+  __elements['monitorStateCard']._classes.has('state-ok'));
 const beepCount = () => (typeof __beeps === 'undefined' ? 0 : __beeps);
 const beforeBeeps = beepCount();
 es.onmessage({ data: JSON.stringify({ type: 'monitor', status: 'tomado', bandeja: 'AR' }) });
@@ -424,6 +461,14 @@ check('asignado a visible en la tabla',
 
 @unittest.skipUnless(node_executable(), "node no disponible para tests de UI")
 class UiMonitorViewTests(unittest.TestCase):
+    def test_dry_run_indicator_is_present_in_markup(self):
+        html = UI_PAGE.read_text(encoding="utf-8")
+        self.assertIn('id="monitorDryRunBanner"', html)
+        self.assertIn('id="monitorDryRunLabel"', html)
+        self.assertIn('id="monitorOptsComportamiento"', html)
+        self.assertIn("Modo prueba", html)
+        self.assertIn("⚠", html)
+
     def test_header_brand_shows_gbs_rec(self):
         html = UI_PAGE.read_text(encoding="utf-8")
         self.assertIn("GBS REC", html)

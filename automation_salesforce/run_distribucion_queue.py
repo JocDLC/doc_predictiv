@@ -15,6 +15,12 @@ registro y se lee el propietario:
 El runner nunca escribe en ``Otra información`` ni en otros campos: solo
 cambia el propietario, verificado por relectura. Los resultados quedan en
 ``cola_distribucion.resultado.json`` junto a la cola.
+
+Con ``modo: "prueba"`` en la cola corre ``simulate_one_lead``: mismo
+recorrido de lectura y clasificación, y para los leads que se reasignarían
+abre el modal "Cambiar propietario" solo para verificar que el nombre
+destino existe en el lookup — siempre lo cancela. Nunca pulsa Pick Up ni
+confirma nada: los estados salen con prefijo ``prueba_``.
 """
 
 from __future__ import annotations
@@ -40,6 +46,7 @@ from lead_monitor import (
     read_record_owner,
     reassign_owner,
     save_contact_panel_if_present,
+    verify_persona_option,
     wait_record_owner,
 )
 from local_audit import capture_failure, create_logger, mask_lead_id
@@ -49,7 +56,17 @@ from run_document_queue import new_run_id, output_override, parse_queue_args, qu
 from salesforce_session import ROOT, is_authenticated, load_config, local_path
 
 # Colas fuera de la distribución: leads ya en frío o exportados a otros canales.
-SKIP_OWNERS = ("AR_LEAD_COLD", "AR_LEAD_EXPORT_GETLEAD", "AR_LEAD_LEADIT_EXPORT")
+# Colas de frío/export: el lead ya fue gestionado por otro canal — nunca se
+# reasigna, solo se lista como ``cola_excluida`` (listas viejas incluidas).
+SKIP_OWNERS = (
+    "AR_LEAD_COLD",
+    "AR_LEAD_EXPORT_GETLEAD",
+    "AR_LEAD_LEADIT_EXPORT",
+    "MX_LEAD_COLD",
+    "MX_LEAD_EXPORT_GETLEAD",
+    "CO_LEAD_COLD",
+    "CO_LEAD_EXPORT_GETLEAD",
+)
 
 STATUS_REASIGNADO = "reasignado"
 STATUS_YA_ASIGNADO = "ya_asignado"
@@ -57,6 +74,15 @@ STATUS_COLA_EXCLUIDA = "cola_excluida"
 STATUS_PICKUP_ERROR = "pickup_error"
 STATUS_INACCESIBLE = "lead_inaccesible"
 STATUS_ERROR = "error"
+
+# Estados de la simulación (modo prueba): nada se escribe en Salesforce.
+STATUS_PRUEBA_YA_ASIGNADO = "prueba_ok:ya_asignado"
+STATUS_PRUEBA_COLA_EXCLUIDA = "prueba_ok:cola_excluida"
+STATUS_PRUEBA_REASIGNAR = "prueba_ok:reasignar"
+STATUS_PRUEBA_PICKUP_Y_REASIGNAR = "prueba_ok:pickup_y_reasignar"
+STATUS_PRUEBA_NOMBRE_NO_ENCONTRADO = "prueba_nombre_no_encontrado"
+STATUS_PRUEBA_INACCESIBLE = "prueba_inaccesible"
+STATUS_PRUEBA_ERROR = "prueba_error"
 
 
 def _same_person(first: str, second: str) -> bool:
@@ -100,6 +126,7 @@ def _result_entry(
     started_at: float,
     propietario: str = "",
     detail: str = "",
+    modo: str = "",
 ) -> dict:
     entry = {
         "lead_id": lead_id,
@@ -109,6 +136,8 @@ def _result_entry(
         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "elapsed_seconds": round_elapsed_seconds(time.monotonic() - started_at),
     }
+    if modo:
+        entry["modo"] = modo
     if propietario:
         entry["propietario_observado"] = propietario
     if detail:
@@ -133,7 +162,7 @@ def distribute_one_lead(
     started_at = time.monotonic()
 
     def record(status: str, propietario: str = "", detail: str = "") -> dict:
-        entry = _result_entry(lead_id, persona, status, run_id, started_at, propietario, detail)
+        entry = _result_entry(lead_id, persona, status, run_id, started_at, propietario, detail, modo="real")
         record_result(results_path, entry)
         return entry
 
@@ -165,6 +194,63 @@ def distribute_one_lead(
     return record(outcome, propietario=owner)
 
 
+def simulate_one_lead(
+    driver,
+    lead: dict[str, str],
+    config: dict,
+    ingreso_owners: list[str],
+    results_path: Path,
+    screenshot_directory: Path,
+    logger,
+    run_id: str,
+) -> dict:
+    """Simula la distribución de un lead sin escribir nada en Salesforce.
+
+    Mismo recorrido que ``distribute_one_lead``: abre el registro, lee el
+    propietario y clasifica la acción que haría la corrida real. Para los
+    leads que se reasignarían verifica además que el nombre destino existe
+    en el lookup del modal "Cambiar propietario" —que siempre se cancela—.
+    NUNCA pulsa Pick Up ni confirma el modal: los estados llevan prefijo
+    ``prueba_`` para distinguirlos de una corrida real.
+    """
+    lead_id = lead["lead_id"]
+    persona = lead["persona"]
+    timeout_seconds = config["timeouts"]["page_load_seconds"]
+    started_at = time.monotonic()
+
+    def record(status: str, propietario: str = "", detail: str = "") -> dict:
+        entry = _result_entry(lead_id, persona, status, run_id, started_at, propietario, detail, modo="prueba")
+        record_result(results_path, entry)
+        return entry
+
+    try:
+        open_record(driver, config, lead_id, timeout_seconds)
+    except (TimeoutException, WebDriverException) as error:
+        capture_failure(driver, screenshot_directory, "distribucion")
+        logger.error("Lead inaccesible: lead=%s motivo=%s", mask_lead_id(lead_id), type(error).__name__)
+        return record(STATUS_PRUEBA_INACCESIBLE, detail=type(error).__name__)
+
+    owner = wait_record_owner(driver)
+    if not owner:
+        return record(STATUS_PRUEBA_INACCESIBLE, detail="propietario_ilegible")
+    if _same_person(owner, persona):
+        return record(STATUS_PRUEBA_YA_ASIGNADO, propietario=owner)
+    if _owner_in(owner, SKIP_OWNERS):
+        return record(STATUS_PRUEBA_COLA_EXCLUIDA, propietario=owner)
+
+    # Tanto la cola de ingreso como otro propietario reasignarían: la
+    # simulación solo verifica que el nombre destino existe en el lookup.
+    outcome = verify_persona_option(driver, persona, timeout_seconds)
+    if outcome == "reasignacion_error:opcion":
+        return record(STATUS_PRUEBA_NOMBRE_NO_ENCONTRADO, propietario=owner)
+    if outcome != "opcion_ok":
+        paso = outcome.split(":", 1)[-1]
+        return record(f"{STATUS_PRUEBA_ERROR}:{paso}", propietario=owner)
+    if _owner_in(owner, ingreso_owners):
+        return record(STATUS_PRUEBA_PICKUP_Y_REASIGNAR, propietario=owner)
+    return record(STATUS_PRUEBA_REASIGNAR, propietario=owner)
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     queue_path, _auto_mode, options = parse_queue_args(argv)
@@ -177,6 +263,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         queue_file = load_distribucion_queue(queue_path, queue_directory)
         leads = queue_file["leads"]
+        modo = queue_file["modo"]
         results_path = output_override(options.get("results", ""), queue_directory, "resultados")
     except ValueError as error:
         print(f"Cola de distribución inválida: {error}")
@@ -206,11 +293,13 @@ def main(argv: list[str] | None = None) -> int:
                 "Iniciá sesión (con 2FA) en la pestaña de Salesforce y volvé a intentar."
             )
             return 1
+        process_lead = simulate_one_lead if modo == "prueba" else distribute_one_lead
+        etiqueta = "Simulación" if modo == "prueba" else "Distribución"
         for index, lead in enumerate(leads, start=1):
-            print(f"\n=== Distribución {index}/{len(leads)} ===")
+            print(f"\n=== {etiqueta} {index}/{len(leads)} ===")
             started_at = time.monotonic()
             try:
-                entry = distribute_one_lead(
+                entry = process_lead(
                     driver,
                     lead,
                     config,
@@ -230,10 +319,11 @@ def main(argv: list[str] | None = None) -> int:
                 entry = _result_entry(
                     lead["lead_id"],
                     lead["persona"],
-                    STATUS_ERROR,
+                    f"{STATUS_PRUEBA_ERROR}:excepcion" if modo == "prueba" else STATUS_ERROR,
                     run_id,
                     started_at,
                     detail=type(error).__name__,
+                    modo=modo,
                 )
                 record_result(results_path, entry)
             stats[entry["status"]] = stats.get(entry["status"], 0) + 1
@@ -241,7 +331,7 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         release_driver(driver)
 
-    print("\nResumen de distribución:")
+    print(f"\nResumen de {etiqueta.lower()}:")
     for status, count in sorted(stats.items()):
         print(f"  {status}: {count}")
     print(f"Resultados: {results_path}")

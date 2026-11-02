@@ -196,6 +196,12 @@
   .state-ok .monitor-state-dot { background: var(--accent2); }
   .state-wait .monitor-state-dot { background: #b45309; }
   .state-alert .monitor-state-dot { background: #b91c1c; }
+  .monitor-state-card.dry-run { border-left-color: #7c3aed; background: #f4f0fd; }
+  .monitor-dryrun-banner { background: #f4f0fd; border: 1px solid #d8ccf7; color: #5b21b6;
+    border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 600; margin: 10px 0; }
+  .monitor-option.option-on { background: #ede7fd; color: #5b21b6; font-weight: 600;
+    border-radius: 8px; padding: 3px 8px; margin-left: -8px; }
+  #monitorOptsComportamiento.dry-run-on { border-color: #a78bfa; background: #faf8ff; }
   .monitor-state-text { flex: 1; min-width: 0; }
   .monitor-status-line { font-size: 16px; font-weight: 700; }
   .monitor-status-detail { font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 4px; }
@@ -261,12 +267,13 @@
   .dist-table th, .dist-table td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: middle; }
   .dist-table th { background: #eef2ff; color: #3730a3; }
   .dist-table tr.dist-excluded td { opacity: .45; }
+  .dist-table td.dist-cell-excluded { background: #fef3c7; color: #92400e; font-weight: 600; }
   .dist-persona, .dist-persona-sel { width: 100%; box-sizing: border-box; }
   .monitor-table td .cell { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
   .monitor-table td.hint { font-size: inherit; margin-top: 0; }
   .monitor-table td.monitor-empty { line-height: 1.4; padding: 24px 8px; text-align: center; color: var(--muted); font-size: 13px; }
-  .monitor-table td a.lead-link { color: #1a5fb4; font-weight: 600; text-decoration: none; }
-  .monitor-table td a.lead-link:hover { text-decoration: underline; }
+  .monitor-table td a.lead-link, .dist-table td a.lead-link { color: #1a5fb4; font-weight: 600; text-decoration: none; }
+  .monitor-table td a.lead-link:hover, .dist-table td a.lead-link:hover { text-decoration: underline; }
   .monitor-table .badge { padding: 1px 7px; }
   .monitor-table .asignado { color: var(--muted); font-size: 11px; }
   .monitor-table th { background: #eef2ff; color: #3730a3; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
@@ -493,10 +500,12 @@
         <span class="monitor-state-dot"></span>
         <div class="monitor-state-text">
           <div class="monitor-status-line" id="monitorStatus">Estado del monitor: consultando…</div>
+
           <div class="monitor-status-detail" id="monitorStatusDetail"></div>
         </div>
         <button type="button" class="switch" id="monitorToggle" role="switch" aria-checked="false"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label" id="monitorToggleLabel">Apagado</span></button>
       </div>
+      <div class="monitor-dryrun-banner hidden" id="monitorDryRunBanner">⚠️ <strong>Modo prueba</strong> — se listan los leads pero no se toma ninguno</div>
       <div class="monitor-banner monitor-info hidden" id="monitorLoginAlert" title="Tocá para cerrar el aviso">
         &#9888; El monitor usa el navegador del bot: ten&eacute;s que estar <strong>logueado en Salesforce</strong> ah&iacute;. Si la sesi&oacute;n expir&oacute;, el monitor se pausa y avisa.
       </div>
@@ -507,9 +516,9 @@
         <button class="btn" id="monitorRestartBrowser" title="Cierra y reabre el navegador dedicado del bot (incluida esta pestaña). Usalo si el monitor dice que el navegador no responde.">Reiniciar navegador del bot</button>
       </div>
       <div class="monitor-options">
-        <fieldset>
+        <fieldset id="monitorOptsComportamiento">
           <legend>Comportamiento</legend>
-          <label class="monitor-option">
+          <label class="monitor-option" id="monitorDryRunLabel">
             <input type="checkbox" id="monitorDryRun"> Modo prueba &mdash; solo listar los QUALIF, no toma ninguno
           </label>
           <label class="monitor-option" title="Tras tomar un lead AR cuya preferencia de contacto es WhatsApp, documenta '1 INT Envío WhatsApp' en Otra información y pulsa Send To Whatsapp automáticamente">
@@ -605,10 +614,15 @@
           <div class="hint">Revisá los destinos: podés editar cualquier persona antes de ejecutar. Las filas sin Lead ID válido quedan excluidas solas.</div>
           <div id="distSummary" class="hint" style="margin:8px 0"></div>
           <div class="monitor-table-wrap"><table class="dist-table" id="distTable"></table></div>
-          <div class="actions" style="margin-top:12px"><button class="btn primary" id="distRun">Ejecutar distribución</button></div>
+          <div class="monitor-dryrun-banner hidden" id="distDryRunBanner">⚠️ <strong>MODO PRUEBA</strong> — se simula la distribución sin guardar cambios en Salesforce</div>
+          <div class="actions" style="margin-top:12px">
+            <label class="monitor-option" id="distDryRunLabel" title="Recorre cada lead, lee su propietario y verifica que el nombre destino existe en Salesforce. Nunca guarda: cancela siempre el diálogo."><input type="checkbox" id="distDryRun"> Modo prueba (no guarda en Salesforce)</label>
+            <button class="btn primary" id="distRun">Ejecutar distribución</button>
+          </div>
         </div>
         <div class="prepare-card hidden" id="distResultsCard">
           <h3>Resultados</h3>
+          <div class="monitor-dryrun-banner hidden" id="distSimBanner">Simulación — nada se guardó en Salesforce</div>
           <div id="distRunState" class="hint"></div>
           <div class="monitor-table-wrap"><table class="dist-table" id="distResultsTable"></table></div>
           <div class="actions" style="margin-top:12px"><button class="btn" id="distRefresh">Actualizar resultados</button></div>
@@ -2083,7 +2097,13 @@ function renderMonitor() {
   $("monitorStatusDetail").textContent = visual.details.join(" · ");
   $("monitorToggle").setAttribute("aria-checked", monitorState.enabled ? "true" : "false");
   $("monitorToggleLabel").textContent = monitorState.enabled ? "Encendido" : "Apagado";
-  $("monitorDryRun").checked = !!monitorState.solo_listar;
+  const dryRun = !!monitorState.solo_listar;
+  $("monitorDryRun").checked = dryRun;
+  $("monitorStateCard").classList.toggle("dry-run", dryRun);
+
+  $("monitorDryRunBanner").classList.toggle("hidden", !dryRun);
+  $("monitorDryRunLabel").classList.toggle("option-on", dryRun);
+  $("monitorOptsComportamiento").classList.toggle("dry-run-on", dryRun);
   $("monitorWhatsapp").checked = !!monitorState.enviar_whatsapp;
   $("monitorNotify").checked = monitorState.notificar !== false;
   if (!bandejasDirty) renderBandejas();
@@ -2839,6 +2859,7 @@ async function toggleNotify() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notificar: checked }),
     });
+    await loadMonitorState();
   } catch (error) {
     $("monitorNotify").checked = !checked;
     alert(`No se pudo cambiar los avisos de Windows.\n\n${error.message}`);
@@ -2929,6 +2950,9 @@ async function connectBotEvents() {
         if (event.enabled !== undefined) monitorState.enabled = event.enabled;
         if (event.solo_listar !== undefined) monitorState.solo_listar = event.solo_listar;
         if (event.enviar_whatsapp !== undefined) monitorState.enviar_whatsapp = event.enviar_whatsapp;
+        if (event.notificar !== undefined) monitorState.notificar = event.notificar;
+        if (event.paused_reason !== undefined) monitorState.paused_reason = event.paused_reason;
+        if (event.last_cycle_at !== undefined) monitorState.last_cycle_at = event.last_cycle_at;
         if (event.equipo !== undefined && !equipoDirty) {
           monitorState.equipo = event.equipo;
           monitorDraftEquipo = (event.equipo || []).map(m => ({ ...m, franjas: (m.franjas || []).map(f => ({ ...f })) }));
@@ -3689,7 +3713,21 @@ const SF_ID_RE = /^[A-Za-z0-9]{15}(?:[A-Za-z0-9]{3})?$/;
 const DIST_STATUS_LABELS = {
   reasignado: "reasignado", ya_asignado: "ya estaba asignado", cola_excluida: "cola excluida (frío/export)",
   pickup_error: "error al tomar", lead_inaccesible: "lead inaccesible", error: "error",
+  "prueba_ok:reasignar": "Simulado: se reasignaría",
+  "prueba_ok:pickup_y_reasignar": "Simulado: pickup + reasignar",
+  "prueba_ok:ya_asignado": "Ya asignado",
+  "prueba_ok:cola_excluida": "Cola excluida",
+  prueba_nombre_no_encontrado: "⚠ Nombre no encontrado en Salesforce",
+  prueba_inaccesible: "Lead inaccesible",
 };
+
+// Los estados de simulación llegan con prefijo prueba_; los que no tienen
+// etiqueta propia (prueba_error:<paso>) se traducen genérico.
+function distStatusLabel(status) {
+  if (DIST_STATUS_LABELS[status]) return DIST_STATUS_LABELS[status];
+  if (String(status).startsWith("prueba_error:")) return `Error de simulación: ${status.split(":")[1]}`;
+  return status;
+}
 let distSheets = [];
 let distSheetIndex = 0;
 let distMapping = {};
@@ -3812,6 +3850,7 @@ function distQueuePayload() {
   });
   return {
     operation: "distribuir_leads",
+    modo: $("distDryRun").checked ? "prueba" : "real",
     generated_at: new Date().toISOString(),
     source_file: distFileName,
     leads,
@@ -3821,9 +3860,12 @@ function distQueuePayload() {
 async function runDistribucion() {
   const queue = distQueuePayload();
   if (!queue.leads.length) { alert("No hay leads con persona destino para distribuir."); return; }
-  const confirmed = confirm(
-    `Vas a reasignar ${queue.leads.length} lead${queue.leads.length === 1 ? "" : "s"} en Salesforce.\n\n` +
-    `En cada uno el bot solo cambia el propietario: sin comentarios ni otros campos. Los leads en colas de frío/export quedan fuera.\n\n¿Confirmás la distribución?`
+  const prueba = queue.modo === "prueba";
+  const confirmed = confirm(prueba
+    ? `Vas a SIMULAR la reasignación de ${queue.leads.length} lead${queue.leads.length === 1 ? "" : "s"}.\n\n` +
+      `El bot recorre cada lead, lee el propietario y verifica que el nombre destino existe en Salesforce. No guarda nada: nunca pulsa Pick Up ni confirma el diálogo.\n\n¿Confirmás la simulación?`
+    : `Vas a reasignar ${queue.leads.length} lead${queue.leads.length === 1 ? "" : "s"} en Salesforce.\n\n` +
+      `En cada uno el bot solo cambia el propietario: sin comentarios ni otros campos. Los leads en colas de frío/export quedan fuera.\n\n¿Confirmás la distribución?`
   );
   if (!confirmed) return;
   try {
@@ -3836,7 +3878,7 @@ async function runDistribucion() {
     await monitorApi("/run-distribucion", { method: "POST" });
     distRunning = true;
     $("distResultsCard").classList.remove("hidden");
-    $("distRunState").textContent = "Distribución en curso…";
+    $("distRunState").textContent = prueba ? "Simulación en curso…" : "Distribución en curso…";
     loadDistribucionResults();
     clearInterval(distPollTimer);
     distPollTimer = setInterval(() => { if (distRunning) loadDistribucionResults(); else clearInterval(distPollTimer); }, 4000);
@@ -3853,16 +3895,24 @@ async function loadDistribucionResults() {
   if (!Array.isArray(entries) || !entries.length) return;
   const rows = distPreviewRows.length ? distPreviewRows : entries.map(e => ({ leadId: e.lead_id, nombre: "", persona: e.persona }));
   const byId = Object.fromEntries(entries.map(e => [e.lead_id, e]));
+  const esSimulacion = entries.some(e => String(e.status || "").startsWith("prueba_") || e.modo === "prueba");
   $("distResultsCard").classList.remove("hidden");
+  $("distSimBanner").classList.toggle("hidden", !esSimulacion);
+  const etiquetaRun = esSimulacion ? "Simulación" : "Distribución";
   $("distRunState").textContent = distRunning
-    ? `Distribución en curso… ${entries.length} procesados.`
-    : `Distribución terminada — ${entries.length} procesados.`;
-  $("distResultsTable").innerHTML = `<thead><tr><th>Lead ID</th><th>Persona</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>` +
+    ? `${etiquetaRun} en curso… ${entries.length} procesados.`
+    : `${etiquetaRun} terminada — ${entries.length} procesados.`;
+  $("distResultsTable").innerHTML = `<thead><tr><th>Lead ID</th><th>Lead</th><th>Persona</th><th>Resultado</th><th>Detalle</th></tr></thead><tbody>` +
     rows.map(row => {
       const entry = byId[row.leadId];
-      const status = entry ? (DIST_STATUS_LABELS[entry.status] || entry.status) : (distRunning ? "pendiente" : "sin procesar");
+      const status = entry ? distStatusLabel(entry.status) : (distRunning ? "pendiente" : "sin procesar");
       const detail = entry ? [entry.propietario_observado ? `propietario: ${entry.propietario_observado}` : "", entry.detalle || ""].filter(Boolean).join(" · ") : "";
-      return `<tr><td>${escapeHTML(row.leadId)}</td><td>${escapeHTML(entry ? entry.persona : row.persona || "")}</td><td>${escapeHTML(status)}</td><td>${escapeHTML(detail)}</td></tr>`;
+      const excludedCls = entry && (entry.status === "cola_excluida" || entry.status === "prueba_ok:cola_excluida") ? "dist-cell-excluded" : "";
+      const nombre = row.nombre || entry?.nombre || "";
+      const nombreCell = nombre && row.leadId
+        ? `<a class="lead-link" target="_blank" rel="noopener" href="${escapeHTML(sfBase.replace(/\/+$/, "") + "/" + row.leadId)}">${escapeHTML(nombre)}</a>`
+        : escapeHTML(nombre);
+      return `<tr><td>${escapeHTML(row.leadId)}</td><td>${nombreCell}</td><td>${escapeHTML(entry ? entry.persona : row.persona || "")}</td><td class="${excludedCls}">${escapeHTML(status)}</td><td>${escapeHTML(detail)}</td></tr>`;
     }).join("") + `</tbody>`;
 }
 
@@ -3874,6 +3924,12 @@ $("distSheet").addEventListener("change", event => { distSheetIndex = Number(eve
 $("distPreview").addEventListener("click", buildDistPreview);
 $("distOtherFile").addEventListener("click", () => { $("distSetup").classList.add("hidden"); distSheets = []; distPreviewRows = []; });
 $("distRun").addEventListener("click", runDistribucion);
+$("distDryRun").addEventListener("change", () => {
+  const prueba = $("distDryRun").checked;
+  $("distDryRunBanner").classList.toggle("hidden", !prueba);
+  $("distDryRunLabel").classList.toggle("option-on", prueba);
+  $("distRun").textContent = prueba ? "Probar (sin guardar)" : "Ejecutar distribución";
+});
 $("distRefresh").addEventListener("click", loadDistribucionResults);
 
 // Se lee ANTES de la recuperación: loadCSVContent cambia la vista a

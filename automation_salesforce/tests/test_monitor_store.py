@@ -175,8 +175,16 @@ class WithinScheduleTests(unittest.TestCase):
         slots = [{"start": "08:00", "end": "20:00"}]
         self.assertTrue(within_schedule(slots, datetime(2026, 10, 8, 10, 0)))
         self.assertFalse(within_schedule(slots, datetime(2026, 10, 8, 22, 15)))
-        self.assertFalse(within_schedule(slots, datetime(2026, 10, 8, 20, 0)))
+        self.assertTrue(within_schedule(slots, datetime(2026, 10, 8, 20, 0)))
+        self.assertFalse(within_schedule(slots, datetime(2026, 10, 8, 20, 1)))
         self.assertTrue(within_schedule(slots, datetime(2026, 10, 8, 8, 0)))
+
+    def test_end_minute_is_inclusive(self):
+        """El usuario escribe 12:00–13:59 queriendo cubrir 13:59
+        inclusive; 14:00 ya queda fuera."""
+        slots = [{"start": "12:00", "end": "13:59"}]
+        self.assertTrue(within_schedule(slots, datetime(2026, 10, 8, 13, 59)))
+        self.assertFalse(within_schedule(slots, datetime(2026, 10, 8, 14, 0)))
 
     def test_second_slot_counts(self):
         slots = [{"start": "08:00", "end": "12:00"}, {"start": "14:00", "end": "18:00"}]

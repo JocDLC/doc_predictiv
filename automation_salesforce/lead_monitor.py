@@ -760,7 +760,7 @@ def _encargada_activa(
                 end = int(str(slot["end"])[:2]) * 60 + int(str(slot["end"])[3:5])
             except (KeyError, ValueError, IndexError):
                 continue
-            if start <= minutes < end:
+            if start <= minutes <= end:
                 return member
     return None
 
@@ -775,11 +775,50 @@ def _lead_entry_moment(details: dict | None) -> datetime | None:
         return None
 
 
+def _usable_entry_moment(details: dict | None, now: datetime | None = None) -> datetime | None:
+    """Hora de ingreso del lead a la cola, solo si es de HOY: una fecha de
+    creación de un día anterior no dice quién cubre la bandeja ahora."""
+    entry = _lead_entry_moment(details)
+    if entry is None or entry.date() != (now or datetime.now()).date():
+        return None
+    return entry
+
+
+def _equipo_para_lead(
+    state: dict,
+    bandeja_code: str,
+    details: dict | None,
+    now: datetime | None = None,
+) -> list[dict] | None:
+    """Equipo a pasar a ``take_lead`` para el lead, o None si queda con el
+    usuario logueado.
+
+    A la hora de INGRESO del lead (solo si es de hoy): si la franja
+    propia cubría esa hora, el lead es propio; si la cubría alguien del
+    equipo, va el equipo. Sin dato usable —o si nadie cubría el
+    ingreso—, la regla de siempre: franja propia vigente ahora.
+    """
+    entry = _usable_entry_moment(details, now)
+    if entry is not None:
+        if state.get("schedule") and within_schedule(
+            state["schedule"], moment=entry, bandeja=bandeja_code
+        ):
+            return None
+        if _encargada_activa(state.get("equipo"), moment=entry, bandeja=bandeja_code):
+            return state.get("equipo")
+    if state.get("schedule") and within_schedule(
+        state["schedule"], moment=now, bandeja=bandeja_code
+    ):
+        return None
+    return state.get("equipo")
+
+
 def _encargada_para_lead(
     equipo: list[dict] | None,
     owner: str,
     bandeja: str | None = None,
     details: dict | None = None,
+    now: datetime | None = None,
 ) -> dict | None:
     """Encargada del lead si la franja activa NO es del usuario logueado.
 
@@ -787,11 +826,14 @@ def _encargada_para_lead(
     sesión): si coincide con el nombre de la encargada, la franja es del
     propio usuario y el flujo sigue normal. La ``bandeja`` restringe a la
     persona que cubre ESA bandeja en su franja activa. La franja se
-    evalúa a la hora de INGRESO del lead a la cola (Fecha de creación):
-    el bot puede tardar minutos en tomarlo y caer en el turno siguiente;
-    sin ``details`` parseables, cae a la hora actual como antes.
+    evalúa a la hora de INGRESO del lead a la cola (Fecha de creación,
+    solo si es de hoy): el bot puede tardar minutos en tomarlo y caer en
+    el turno siguiente; si el ingreso no da miembro —o no es usable—,
+    cae a la hora actual como antes.
     """
-    member = _encargada_activa(equipo, moment=_lead_entry_moment(details), bandeja=bandeja)
+    entry = _usable_entry_moment(details, now)
+    member = _encargada_activa(equipo, moment=entry, bandeja=bandeja)
+    member = member or _encargada_activa(equipo, moment=now, bandeja=bandeja)
     if not member:
         return None
     nombre = normalized_key(member.get("nombre") or "")
@@ -907,6 +949,29 @@ def reassign_owner(driver, nombre: str, timeout_seconds: int) -> str:
     if _owner_matches(owner, nombre):
         return "reasignado"
     return _reassign_attempt(driver, nombre, timeout_seconds)
+
+
+def verify_persona_option(driver, nombre: str, timeout_seconds: int) -> str:
+    """Simula la reasignación a ``nombre`` y SIEMPRE cancela el modal.
+
+    Recorre el mismo camino que ``_reassign_attempt`` —abrir el diálogo
+    "Cambiar propietario", esperar el lookup y tipear el nombre— pero se
+    detiene en la opción encontrada: NUNCA pulsa el botón de confirmar y
+    cierra el modal con Cancelar en todas las salidas una vez abierto.
+    Devuelve ``opcion_ok`` si el nombre aparece en el lookup, o
+    ``reasignacion_error:modal|busqueda|opcion`` según el paso que falló.
+    """
+    if not open_change_owner_dialog(driver, timeout_seconds):
+        return "reasignacion_error:modal"
+    search_input = _wait_owner_search_input(driver, timeout_seconds)
+    if search_input is None:
+        _dismiss_owner_dialog(driver)
+        return "reasignacion_error:busqueda"
+    if not _pick_owner_option(driver, search_input, nombre, QUEUE_SEARCH_TIMEOUT_SECONDS):
+        _dismiss_owner_dialog(driver)
+        return "reasignacion_error:opcion"
+    _dismiss_owner_dialog(driver)
+    return "opcion_ok"
 
 
 def send_whatsapp(driver) -> str:
@@ -1297,8 +1362,6 @@ def run_bandeja_cycle(
     propio_activo = bool(state.get("schedule")) and within_schedule(
         state["schedule"], bandeja=bandeja["code"]
     )
-    if propio_activo:
-        equipo = None
     # Cobertura por bandeja: sin franja propia que cubra ESTA bandeja, solo
     # la persona del equipo cuya franja activa la cubre habilita la toma.
     # Un lead MX con franja AR vigente queda detectado "sin cobertura" —
@@ -1337,7 +1400,7 @@ def run_bandeja_cycle(
                     diag_dir=diag_dir,
                     details=lead.details,
                     enviar_whatsapp=enviar_whatsapp,
-                    equipo=equipo,
+                    equipo=_equipo_para_lead(state, bandeja["code"], lead.details),
                     bot_owner=state.get("bot_owner"),
                 )
             except (TimeoutException, WebDriverException, ValueError):

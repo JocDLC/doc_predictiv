@@ -1,4 +1,10 @@
-## ADDED Requirements
+## Purpose
+
+Define cómo la vista Monitor de Bandeja presenta el estado del bot
+(tarjeta con semáforo, interruptor encendido/apagado, opciones agrupadas y
+resaltado del modo prueba) para que sea legible de un vistazo.
+
+## Requirements
 
 ### Requirement: Tarjeta de estado con semáforo
 La vista Monitor de Bandeja SHALL mostrar, debajo del título y antes del texto
@@ -86,3 +92,18 @@ porque duplicaba el toast nativo.
 #### Scenario: aviso de Windows único
 - **WHEN** entra un lead nuevo y `notificar` está encendido
 - **THEN** solo sale el toast nativo de Windows del servidor; la UI no emite `new Notification`
+
+### Requirement: Indicador propio de modo prueba
+Con `solo_listar` activo la vista MUST resaltar el modo prueba con color propio
+(violeta, distinto del semáforo): la tarjeta de estado cambia su fondo/borde,
+un banner propio bajo la tarjeta aclara que no se toma ningún lead, y la
+casilla con su fieldset "Comportamiento" quedan resaltados. Al desactivarlo
+MUST quitarse todo resaltado.
+
+#### Scenario: modo prueba activo
+- **WHEN** `solo_listar = true`
+- **THEN** la tarjeta muestra la clase `dry-run`, el banner es visible, y la casilla y su fieldset quedan resaltados
+
+#### Scenario: modo prueba apagado
+- **WHEN** `solo_listar = false`
+- **THEN** no queda ningún resaltado de modo prueba

@@ -168,7 +168,7 @@ class SimulateOneLeadTests(unittest.TestCase):
         patches = {
             "open_record": Mock(),
             "wait_record_owner": Mock(return_value=owner),
-            "verify_persona_option": Mock(return_value=verify),
+            "verify_persona_option": Mock(return_value=verify) if isinstance(verify, str) else Mock(side_effect=verify),
             "press_pick_up": Mock(),
             "reassign_owner": Mock(),
             "save_contact_panel_if_present": Mock(),
@@ -206,7 +206,7 @@ class SimulateOneLeadTests(unittest.TestCase):
     def test_ingreso_queue_reports_pickup_y_reasignar(self):
         entry, patches = self.run_lead("AR_LEAD_QUALIF")
         self.assertEqual(entry["status"], "prueba_ok:pickup_y_reasignar")
-        patches["verify_persona_option"].assert_called_once_with(self.driver, "Ana Perez", 5)
+        patches["verify_persona_option"].assert_called_once_with(self.driver, "Ana Perez", 5, unittest.mock.ANY)
 
     def test_other_owner_reports_reasignar(self):
         entry, _ = self.run_lead("Otra Persona")
@@ -232,6 +232,19 @@ class SimulateOneLeadTests(unittest.TestCase):
         self.assertEqual(entry["status"], "prueba_inaccesible")
         self.assertEqual(entry["detalle"], "propietario_ilegible")
         patches["verify_persona_option"].assert_not_called()
+
+    def test_nombre_no_encontrado_detail_shows_what_lookup_saw(self):
+        """Si la opción no aparece, el detalle cuenta qué vio el desplegable:
+        el texto tipeado y las opciones visibles — el diagnóstico que
+        faltaba para el caso 'nombre no encontrado en Salesforce'."""
+        def fake_verify(driver, nombre, timeout, diagnostics):
+            diagnostics.update({"inputValue": nombre, "options": ["ana perez"]})
+            return "reasignacion_error:opcion"
+
+        entry, _ = self.run_lead("Otra Persona", verify=fake_verify)
+        self.assertEqual(entry["status"], "prueba_nombre_no_encontrado")
+        self.assertIn("ana perez", entry["detalle"])
+        self.assertIn("Ana Perez", entry["detalle"])
 
     def test_navigation_failure_records_prueba_inaccesible(self):
         from selenium.common.exceptions import TimeoutException

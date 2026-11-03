@@ -865,13 +865,50 @@ def _wait_owner_search_input(driver, timeout_seconds: float):
     return None
 
 
-def _pick_owner_option(driver, search_input, wanted: str, timeout_seconds: float) -> bool:
+OWNER_LOOKUP_DUMP_SCRIPT = _OWNER_DIALOG_HELPERS + r"""
+const dialog = ownerDialog();
+const input = ownerSearchInput(dialog);
+const seen = [];
+if (dialog) {
+    for (const el of dialogDescendants(dialog)) {
+        if (!isVisible(el)) continue;
+        if (el.matches('[role="option"], lightning-base-combobox-item, [class*="slds-listbox__option"], li')
+                || el.matches('tr, [role="row"], records-record-picker-row')) {
+            const txt = normalize(el.textContent).slice(0, 60);
+            if (txt && !seen.includes(txt)) seen.push(txt);
+            if (seen.length >= 8) break;
+        }
+    }
+}
+return { inputValue: input ? input.value : null, options: seen };
+"""
+
+
+def _owner_lookup_snapshot(driver) -> dict:
+    """Vuelca qué muestra el lookup del modal (texto tipeado + opciones
+    visibles). Solo diagnóstico: se usa cuando la opción no apareció."""
+    try:
+        snapshot = execute_in_any_frame(driver, OWNER_LOOKUP_DUMP_SCRIPT)
+    except WebDriverException:
+        return {}
+    return snapshot if isinstance(snapshot, dict) else {}
+
+
+def _pick_owner_option(
+    driver, search_input, wanted: str, timeout_seconds: float, diagnostics=None
+) -> bool:
     """Tipea ``wanted`` en el lookup y elige la opción. Si el primer tipeo
     cayó antes de que el combobox quedara listo (texto escrito pero sin
     resultados), reescribe una vez más — reintenta el tipeo, nunca el clic
-    de confirmar."""
+    de confirmar. El click previo le da foco al combobox: sin foco, los
+    send_keys pueden caer en la nada. Con ``diagnostics`` (dict) vuelca lo
+    que el desplegable mostraba al agotar los intentos."""
     deadline = time.monotonic() + timeout_seconds
     for attempt in range(2):
+        try:
+            search_input.click()
+        except WebDriverException:
+            pass
         search_input.clear()
         search_input.send_keys(wanted)
         attempt_deadline = time.monotonic() + (deadline - time.monotonic()) / (2 - attempt)
@@ -879,6 +916,8 @@ def _pick_owner_option(driver, search_input, wanted: str, timeout_seconds: float
             if execute_in_any_frame(driver, PICK_QUEUE_RESULT_SCRIPT, wanted) == "clicked":
                 return True
             time.sleep(POLL_SECONDS)
+    if diagnostics is not None:
+        diagnostics.update(_owner_lookup_snapshot(driver))
     return False
 
 
@@ -951,7 +990,7 @@ def reassign_owner(driver, nombre: str, timeout_seconds: int) -> str:
     return _reassign_attempt(driver, nombre, timeout_seconds)
 
 
-def verify_persona_option(driver, nombre: str, timeout_seconds: int) -> str:
+def verify_persona_option(driver, nombre: str, timeout_seconds: int, diagnostics=None) -> str:
     """Simula la reasignación a ``nombre`` y SIEMPRE cancela el modal.
 
     Recorre el mismo camino que ``_reassign_attempt`` —abrir el diálogo
@@ -967,7 +1006,7 @@ def verify_persona_option(driver, nombre: str, timeout_seconds: int) -> str:
     if search_input is None:
         _dismiss_owner_dialog(driver)
         return "reasignacion_error:busqueda"
-    if not _pick_owner_option(driver, search_input, nombre, QUEUE_SEARCH_TIMEOUT_SECONDS):
+    if not _pick_owner_option(driver, search_input, nombre, QUEUE_SEARCH_TIMEOUT_SECONDS, diagnostics):
         _dismiss_owner_dialog(driver)
         return "reasignacion_error:opcion"
     _dismiss_owner_dialog(driver)

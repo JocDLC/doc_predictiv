@@ -194,6 +194,14 @@ def distribute_one_lead(
     return record(outcome, propietario=owner)
 
 
+def _format_lookup_diag(diagnostics: dict) -> str:
+    """Resumen de lo que el lookup mostraba cuando el nombre no apareció."""
+    if not diagnostics:
+        return ""
+    opciones = " / ".join(str(o) for o in diagnostics.get("options") or []) or "ninguna"
+    return f"input: {diagnostics.get('inputValue')!r} · opciones vistas: {opciones}"
+
+
 def simulate_one_lead(
     driver,
     lead: dict[str, str],
@@ -240,9 +248,13 @@ def simulate_one_lead(
 
     # Tanto la cola de ingreso como otro propietario reasignarían: la
     # simulación solo verifica que el nombre destino existe en el lookup.
-    outcome = verify_persona_option(driver, persona, timeout_seconds)
+    # ``diagnostics`` vuelca qué mostraba el desplegable si la opción no
+    # aparece — el dato que explica un "nombre no encontrado".
+    diagnostics: dict = {}
+    outcome = verify_persona_option(driver, persona, timeout_seconds, diagnostics)
     if outcome == "reasignacion_error:opcion":
-        return record(STATUS_PRUEBA_NOMBRE_NO_ENCONTRADO, propietario=owner)
+        detail = _format_lookup_diag(diagnostics)
+        return record(STATUS_PRUEBA_NOMBRE_NO_ENCONTRADO, propietario=owner, detail=detail)
     if outcome != "opcion_ok":
         paso = outcome.split(":", 1)[-1]
         return record(f"{STATUS_PRUEBA_ERROR}:{paso}", propietario=owner)

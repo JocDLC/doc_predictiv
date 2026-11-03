@@ -268,6 +268,7 @@
   .dist-table th { background: #eef2ff; color: #3730a3; }
   .dist-table tr.dist-excluded td { opacity: .45; }
   .dist-table td.dist-cell-excluded { background: #fef3c7; color: #92400e; font-weight: 600; }
+  .dist-table td.dist-cell-error { background: #fee2e2; color: #991b1b; font-weight: 600; }
   .dist-persona, .dist-persona-sel { width: 100%; box-sizing: border-box; }
   .monitor-table td .cell { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
   .monitor-table td.hint { font-size: inherit; margin-top: 0; }
@@ -3721,11 +3722,22 @@ const DIST_STATUS_LABELS = {
   prueba_inaccesible: "Lead inaccesible",
 };
 
+const DIST_ERROR_PASOS = {
+  modal: "no abrió el diálogo de cambio de propietario",
+  busqueda: "no apareció el buscador de personas",
+  opcion: "el nombre no apareció en el buscador",
+  confirmar: "no se pudo confirmar el cambio",
+  verificacion: "el propietario no cambió tras confirmar",
+};
+
 // Los estados de simulación llegan con prefijo prueba_; los que no tienen
-// etiqueta propia (prueba_error:<paso>) se traducen genérico.
+// etiqueta propia (prueba_error:<paso>, reasignacion_error:<paso>) se
+// traducen genérico.
 function distStatusLabel(status) {
   if (DIST_STATUS_LABELS[status]) return DIST_STATUS_LABELS[status];
-  if (String(status).startsWith("prueba_error:")) return `Error de simulación: ${status.split(":")[1]}`;
+  const s = String(status);
+  if (s.startsWith("prueba_error:")) return `Error de simulación: ${DIST_ERROR_PASOS[s.split(":")[1]] || s.split(":")[1]}`;
+  if (s.startsWith("reasignacion_error:")) return `⚠ Error al reasignar: ${DIST_ERROR_PASOS[s.split(":")[1]] || s.split(":")[1]}`;
   return status;
 }
 let distSheets = [];
@@ -3907,12 +3919,14 @@ async function loadDistribucionResults() {
       const entry = byId[row.leadId];
       const status = entry ? distStatusLabel(entry.status) : (distRunning ? "pendiente" : "sin procesar");
       const detail = entry ? [entry.propietario_observado ? `propietario: ${entry.propietario_observado}` : "", entry.detalle || ""].filter(Boolean).join(" · ") : "";
-      const excludedCls = entry && (entry.status === "cola_excluida" || entry.status === "prueba_ok:cola_excluida") ? "dist-cell-excluded" : "";
+      const statusStr = entry ? String(entry.status || "") : "";
+      const excludedCls = statusStr === "cola_excluida" || statusStr === "prueba_ok:cola_excluida" ? "dist-cell-excluded" : "";
+      const statusCls = excludedCls || (entry && (statusStr.includes("error") || statusStr.includes("inaccesible")) ? "dist-cell-error" : "");
       const nombre = row.nombre || entry?.nombre || "";
       const nombreCell = nombre && row.leadId
         ? `<a class="lead-link" target="_blank" rel="noopener" href="${escapeHTML(sfBase.replace(/\/+$/, "") + "/" + row.leadId)}">${escapeHTML(nombre)}</a>`
         : escapeHTML(nombre);
-      return `<tr><td>${escapeHTML(row.leadId)}</td><td>${nombreCell}</td><td>${escapeHTML(entry ? entry.persona : row.persona || "")}</td><td class="${excludedCls}">${escapeHTML(status)}</td><td>${escapeHTML(detail)}</td></tr>`;
+      return `<tr><td>${escapeHTML(row.leadId)}</td><td>${nombreCell}</td><td>${escapeHTML(entry ? entry.persona : row.persona || "")}</td><td class="${statusCls}">${escapeHTML(status)}</td><td>${escapeHTML(detail)}</td></tr>`;
     }).join("") + `</tbody>`;
 }
 

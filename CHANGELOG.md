@@ -30,6 +30,15 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ### Cambiado
 
+- **Lookup "Cambiar propietario" — diagnóstico y foco**: `_pick_owner_option`
+  hace click en el input antes de tipear (los combobox de Lightning pueden
+  ignorar `send_keys` sin foco) y, cuando la opción no aparece, la
+  simulación guarda en `detalle` lo que el desplegable mostraba (texto
+  tipeado + opciones vistas) — el dato que explica un "nombre no
+  encontrado". Herramienta nueva `debug_owner_lookup.py` para inspeccionar
+  el lookup en vivo. Tests-regla:
+  `tests.test_lead_monitor.PickOwnerOptionTests`,
+  `tests.test_run_distribucion_queue.SimulateOneLeadTests.test_nombre_no_encontrado_detail_shows_what_lookup_saw`.
 - **Distribuir leads — colas ya gestionadas (MX/CO)**: `SKIP_OWNERS` suma
   `MX_LEAD_COLD`, `MX_LEAD_EXPORT_GETLEAD`, `CO_LEAD_COLD` y
   `CO_LEAD_EXPORT_GETLEAD`: un lead ya derivado al canal frío/export de

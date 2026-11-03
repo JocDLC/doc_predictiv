@@ -1645,6 +1645,59 @@ class ReassignOwnerTests(unittest.TestCase):
         self.assertEqual(outcome, "reasignacion_error:opcion")
         dismiss.assert_called_once()
 
+    def test_verify_persona_option_forwards_diagnostics(self):
+        """El dict de diagnóstico llega a _pick_owner_option para que el
+        caller vea qué mostraba el desplegable cuando la opción no sale."""
+        import lead_monitor
+
+        diagnostics = {}
+        with (
+            patch("lead_monitor.open_change_owner_dialog", return_value=True),
+            patch("lead_monitor._wait_owner_search_input", return_value=unittest.mock.Mock()),
+            patch("lead_monitor._pick_owner_option", return_value=False) as pick,
+            patch("lead_monitor._dismiss_owner_dialog"),
+        ):
+            lead_monitor.verify_persona_option(unittest.mock.Mock(), "Ana Perez", 5, diagnostics)
+        self.assertIs(pick.call_args.args[-1], diagnostics)
+
+
+class PickOwnerOptionTests(unittest.TestCase):
+    def test_focuses_input_before_typing(self):
+        """El combobox de Lightning ignora send_keys sin foco: click primero."""
+        import lead_monitor
+
+        search_input = unittest.mock.Mock()
+        with (
+            patch("lead_monitor.execute_in_any_frame", return_value="clicked"),
+            patch("lead_monitor.time.sleep"),
+        ):
+            self.assertTrue(
+                lead_monitor._pick_owner_option(unittest.mock.Mock(), search_input, "Ana Perez", 1)
+            )
+        names = [call[0] for call in search_input.mock_calls]
+        self.assertEqual(names[:3], ["click", "clear", "send_keys"])
+
+    def test_fills_diagnostics_when_option_never_appears(self):
+        """Sin opción: el diagnóstico vuelca lo que veía el desplegable."""
+        import lead_monitor
+
+        diagnostics = {}
+        with (
+            patch("lead_monitor.execute_in_any_frame", return_value="not_found"),
+            patch("lead_monitor.time.sleep"),
+            patch(
+                "lead_monitor._owner_lookup_snapshot",
+                return_value={"inputValue": "Ana Perez", "options": ["x", "y"]},
+            ),
+        ):
+            self.assertFalse(
+                lead_monitor._pick_owner_option(
+                    unittest.mock.Mock(), unittest.mock.Mock(), "Ana Perez", 0.01, diagnostics
+                )
+            )
+        self.assertEqual(diagnostics["inputValue"], "Ana Perez")
+        self.assertEqual(diagnostics["options"], ["x", "y"])
+
 
 class EquipoParaLeadTests(unittest.TestCase):
     def _state(self):

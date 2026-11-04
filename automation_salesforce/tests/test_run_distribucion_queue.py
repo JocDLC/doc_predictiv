@@ -68,6 +68,23 @@ class DistributeOneLeadTests(unittest.TestCase):
         patches["press_pick_up"].assert_not_called()
         patches["reassign_owner"].assert_not_called()
 
+    def test_entry_carries_lead_nombre(self):
+        """La entrada de resultado guarda el nombre del lead del archivo:
+        la columna Lead se mantiene aunque la página se recargue."""
+        with patch.multiple(
+            run_distribucion_queue,
+            open_record=Mock(),
+            wait_record_owner=Mock(return_value="Ana Perez"),
+            press_pick_up=Mock(),
+            reassign_owner=Mock(),
+        ):
+            entry = distribute_one_lead(
+                self.driver,
+                {**LEAD, "nombre": "Juan Cliente"},
+                CONFIG, INGRESO, self.results_path, self.screenshots, Mock(), "run_x"
+            )
+        self.assertEqual(entry["nombre"], "Juan Cliente")
+
     def test_owner_matches_destino_case_insensitive(self):
         entry, _ = self.run_lead(["ANA PEREZ"])
         self.assertEqual(entry["status"], "ya_asignado")

@@ -127,6 +127,7 @@ def _result_entry(
     propietario: str = "",
     detail: str = "",
     modo: str = "",
+    nombre: str = "",
 ) -> dict:
     entry = {
         "lead_id": lead_id,
@@ -136,6 +137,8 @@ def _result_entry(
         "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "elapsed_seconds": round_elapsed_seconds(time.monotonic() - started_at),
     }
+    if nombre:
+        entry["nombre"] = nombre
     if modo:
         entry["modo"] = modo
     if propietario:
@@ -158,11 +161,12 @@ def distribute_one_lead(
     """Resuelve el propietario de un lead y lo deja en la persona destino."""
     lead_id = lead["lead_id"]
     persona = lead["persona"]
+    nombre = str(lead.get("nombre") or "")
     timeout_seconds = config["timeouts"]["page_load_seconds"]
     started_at = time.monotonic()
 
     def record(status: str, propietario: str = "", detail: str = "") -> dict:
-        entry = _result_entry(lead_id, persona, status, run_id, started_at, propietario, detail, modo="real")
+        entry = _result_entry(lead_id, persona, status, run_id, started_at, propietario, detail, modo="real", nombre=nombre)
         record_result(results_path, entry)
         return entry
 
@@ -223,11 +227,12 @@ def simulate_one_lead(
     """
     lead_id = lead["lead_id"]
     persona = lead["persona"]
+    nombre = str(lead.get("nombre") or "")
     timeout_seconds = config["timeouts"]["page_load_seconds"]
     started_at = time.monotonic()
 
     def record(status: str, propietario: str = "", detail: str = "") -> dict:
-        entry = _result_entry(lead_id, persona, status, run_id, started_at, propietario, detail, modo="prueba")
+        entry = _result_entry(lead_id, persona, status, run_id, started_at, propietario, detail, modo="prueba", nombre=nombre)
         record_result(results_path, entry)
         return entry
 
@@ -336,6 +341,7 @@ def main(argv: list[str] | None = None) -> int:
                     started_at,
                     detail=type(error).__name__,
                     modo=modo,
+                    nombre=str(lead.get("nombre") or ""),
                 )
                 record_result(results_path, entry)
             stats[entry["status"]] = stats.get(entry["status"], 0) + 1

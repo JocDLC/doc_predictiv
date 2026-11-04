@@ -832,7 +832,10 @@ def _encargada_para_lead(
     cae a la hora actual como antes.
     """
     entry = _usable_entry_moment(details, now)
-    member = _encargada_activa(equipo, moment=entry, bandeja=bandeja)
+    # Con ingreso no usable (None) no se evalúa: ``moment=None`` miraría el
+    # reloj real en vez del ``now`` inyectado — el fallback correcto es la
+    # hora actual de abajo.
+    member = _encargada_activa(equipo, moment=entry, bandeja=bandeja) if entry else None
     member = member or _encargada_activa(equipo, moment=now, bandeja=bandeja)
     if not member:
         return None

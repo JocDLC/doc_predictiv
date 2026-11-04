@@ -119,10 +119,11 @@ def parse_archivo(filename: str, content: bytes) -> dict:
 
 
 def validate_distribucion_queue(payload: object) -> list[dict[str, str]]:
-    """Valida la cola de distribución y devuelve ``[{lead_id, persona}]``.
+    """Valida la cola de distribución y devuelve ``[{lead_id, persona, nombre?}]``.
 
-    La UI envía solo los pares lead/persona ya revisados en la vista previa;
-    la cola nunca contiene datos personales de clientes.
+    La UI envía los pares lead/persona ya revisados en la vista previa; el
+    ``nombre`` del lead es opcional y solo se conserva para mostrar la
+    columna Lead en la tabla de resultados — nunca sale de la máquina.
     """
     if not isinstance(payload, dict) or payload.get("operation") != DISTRIBUCION_OPERATION:
         raise ValueError(f"La cola de distribución no declara operation='{DISTRIBUCION_OPERATION}'.")
@@ -146,7 +147,11 @@ def validate_distribucion_queue(payload: object) -> list[dict[str, str]]:
         if lead_id in seen:
             raise ValueError(f"Lead {index} duplicado en la cola de distribución.")
         seen.add(lead_id)
-        validated.append({"lead_id": lead_id, "persona": persona})
+        entry = {"lead_id": lead_id, "persona": persona}
+        nombre = str(lead.get("nombre") or "").strip()
+        if nombre:
+            entry["nombre"] = nombre
+        validated.append(entry)
     return validated
 
 

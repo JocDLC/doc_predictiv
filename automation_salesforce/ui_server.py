@@ -64,6 +64,14 @@ from monitor_store import (
     within_schedule,
 )
 from queue_loader import load_queue_file
+from reparto_equitativo import (
+    EQUIPO_REPARTO_FILE_NAME,
+    build_export_xlsx,
+    load_equipo_reparto,
+    repartir,
+    save_equipo_reparto,
+    validate_equipo_reparto,
+)
 
 try:
     import msvcrt
@@ -148,6 +156,10 @@ def monitor_state_path(config: dict) -> Path:
 
 def ui_prefs_path(config: dict) -> Path:
     return ROOT / config.get("ui_output_directory", "ui_output") / "ui_prefs.json"
+
+
+def equipo_reparto_path(config: dict) -> Path:
+    return ROOT / config.get("ui_output_directory", "ui_output") / EQUIPO_REPARTO_FILE_NAME
 
 
 PREF_KEY_PATTERN = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
@@ -934,6 +946,14 @@ def restart_browser(config: dict) -> None:
         deadline = time.monotonic() + 15
         while debugger_is_listening(debugger_address) and time.monotonic() < deadline:
             time.sleep(0.5)
+        # El puerto deja de escuchar apenas muere su proceso dueño, pero los
+        # demás procesos del perfil tardan más en salir: relanzar antes de
+        # que desaparezcan delega el nuevo arranque al Edge que aún muere
+        # (singleton del user-data-dir) y el puerto nunca abre — el loop de
+        # navegador_trabado que se veía tras los reinicios programados.
+        deadline = time.monotonic() + 15
+        while dedicated_profile_pids(profile_directory) and time.monotonic() < deadline:
+            time.sleep(0.5)
     subprocess.run(["taskkill", "/IM", "msedgedriver.exe", "/F"], capture_output=True)
     launch_persistent_browser(executable, profile_directory, debugger_address)
     if not wait_for_debugger(debugger_address):
@@ -981,6 +1001,16 @@ def make_handler(token: str, config: dict | None = None):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+
+        def _send_binary(self, payload: bytes, content_type: str, filename: str) -> None:
+            """Descarga binaria (los .xlsx del reparto se generan en memoria)."""
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
 
         def _authorized(self) -> bool:
             # Sin el token de la sesión ninguna otra página local puede disparar el bot.
@@ -1088,6 +1118,12 @@ def make_handler(token: str, config: dict | None = None):
                     return
                 self._send(200, {"prefs": read_ui_prefs(config or load_config())})
                 return
+            if route == "/api/distribucion-equipo":
+                if not self._authorized():
+                    self._send(403, {"error": "token inválido o ausente"})
+                    return
+                self._send(200, load_equipo_reparto(equipo_reparto_path(config or load_config())))
+                return
             if route == "/status":
                 running = current_process is not None and current_process.poll() is None
                 self._send(
@@ -1124,6 +1160,24 @@ def make_handler(token: str, config: dict | None = None):
 
         def do_PUT(self) -> None:
             route = urlparse(self.path).path
+            if route == "/api/distribucion-equipo":
+                # Equipo del día del reparto equitativo: [{nombre, trabaja}].
+                # Se guarda entero en cada cambio (alta, baja o tilde).
+                if not self._authorized():
+                    self._send(403, {"error": "token inválido o ausente"})
+                    return
+                payload = self._read_json_body()
+                if payload is None:
+                    return
+                entries = payload.get("equipo") if isinstance(payload, dict) else payload
+                try:
+                    equipo = validate_equipo_reparto(entries)
+                except ValueError as error:
+                    self._send(400, {"error": str(error)})
+                    return
+                save_equipo_reparto(equipo_reparto_path(config or load_config()), equipo)
+                self._send(200, equipo)
+                return
             if route == "/api/ui-prefs":
                 # Preferencias de UI (vista de columnas, toggles): persisten
                 # del lado del servidor para que sigan al usuario aunque
@@ -1279,6 +1333,55 @@ def make_handler(token: str, config: dict | None = None):
                     self._send(400, {"error": str(error)})
                     return
                 self._send(200, parsed)
+                return
+            if route == "/api/distribucion/reparto":
+                # Reparto equitativo del lote entre quienes trabajan hoy.
+                # El algoritmo vive acá (puro, testeable con unittest); la
+                # UI solo muestra las asignaciones y arma la misma cola.
+                payload = self._read_json_body()
+                if payload is None:
+                    return
+                if not isinstance(payload, dict):
+                    self._send(400, {"error": "se esperaba un objeto con 'filas' y 'trabajan'"})
+                    return
+                try:
+                    asignaciones, resumen = repartir(payload.get("filas"), payload.get("trabajan"))
+                except ValueError as error:
+                    self._send(400, {"error": str(error)})
+                    return
+                whatsapp_list = [
+                    {"lead_id": asignacion["lead_id"], "persona": asignacion["destino"]}
+                    for asignacion in asignaciones
+                    if asignacion["whatsapp"]
+                ]
+                self._send(
+                    200,
+                    {
+                        "asignaciones": asignaciones,
+                        "resumen": resumen,
+                        "whatsapp_list": whatsapp_list,
+                    },
+                )
+                return
+            if route == "/api/distribucion/exportar":
+                # Exportación Excel del reparto: el .xlsx se genera en
+                # memoria y viaja como descarga — nada queda persistido.
+                payload = self._read_json_body()
+                if payload is None:
+                    return
+                if not isinstance(payload, dict):
+                    self._send(400, {"error": "se esperaba un objeto con 'tipo' y 'filas'"})
+                    return
+                try:
+                    filename, content = build_export_xlsx(payload.get("tipo"), payload.get("filas"))
+                except ValueError as error:
+                    self._send(400, {"error": str(error)})
+                    return
+                self._send_binary(
+                    content,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    filename,
+                )
                 return
             if route == "/api/monitor/clear-results":
                 if not cycle_lock.acquire(blocking=False):
@@ -1524,6 +1627,10 @@ def make_handler(token: str, config: dict | None = None):
             except OSError:
                 self._send(500, {"error": "no se pudo congelar la cola de distribución"})
                 return False
+            # Cada corrida arranca con resultados limpios: el runner
+            # appendea y la UI no debe mezclar corridas (una prueba seguida
+            # de una real quedaba con estados viejos).
+            (queue_directory / "cola_distribucion_activa.resultado.json").unlink(missing_ok=True)
             current_operation = "distribucion"
             current_process = subprocess.Popen(
                 [

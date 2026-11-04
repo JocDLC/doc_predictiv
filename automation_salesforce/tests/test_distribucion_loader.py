@@ -77,6 +77,18 @@ class DistribucionQueueTests(unittest.TestCase):
         leads = validate_distribucion_queue(VALID_QUEUE)
         self.assertEqual(leads, [{"lead_id": "00Q000000000001AAA", "persona": "Ana Perez"}])
 
+    def test_keeps_nombre_when_present(self):
+        """El nombre del lead viaja en la cola para mostrar la columna Lead
+        en la tabla de resultados aunque la página se recargue."""
+        queue = {**VALID_QUEUE, "leads": [{**VALID_LEAD, "nombre": "Juan Cliente"}]}
+        leads = validate_distribucion_queue(queue)
+        self.assertEqual(leads[0]["nombre"], "Juan Cliente")
+
+    def test_nombre_absent_keeps_pair_only(self):
+        """Colas viejas sin nombre validan igual: el campo es opcional."""
+        leads = validate_distribucion_queue(VALID_QUEUE)
+        self.assertNotIn("nombre", leads[0])
+
     def test_rejects_wrong_operation_empty_leads_and_duplicates(self):
         with self.assertRaises(ValueError):
             validate_distribucion_queue({"operation": "otra", "leads": [VALID_LEAD]})

@@ -1885,6 +1885,38 @@ class MonitorTickTests(unittest.TestCase):
         self.assertTrue(any("4242" in call for call in calls))
         launch.assert_called_once()
 
+    def test_restart_browser_waits_for_profile_processes_to_die(self):
+        """El reinicio debe esperar a que los procesos del perfil dedicado
+        mueran antes de relanzar: un Edge cerrándose aún tiene el lock del
+        user-data-dir y el nuevo arranque se delega al proceso que muere
+        (el puerto nunca abre → loop de navegador_trabado)."""
+        import ui_server
+
+        config = {
+            "browser": "edge",
+            "debugger_address": "127.0.0.1:9222",
+            "profile_directory": "perfil",
+            "salesforce_url": "https://sf.example",
+        }
+        pid_calls = []
+        with (
+            patch("ui_server.find_listening_pid", return_value=None),
+            patch(
+                "ui_server.dedicated_profile_pids",
+                side_effect=lambda profile: pid_calls.append(["4242"] if len(pid_calls) < 3 else [])
+                or pid_calls[-1],
+            ),
+            patch("ui_server.subprocess.run"),
+            patch("ui_server.debugger_is_listening", return_value=False),
+            patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
+            patch("ui_server.launch_persistent_browser") as launch,
+            patch("ui_server.wait_for_debugger", return_value=False),
+        ):
+            ui_server.restart_browser(config)
+        # Esperó hasta que el perfil quedó sin procesos antes de relanzar.
+        self.assertGreaterEqual(len(pid_calls), 2)
+        launch.assert_called_once()
+
     def test_dedicated_profile_pids_matches_user_data_dir(self):
         """El listado por proceso reconoce el perfil dedicado con y sin
         comillas, y no confunde perfiles hermanos ni otros ejecutables."""

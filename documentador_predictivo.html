@@ -605,6 +605,8 @@
             <div class="field" id="distSheetField"><label for="distSheet">Hoja del archivo</label><select id="distSheet"></select></div>
             <div class="field"><label for="mapDistId">Lead ID *</label><select id="mapDistId"></select></div>
             <div class="field"><label for="mapDistPersona">Persona destino *</label><select id="mapDistPersona"></select></div>
+            <div class="field"><label for="mapDistAuxiliar">Auxiliar actual (opcional, para reparto)</label><select id="mapDistAuxiliar"></select></div>
+            <div class="field"><label for="mapDistContacto">Preferred mean of contact (opcional, WhatsApp)</label><select id="mapDistContacto"></select></div>
             <div class="field"><label for="mapDistNombre">Nombre del lead (opcional)</label><select id="mapDistNombre"></select></div>
             <div class="field"><label for="mapDistApellido">Apellido del lead (opcional)</label><select id="mapDistApellido"></select></div>
           </div>
@@ -613,8 +615,35 @@
         <div class="prepare-card hidden" id="distPreviewCard">
           <h3>3. Vista previa y ejecución</h3>
           <div class="hint">Revisá los destinos: podés editar cualquier persona antes de ejecutar. Las filas sin Lead ID válido quedan excluidas solas.</div>
+          <div class="field" style="max-width:340px;margin-top:10px">
+            <label for="distModo">Modo de asignación</label>
+            <select id="distModo">
+              <option value="archivo">Destino desde archivo</option>
+              <option value="reparto">Reparto equitativo (mínimo de cambios)</option>
+            </select>
+          </div>
+          <div id="distRepartoPanel" class="hidden" style="margin-top:10px">
+            <div class="hint"><strong>Equipo de hoy</strong>: tildá quiénes trabajan — el reparto divide el lote en partes iguales moviendo la menor cantidad de leads (usa la columna "Auxiliar actual"). La lista se guarda sola; los destinos calculados quedan editables fila a fila.</div>
+            <div id="distEquipo" style="margin-top:8px"></div>
+            <div class="actions" style="margin:8px 0">
+              <input type="text" id="distEquipoNombre" placeholder="Nombre exacto en Salesforce" style="max-width:260px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px">
+              <button class="btn small" id="distEquipoAdd">Agregar persona</button>
+              <button class="btn primary" id="distCalcular">Calcular reparto</button>
+              <span class="hint" id="distRepartoMsg"></span>
+            </div>
+            <div class="actions hidden" id="distExportRow" style="margin:8px 0">
+              <button class="btn" id="distExportar" title="Excel con una fila por lead: id, nombre, auxiliar actual, nueva persona y acción — para repartir al equipo">Descargar distribución (.xlsx)</button>
+              <button class="btn hidden" id="distExportarWa" title="Excel solo con los leads que pidieron WhatsApp: id y nueva persona — para los GTR">Descargar WhatsApp (.xlsx)</button>
+            </div>
+            <div id="distResumen" class="hint"></div>
+          </div>
           <div id="distSummary" class="hint" style="margin:8px 0"></div>
           <div class="monitor-table-wrap"><table class="dist-table" id="distTable"></table></div>
+          <details id="distWhatsappCard" class="hidden" style="margin-top:10px">
+            <summary style="cursor:pointer;font-weight:600">Reasignación WhatsApp</summary>
+            <div class="hint">Leads que pidieron WhatsApp (Preferred mean of contact) y su nueva persona tras el reparto.</div>
+            <div class="monitor-table-wrap"><table class="dist-table" id="distWhatsappTable"></table></div>
+          </details>
           <div class="monitor-dryrun-banner hidden" id="distDryRunBanner">⚠️ <strong>MODO PRUEBA</strong> — se simula la distribución sin guardar cambios en Salesforce</div>
           <div class="actions" style="margin-top:12px">
             <label class="monitor-option" id="distDryRunLabel" title="Recorre cada lead, lee su propietario y verifica que el nombre destino existe en Salesforce. Nunca guarda: cancela siempre el diálogo."><input type="checkbox" id="distDryRun"> Modo prueba (no guarda en Salesforce)</label>
@@ -626,6 +655,10 @@
           <div class="monitor-dryrun-banner hidden" id="distSimBanner">Simulación — nada se guardó en Salesforce</div>
           <div id="distRunState" class="hint"></div>
           <div class="monitor-table-wrap"><table class="dist-table" id="distResultsTable"></table></div>
+          <details id="distWhatsappResults" class="hidden" style="margin-top:10px">
+            <summary style="cursor:pointer;font-weight:600">Reasignación WhatsApp</summary>
+            <div class="monitor-table-wrap"><table class="dist-table" id="distWhatsappResultsTable"></table></div>
+          </details>
           <div class="actions" style="margin-top:12px"><button class="btn" id="distRefresh">Actualizar resultados</button></div>
         </div>
       </div>
@@ -671,7 +704,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.4.3";
+const APP_VERSION = "1.5.0";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -3707,6 +3740,8 @@ $("appVersion").textContent = "v" + APP_VERSION;
 const DIST_FIELDS = [
   ["id", "Lead ID", ["lead id", "id"]],
   ["persona", "Persona destino", ["otra informacion", "distribucion", "agente", "asignado a", "propietario"]],
+  ["auxiliar", "Auxiliar actual", ["auxiliar", "auxiliar actual", "propietario actual", "propietario del lead", "lead owner", "owner", "asesor actual", "agente actual"]],
+  ["contacto", "Preferred mean of contact", ["preferred mean of contact", "medio de contacto preferido", "preferencia de contacto", "medio de contacto"]],
   ["nombre", "Nombre", ["nombre"]],
   ["apellido", "Apellido", ["apellidos", "apellido"]],
 ];
@@ -3747,11 +3782,23 @@ let distFileName = "";
 let distPreviewRows = [];
 let distRunning = false;
 let distPollTimer = null;
+// Equipo del día del reparto equitativo (persistido en el servidor) y la
+// última lista "Reasignación WhatsApp" calculada en esta sesión.
+let distEquipo = [];
+let distWhatsappList = [];
+
+function isWhatsappText(value) {
+  return normalizeHeader(value).includes("whatsapp");
+}
 
 function openDistribuirView() {
   showView("viewDistribuir");
+  // Los resultados persisten en el servidor: al re-entrar se recupera la
+  // última corrida sola, sin tocar "Actualizar resultados".
+  loadDistribucionResults();
   connectBotEvents();
   loadDistribucionResults();
+  loadDistEquipo();
 }
 
 function currentDistSheet() {
@@ -3822,15 +3869,33 @@ function buildDistPreview() {
       nombre: [row[distMapping.nombre], row[distMapping.apellido]]
         .map(v => (v || "").trim()).filter(Boolean).join(" "),
       persona: (row[distMapping.persona] || "").trim(),
+      auxiliar: (row[distMapping.auxiliar] || "").trim(),
+      whatsapp: isWhatsappText(row[distMapping.contacto]),
+      accion: "",
       include: SF_ID_RE.test(leadId),
     };
   });
   const valid = distPreviewRows.filter(r => r.valid).length;
   $("distSummary").textContent = `${distPreviewRows.length} filas leídas · ${valid} con Lead ID válido · ${distPreviewRows.length - valid} excluidas`;
-  // El destino se elige del desplegable con las personas del archivo;
-  // "Otro (escribir)…" habilita el campo libre para quien no aparezca.
-  const personas = [...new Set(distPreviewRows.map(row => row.persona).filter(Boolean))];
-  $("distTable").innerHTML = `<thead><tr><th></th><th>Lead ID</th><th>Nombre</th><th>Persona destino</th></tr></thead><tbody>` +
+  distWhatsappList = [];
+  renderDistWhatsapp();
+  $("distResumen").textContent = "";
+  $("distExportRow").classList.add("hidden");
+  setConfigMsg($("distRepartoMsg"), "", false);
+  renderDistTable();
+  $("distPreviewCard").classList.remove("hidden");
+}
+
+function renderDistTable() {
+  if (!distPreviewRows.length) return;
+  // El destino se elige del desplegable con las personas del archivo más
+  // el equipo del reparto; "Otro (escribir)…" habilita el campo libre.
+  const personas = [...new Set([
+    ...distPreviewRows.map(row => row.persona).filter(Boolean),
+    ...distEquipo.map(member => member.nombre).filter(Boolean),
+  ])];
+  const showAccion = $("distModo").value === "reparto" && distPreviewRows.some(row => row.accion);
+  $("distTable").innerHTML = `<thead><tr><th></th><th>Lead ID</th><th>Nombre</th><th>Persona destino</th>${showAccion ? "<th>Acción</th>" : ""}</tr></thead><tbody>` +
     distPreviewRows.map((row, i) => {
       const inList = personas.includes(row.persona);
       const dis = row.valid ? "" : "disabled";
@@ -3838,7 +3903,9 @@ function buildDistPreview() {
         personas.map(p => `<option value="${escapeHTML(p)}" ${p === row.persona ? "selected" : ""}>${escapeHTML(p)}</option>`).join("") +
         `<option value="__otro__" ${inList ? "" : "selected"}>Otro (escribir)…</option></select>`;
       const input = `<input class="dist-persona ${inList ? "hidden" : ""}" data-i="${i}" value="${escapeHTML(row.persona)}" placeholder="Nombre exacto en Salesforce" ${dis}>`;
-      return `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="dist-inc" data-i="${i}" ${row.include ? "checked" : ""} ${dis}></td><td>${escapeHTML(row.leadId || "—")}</td><td>${escapeHTML(row.nombre)}</td><td>${select}${input}</td></tr>`;
+      const accion = row.accion === "se_queda" ? "se queda" : row.accion === "se_mueve" ? "se mueve" : "";
+      const accionTd = showAccion ? `<td>${accion}</td>` : "";
+      return `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="dist-inc" data-i="${i}" ${row.include ? "checked" : ""} ${dis}></td><td>${escapeHTML(row.leadId || "—")}</td><td>${escapeHTML(row.nombre)}</td><td>${select}${input}</td>${accionTd}</tr>`;
     }).join("") + `</tbody>`;
   document.querySelectorAll(".dist-persona-sel").forEach(sel => sel.addEventListener("change", () => {
     const input = document.querySelector(`.dist-persona[data-i="${sel.dataset.i}"]`);
@@ -3847,7 +3914,194 @@ function buildDistPreview() {
     if (custom) input.focus();
     else input.value = sel.value;
   }));
-  $("distPreviewCard").classList.remove("hidden");
+}
+
+// ---------- Reparto equitativo ----------
+// El equipo del día se guarda server-side (ui_output/equipo_reparto.json):
+// alta, baja y tilde "trabaja hoy" persisten solas en cada cambio. El
+// algoritmo corre en el servidor (POST /api/distribucion/reparto) para
+// poder testearlo con unittest; la UI solo vuelca las asignaciones en la
+// vista previa editable — la cola y el runner no cambian.
+
+async function loadDistEquipo() {
+  try {
+    const equipo = await monitorApi("/api/distribucion-equipo");
+    distEquipo = Array.isArray(equipo) ? equipo : [];
+  } catch { distEquipo = []; }
+  renderDistEquipo();
+}
+
+async function saveDistEquipo() {
+  try {
+    const saved = await monitorApi("/api/distribucion-equipo", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ equipo: distEquipo }),
+    });
+    if (Array.isArray(saved)) distEquipo = saved;
+    setConfigMsg($("distRepartoMsg"), "", false);
+  } catch (error) {
+    setConfigMsg($("distRepartoMsg"), `No se pudo guardar el equipo: ${error.message}`, true);
+  }
+  renderDistEquipo();
+}
+
+function renderDistEquipo() {
+  const container = $("distEquipo");
+  container.innerHTML = "";
+  if (!distEquipo.length) {
+    container.innerHTML = '<div class="hint">Sin personas guardadas: agregá cada auxiliar con el nombre exacto de Salesforce.</div>';
+    return;
+  }
+  distEquipo.forEach((member, index) => {
+    const box = document.createElement("div");
+    box.className = "equipo-member";
+    const row = document.createElement("div");
+    row.className = "bandeja-row";
+    const label = document.createElement("label");
+    label.className = "monitor-option";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!member.trabaja;
+    cb.title = "Trabaja hoy: recibe leads en el reparto";
+    cb.addEventListener("change", () => { member.trabaja = cb.checked; saveDistEquipo(); });
+    label.append(cb, document.createTextNode(member.nombre));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "btn small";
+    remove.textContent = "×";
+    remove.title = "Quitar persona";
+    remove.addEventListener("click", () => { distEquipo.splice(index, 1); saveDistEquipo(); });
+    row.append(label, remove);
+    box.appendChild(row);
+    container.appendChild(box);
+  });
+}
+
+function addDistEquipoPersona() {
+  const input = $("distEquipoNombre");
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  const key = normalizeHeader(nombre);
+  const existing = distEquipo.find(member => normalizeHeader(member.nombre) === key);
+  if (existing) existing.trabaja = true;
+  else distEquipo.push({ nombre, trabaja: true });
+  input.value = "";
+  saveDistEquipo();
+}
+
+async function calcularReparto() {
+  const trabajan = distEquipo.filter(member => member.trabaja).map(member => member.nombre);
+  if (!trabajan.length) { alert("Tildá al menos una persona que trabaja hoy."); return; }
+  const indices = [...document.querySelectorAll(".dist-inc")].filter(box => box.checked).map(box => Number(box.dataset.i));
+  if (!indices.length) { alert("No hay filas marcadas para repartir."); return; }
+  const filas = indices.map(i => ({
+    lead_id: distPreviewRows[i].leadId,
+    auxiliar: distPreviewRows[i].auxiliar || "",
+    whatsapp: !!distPreviewRows[i].whatsapp,
+  }));
+  // Las exclusiones por tilde viven solo en el DOM: se bajan al modelo
+  // antes de re-renderizar para que la tabla no las reactive.
+  const included = new Set(indices);
+  distPreviewRows.forEach((row, i) => { if (!included.has(i)) row.include = false; });
+  try {
+    const resp = await monitorApi("/api/distribucion/reparto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filas, trabajan }),
+    });
+    (resp.asignaciones || []).forEach((asignacion, k) => {
+      const row = distPreviewRows[indices[k]];
+      row.persona = asignacion.destino;
+      row.accion = asignacion.accion;
+    });
+    distWhatsappList = resp.whatsapp_list || [];
+    renderDistResumen(resp.resumen || {});
+    renderDistTable();
+    renderDistWhatsapp();
+    $("distExportRow").classList.remove("hidden");
+    $("distExportarWa").classList.toggle("hidden", !distPreviewRows.some(row => row.valid && row.whatsapp));
+    setConfigMsg($("distRepartoMsg"), "Reparto calculado: revisá los destinos y ajustá lo que haga falta antes de ejecutar.", false);
+  } catch (error) {
+    alert(`No se pudo calcular el reparto: ${error.message || error}`);
+  }
+}
+
+// Descarga .xlsx server-side: la UI manda las filas marcadas con el
+// destino EDITADO (lo que se ve en la tabla) y el servidor genera el
+// Excel en memoria — nada persiste en disco. Los botones solo aparecen
+// en modo reparto tras "Calcular reparto".
+function distFilasExport() {
+  const filas = [];
+  document.querySelectorAll(".dist-inc").forEach(box => {
+    if (!box.checked) return;
+    const i = Number(box.dataset.i);
+    const row = distPreviewRows[i];
+    const sel = document.querySelector(`.dist-persona-sel[data-i="${i}"]`);
+    const input = document.querySelector(`.dist-persona[data-i="${i}"]`);
+    const destino = (sel.value === "__otro__" ? input.value : sel.value).trim();
+    filas.push({
+      lead_id: row.leadId,
+      nombre: row.nombre || "",
+      auxiliar: row.auxiliar || "",
+      destino,
+      accion: row.accion || "",
+      whatsapp: !!row.whatsapp,
+    });
+  });
+  return filas;
+}
+
+async function descargarDistExcel(tipo) {
+  const filas = distFilasExport().filter(fila => tipo !== "whatsapp" || fila.whatsapp);
+  if (!filas.length) {
+    alert(tipo === "whatsapp" ? "No hay leads WhatsApp en el reparto." : "No hay filas marcadas para exportar.");
+    return;
+  }
+  try {
+    const { base, token } = await monitorEndpoint();
+    const response = await fetch(`${base}/api/distribucion/exportar`, {
+      method: "POST",
+      headers: { "X-Bot-Token": token, "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo, filas }),
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      throw new Error(payload.error || `bot api ${response.status}`);
+    }
+    const blob = await response.blob();
+    const match = (response.headers.get("Content-Disposition") || "").match(/filename="?([^";]+)"?/);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = match ? match[1] : `${tipo}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    alert(`No se pudo exportar: ${error.message || error}`);
+  }
+}
+
+function renderDistResumen(resumen) {
+  const parts = Object.entries(resumen).map(([persona, r]) =>
+    `${persona}: ${r.cupos} lead${r.cupos === 1 ? "" : "s"} (${r.se_quedan} se quedan · ${r.entran} entran)`);
+  $("distResumen").textContent = parts.length ? `Resumen de cupos — ${parts.join(" · ")}` : "";
+}
+
+function distWhatsappTableHtml() {
+  return `<thead><tr><th>Lead ID</th><th>Nueva persona</th></tr></thead><tbody>` +
+    distWhatsappList.map(item => `<tr><td>${escapeHTML(item.lead_id)}</td><td>${escapeHTML(item.persona)}</td></tr>`).join("") +
+    `</tbody>`;
+}
+
+function renderDistWhatsapp() {
+  const has = distWhatsappList.length > 0;
+  $("distWhatsappCard").classList.toggle("hidden", !has);
+  $("distWhatsappResults").classList.toggle("hidden", !has);
+  if (!has) return;
+  const html = distWhatsappTableHtml();
+  $("distWhatsappTable").innerHTML = html;
+  $("distWhatsappResultsTable").innerHTML = html;
 }
 
 function distQueuePayload() {
@@ -3858,7 +4112,7 @@ function distQueuePayload() {
     const sel = document.querySelector(`.dist-persona-sel[data-i="${i}"]`);
     const input = document.querySelector(`.dist-persona[data-i="${i}"]`);
     const persona = (sel.value === "__otro__" ? input.value : sel.value).trim();
-    if (persona) leads.push({ lead_id: distPreviewRows[i].leadId, persona });
+    if (persona) leads.push({ lead_id: distPreviewRows[i].leadId, persona, nombre: distPreviewRows[i].nombre });
   });
   return {
     operation: "distribuir_leads",
@@ -3905,7 +4159,7 @@ async function loadDistribucionResults() {
   let entries;
   try { entries = await monitorApi("/api/distribucion-results"); } catch { return; }
   if (!Array.isArray(entries) || !entries.length) return;
-  const rows = distPreviewRows.length ? distPreviewRows : entries.map(e => ({ leadId: e.lead_id, nombre: "", persona: e.persona }));
+  const rows = distPreviewRows.length ? distPreviewRows : entries.map(e => ({ leadId: e.lead_id, nombre: e.nombre || "", persona: e.persona }));
   const byId = Object.fromEntries(entries.map(e => [e.lead_id, e]));
   const esSimulacion = entries.some(e => String(e.status || "").startsWith("prueba_") || e.modo === "prueba");
   $("distResultsCard").classList.remove("hidden");
@@ -3928,6 +4182,9 @@ async function loadDistribucionResults() {
         : escapeHTML(nombre);
       return `<tr><td>${escapeHTML(row.leadId)}</td><td>${nombreCell}</td><td>${escapeHTML(entry ? entry.persona : row.persona || "")}</td><td class="${statusCls}">${escapeHTML(status)}</td><td>${escapeHTML(detail)}</td></tr>`;
     }).join("") + `</tbody>`;
+  // La lista WhatsApp del último reparto de esta sesión acompaña los
+  // resultados mientras dure la corrida y después.
+  renderDistWhatsapp();
 }
 
 $("distDropzone").addEventListener("click", () => $("distFileInput").click());
@@ -3937,6 +4194,17 @@ $("distFileInput").addEventListener("change", event => { const [file] = event.ta
 $("distSheet").addEventListener("change", event => { distSheetIndex = Number(event.target.value); renderDistMapping(); });
 $("distPreview").addEventListener("click", buildDistPreview);
 $("distOtherFile").addEventListener("click", () => { $("distSetup").classList.add("hidden"); distSheets = []; distPreviewRows = []; });
+$("distModo").addEventListener("change", () => {
+  const reparto = $("distModo").value === "reparto";
+  $("distRepartoPanel").classList.toggle("hidden", !reparto);
+  if (reparto) loadDistEquipo();
+  renderDistTable();
+});
+$("distEquipoAdd").addEventListener("click", addDistEquipoPersona);
+$("distEquipoNombre").addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); addDistEquipoPersona(); } });
+$("distCalcular").addEventListener("click", calcularReparto);
+$("distExportar").addEventListener("click", () => descargarDistExcel("distribucion"));
+$("distExportarWa").addEventListener("click", () => descargarDistExcel("whatsapp"));
 $("distRun").addEventListener("click", runDistribucion);
 $("distDryRun").addEventListener("change", () => {
   const prueba = $("distDryRun").checked;

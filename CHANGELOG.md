@@ -17,6 +17,18 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ## [Sin publicar]
 
+## [1.5.0] — 2026-11-04
+
+### Corregido
+
+- **Reinicio del navegador espera a que el Edge viejo muera**: tras el
+  taskkill, el relanzamiento ahora aguarda a que desaparezcan los procesos
+  del perfil dedicado (antes solo esperaba a que el puerto soltara). Sin la
+  espera, el nuevo arranque se delegaba al Edge que aún se estaba cerrando
+  y el puerto de depuración nunca abría — el loop de navegador_trabado que
+  se veía tras los reinicios programados (RAM).
+  Test-regla: `tests.test_ui_server.MonitorTickTests.test_restart_browser_waits_for_profile_processes_to_die`.
+
 ### Agregado
 
 - **Distribuir leads — modo prueba**: casilla "Modo prueba" en la vista
@@ -39,6 +51,12 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
   el lookup en vivo. Tests-regla:
   `tests.test_lead_monitor.PickOwnerOptionTests`,
   `tests.test_run_distribucion_queue.SimulateOneLeadTests.test_nombre_no_encontrado_detail_shows_what_lookup_saw`.
+- **Distribuir leads — columna Lead persistente**: la cola y el resultado
+  guardan el `nombre` del lead (local, en `queues/`); la tabla de
+  Resultados lo muestra como link a Salesforce igual que la vista previa.
+  Al entrar a la vista se cargan solos los últimos resultados — tras un
+  F5 queda todo como estaba. Test-regla:
+  `tests.test_run_distribucion_queue.DistributeOneLeadTests.test_entry_carries_lead_nombre`.
 - **Distribuir leads — colas ya gestionadas (MX/CO)**: `SKIP_OWNERS` suma
   `MX_LEAD_COLD`, `MX_LEAD_EXPORT_GETLEAD`, `CO_LEAD_COLD` y
   `CO_LEAD_EXPORT_GETLEAD`: un lead ya derivado al canal frío/export de
@@ -48,6 +66,13 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
   `...SimulateOneLeadTests.test_other_country_managed_queues_are_listed_only`.
 
 ### Corregido
+
+- **Distribuir leads — resultados mezclados entre corridas**: el archivo de
+  resultados acumulaba corridas; tras una simulación, la corrida real
+  mostraba estados viejos. Ahora cada corrida arranca con el resultado
+  limpio. Test-regla:
+  .
+
 
 - **Reasignación por hora de ingreso (completa)**: el fix de 1.4.3 no
   alcanzaba porque, con la franja propia vigente al momento de la toma, el

@@ -23,22 +23,14 @@ la franja es del usuario del bot → **flujo normal** (incluye WhatsApp
 automático en AR). Sin flag extra — la comparación por nombre es la
 fuente de verdad.
 
-### Comentario con método
+### Toma y reasignación sin comentarios
 
-Lead reasignado: `Otra información` queda `Asignado - <método>` donde el
-método se deriva de `preferencia_contacto` del lead (lo que pidió el
-cliente en el formulario), no de la persona:
-
-| preferencia del lead | texto |
-|---|---|
-| contiene `whatsapp` | `Asignado - Enviar Whatsapp` |
-| contiene `llamad`/`telefon` | `Asignado - Llamarlo` |
-| otro / vacío | `Asignado - Gestionarlo` |
-
-Se reutiliza `_ensure_take_mark(mark_text=...)` con el mismo saneado y
-verificación estricta. `drop_take_mark` NO aplica (la línea empieza con
-`Asignado`, no es la marca solitaria). El WhatsApp automático queda
-forzado a off para ese lead (`whatsapp=False`), pase lo que pase.
+Guardar Contact Client no escribe en `Otra información`. No se llama
+al escritor de comentarios al tomar ni reasignar, independientemente de
+la preferencia de contacto. El resultado incluye `sin_comentario`.
+Si se reasigna, el WhatsApp automático queda forzado a off.
+Solo un envío real habilitado al propio usuario conserva la documentación
+del intento de WhatsApp.
 
 ### Mecánica del modal (verificada en vivo)
 
@@ -73,5 +65,4 @@ preservado, error explícito en `finalizacion` — nada se traga.
   muestra el recordatorio "nombre exacto como en Salesforce".
 - Franjas solapadas entre personas → se toma la primera; queda en
   `finalize_diag`.
-- Campo ya documentado por una toma previa con `Asignado` pelado → no se
-  reescribe a `Asignado - <método>` (idempotencia conservadora).
+- Campo con notas o marcas históricas → la toma y reasignación no lo editan.

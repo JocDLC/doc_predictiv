@@ -25,14 +25,13 @@ en `wa_ok` si el toast de confirmación aparece.
 
 **Given** un lead AR con `preferencia_contacto` "llamada telefónica".
 **When** finaliza la toma.
-**Then** `Otra información` recibe `Asignado` como siempre y no se pulsa
-ningún botón de envío.
+**Then** no se modifica `Otra información` y no se pulsa ningún botón de envío.
 
 #### Scenario: toggle apagado
 
 **Given** el toggle "Enviar WhatsApp auto" apagado.
 **When** se toma un lead AR con preferencia whatsapp.
-**Then** se escribe `Asignado` (no el intento) y no se envía nada.
+**Then** no se escribe ningún comentario ni intento y no se envía nada.
 
 #### Scenario: campo ya documentado
 

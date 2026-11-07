@@ -33,6 +33,13 @@
 
 ## Estado actual
 
+- **Regla vigente — toma sin comentarios**: Pick Up + Save de Contact Client
+  no agrega `Asignado` ni modifica `Otra información`, tanto si el lead queda
+  con el usuario del bot como si se reasigna al equipo o se distribuye por
+  archivo. Sustituye las referencias históricas a marcas de toma. Solo el
+  envío automático real de WhatsApp conserva su documentación de contacto;
+  reasignar a otro auxiliar no envía WhatsApp.
+
 - **Revisión visual de la opción B** (`renombrar-ui-gestion-leads`): el usuario
   encontró la muestra demasiado blanca y fría. Restaurar header con degradado
   azul/violeta y colores originales del Monitor. Home conserva tarjetas claras,

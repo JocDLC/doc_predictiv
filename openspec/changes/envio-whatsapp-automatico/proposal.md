@@ -22,7 +22,7 @@ que estar pendiente para no dejar pasar el contacto inicial.
 - Nuevos outcomes en `finalizacion`: `wa_ok`, `wa_no_confirmado`,
   `wa_error:<exc>`.
 - Alcance: **solo bandeja AR** en esta iteración; CO/MX quedan con el
-  comportamiento actual (`Asignado`).
+  toma sin comentarios ni envío automático.
 
 ## Capabilities
 

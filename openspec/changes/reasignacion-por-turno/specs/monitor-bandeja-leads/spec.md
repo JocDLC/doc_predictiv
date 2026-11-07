@@ -23,45 +23,41 @@ persona.
 **When** se guarda.
 **Then** se rechaza con error y el estado previo queda intacto.
 
-### Requirement: REQ-815: Encargada activa y comentario con método
+### Requirement: REQ-815: Encargada activa sin comentario de asignación
 
 Al tomar un lead, el monitor MUST determinar la encargada activa como la
 primera persona cuya franja cubre la hora actual. Si el nombre coincide
 con el propietario post-pickup (el usuario logueado) o no hay encargada,
-el flujo MUST seguir el comportamiento vigente (`Asignado` o intento
-WhatsApp + envío automático en AR). Si es otra persona, `Otra
-información` MUST quedar `Asignado - Enviar Whatsapp`,
-`Asignado - Llamarlo` o `Asignado - Gestionarlo` según la
-`preferencia_contacto` del propio lead (whatsapp → Enviar Whatsapp,
-llamada/teléfono → Llamarlo, otro/vacío → Gestionarlo), con la misma
-verificación estricta de siempre.
+la toma MUST NOT escribir comentarios. Si corresponde un envío real
+de WhatsApp en AR, se documenta ese contacto según su regla específica.
+Si es otra persona, el bot MUST NOT escribir en `Otra información` ni
+enviar WhatsApp, cualquiera sea la preferencia de contacto del lead.
 
 #### Scenario: franja del propio usuario
 
 **Given** la encargada activa es el usuario logueado (nombre coincide
 con el propietario post-pickup).
 **When** finaliza la toma.
-**Then** el flujo es el normal: `Asignado` o WhatsApp automático en AR,
-sin reasignación.
+**Then** la toma no escribe comentarios y no reasigna; WhatsApp automático
+en AR conserva sus condiciones de envío y documentación de contacto.
 
 #### Scenario: encargada distinta y lead whatsapp
 
 **Given** la encargada activa es otra persona y el lead tiene
 `preferencia_contacto` con whatsapp.
 **When** finaliza la toma.
-**Then** `Otra información` persiste `Asignado - Enviar Whatsapp` y NO se
-envía WhatsApp automático.
+**Then** no se modifica `Otra información` y NO se envía WhatsApp automático.
 
 #### Scenario: encargada distinta y lead sin preferencia clara
 
 **Given** la encargada activa es otra persona y el lead no declara
 whatsapp ni llamada.
 **When** finaliza la toma.
-**Then** `Otra información` persiste `Asignado - Gestionarlo`.
+**Then** no se modifica `Otra información`.
 
 ### Requirement: REQ-816: Cambio de propietario verificado
 
-Con encargada distinta del usuario, tras documentar el comentario el
+Con encargada distinta del usuario, tras guardar Contact Client el
 monitor MUST: pulsar el botón `Cambiar propietario` (lápiz del campo
 `Propietario del candidato`, dentro de shadow DOM), esperar el modal
 "Cambiar propietario de Candidato", tipear el nombre en el lookup,
@@ -90,5 +86,5 @@ el modal y el lead queda con el usuario del bot.
 **Given** un lead AR con `preferencia_contacto` "vía whatsapp" y una
 encargada distinta al usuario.
 **When** finaliza la toma.
-**Then** el botón `Send To Whatsapp` NO se pulsa, el comentario es
-`Asignado - <método>` y se ejecuta la reasignación.
+**Then** el botón `Send To Whatsapp` NO se pulsa, no se escribe comentario
+y se ejecuta la reasignación.

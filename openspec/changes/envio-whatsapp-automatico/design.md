@@ -20,9 +20,9 @@ panel_guardado/marca_presente/wa_ok
 
 El usuario confirmó que para leads WhatsApp el campo queda **solo** con
 `1 INT Envío WhatsApp DD/MM/AAAA HH:MM`. La línea de intento cumple el
-mismo rol de evidencia que `Asignado` (registra quién/cuándo), así que
-`_ensure_take_mark` se parametriza con un "texto objetivo" por lead:
-`Asignado` por defecto, la línea de intento para AR+whatsapp+toggle.
+rol de evidencia del contacto. `_ensure_take_mark` se utiliza únicamente
+para documentar ese envío; si no se envía WhatsApp no se escribe ningún
+comentario de toma ni de asignación.
 
 Idempotencia: se considera "ya documentado" si el campo contiene la marca
 o cualquier línea `\d+ INT ` (otro intento humano/bot previo) — nunca se

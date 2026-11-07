@@ -8,8 +8,7 @@
       modal (lápiz shadow-DOM → "Cambiar propietario de Candidato" →
       lookup → opción → confirmar) + `reassign_owner(driver, nombre)`
       con verificación del propietario.
-- [x] `lead_monitor.py`: `finalize_pick_up(..., encargada=)` — marca
-      `Asignado - <método>` derivada de `preferencia_contacto` del lead,
+- [x] `lead_monitor.py`: `finalize_pick_up(..., encargada=)` — sin comentario,
       fuerza `whatsapp=False`, encadena segmento
       `reasignado`/`reasignacion_error:<paso>`;
       `take_lead`/`run_bandeja_cycle` calculan la encargada con el
@@ -23,7 +22,7 @@
 - [x] `_encargada_activa`: sin franja, franja vigente, solape (gana la
       primera), franja fuera de hora.
 - [x] Encargada = propietario post-pickup → flujo normal (WA si aplica).
-- [x] Encargada distinta → comentario `Asignado - <método>` según
+- [x] Encargada distinta → sin comentario para cualquier
       `preferencia_contacto`, sin envío WhatsApp, outcome `reasignado`
       con propietario verificado.
 - [x] Lookup sin opción → `reasignacion_error:opcion`, modal cancelado,
@@ -37,4 +36,4 @@
 - [x] `MEMORY.md` + `graphify update .` + log en Gantt.
 - [x] Borrar `probe_dom.py` / `probe_reassign.py`.
 - [ ] Prueba real con `00QbD00000vUTK1UAO` (o próximo lead en franja de
-      otra persona) — validar comentario y propietario final.
+      otra persona) — validar ausencia de escritura y propietario final.

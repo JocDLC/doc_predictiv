@@ -12,6 +12,7 @@ from monitor_store import (
     STATUS_NO_VERIFICADO,
     STATUS_TOMADO,
     STATUS_TOMADO_POR_OTRO,
+    check_solape_propio_equipo,
     clear_results,
     default_state,
     default_unassigned_owner,
@@ -163,8 +164,14 @@ class ScheduleValidationTests(unittest.TestCase):
             validate_schedule([{"start": "08:00", "end": "13:00"}, {"start": "12:00", "end": "18:00"}])
 
     def test_adjacent_slots_allowed(self):
-        result = validate_schedule([{"start": "08:00", "end": "12:00"}, {"start": "12:00", "end": "18:00"}])
+        # Fin inclusivo: contiguas de verdad es 11:59/12:00 — compartir el
+        # minuto límite (…–12:00 + 12:00–…) es solape, no contigüidad.
+        result = validate_schedule([{"start": "08:00", "end": "11:59"}, {"start": "12:00", "end": "18:00"}])
         self.assertEqual(len(result), 2)
+
+    def test_boundary_minute_shared_rejected(self):
+        with self.assertRaises(ValueError):
+            validate_schedule([{"start": "08:00", "end": "12:00"}, {"start": "12:00", "end": "18:00"}])
 
 
 class WithinScheduleTests(unittest.TestCase):
@@ -413,6 +420,63 @@ class ValidateEquipoTests(unittest.TestCase):
             [{"nombre": "Ana", "franjas": [{"start": "09:00", "end": "13:00", "bandejas": ["AR", "MX"]}]}]
         )
         self.assertEqual(equipo[0]["franjas"][0]["bandejas"], ["AR", "MX"])
+
+
+class SolapePropioEquipoTests(unittest.TestCase):
+    """Una sola persona por bandeja y horario: la franja del usuario
+    logueado no puede pisar la de un auxiliar en la MISMA bandeja — el
+    bot reasigna o queda con el dueño según hora de ingreso, y dos
+    coberturas simultáneas vuelven esa decisión ambigua."""
+
+    def test_solape_misma_bandeja_rechazado(self):
+        with self.assertRaises(ValueError):
+            check_solape_propio_equipo(
+                [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}],
+                [{"nombre": "Ana", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}]}],
+            )
+
+    def test_solape_parcial_rechazado(self):
+        with self.assertRaises(ValueError):
+            check_solape_propio_equipo(
+                [{"start": "12:30", "end": "14:00", "bandejas": ["AR"]}],
+                [{"nombre": "Ana", "franjas": [{"start": "12:00", "end": "13:00", "bandejas": ["AR"]}]}],
+            )
+
+    def test_minuto_limite_compartido_rechazado(self):
+        # Fin inclusivo: 12:00–13:59 cubre el minuto 13:59 — otra franja
+        # que empieza 13:59 lo pisa (12:00–13:59 + 14:00–15:59 sí vale).
+        with self.assertRaises(ValueError):
+            check_solape_propio_equipo(
+                [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}],
+                [{"nombre": "Ana", "franjas": [{"start": "13:59", "end": "15:00", "bandejas": ["AR"]}]}],
+            )
+
+    def test_franjas_contiguas_ok(self):
+        check_solape_propio_equipo(
+            [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}],
+            [{"nombre": "Ana", "franjas": [{"start": "14:00", "end": "15:59", "bandejas": ["AR"]}]}],
+        )
+
+    def test_bandeja_distinta_ok(self):
+        check_solape_propio_equipo(
+            [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}],
+            [{"nombre": "Ana", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": ["CO"]}]}],
+        )
+
+    def test_propio_sin_bandejas_cubre_todas(self):
+        # Una franja propia legada sin 'bandejas' cubre todas — pisa
+        # cualquier franja de equipo en ese horario.
+        with self.assertRaises(ValueError):
+            check_solape_propio_equipo(
+                [{"start": "12:00", "end": "13:59", "bandejas": []}],
+                [{"nombre": "Ana", "franjas": [{"start": "13:00", "end": "14:00", "bandejas": ["AR"]}]}],
+            )
+
+    def test_equipo_sin_bandejas_no_cubre_nada(self):
+        check_solape_propio_equipo(
+            [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}],
+            [{"nombre": "Ana", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": []}]}],
+        )
 
 
 class PrivacyTests(unittest.TestCase):

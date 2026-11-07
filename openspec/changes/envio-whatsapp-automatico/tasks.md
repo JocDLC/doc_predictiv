@@ -25,8 +25,8 @@
 
 - [x] Rama whatsapp AR+toggle: escribe `1 INT Envío WhatsApp ...` y no
       `Asignado`; outcome `.../wa_ok`.
-- [x] Preferencia distinta / toggle apagado / bandeja no-AR → solo
-      `Asignado`, sin segmento `wa`.
+- [x] Preferencia distinta / toggle apagado / bandeja no-AR → toma sin
+      comentarios, sin segmento `wa`.
 - [x] Campo ya con `N INT` o `Asignado` → no duplica, envía igual.
 - [x] Toast ausente → `wa_no_confirmado`, un solo clic.
 - [x] Botón ausente → `wa_sin_boton`, sin excepción.

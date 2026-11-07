@@ -17,6 +17,36 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ## [Sin publicar]
 
+### Corregido
+
+- **"Asignado" inyectado por Salesforce ya no queda en el lead**: el Save
+  del panel "Contact Client" (o un flow) puede escribir `Asignado` en
+  `Otra información` de forma asíncrona — ante Compliance cuenta como
+  lead ya gestionado, cuando solo lo tomó el bot. Tras el guardado del
+  panel, toda toma sin comentario propio (llamada, sin método o
+  reasignación) corre una limpieza que quita la línea `Asignado` dejando
+  el resto del contenido intacto; el resultado muestra `asignado_quitado`
+  cuando hubo que limpiar. Tests-regla:
+  `tests.test_lead_monitor.FinalizePickUpTests.test_injected_asignado_is_cleaned_for_own_take`,
+  `...test_injected_asignado_removed_preserving_notes`.
+- **Una persona por bandeja y horario**: la franja del usuario logueado
+  ya no puede pisar la de un auxiliar en la misma bandeja — los PUT de
+  `schedule` y `equipo` responden 400 y la UI avisa en vivo y con pop-up
+  al agregar la franja. Además el minuto límite compartido ahora cuenta
+  como solape (…–12:00 + 12:00–… pisa el minuto 12:00, igual que la
+  evaluación inclusiva del turno): contiguas de verdad es 11:59/12:00.
+  Tests-regla:
+  `tests.test_monitor_store.SolapePropioEquipoTests`,
+  `tests.test_ui_server.UiServerMonitorTests.test_franja_no_puede_solapar_al_otro_editor`.
+- **Toma de leads sin comentario de asignación**: el Monitor ya no escribe
+  `Asignado` cuando el lead queda con el usuario del bot. Tanto la toma
+  propia como la reasignación y la distribución por archivo guardan Contact
+  Client sin modificar `Otra información`. Se elimina el generador sin uso
+  de `Asignado - <método>`. La documentación del envío real de WhatsApp
+  continúa separada de la toma. Tests-regla:
+  `tests.test_lead_monitor.FinalizePickUpTests.test_toma_simple_o_reasignada_no_escribe_comentarios`
+  y `tests.test_run_distribucion_queue.DistributeOneLeadTests.test_pickup_y_reasignacion_no_escriben_comentarios`.
+
 ## [1.5.0] — 2026-11-04
 
 ### Corregido
@@ -57,6 +87,11 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
   Al entrar a la vista se cargan solos los últimos resultados — tras un
   F5 queda todo como estaba. Test-regla:
   `tests.test_run_distribucion_queue.DistributeOneLeadTests.test_entry_carries_lead_nombre`.
+- **Distribuir leads — Detalle y semáforo en Resultados**: el Detalle de los
+  reasignados muestra `propietario anterior → persona destino` (antes decía
+  solo "propietario: X" y parecía el dueño final). La celda Resultado se
+  pinta: verde (reasignado / ya asignado), ámbar (cola excluida) y rojo
+  (errores y "nombre no encontrado").
 - **Distribuir leads — colas ya gestionadas (MX/CO)**: `SKIP_OWNERS` suma
   `MX_LEAD_COLD`, `MX_LEAD_EXPORT_GETLEAD`, `CO_LEAD_COLD` y
   `CO_LEAD_EXPORT_GETLEAD`: un lead ya derivado al canal frío/export de

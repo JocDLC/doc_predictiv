@@ -172,8 +172,12 @@ check('hora fuera de rango rechazada', scheduleError([{ start: '25:00', end: '20
 check('inicio después del fin rechazado', scheduleError([{ start: '18:00', end: '09:00', bandejas: ['AR'] }]) !== '');
 check('franjas solapadas rechazadas',
   scheduleError([{ start: '08:00', end: '12:00', bandejas: ['AR'] }, { start: '11:00', end: '14:00', bandejas: ['AR'] }]) !== '');
+// Fin inclusivo: contiguas de verdad es 11:59/12:00; compartir el minuto
+// límite (…–12:00 + 12:00–…) es solape — solo una persona por bandeja.
 check('franjas contiguas aceptadas',
-  scheduleError([{ start: '08:00', end: '12:00', bandejas: ['AR'] }, { start: '12:00', end: '14:00', bandejas: ['AR'] }]) === '');
+  scheduleError([{ start: '08:00', end: '11:59', bandejas: ['AR'] }, { start: '12:00', end: '14:00', bandejas: ['AR'] }]) === '');
+check('minuto limite compartido rechazado',
+  scheduleError([{ start: '08:00', end: '12:00', bandejas: ['AR'] }, { start: '12:00', end: '14:00', bandejas: ['AR'] }]) !== '');
 // Solape por bandeja: distintas bandejas sí pueden cruzarse, la misma no;
 // una franja sin bandejas (todas) pisa cualquier solape.
 check('solape en misma bandeja rechazado',

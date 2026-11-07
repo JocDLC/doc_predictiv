@@ -54,6 +54,7 @@ from monitor_store import (
     STATUS_TOMADO,
     STATUS_TOMADO_POR_OTRO,
     STATE_FILE_NAME,
+    check_solape_propio_equipo,
     clear_results,
     load_state,
     save_state,
@@ -1240,6 +1241,10 @@ def make_handler(token: str, config: dict | None = None):
                             raise ValueError(
                                 f"Franjas apuntan a bandejas no disponibles: {', '.join(sorted(missing))}."
                             )
+                        # Una sola persona por bandeja y horario: la franja
+                        # de equipo no puede pisar la franja propia en la
+                        # misma bandeja (el bot no sabría a quién asignar).
+                        check_solape_propio_equipo(state.get("schedule") or [], equipo)
                         state["equipo"] = equipo
                     else:
                         schedule = validate_schedule(payload.get("schedule"))
@@ -1254,6 +1259,7 @@ def make_handler(token: str, config: dict | None = None):
                             raise ValueError(
                                 f"Franjas apuntan a bandejas no disponibles: {', '.join(sorted(missing))}."
                             )
+                        check_solape_propio_equipo(schedule, state.get("equipo") or [])
                         state["schedule"] = schedule
                 except ValueError as error:
                     self._send(400, {"error": str(error)})

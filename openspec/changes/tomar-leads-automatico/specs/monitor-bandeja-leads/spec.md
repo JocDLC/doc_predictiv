@@ -137,10 +137,10 @@ distinto del `unassigned_owner`. MUST NOT pulsar ningún otro control ni repetir
 `Pick Up` cuando la verificación no confirma el cambio.
 
 Tras la verificación, el monitor MUST finalizar la toma: si aparece el panel
-"Contact Client" MUST escribir `Asignado` en su comentario y pulsar el `Save`
-del panel (nunca "Save & SendEmail"). La marca `Asignado` MUST quedar en el
-campo `Otra información` del registro — si el guardado del panel no la volcó
-ahí, el monitor MUST editar el campo conservando el contenido previo. La
+"Contact Client" MUST pulsar solo el `Save` del panel (nunca "Save & SendEmail").
+La toma MUST NOT escribir `Asignado` ni otro comentario en el panel o en
+`Otra información`. La documentación de un envío real de WhatsApp es una
+operación de contacto separada, no una marca de toma. La
 finalización es best-effort: un panel ausente o un guardado fallido MUST NOT
 degradar un `tomado` ya verificado. El resultado MUST registrar el propietario
 observado en `asignado_a` para que la tabla del monitor muestre a qué persona
@@ -152,8 +152,8 @@ quedó asignado el Lead.
 el registro.
 **When** el monitor ejecuta Pick Up.
 **Then** el propietario releído ya no es el `unassigned_owner` y el resultado
-es `tomado`, `asignado_a` registra el nombre observado y `Otra información`
-contiene la marca `Asignado`.
+es `tomado`, `asignado_a` registra el nombre observado y el bot no escribe
+en `Otra información`.
 
 #### Scenario: lead tomado por otro operador
 
@@ -174,8 +174,8 @@ marcado para revisión.
 
 **Given** un Lead tomado cuyo registro no muestra el panel "Contact Client".
 **When** el monitor finaliza la toma.
-**Then** el resultado sigue siendo `tomado` y la marca `Asignado` se escribe
-editando `Otra información` directamente.
+**Then** el resultado sigue siendo `tomado` y el bot no edita
+`Otra información` ni intenta escribir una marca como alternativa al panel.
 
 #### Scenario: modo prueba solo listar
 

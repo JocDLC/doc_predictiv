@@ -268,6 +268,7 @@
   .dist-table th { background: #eef2ff; color: #3730a3; }
   .dist-table tr.dist-excluded td { opacity: .45; }
   .dist-table td.dist-cell-excluded { background: #fef3c7; color: #92400e; font-weight: 600; }
+  .dist-table td.dist-cell-ok { background: #dcfce7; color: #166534; font-weight: 600; }
   .dist-table td.dist-cell-error { background: #fee2e2; color: #991b1b; font-weight: 600; }
   .dist-persona, .dist-persona-sel { width: 100%; box-sizing: border-box; }
   .monitor-table td .cell { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
@@ -2276,6 +2277,11 @@ function renderSchedule() {
       chip.classList.add("sched-chip-bad");
       chip.title = "Franja vieja sin bandeja: cubre todas, pero no se puede volver a guardar así — recreala tildando su bandeja.";
     }
+    const conflicto = franjaPropiaConflicto(slot, index);
+    if (conflicto) {
+      chip.classList.add("sched-chip-bad");
+      chip.title = `Se solapa con ${conflicto} en la misma bandeja: una persona por bandeja y horario — corregí u quitá una de las dos.`;
+    }
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "×";
@@ -2322,10 +2328,77 @@ function scheduleError(slots) {
     const [curStart, , cur] = parsed[i];
     for (let j = 0; j < i; j++) {
       const [, prevEnd, prev] = parsed[j];
-      if (curStart >= prevEnd) continue;
+      if (curStart > prevEnd) continue;
       const shared = (prev.bandejas || []).filter(code => (cur.bandejas || []).includes(code));
       if (!(prev.bandejas || []).length || !(cur.bandejas || []).length || shared.length) {
         return `Las franjas se solapan en la misma bandeja${shared.length ? ` (${shared.join(", ")})` : ""}.`;
+      }
+    }
+  }
+  return crossOverlapError(slots, monitorDraftEquipo);
+}
+
+// Una sola persona por bandeja y horario: la franja del usuario logueado
+// no puede pisar la de un auxiliar en la MISMA bandeja. Una franja propia
+// sin bandejas (vieja, "todas") pisa cualquier bandeja; una de equipo
+// sin bandejas no cubre nada. Minuto final inclusivo: 12:00–13:59 y
+// 13:59–15:00 comparten el minuto 13:59.
+// Qué franja del otro panel (o del mismo) pisa a esta — sirve para
+// marcar el chip en rojo. Devuelve una descripción corta o "".
+function _slotMin(v) { const [h, m] = String(v).split(":").map(Number); return h * 60 + m; }
+function _rangosPisan(a, b) { return _slotMin(a.start) <= _slotMin(b.end) && _slotMin(b.start) <= _slotMin(a.end); }
+function franjaPropiaConflicto(slot, index) {
+  for (const m of monitorDraftEquipo || []) {
+    for (const f of m.franjas || []) {
+      if (!(f.bandejas || []).length || !_rangosPisan(slot, f)) continue;
+      if (!(slot.bandejas || []).length || f.bandejas.some(c => slot.bandejas.includes(c))) {
+        return `la de ${m.nombre || "el equipo"} ${f.start}–${f.end}`;
+      }
+    }
+  }
+  for (const [i, f] of (monitorDraftSchedule || []).entries()) {
+    if (i === index || !_rangosPisan(slot, f)) continue;
+    const sa = slot.bandejas || [], sb = f.bandejas || [];
+    if (!sa.length || !sb.length || sa.some(c => sb.includes(c))) {
+      return `tu otra franja ${f.start}–${f.end}`;
+    }
+  }
+  return "";
+}
+function franjaEquipoConflicto(slot, memberIndex, slotIndex) {
+  for (const f of monitorDraftSchedule || []) {
+    if (!(slot.bandejas || []).length || !_rangosPisan(slot, f)) continue;
+    const sb = f.bandejas || [];
+    if (!sb.length || slot.bandejas.some(c => sb.includes(c))) {
+      return `tu franja propia ${f.start}–${f.end}`;
+    }
+  }
+  for (const [mi, m] of (monitorDraftEquipo || []).entries()) {
+    for (const [si, f] of (m.franjas || []).entries()) {
+      if ((mi === memberIndex && si === slotIndex) || !_rangosPisan(slot, f)) continue;
+      const sa = slot.bandejas || [], sb = f.bandejas || [];
+      if (!sa.length || !sb.length) continue;
+      if (sa.some(c => sb.includes(c))) {
+        return `la de ${m.nombre || "otra persona"} ${f.start}–${f.end}`;
+      }
+    }
+  }
+  return "";
+}
+
+function crossOverlapError(ownSlots, members) {
+  const toMin = v => { const [h, m] = String(v).split(":").map(Number); return h * 60 + m; };
+  for (const slot of ownSlots || []) {
+    const start = toMin(slot.start), end = toMin(slot.end);
+    const explicit = new Set(slot.bandejas || []);
+    for (const member of members || []) {
+      for (const other of member.franjas || []) {
+        for (const code of other.bandejas || []) {
+          if (explicit.size && !explicit.has(code)) continue;
+          if (start <= toMin(other.end) && toMin(other.start) <= end) {
+            return `La franja propia ${slot.start}–${slot.end} y la de ${member.nombre} ${other.start}–${other.end} se solapan en ${code}: una persona por bandeja y horario.`;
+          }
+        }
       }
     }
   }
@@ -2400,6 +2473,11 @@ function renderEquipo() {
         chip.classList.add("sched-chip-bad");
         chip.title = "Franja sin bandeja: no cubre nada — quitála y cargala de nuevo con su bandeja.";
       }
+      const conflicto = franjaEquipoConflicto(slot, index, slotIndex);
+      if (conflicto) {
+        chip.classList.add("sched-chip-bad");
+        chip.title = `Se solapa con ${conflicto} en la misma bandeja: una persona por bandeja y horario — corregí u quitá una de las dos.`;
+      }
       const drop = document.createElement("button");
       drop.type = "button";
       drop.textContent = "×";
@@ -2454,7 +2532,9 @@ function renderEquipo() {
       member.franjas.push(candidate);
       equipoDirty = true;
       renderEquipo();
-      saveEquipo();
+      // Pop-up también si el servidor la rechaza (ej. solape con la
+      // franja propia): el chip queda en rojo marcando el conflicto.
+      saveEquipo(true);
     });
     slots.append(from, document.createTextNode("–"), to, ...bandejaBoxes, add);
     box.appendChild(slots);
@@ -2534,12 +2614,12 @@ function equipoError(members) {
   for (const [code, intervals] of Object.entries(coverage)) {
     intervals.sort((a, b) => a[0] - b[0]);
     for (let i = 1; i < intervals.length; i++) {
-      if (intervals[i][0] < intervals[i - 1][1]) {
+      if (intervals[i][0] <= intervals[i - 1][1]) {
         return `Franjas de ${code} solapadas: ${intervals[i - 1][2]} y ${intervals[i][2]}.`;
       }
     }
   }
-  return "";
+  return crossOverlapError(monitorDraftSchedule, members);
 }
 
 async function saveEquipo(popup = false) {
@@ -3223,7 +3303,7 @@ $("schedAdd").addEventListener("click", () => {
   renderSchedule();
   // Guardado automático: la franja persiste en el servidor al instante,
   // sin exigir el botón "Guardar horario" (que queda como respaldo).
-  saveSchedule();
+  saveSchedule(true);
 });
 $("runBot").addEventListener("click", runBot);
 $("countryMode").addEventListener("change", event => setCountryMode(event.target.value));
@@ -3775,6 +3855,30 @@ function distStatusLabel(status) {
   if (s.startsWith("reasignacion_error:")) return `⚠ Error al reasignar: ${DIST_ERROR_PASOS[s.split(":")[1]] || s.split(":")[1]}`;
   return status;
 }
+
+// Semáforo de la celda Resultado: verde si quedó bien, ámbar si la cola lo
+// excluye (ya gestionado por otro canal), rojo si falló o el nombre no existe.
+const DIST_STATUS_OK = new Set(["reasignado", "ya_asignado", "prueba_ok:reasignar", "prueba_ok:pickup_y_reasignar", "prueba_ok:ya_asignado"]);
+const DIST_STATUS_WARN = new Set(["cola_excluida", "prueba_ok:cola_excluida"]);
+function distStatusClass(status) {
+  const s = String(status || "");
+  if (DIST_STATUS_OK.has(s)) return "dist-cell-ok";
+  if (DIST_STATUS_WARN.has(s)) return "dist-cell-excluded";
+  if (s.includes("error") || s.includes("inaccesible")) return "dist-cell-error";
+  return "";
+}
+
+// En los estados de reasignación el propietario observado es el ANTERIOR:
+// se muestra "anterior → destino" para no confundirlo con el dueño final.
+const DIST_STATUS_REASSIGNED = new Set(["reasignado", "prueba_ok:reasignar", "prueba_ok:pickup_y_reasignar"]);
+function distDetailText(entry) {
+  const parts = [];
+  const observed = entry.propietario_observado;
+  if (observed && DIST_STATUS_REASSIGNED.has(entry.status)) parts.push(`${observed} → ${entry.persona}`);
+  else if (observed) parts.push(`propietario: ${observed}`);
+  if (entry.detalle) parts.push(entry.detalle);
+  return parts.join(" · ");
+}
 let distSheets = [];
 let distSheetIndex = 0;
 let distMapping = {};
@@ -4157,7 +4261,15 @@ const DIST_STATUS_ORDER = ["reasignado", "ya_asignado", "cola_excluida"];
 
 async function loadDistribucionResults() {
   let entries;
-  try { entries = await monitorApi("/api/distribucion-results"); } catch { return; }
+  try { entries = await monitorApi("/api/distribucion-results"); }
+  catch (error) {
+    // Sin diagnóstico el fetch falla en silencio y la tarjeta queda oculta:
+    // ya pasó que el usuario creyó haber perdido los resultados.
+    $("distResultsCard")?.classList.remove("hidden");
+    const line = $("distRunState");
+    if (line) line.textContent = `No se pudieron cargar los resultados: ${error.message}`;
+    return;
+  }
   if (!Array.isArray(entries) || !entries.length) return;
   const rows = distPreviewRows.length ? distPreviewRows : entries.map(e => ({ leadId: e.lead_id, nombre: e.nombre || "", persona: e.persona }));
   const byId = Object.fromEntries(entries.map(e => [e.lead_id, e]));
@@ -4172,10 +4284,8 @@ async function loadDistribucionResults() {
     rows.map(row => {
       const entry = byId[row.leadId];
       const status = entry ? distStatusLabel(entry.status) : (distRunning ? "pendiente" : "sin procesar");
-      const detail = entry ? [entry.propietario_observado ? `propietario: ${entry.propietario_observado}` : "", entry.detalle || ""].filter(Boolean).join(" · ") : "";
-      const statusStr = entry ? String(entry.status || "") : "";
-      const excludedCls = statusStr === "cola_excluida" || statusStr === "prueba_ok:cola_excluida" ? "dist-cell-excluded" : "";
-      const statusCls = excludedCls || (entry && (statusStr.includes("error") || statusStr.includes("inaccesible")) ? "dist-cell-error" : "");
+      const detail = entry ? distDetailText(entry) : "";
+      const statusCls = entry ? distStatusClass(entry.status) : "";
       const nombre = row.nombre || entry?.nombre || "";
       const nombreCell = nombre && row.leadId
         ? `<a class="lead-link" target="_blank" rel="noopener" href="${escapeHTML(sfBase.replace(/\/+$/, "") + "/" + row.leadId)}">${escapeHTML(nombre)}</a>`
@@ -4224,6 +4334,7 @@ if (recovery?.text && recovery?.name && typeof recovery.size === "number") {
 // Volver a la vista donde estaba la persona al recargar (F5).
 if (lastView === "viewMonitor") openMonitorView();
 else if (lastView === "viewQueue") openQueueView();
+else if (lastView === "viewDistribuir") openDistribuirView();
 else if (VIEW_IDS.includes(lastView) && lastView !== "viewDocumentar") showView(lastView);
 </script>
 </body>

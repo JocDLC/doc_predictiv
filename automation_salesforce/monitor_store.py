@@ -177,8 +177,9 @@ def _validate_franjas(slots: object, nombre: str) -> list[dict]:
 def _franjas_se_solapan(first: dict, second: dict) -> bool:
     """Solape prohibido: mismo rango horario y MISMA bandeja. Una franja
     sin bandejas ('todas' en horario propio / 'ninguna' en equipo) pisa
-    todo lo que la solape."""
-    if second["_start_minutes"] >= first["_end_minutes"]:
+    todo lo que la solape. El minuto final es inclusivo: 12:00–13:59 y
+    13:59–15:00 comparten el minuto 13:59."""
+    if second["_start_minutes"] > first["_end_minutes"]:
         return False
     return (
         not first["bandejas"]
@@ -235,7 +236,7 @@ def _check_bandeja_overlaps(validated: list[dict]) -> None:
     for code, intervals in coverage.items():
         intervals.sort(key=lambda item: item[0])
         for previous, current in zip(intervals, intervals[1:]):
-            if current[0] < previous[1]:
+            if current[0] <= previous[1]:
                 raise ValueError(
                     f"Franjas de {code} solapadas: {previous[2]} y {current[2]}."
                 )
@@ -277,6 +278,43 @@ def validate_equipo(members: object) -> list[dict]:
         }
         for member in validated
     ]
+
+
+def check_solape_propio_equipo(schedule: list[dict], equipo: list[dict]) -> None:
+    """Una sola persona por bandeja y horario: la franja del usuario
+    logueado no puede pisar la de un auxiliar en la MISMA bandeja.
+
+    Con dos coberturas simultáneas el bot no sabría si el lead queda con
+    el dueño de la sesión o se reasigna. Una franja propia sin ``bandejas``
+    ("todas", formato viejo) pisa cualquier bandeja; una de equipo sin
+    ``bandejas`` no cubre nada y no genera conflicto. El minuto final es
+    inclusivo: 12:00–13:59 y 13:59–15:00 comparten el minuto 13:59.
+    """
+    team_intervals = []
+    for member in equipo or []:
+        for slot in member.get("franjas") or []:
+            for code in slot.get("bandejas") or []:
+                team_intervals.append(
+                    (
+                        code,
+                        _parse_hhmm(slot["start"], "start"),
+                        _parse_hhmm(slot["end"], "end"),
+                        member.get("nombre") or "?",
+                        f"{slot['start']}–{slot['end']}",
+                    )
+                )
+    for slot in schedule or []:
+        start = _parse_hhmm(slot["start"], "start")
+        end = _parse_hhmm(slot["end"], "end")
+        explicit = set(slot.get("bandejas") or [])
+        for code, other_start, other_end, nombre, other_range in team_intervals:
+            if explicit and code not in explicit:
+                continue
+            if start <= other_end and other_start <= end:
+                raise ValueError(
+                    f"La franja propia {slot['start']}–{slot['end']} y la de {nombre} "
+                    f"{other_range} se solapan en {code}: una persona por bandeja y horario."
+                )
 
 
 def within_schedule(

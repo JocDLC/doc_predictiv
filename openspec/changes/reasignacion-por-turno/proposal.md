@@ -19,19 +19,17 @@ de siempre: alguien pendiente de la bandeja.
 - En cada toma, el monitor determina la **encargada activa** según la
   franja vigente:
   - Si no hay encargada o la franja pertenece al **propio usuario
-    logueado** → flujo actual intacto (`Asignado`, o intento + WhatsApp
-    automático en AR).
-  - Si la encargada es **otra persona** → el comentario queda
-    `Asignado - <método>` derivado de `preferencia_contacto` del lead
-    (whatsapp → `Enviar Whatsapp`, llamada/teléfono → `Llamarlo`, otro →
-    `Gestionarlo`; nunca el intento WhatsApp), se abre el modal
+    logueado** → toma sin comentario; intento + WhatsApp automático
+    en AR solo cuando corresponde un envío real habilitado.
+  - Si la encargada es **otra persona** → sin escribir comentarios,
+    se abre el modal
     "Cambiar propietario de Candidato" desde el lápiz del campo
     `Propietario del candidato`, se tipea el nombre, se elige la opción
     del lookup y se confirma con `Cambiar propietario`. Luego se verifica
     que el propietario cambió.
 - **Regla dura**: un lead reasignado NUNCA recibe el WhatsApp automático —
   el envío sale de la sesión del usuario logueado; para leads reasignados
-  el primer contacto lo hace la encargada (documentado en el comentario).
+  el primer contacto lo hace la encargada.
 - Nuevos outcomes en `finalizacion`: cuarto segmento `reasignado` /
   `reasignacion_error:<paso>` (el lead nunca se pierde: si la
   reasignación falla queda con el usuario del bot y el fallo queda

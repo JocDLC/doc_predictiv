@@ -29,6 +29,30 @@ class FakeDriver:
 
 
 class DistributeOneLeadTests(unittest.TestCase):
+    def test_pickup_y_reasignacion_no_escriben_comentarios(self):
+        """El lote guarda Contact Client y reasigna, sin documentar ni enviar."""
+        from lead_monitor import save_contact_panel_if_present
+
+        with (
+            patch("lead_monitor._save_contact_panel_initial", return_value="panel_guardado") as panel,
+            patch("lead_monitor._ensure_take_mark") as mark,
+            patch("lead_monitor.prepare_other_information") as edit,
+            patch("lead_monitor.save_edit_form") as save,
+            patch("lead_monitor.send_whatsapp") as send,
+        ):
+            entry, patches = self.run_lead(
+                ["AR_LEAD_QUALIF", "AR_LEAD_QUALIF", "Usuario Bot"],
+                panel=save_contact_panel_if_present,
+            )
+            self.assertEqual(entry["status"], "reasignado")
+            patches["press_pick_up"].assert_called_once()
+            panel.assert_called_once()
+            patches["reassign_owner"].assert_called_once()
+            mark.assert_not_called()
+            edit.assert_not_called()
+            save.assert_not_called()
+            send.assert_not_called()
+
     def setUp(self):
         self.temporary = TemporaryDirectory()
         self.results_path = Path(self.temporary.name) / "cola_distribucion.resultado.json"

@@ -195,6 +195,37 @@ def _typed_text(element):
 
 
 class FinalizePickUpTests(unittest.TestCase):
+    def test_toma_simple_o_reasignada_no_escribe_comentarios(self):
+        """Tomar un lead no documenta contacto ni edita texto previo."""
+        from lead_monitor import finalize_pick_up
+
+        for encargada in (None, {"nombre": "Ana Perez"}):
+            for panel in ("panel_guardado", "sin_panel", "panel_error"):
+                with (
+                    self.subTest(encargada=encargada, panel=panel),
+                    patch("lead_monitor._save_contact_panel_initial", return_value=panel),
+                    patch("lead_monitor._save_contact_panel_late", return_value="sin_panel"),
+                    patch("lead_monitor.execute_in_any_frame", return_value=[]),
+                    patch("lead_monitor._ensure_take_mark") as mark,
+                    patch("lead_monitor.prepare_other_information") as edit,
+                    patch("lead_monitor.save_edit_form") as save,
+                    patch("lead_monitor.send_whatsapp") as send,
+                    patch("lead_monitor.reassign_owner", return_value="reasignado") as reassign,
+                ):
+                    outcome, _ = finalize_pick_up(
+                        object(), 5, encargada=encargada,
+                        details={"preferencia_contacto": "vía whatsapp"},
+                    )
+                    mark.assert_not_called()
+                    edit.assert_not_called()
+                    save.assert_not_called()
+                    send.assert_not_called()
+                    self.assertIn("/sin_comentario", outcome)
+                    if encargada:
+                        reassign.assert_called_once()
+                    else:
+                        reassign.assert_not_called()
+
     def test_panel_found_saves_without_typing(self):
         """Panel presente: solo pulsa Save; nada se escribe en la sección."""
         from lead_monitor import PANEL_PRESENT_SCRIPT, PANEL_SAVE_CLICK_SCRIPT, finalize_pick_up
@@ -206,20 +237,71 @@ class FinalizePickUpTests(unittest.TestCase):
         }
         with (
             patch("lead_monitor.execute_in_any_frame", side_effect=lambda _d, s, *a: executed.append(s) or responses[s]),
-            patch("lead_monitor.field_result_if_found", side_effect=lambda *_: next(_field_reads("Nota previa\nAsignado"))),
-            patch("lead_monitor._read_other_information_value", return_value="Nota previa\nAsignado"),
+            patch("lead_monitor.field_result_if_found", side_effect=lambda *_: next(_field_reads("Nota previa"))),
+            patch("lead_monitor._read_other_information_value", return_value="Nota previa"),
             patch("lead_monitor.prepare_other_information") as edit,
             patch("lead_monitor.wait_for_lightning_ready"),
             patch("lead_monitor.time.sleep"),
         ):
             outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "panel_guardado/marca_presente")
+        self.assertEqual(outcome, "panel_guardado/sin_comentario")
         # Nada de buscar inputs ni send_keys: presencia → Save → listo.
         self.assertEqual(executed, [PANEL_PRESENT_SCRIPT, PANEL_SAVE_CLICK_SCRIPT])
-        edit.assert_not_called()  # la marca ya quedó en Otra información
+        edit.assert_not_called()  # tampoco modifica las notas previas
 
-    def test_panel_save_then_marks_other_information(self):
-        """Tras el Save del panel, 'Asignado' se garantiza en Otra información."""
+    def test_injected_asignado_is_cleaned_for_own_take(self):
+        """Compliance: la toma del bot no es un contacto — el 'Asignado'
+        que el Save del panel (o un flow) inyecta en Otra información se
+        elimina: un lead tomado por el bot no puede quedar como gestionado."""
+        from lead_monitor import PANEL_PRESENT_SCRIPT, PANEL_SAVE_CLICK_SCRIPT, finalize_pick_up
+
+        responses = {
+            PANEL_PRESENT_SCRIPT: "found",
+            PANEL_SAVE_CLICK_SCRIPT: "clicked",
+        }
+        reads = _field_reads("Asignado", "Asignado")
+        persisted = iter(["Asignado", ""])
+        with (
+            patch("lead_monitor.execute_in_any_frame", side_effect=lambda _d, s, *a: responses[s]),
+            patch("lead_monitor.field_result_if_found", side_effect=lambda *_: next(reads)),
+            patch("lead_monitor._read_other_information_value", side_effect=lambda *_: next(persisted)),
+            patch("lead_monitor.prepare_other_information") as edit,
+            patch("lead_monitor.save_edit_form") as save,
+            patch("lead_monitor.wait_for_lightning_ready"),
+            patch("lead_monitor.time.sleep"),
+        ):
+            outcome, _diag = finalize_pick_up(object(), 5)
+        self.assertEqual(outcome, "panel_guardado/asignado_quitado")
+        edit.assert_called_once_with(unittest.mock.ANY, "", unittest.mock.ANY)
+        save.assert_called_once()
+
+    def test_injected_asignado_removed_preserving_notes(self):
+        """'Nota previa\\nAsignado' → queda solo 'Nota previa': la
+        limpieza quita la línea inyectada sin tocar el resto."""
+        from lead_monitor import PANEL_PRESENT_SCRIPT, PANEL_SAVE_CLICK_SCRIPT, finalize_pick_up
+
+        responses = {
+            PANEL_PRESENT_SCRIPT: "found",
+            PANEL_SAVE_CLICK_SCRIPT: "clicked",
+        }
+        reads = _field_reads("Nota previa\nAsignado", "Nota previa\nAsignado")
+        persisted = iter(["Nota previa\nAsignado", "Nota previa"])
+        with (
+            patch("lead_monitor.execute_in_any_frame", side_effect=lambda _d, s, *a: responses[s]),
+            patch("lead_monitor.field_result_if_found", side_effect=lambda *_: next(reads)),
+            patch("lead_monitor._read_other_information_value", side_effect=lambda *_: next(persisted)),
+            patch("lead_monitor.prepare_other_information") as edit,
+            patch("lead_monitor.save_edit_form") as save,
+            patch("lead_monitor.wait_for_lightning_ready"),
+            patch("lead_monitor.time.sleep"),
+        ):
+            outcome, _diag = finalize_pick_up(object(), 5)
+        self.assertEqual(outcome, "panel_guardado/asignado_quitado")
+        edit.assert_called_once_with(unittest.mock.ANY, "Nota previa", unittest.mock.ANY)
+        save.assert_called_once()
+
+    def test_panel_save_preserves_other_information(self):
+        """Tras Save no agrega Asignado ni altera las notas del auxiliar."""
         from lead_monitor import PANEL_PRESENT_SCRIPT, PANEL_SAVE_CLICK_SCRIPT, finalize_pick_up
 
         responses = {
@@ -238,14 +320,14 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.time.sleep"),
         ):
             outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "panel_guardado/marca_ok")
-        self.assertEqual(edit.call_args.args[1], "Nota previa\nAsignado")
-        save.assert_called_once()
+        self.assertEqual(outcome, "panel_guardado/sin_comentario")
+        edit.assert_not_called()
+        save.assert_not_called()
 
     def test_mark_lost_by_panel_reload_is_retried(self):
         """Si el repintado tras el Save del panel pierde la escritura, se
         reintenta una vez y queda confirmada."""
-        from lead_monitor import finalize_pick_up
+        from lead_monitor import _ensure_take_mark
 
         # Dos escrituras: la segunda lectura sigue sin la marca (perdida por
         # el repintado); la verificación final la confirma.
@@ -260,8 +342,8 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.prepare_other_information") as edit,
             patch("lead_monitor.save_edit_form") as save,
         ):
-            outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "sin_panel/marca_ok")
+            outcome = _ensure_take_mark(object(), 5)
+        self.assertEqual(outcome, "marca_ok")
         self.assertEqual(edit.call_count, 2)
         self.assertEqual(save.call_count, 2)
 
@@ -269,7 +351,7 @@ class FinalizePickUpTests(unittest.TestCase):
         """Regresión: la etiqueta del lápiz llegó pegada a un glifo de ícono
         ("✎ Modificar Otra información") y el strip por igualdad exacta la
         dejaba pasar → se persistía dentro del valor."""
-        from lead_monitor import finalize_pick_up
+        from lead_monitor import _ensure_take_mark
 
         reads = _field_reads("✏ Modificar Otra información", "Asignado")
         persisted = iter([None, "Asignado"])
@@ -282,15 +364,15 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.prepare_other_information") as edit,
             patch("lead_monitor.save_edit_form"),
         ):
-            outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "sin_panel/marca_ok")
+            outcome = _ensure_take_mark(object(), 5)
+        self.assertEqual(outcome, "marca_ok")
         self.assertEqual(edit.call_args.args[1], "Asignado")
 
     def test_persisted_label_pollution_is_repaired(self):
         """Verificación pedida: si el valor YA guardado trae la etiqueta del
         lápiz (contaminado en una corrida previa), se reescribe limpio aunque
         la marca Asignado ya esté."""
-        from lead_monitor import finalize_pick_up
+        from lead_monitor import _ensure_take_mark
 
         reads = _field_reads("Modificar Otra información\nAsignado", "Asignado")
         persisted = iter(["Modificar Otra información\nAsignado", "Asignado"])
@@ -303,15 +385,15 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.prepare_other_information") as edit,
             patch("lead_monitor.save_edit_form") as save,
         ):
-            outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "sin_panel/marca_ok")
+            outcome = _ensure_take_mark(object(), 5)
+        self.assertEqual(outcome, "marca_ok")
         self.assertEqual(edit.call_args.args[1], "Asignado")  # queda limpio
         save.assert_called_once()
 
     def test_unrendered_field_is_not_blank(self):
         """Regresión del bug real: lectura "" por campo no renderizado no es
         un campo vacío — se espera el render y se escribe sobre el valor real."""
-        from lead_monitor import finalize_pick_up
+        from lead_monitor import _ensure_take_mark
 
         reads = iter(
             [False, {"found": True, "text": "Contenido real"}, {"found": True, "text": "Contenido real\nAsignado"}]
@@ -328,8 +410,8 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.prepare_other_information") as edit,
             patch("lead_monitor.save_edit_form") as save,
         ):
-            outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "sin_panel/marca_ok")
+            outcome = _ensure_take_mark(object(), 5)
+        self.assertEqual(outcome, "marca_ok")
         # Escribe sobre el contenido real, no sobre "": nunca pisa datos.
         self.assertEqual(edit.call_args.args[1], "Contenido real\nAsignado")
         save.assert_called_once()
@@ -337,7 +419,7 @@ class FinalizePickUpTests(unittest.TestCase):
     def test_field_absent_reports_campo_ausente(self):
         """Si el campo nunca se renderiza, no se escribe a ciegas y queda
         registrado como campo_ausente."""
-        from lead_monitor import finalize_pick_up
+        from lead_monitor import _ensure_take_mark
 
         with (
             patch("lead_monitor.execute_in_any_frame", return_value="missing"),
@@ -349,13 +431,13 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.scroll_toward_other_information", return_value=False),
             patch("lead_monitor.prepare_other_information") as edit,
         ):
-            outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "sin_panel/campo_ausente")
+            outcome = _ensure_take_mark(object(), 5)
+        self.assertEqual(outcome, "campo_ausente")
         edit.assert_not_called()
 
     def test_mark_unconfirmed_after_two_writes(self):
         """Dos escrituras sin confirmar la marca: se reporta en el outcome."""
-        from lead_monitor import finalize_pick_up
+        from lead_monitor import _ensure_take_mark
 
         reads = _field_reads("Nota previa", "Nota previa", "Nota previa")
         persisted = iter(["Nota previa", "Nota previa", "Nota previa"])
@@ -368,8 +450,8 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.prepare_other_information") as edit,
             patch("lead_monitor.save_edit_form") as save,
         ):
-            outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "sin_panel/marca_no_confirmada")
+            outcome = _ensure_take_mark(object(), 5)
+        self.assertEqual(outcome, "marca_no_confirmada")
         self.assertEqual(edit.call_count, 2)
         self.assertEqual(save.call_count, 2)
 
@@ -378,7 +460,7 @@ class FinalizePickUpTests(unittest.TestCase):
         ``except`` silencioso."""
         from selenium.common.exceptions import TimeoutException
 
-        from lead_monitor import finalize_pick_up
+        from lead_monitor import _ensure_take_mark
 
         with (
             patch("lead_monitor.execute_in_any_frame", return_value="missing"),
@@ -387,46 +469,39 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.field_result_if_found", return_value={"found": True, "text": "Nota previa"}),
             patch("lead_monitor.prepare_other_information", side_effect=TimeoutException("boom")),
         ):
-            outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "sin_panel/marca_error:editar:TimeoutException")
+            outcome = _ensure_take_mark(object(), 5)
+        self.assertEqual(outcome, "marca_error:editar:TimeoutException")
 
-    def test_late_panel_is_saved_after_mark(self):
+    def test_late_panel_is_saved_without_mark(self):
         """El panel puede renderizar pasada la ventana inicial (bajo carga):
-        un chequeo tardío tras la marca lo detecta y lo guarda igual."""
+        el chequeo tardío lo guarda sin depender de escribir una marca."""
         from lead_monitor import (
             PANEL_PRESENT_SCRIPT,
             PANEL_SAVE_CLICK_SCRIPT,
             finalize_pick_up,
         )
 
-        # Determinístico: el panel solo "aparece" después de la fase de
-        # marca — así la ventana inicial lo pierde y el chequeo tardío lo
-        # halla, sin depender de cuántas veces itera cada loop.
-        mark_phase_done = {"value": False}
-
-        def read_value(_driver):
-            mark_phase_done["value"] = True
-            return "Asignado"
-
         def fake_exec(_driver, script, *args):
             if script is PANEL_PRESENT_SCRIPT:
-                return "found" if mark_phase_done["value"] else "missing"
+                return "found"
             if script is PANEL_SAVE_CLICK_SCRIPT:
                 return "clicked"
             return []  # PANEL_DIAGNOSTIC_SCRIPT
 
         with (
+            patch("lead_monitor._save_contact_panel_initial", return_value="sin_panel"),
             patch("lead_monitor.execute_in_any_frame", side_effect=fake_exec),
             patch("lead_monitor.PANEL_WAIT_SECONDS", 0.001),
             patch("lead_monitor.POLL_SECONDS", 0.01),
             patch("lead_monitor.field_result_if_found", return_value={"found": True, "text": "Asignado"}),
-            patch("lead_monitor._read_other_information_value", side_effect=read_value),
+            patch("lead_monitor._drop_injected_take_mark", return_value="sin_comentario") as drop,
             patch("lead_monitor.prepare_other_information") as edit,
             patch("lead_monitor.wait_for_lightning_ready"),
             patch("lead_monitor.time.sleep"),
         ):
             outcome, diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "panel_tardio_guardado/marca_presente")
+        self.assertEqual(outcome, "panel_tardio_guardado/sin_comentario")
+        drop.assert_called_once()
         self.assertEqual(diag, "")
         edit.assert_not_called()
 
@@ -452,10 +527,10 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.LATE_PANEL_WAIT_SECONDS", 0),
             patch("lead_monitor.POLL_SECONDS", 0.01),
             patch("lead_monitor.field_result_if_found", return_value={"found": True, "text": "Asignado"}),
-            patch("lead_monitor._read_other_information_value", return_value="Asignado"),
+            patch("lead_monitor._drop_injected_take_mark", return_value="sin_comentario"),
         ):
             outcome, diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "sin_panel/marca_presente")
+        self.assertEqual(outcome, "sin_panel/sin_comentario")
         self.assertEqual(diag, "; ".join(chains))
 
     def test_panel_in_other_tab_is_saved(self):
@@ -492,15 +567,15 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.LATE_PANEL_WAIT_SECONDS", 0.01),
             patch("lead_monitor.POLL_SECONDS", 0.01),
             patch("lead_monitor.field_result_if_found", return_value={"found": True, "text": "Asignado"}),
-            patch("lead_monitor._read_other_information_value", return_value="Asignado"),
+            patch("lead_monitor._drop_injected_take_mark", return_value="sin_comentario"),
             patch("lead_monitor.time.sleep"),
         ):
             outcome, diag = finalize_pick_up(driver, 5)
-        self.assertEqual(outcome, "panel_otra_tab_guardado/marca_presente")
+        self.assertEqual(outcome, "panel_otra_tab_guardado/sin_comentario")
         self.assertEqual(driver.current_window_handle, "main")  # restaurado
 
-    def test_missing_panel_still_marks_other_information(self):
-        """Sin panel Contact Client, 'Asignado' se escribe editando el campo."""
+    def test_missing_panel_does_not_mark_other_information(self):
+        """Sin panel tampoco se escribe en Otra información."""
         from lead_monitor import finalize_pick_up
 
         reads = _field_reads("Nota previa", "Nota previa\nAsignado")
@@ -515,16 +590,14 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.save_edit_form") as save,
         ):
             outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "sin_panel/marca_ok")
-        edit.assert_called_once()
-        self.assertIn("Asignado", edit.call_args.args[1])
-        self.assertIn("Nota previa", edit.call_args.args[1])  # append, no pisa
-        save.assert_called_once()
+        self.assertEqual(outcome, "sin_panel/sin_comentario")
+        edit.assert_not_called()
+        save.assert_not_called()
 
     def test_edit_button_label_is_never_written_into_the_field(self):
         """La lectura arrastra "Modificar Otra información": no debe quedar
         dentro del valor guardado (bug reportado en el lead real)."""
-        from lead_monitor import finalize_pick_up
+        from lead_monitor import _ensure_take_mark
 
         reads = _field_reads("Modificar Otra información", "Asignado")
         persisted = iter([None, "Asignado"])
@@ -537,11 +610,11 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.prepare_other_information") as edit,
             patch("lead_monitor.save_edit_form"),
         ):
-            finalize_pick_up(object(), 5)
+            _ensure_take_mark(object(), 5)
         self.assertEqual(edit.call_args.args[1], "Asignado")
 
     def test_edit_button_label_stripped_but_content_kept(self):
-        from lead_monitor import finalize_pick_up
+        from lead_monitor import _ensure_take_mark
 
         reads = _field_reads("Modificar Otra información\nNota previa", "Nota previa\nAsignado")
         persisted = iter(["Nota previa", "Nota previa\nAsignado"])
@@ -554,7 +627,7 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.prepare_other_information") as edit,
             patch("lead_monitor.save_edit_form"),
         ):
-            finalize_pick_up(object(), 5)
+            _ensure_take_mark(object(), 5)
         self.assertEqual(edit.call_args.args[1], "Nota previa\nAsignado")
 
     def test_panel_error_does_not_raise(self):
@@ -567,10 +640,10 @@ class FinalizePickUpTests(unittest.TestCase):
             patch("lead_monitor.execute_in_any_frame", side_effect=WebDriverException("boom")),
             patch("lead_monitor.PANEL_WAIT_SECONDS", 0.01),
             patch("lead_monitor.field_result_if_found", return_value={"found": True, "text": "Asignado"}),
-            patch("lead_monitor._read_other_information_value", return_value="Asignado"),
+            patch("lead_monitor._drop_injected_take_mark", return_value="sin_comentario"),
         ):
             outcome, _diag = finalize_pick_up(object(), 5)
-        self.assertEqual(outcome, "panel_error/marca_presente")
+        self.assertEqual(outcome, "panel_error/sin_comentario")
 
 
 class WhatsappSendTests(unittest.TestCase):
@@ -653,8 +726,8 @@ class WhatsappSendTests(unittest.TestCase):
         edit.assert_not_called()  # ya documentado: nunca se pisa
         send.assert_called_once()
 
-    def test_non_whatsapp_lead_keeps_asignado_and_no_wa_segment(self):
-        """whatsapp=False: comportamiento intacto, sin tercer segmento."""
+    def test_non_whatsapp_lead_does_not_write_or_send(self):
+        """Sin envío real no hay documentación ni marca de toma."""
         from lead_monitor import finalize_pick_up
 
         reads = _field_reads("", "Asignado")
@@ -671,8 +744,8 @@ class WhatsappSendTests(unittest.TestCase):
             patch("lead_monitor.send_whatsapp") as send,
         ):
             outcome, _diag = finalize_pick_up(object(), 5, whatsapp=False)
-        self.assertEqual(outcome, "sin_panel/marca_ok")
-        self.assertEqual(edit.call_args.args[1], "Asignado")
+        self.assertEqual(outcome, "sin_panel/sin_comentario")
+        edit.assert_not_called()
         send.assert_not_called()
 
     def test_attempt_with_stray_asignado_is_cleaned(self):
@@ -1459,19 +1532,28 @@ class ReassignOwnerTests(unittest.TestCase):
         send.assert_not_called()
         reassign.assert_called_once_with(unittest.mock.ANY, "Micaela Caetano", 5)
 
-    def test_reasignacion_mark_sale_de_la_preferencia_del_lead(self):
-        """El método del comentario sale de preferencia_contacto del lead,
-        no de la persona: whatsapp → Enviar Whatsapp, llamada/teléfono →
-        Llamarlo, otro/vacío → Gestionarlo."""
-        from lead_monitor import _reasignacion_mark
+    def test_reasignacion_no_comenta_cualquiera_sea_la_preferencia(self):
+        """La preferencia no genera comentarios de asignación."""
+        from lead_monitor import finalize_pick_up
 
-        self.assertEqual(_reasignacion_mark({"preferencia_contacto": "vía whatsapp"}), "Asignado - Enviar Whatsapp")
-        self.assertEqual(
-            _reasignacion_mark({"preferencia_contacto": "llamada telefónica"}), "Asignado - Llamarlo"
-        )
-        self.assertEqual(_reasignacion_mark({"preferencia_contacto": "correo"}), "Asignado - Gestionarlo")
-        self.assertEqual(_reasignacion_mark({}), "Asignado - Gestionarlo")
-        self.assertEqual(_reasignacion_mark(None), "Asignado - Gestionarlo")
+        for preferencia in ("vía whatsapp", "llamada telefónica", "correo", ""):
+            with (
+                self.subTest(preferencia=preferencia),
+                patch("lead_monitor._save_contact_panel_initial", return_value="panel_guardado"),
+                patch("lead_monitor._ensure_take_mark") as mark,
+                patch("lead_monitor.prepare_other_information") as edit,
+                patch("lead_monitor.send_whatsapp") as send,
+                patch("lead_monitor.reassign_owner", return_value="reasignado") as reassign,
+            ):
+                outcome, _ = finalize_pick_up(
+                    object(), 5, whatsapp=True, encargada={"nombre": "Ana Perez"},
+                    details={"preferencia_contacto": preferencia},
+                )
+                self.assertEqual(outcome, "panel_guardado/sin_comentario/reasignado")
+                mark.assert_not_called()
+                edit.assert_not_called()
+                send.assert_not_called()
+                reassign.assert_called_once()
 
     def test_reassign_owner_action_button_appears_late(self):
         """El botón Cambiar propietario llega tarde por el re-render tras

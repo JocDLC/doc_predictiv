@@ -74,10 +74,11 @@ OWNER_LOOKUP_SETTLE_SECONDS = 3
 
 # Panel "Contact Client" que Lightning muestra tras el Pick Up: solo hay que
 # pulsar su Save para que la toma quede firme (sin escribir en su sección).
-# La marca del bot va únicamente en "Otra información".
+# Marca histórica: se reconoce al leer documentación previa, no se agrega
+# al tomar ni al reasignar un lead.
 BOT_TAKE_MARK = "Asignado"
 PANEL_WAIT_SECONDS = 15
-# Reintento corto tras escribir la marca: el panel puede renderizar tarde
+# Reintento corto tras la espera inicial: el panel puede renderizar tarde
 # (bajo carga) y quedar abierto sin su Save si no se vuelve a mirar.
 LATE_PANEL_WAIT_SECONDS = 4
 
@@ -624,6 +625,47 @@ def _strip_take_mark_lines(text: str) -> str:
     return "\n".join(lines).strip()
 
 
+def _drop_injected_take_mark(driver, timeout_seconds: int) -> str:
+    """Quita líneas ``Asignado`` que el Save del panel "Contact Client" o
+    un flow hayan inyectado en ``Otra información``.
+
+    La toma del bot no es un contacto: la palabra cuenta ante Compliance
+    como lead ya gestionado. Solo abre la edición cuando el valor
+    persistido realmente trae algo que limpiar — el resto del contenido
+    queda intacto. Devuelve ``sin_comentario``, ``asignado_quitado`` o el
+    error del paso que falló.
+    """
+    try:
+        persisted = _read_other_information_value(driver)
+        if persisted is None:
+            persisted = _read_other_information(driver)
+    except (WebDriverException, AttributeError):
+        return "sin_comentario"
+    if persisted is None:
+        return "sin_comentario"
+    clean = _strip_take_mark_lines(_strip_edit_button_label(persisted, OTHER_INFORMATION_LABELS))
+    if clean == persisted.strip():
+        return "sin_comentario"
+    for _ in range(2):
+        try:
+            prepare_other_information(driver, clean, timeout_seconds)
+            save_edit_form(driver, timeout_seconds)
+        except (TimeoutException, WebDriverException, ValueError) as error:
+            return f"limpieza_error:{type(error).__name__}"
+        try:
+            persisted = _read_other_information_value(driver)
+            if persisted is None:
+                persisted = _read_other_information(driver)
+        except (WebDriverException, AttributeError):
+            persisted = None
+        if persisted is None:
+            return "limpieza_no_confirmada"
+        clean = _strip_take_mark_lines(_strip_edit_button_label(persisted, OTHER_INFORMATION_LABELS))
+        if clean == persisted.strip():
+            return "asignado_quitado"
+    return "limpieza_no_confirmada"
+
+
 def _whatsapp_attempt_line(tz_offset: int = 0) -> str:
     """Documentación del primer contacto con el formato de los auxiliares.
 
@@ -718,22 +760,6 @@ def _ensure_take_mark(
 
 
 # --- Reasignación por turno -------------------------------------------------
-
-# Texto del comentario para leads que se pasan a otra persona: la marca
-# ``Asignado`` queda, seguida del método de contacto que pidió el lead en
-# ``preferencia_contacto`` (así la encargada sabe qué hacer al gestionarlo).
-# El intento WhatsApp automático NO aplica a estos leads (el envío saldría
-# de la sesión del bot, no de la encargada).
-def _reasignacion_mark(details: dict | None) -> str:
-    preference = normalize_label((details or {}).get("preferencia_contacto") or "")
-    if "whatsapp" in preference:
-        metodo = "Enviar Whatsapp"
-    elif "llamad" in preference or "telefon" in preference:
-        metodo = "Llamarlo"
-    else:
-        metodo = "Gestionarlo"
-    return f"Asignado - {metodo}"
-
 
 def _encargada_activa(
     equipo: list[dict] | None,
@@ -1140,13 +1166,14 @@ def finalize_pick_up(
     """Guarda el panel "Contact Client" que aparece tras el Pick Up.
 
     Solo pulsa su ``Save`` (la toma no queda firme en Salesforce hasta ese
-    guardado) — no escribe nada en la sección. La marca ``Asignado`` se
-    deja únicamente en ``Otra información`` para saber que lo tomó el bot.
+    guardado). Tomar o reasignar no escribe comentarios ni modifica
+    ``Otra información``. Solo el envío automático de WhatsApp, cuando
+    está habilitado y no se reasigna, documenta su intento de contacto.
 
     Best-effort: la asignación ya quedó verificada por el cambio de
     propietario — un panel ausente o un guardado fallido no degradan el
     ``tomado``. Devuelve ``(outcome, diagnostico)``: ``<panel>/<marca>``
-    (p. ej. ``panel_guardado/marca_ok``; ``panel_tardio_*`` cuando el panel
+    (p. ej. ``panel_guardado/sin_comentario``; ``panel_tardio_*`` cuando el panel
     apareció pasada la ventana inicial; ``panel_otra_tab_*`` cuando estaba
     en otro handle) y, si nunca se detectó, los encabezados de diálogos
     visibles, la cadena DOM de los botones Save/SendEmail y el nombre del
@@ -1154,22 +1181,16 @@ def finalize_pick_up(
     """
     outcome = _save_contact_panel_initial(driver, timeout_seconds)
     diagnostic = ""
-    # La evidencia de la toma tiene que quedar en "Otra información" aunque
-    # el panel no exista: `Asignado` o, en la rama WhatsApp, la línea de
-    # intento `1 INT Se envía WhatsApp ...` — va ANTES del envío, como hacen
-    # los auxiliares.
-    # Lead reasignado: la encargada hace el contacto — el WhatsApp
-    # automático queda apagado siempre. El comentario de asignación
-    # (``_reasignacion_mark``) queda pendiente de definición: por ahora no
-    # se escribe nada en Otra información.
+    # La toma no es un contacto: no genera "Asignado" ni otro comentario.
+    # Si se reasigna, el contacto lo hace el auxiliar destino y no se envía
+    # WhatsApp desde la sesión del bot. Un envío real habilitado sí conserva
+    # su documentación de contacto, independiente de la toma.
     if encargada:
         whatsapp = False
         mark_text = None
     else:
-        mark_text = _whatsapp_attempt_line(tz_offset) if whatsapp else BOT_TAKE_MARK
-    if mark_text is None:
-        mark = "sin_comentario"
-    else:
+        mark_text = _whatsapp_attempt_line(tz_offset) if whatsapp else None
+    if mark_text is not None:
         try:
             mark = _ensure_take_mark(driver, timeout_seconds, mark_text, drop_take_mark=whatsapp)
         except (TimeoutException, WebDriverException, ValueError) as error:
@@ -1194,6 +1215,15 @@ def finalize_pick_up(
                 diagnostic = f"{diagnostic} | shot:{shot.name}" if diagnostic else f"shot:{shot.name}"
             except (OSError, WebDriverException):
                 pass
+    # Sin comentario propio (llamada/sin método o reasignación): el Save
+    # del panel o un flow pueden inyectar "Asignado" — cuenta ante
+    # Compliance como lead ya gestionado, así que se limpia tras el
+    # guardado del panel.
+    if mark_text is None:
+        try:
+            mark = _drop_injected_take_mark(driver, timeout_seconds)
+        except (TimeoutException, WebDriverException, ValueError) as error:
+            mark = f"limpieza_error:{type(error).__name__}"
     # El envío va último: documentado primero (aunque falle el envío queda
     # el intento registrado) y el clic jamás se reintenta si el toast no
     # confirma — un segundo clic podría duplicar el mensaje.
@@ -1236,7 +1266,7 @@ def take_lead(
     confirma, queda ``no_verificado`` y nunca se repite el clic a ciegas.
     Devuelve ``(status, propietario_observado, finalización, diagnóstico)`` —
     el nombre de la persona a la que quedó asignado y el resultado de
-    ``finalize_pick_up`` (panel + marca ``Asignado``, más los paneles
+    ``finalize_pick_up`` (Save del panel sin comentario de toma, más los paneles
     visibles si no se detectó el esperado), para la verificación en la
     tabla del monitor.
     """

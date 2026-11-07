@@ -809,6 +809,48 @@ class UiServerMonitorTests(unittest.TestCase):
             saved = json.loads(self._state_file(tmp).read_text(encoding="utf-8"))
             self.assertEqual(saved["equipo"], equipo)
 
+    def test_franja_no_puede_solapar_al_otro_editor(self):
+        """Una sola persona por bandeja y horario: la franja propia y la
+        de un auxiliar no pueden pisarse en la MISMA bandeja — el PUT que
+        la crearía sale con 400 y no pisa lo guardado."""
+        bandejas = {"bandejas": [{"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]}
+        with TemporaryDirectory() as tmp, patch("ui_server.monitor_state_path", return_value=self._state_file(tmp)):
+            status, _ = self._request("PUT", "/api/monitor/config", bandejas)
+            self.assertEqual(status, 200)
+            status, _ = self._request(
+                "PUT", "/api/monitor/schedule",
+                {"schedule": [{"start": "10:00", "end": "12:00", "bandejas": ["AR"]}]},
+            )
+            self.assertEqual(status, 200)
+            # Equipo que pisa la franja propia en AR -> 400.
+            status, payload = self._request(
+                "PUT", "/api/monitor/equipo",
+                {"equipo": [{"nombre": "Ana", "franjas": [{"start": "11:00", "end": "13:00", "bandejas": ["AR"]}]}]},
+            )
+            self.assertEqual(status, 400)
+            self.assertIn("solap", payload["error"])
+            # Misma hora en otra bandeja no aplica (solo AR habilitada, igual queda el punto).
+            saved = json.loads(self._state_file(tmp).read_text(encoding="utf-8"))
+            self.assertEqual(saved["equipo"], [])
+
+            # Al revés: con el equipo guardado, la franja propia que lo pisa -> 400.
+            status, _ = self._request(
+                "PUT", "/api/monitor/equipo",
+                {"equipo": [{"nombre": "Ana", "franjas": [{"start": "14:00", "end": "16:00", "bandejas": ["AR"]}]}]},
+            )
+            self.assertEqual(status, 200)
+            status, payload = self._request(
+                "PUT", "/api/monitor/schedule",
+                {"schedule": [
+                    {"start": "10:00", "end": "12:00", "bandejas": ["AR"]},
+                    {"start": "15:00", "end": "17:00", "bandejas": ["AR"]},
+                ]},
+            )
+            self.assertEqual(status, 400)
+            self.assertIn("solap", payload["error"])
+            saved = json.loads(self._state_file(tmp).read_text(encoding="utf-8"))
+            self.assertEqual(saved["schedule"], [{"start": "10:00", "end": "12:00", "bandejas": ["AR"]}])
+
     def test_ui_prefs_roundtrip(self):
         """Las preferencias de UI persisten del lado del servidor: la vista
         de columnas sobrevive aunque el usuario cambie de navegador o su

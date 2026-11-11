@@ -25,9 +25,7 @@ class UiServerTests(unittest.TestCase):
         import ui_server
 
         with TemporaryDirectory() as tmp:
-            (Path(tmp) / SESSION_FILE).write_text(
-                json.dumps({"port": 8765, "token": "token-fijo"}), encoding="utf-8"
-            )
+            (Path(tmp) / SESSION_FILE).write_text(json.dumps({"port": 8765, "token": "token-fijo"}), encoding="utf-8")
             self.assertEqual(ui_server.load_or_create_token(Path(tmp)), "token-fijo")
 
     def test_load_or_create_token_generates_only_when_missing(self):
@@ -711,7 +709,11 @@ class UiServerMonitorTests(unittest.TestCase):
             status, _ = self._request(
                 "PUT",
                 "/api/monitor/config",
-                {"bandejas": [{"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]},
+                {
+                    "bandejas": [
+                        {"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}
+                    ]
+                },
             )
             self.assertEqual(status, 200)
             # Franja sin bandeja indicada -> 400 (cada franja exige bandeja).
@@ -720,14 +722,13 @@ class UiServerMonitorTests(unittest.TestCase):
             )
             self.assertEqual(status, 400)
             status, _ = self._request(
-                "PUT", "/api/monitor/schedule",
+                "PUT",
+                "/api/monitor/schedule",
                 {"schedule": [{"start": "08:00", "end": "20:00", "bandejas": ["AR"]}]},
             )
             self.assertEqual(status, 200)
             saved = json.loads(self._state_file(tmp).read_text(encoding="utf-8"))
-            self.assertEqual(
-                saved["schedule"], [{"start": "08:00", "end": "20:00", "bandejas": ["AR"]}]
-            )
+            self.assertEqual(saved["schedule"], [{"start": "08:00", "end": "20:00", "bandejas": ["AR"]}])
 
             status, payload = self._request(
                 "PUT",
@@ -739,22 +740,26 @@ class UiServerMonitorTests(unittest.TestCase):
     def test_schedule_franja_requiere_bandeja_disponible(self):
         """Una franja propia solo puede apuntar a bandejas disponibles:
         habilitada con link. Sin bandeja tildada (todas) siempre vale."""
-        bandejas = {"bandejas": [
-            {"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"},
-            {"code": "MX", "enabled": False, "url": ""},
-        ]}
+        bandejas = {
+            "bandejas": [
+                {"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"},
+                {"code": "MX", "enabled": False, "url": ""},
+            ]
+        }
         with TemporaryDirectory() as tmp, patch("ui_server.monitor_state_path", return_value=self._state_file(tmp)):
             status, _ = self._request("PUT", "/api/monitor/config", bandejas)
             self.assertEqual(status, 200)
             # MX no disponible (deshabilitada/sin link) -> 400.
             status, _ = self._request(
-                "PUT", "/api/monitor/schedule",
+                "PUT",
+                "/api/monitor/schedule",
                 {"schedule": [{"start": "08:00", "end": "12:00", "bandejas": ["MX"]}]},
             )
             self.assertEqual(status, 400)
             # AR disponible -> 200.
             status, _ = self._request(
-                "PUT", "/api/monitor/schedule",
+                "PUT",
+                "/api/monitor/schedule",
                 {"schedule": [{"start": "08:00", "end": "12:00", "bandejas": ["AR"]}]},
             )
             self.assertEqual(status, 200)
@@ -771,7 +776,11 @@ class UiServerMonitorTests(unittest.TestCase):
             status, _ = self._request(
                 "PUT",
                 "/api/monitor/config",
-                {"bandejas": [{"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]},
+                {
+                    "bandejas": [
+                        {"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}
+                    ]
+                },
             )
             self.assertEqual(status, 200)
             status, _ = self._request("PUT", "/api/monitor/equipo", {"equipo": equipo})
@@ -813,18 +822,22 @@ class UiServerMonitorTests(unittest.TestCase):
         """Una sola persona por bandeja y horario: la franja propia y la
         de un auxiliar no pueden pisarse en la MISMA bandeja — el PUT que
         la crearía sale con 400 y no pisa lo guardado."""
-        bandejas = {"bandejas": [{"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]}
+        bandejas = {
+            "bandejas": [{"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]
+        }
         with TemporaryDirectory() as tmp, patch("ui_server.monitor_state_path", return_value=self._state_file(tmp)):
             status, _ = self._request("PUT", "/api/monitor/config", bandejas)
             self.assertEqual(status, 200)
             status, _ = self._request(
-                "PUT", "/api/monitor/schedule",
+                "PUT",
+                "/api/monitor/schedule",
                 {"schedule": [{"start": "10:00", "end": "12:00", "bandejas": ["AR"]}]},
             )
             self.assertEqual(status, 200)
             # Equipo que pisa la franja propia en AR -> 400.
             status, payload = self._request(
-                "PUT", "/api/monitor/equipo",
+                "PUT",
+                "/api/monitor/equipo",
                 {"equipo": [{"nombre": "Ana", "franjas": [{"start": "11:00", "end": "13:00", "bandejas": ["AR"]}]}]},
             )
             self.assertEqual(status, 400)
@@ -835,16 +848,20 @@ class UiServerMonitorTests(unittest.TestCase):
 
             # Al revés: con el equipo guardado, la franja propia que lo pisa -> 400.
             status, _ = self._request(
-                "PUT", "/api/monitor/equipo",
+                "PUT",
+                "/api/monitor/equipo",
                 {"equipo": [{"nombre": "Ana", "franjas": [{"start": "14:00", "end": "16:00", "bandejas": ["AR"]}]}]},
             )
             self.assertEqual(status, 200)
             status, payload = self._request(
-                "PUT", "/api/monitor/schedule",
-                {"schedule": [
-                    {"start": "10:00", "end": "12:00", "bandejas": ["AR"]},
-                    {"start": "15:00", "end": "17:00", "bandejas": ["AR"]},
-                ]},
+                "PUT",
+                "/api/monitor/schedule",
+                {
+                    "schedule": [
+                        {"start": "10:00", "end": "12:00", "bandejas": ["AR"]},
+                        {"start": "15:00", "end": "17:00", "bandejas": ["AR"]},
+                    ]
+                },
             )
             self.assertEqual(status, 400)
             self.assertIn("solap", payload["error"])
@@ -855,9 +872,7 @@ class UiServerMonitorTests(unittest.TestCase):
         """Las preferencias de UI persisten del lado del servidor: la vista
         de columnas sobrevive aunque el usuario cambie de navegador o su
         perfil borre el localStorage."""
-        with TemporaryDirectory() as tmp, patch(
-            "ui_server.ui_prefs_path", return_value=Path(tmp) / "ui_prefs.json"
-        ):
+        with TemporaryDirectory() as tmp, patch("ui_server.ui_prefs_path", return_value=Path(tmp) / "ui_prefs.json"):
             status, payload = self._request("GET", "/api/ui-prefs")
             self.assertEqual(status, 200)
             self.assertEqual(payload["prefs"], {})
@@ -877,9 +892,7 @@ class UiServerMonitorTests(unittest.TestCase):
             self.assertIs(payload["prefs"]["monitorSound"], False)
 
     def test_ui_prefs_validates_input(self):
-        with TemporaryDirectory() as tmp, patch(
-            "ui_server.ui_prefs_path", return_value=Path(tmp) / "ui_prefs.json"
-        ):
+        with TemporaryDirectory() as tmp, patch("ui_server.ui_prefs_path", return_value=Path(tmp) / "ui_prefs.json"):
             status, _ = self._request("PUT", "/api/ui-prefs", {"otro": {}})
             self.assertEqual(status, 400)
             status, _ = self._request("PUT", "/api/ui-prefs", {"prefs": {"../evil": 1}})
@@ -901,9 +914,7 @@ class UiServerMonitorTests(unittest.TestCase):
 
         state = default_state()
         state["schedule"] = []
-        state["equipo"] = [
-            {"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR"]}]}
-        ]
+        state["equipo"] = [{"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR"]}]}]
         state["bandejas"] = validate_bandejas(
             [{"code": "MX", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]
         )
@@ -1272,9 +1283,7 @@ class MonitorTickTests(unittest.TestCase):
             ):
                 ui_server.monitor_tick(self._config(tmp))
         monitor_state_events = [
-            call.args[0]
-            for call in broadcast.call_args_list
-            if call.args[0].get("type") == "monitor_state"
+            call.args[0] for call in broadcast.call_args_list if call.args[0].get("type") == "monitor_state"
         ]
         self.assertIn("fuera_de_horario", [e.get("paused_reason") for e in monitor_state_events])
 
@@ -1294,9 +1303,7 @@ class MonitorTickTests(unittest.TestCase):
             ):
                 ui_server.monitor_tick(self._config(tmp))
         monitor_state_events = [
-            call.args[0]
-            for call in broadcast.call_args_list
-            if call.args[0].get("type") == "monitor_state"
+            call.args[0] for call in broadcast.call_args_list if call.args[0].get("type") == "monitor_state"
         ]
         self.assertTrue(monitor_state_events)
         last = monitor_state_events[-1]
@@ -1369,6 +1376,40 @@ class MonitorTickTests(unittest.TestCase):
             saved = json.loads(state_path.read_text(encoding="utf-8"))
             self.assertFalse(saved["solo_listar"])
 
+    def test_scan_log_distinguishes_qualif_without_id(self):
+        """Un escaneo con propietario QUALIF pero sin ID loguea el conteo:
+        distingue 'bandeja vacía' de 'fila QUALIF sin identidad' — el caso
+        de AR que leía 0 sin asignar sin explicación."""
+        import io
+        from contextlib import redirect_stdout
+
+        import ui_server
+
+        scan_event = {
+            "type": "bandeja_scan",
+            "bandeja": "AR",
+            "rows": 27,
+            "unassigned": 0,
+            "unassigned_owner": "AR_LEAD_QUALIF",
+            "owners_seen": ["AR_LEAD_QUALIF"],
+            "owner_without_id": 2,
+            "horizontal_passes": 3,
+        }
+        output = io.StringIO()
+        with TemporaryDirectory() as tmp, self._enabled_state(tmp):
+            with (
+                patch("ui_server.detect_browser", return_value=("edge", Path("msedge.exe"))),
+                patch("ui_server.create_driver", return_value=object()),
+                patch("ui_server.ensure_monitor_window"),
+                patch("ui_server.release_driver"),
+                patch("ui_server.run_cycle", return_value=[scan_event]),
+                redirect_stdout(output),
+            ):
+                ui_server._monitor_cycle(self._config(tmp), force=True)
+        log = output.getvalue()
+        self.assertIn("2 QUALIF sin ID", log)
+        self.assertIn("27 filas, 0 sin asignar", log)
+
     def test_auto_restart_after_repeated_wedged_cycles(self):
         """Tras AUTO_RESTART_AFTER_FAILURES ciclos seguidos sin conectar al
         navegador, el dedicado se reinicia solo (una vez)."""
@@ -1379,9 +1420,7 @@ class MonitorTickTests(unittest.TestCase):
         ui_server.consecutive_browser_failures = 0
         # Pasado el cooldown pero dentro del reinicio programado de 4 h —
         # así el único restart posible es el automático por fallos.
-        ui_server.browser_started_monotonic = (
-            time.monotonic() - ui_server.AUTO_RESTART_COOLDOWN_SECONDS - 1
-        )
+        ui_server.browser_started_monotonic = time.monotonic() - ui_server.AUTO_RESTART_COOLDOWN_SECONDS - 1
         try:
             with TemporaryDirectory() as tmp, self._enabled_state(tmp):
                 with (
@@ -1406,9 +1445,7 @@ class MonitorTickTests(unittest.TestCase):
         import ui_server
 
         ui_server.consecutive_browser_failures = 0
-        ui_server.browser_started_monotonic = (
-            time.monotonic() - ui_server.AUTO_RESTART_COOLDOWN_SECONDS - 1
-        )
+        ui_server.browser_started_monotonic = time.monotonic() - ui_server.AUTO_RESTART_COOLDOWN_SECONDS - 1
         try:
             with TemporaryDirectory() as tmp, self._enabled_state(tmp):
                 with (
@@ -1734,6 +1771,56 @@ class MonitorTickTests(unittest.TestCase):
         finally:
             ui_server.monitor_window_handle = None
 
+    def test_monitor_window_widens_when_screen_allows(self):
+        """Escritorio amplio: la ventana dedicada se estira hasta 1600px —
+        menos pasadas del barrido horizontal en reportes anchos."""
+        import ui_server
+
+        driver = unittest.mock.Mock()
+        driver.window_handles = ["main", "win"]
+        driver.current_window_handle = "win"
+        driver.execute_script.return_value = 1920
+        ui_server.monitor_window_handle = None
+        try:
+            ui_server.ensure_monitor_window(driver)
+            driver.set_window_rect.assert_called_once_with(x=60, y=60, width=1600, height=760)
+        finally:
+            ui_server.monitor_window_handle = None
+
+    def test_monitor_window_uses_available_width_on_medium_screens(self):
+        import ui_server
+
+        driver = unittest.mock.Mock()
+        driver.window_handles = ["main", "win"]
+        driver.current_window_handle = "win"
+        driver.execute_script.return_value = 1366
+        ui_server.monitor_window_handle = None
+        try:
+            ui_server.ensure_monitor_window(driver)
+            driver.set_window_rect.assert_called_once_with(x=60, y=60, width=1226, height=760)
+        finally:
+            ui_server.monitor_window_handle = None
+
+    def test_monitor_window_keeps_fallback_on_small_or_failed_probe(self):
+        """Pantalla chica o sondeo rechazado: se conserva el rectángulo de
+        siempre — el barrido horizontal cubre la diferencia."""
+        import ui_server
+
+        for probe in (1280, RuntimeError("no js")):
+            driver = unittest.mock.Mock()
+            driver.window_handles = ["main", "win"]
+            driver.current_window_handle = "win"
+            if isinstance(probe, Exception):
+                driver.execute_script.side_effect = probe
+            else:
+                driver.execute_script.return_value = probe
+            ui_server.monitor_window_handle = None
+            try:
+                ui_server.ensure_monitor_window(driver)
+                driver.set_window_rect.assert_called_once_with(x=60, y=60, width=1150, height=760)
+            finally:
+                ui_server.monitor_window_handle = None
+
     def test_ensure_monitor_window_adopts_the_restored_window(self):
         """Tras reiniciar el navegador, la ventana restaurada se adopta en vez de duplicarse."""
         import ui_server
@@ -1945,8 +2032,7 @@ class MonitorTickTests(unittest.TestCase):
             patch("ui_server.find_listening_pid", return_value=None),
             patch(
                 "ui_server.dedicated_profile_pids",
-                side_effect=lambda profile: pid_calls.append(["4242"] if len(pid_calls) < 3 else [])
-                or pid_calls[-1],
+                side_effect=lambda profile: pid_calls.append(["4242"] if len(pid_calls) < 3 else []) or pid_calls[-1],
             ),
             patch("ui_server.subprocess.run"),
             patch("ui_server.debugger_is_listening", return_value=False),

@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from lead_monitor import (
     owner_is_unassigned,
+    read_bandeja_leads,
     run_bandeja_cycle,
     run_cycle,
     status_is_expected,
@@ -146,9 +147,7 @@ class TakeLeadTests(unittest.TestCase):
             patch("lead_monitor.OWNER_VERIFY_TIMEOUT_SECONDS", 0.1),
             patch("lead_monitor.POLL_SECONDS", 0.01),
         ):
-            status, owner, _fin, _diag = take_lead(
-                object(), CONFIG, bandeja(), LEAD_ID, 5, bot_owner="Maria Perez"
-            )
+            status, owner, _fin, _diag = take_lead(object(), CONFIG, bandeja(), LEAD_ID, 5, bot_owner="Maria Perez")
         self.assertEqual(status, STATUS_TOMADO)
         self.assertEqual(owner, "Maria Perez")
         finalize.assert_called_once()
@@ -167,9 +166,7 @@ class TakeLeadTests(unittest.TestCase):
             patch("lead_monitor.OWNER_VERIFY_TIMEOUT_SECONDS", 0.1),
             patch("lead_monitor.POLL_SECONDS", 0.01),
         ):
-            status, owner, _fin, _diag = take_lead(
-                object(), CONFIG, bandeja(), LEAD_ID, 5, bot_owner="Maria Perez"
-            )
+            status, owner, _fin, _diag = take_lead(object(), CONFIG, bandeja(), LEAD_ID, 5, bot_owner="Maria Perez")
         self.assertEqual(status, STATUS_TOMADO_POR_OTRO)
         self.assertEqual(owner, "Pedro Gomez")
         finalize.assert_not_called()
@@ -195,6 +192,89 @@ def _typed_text(element):
 
 
 class FinalizePickUpTests(unittest.TestCase):
+    def setUp(self):
+        # La espera previa al reload del panel es real en producción (≤3 s);
+        # en tests la recarga falla al instante con el driver simulado.
+        patcher = patch("lead_monitor.RELOAD_PANEL_WAIT_SECONDS", 0)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_missing_panel_reloads_page_and_retries(self):
+        """Panel ausente tras las dos ventanas: espera y recarga la ficha —
+        un render fallido de Salesforce no puede dejar el lead en 'Nuevo'."""
+        from lead_monitor import PANEL_PRESENT_SCRIPT, PANEL_SAVE_CLICK_SCRIPT, finalize_pick_up
+
+        driver = unittest.mock.Mock()
+        driver.window_handles = ["w"]
+        driver.current_window_handle = "w"
+        state = {"reloaded": False}
+        driver.refresh.side_effect = lambda *_: state.update(reloaded=True)
+
+        def scripts(_driver, script, *_args):
+            if script == PANEL_PRESENT_SCRIPT:
+                return "found" if state["reloaded"] else "missing"
+            if script == PANEL_SAVE_CLICK_SCRIPT:
+                return "clicked"
+            return "missing"
+
+        with (
+            patch("lead_monitor.execute_in_any_frame", side_effect=scripts),
+            patch("lead_monitor.PANEL_WAIT_SECONDS", 0.01),
+            patch("lead_monitor.LATE_PANEL_WAIT_SECONDS", 0),
+            patch("lead_monitor.POLL_SECONDS", 0.01),
+            patch("lead_monitor.wait_for_lightning_ready"),
+            patch("lead_monitor._read_other_information_value", return_value="Nota previa"),
+            patch("lead_monitor.prepare_other_information") as edit,
+            patch("lead_monitor.time.sleep"),
+        ):
+            outcome, _diag = finalize_pick_up(driver, 5)
+        driver.refresh.assert_called_once()
+        self.assertEqual(outcome, "panel_tras_reload/sin_comentario")
+        edit.assert_not_called()
+
+    def test_reload_retry_reverifies_the_attempt_mark(self):
+        """El reload descarta una edición inline abierta: tras recargar la
+        marca documentada se re-verifica (la escritura no se pierde)."""
+        from lead_monitor import finalize_pick_up
+
+        driver = unittest.mock.Mock()
+        driver.window_handles = ["w"]
+        driver.current_window_handle = "w"
+        with (
+            patch("lead_monitor.execute_in_any_frame", return_value="missing"),
+            patch("lead_monitor.PANEL_WAIT_SECONDS", 0.01),
+            patch("lead_monitor.LATE_PANEL_WAIT_SECONDS", 0),
+            patch("lead_monitor.POLL_SECONDS", 0.01),
+            patch("lead_monitor.wait_for_lightning_ready"),
+            patch("lead_monitor._whatsapp_attempt_line", return_value="1 INT Se envía WhatsApp 14/10/2026 15:22"),
+            patch("lead_monitor._ensure_take_mark", return_value="marca_ok") as mark,
+            patch("lead_monitor.send_whatsapp", return_value="wa_ok"),
+            patch("lead_monitor.time.sleep"),
+        ):
+            outcome, _diag = finalize_pick_up(driver, 5, whatsapp=True)
+        driver.refresh.assert_called_once()
+        # inicial + re-verificación post-reload + pasada final tras el envío
+        self.assertEqual(mark.call_count, 3)
+        self.assertEqual(outcome, "sin_panel/marca_ok/wa_ok")
+
+    def test_reload_retry_reports_panel_saved_after_reload(self):
+        from lead_monitor import _save_contact_panel_after_reload
+
+        driver = unittest.mock.Mock()
+        with (
+            patch("lead_monitor._save_contact_panel_initial", return_value="panel_guardado"),
+            patch("lead_monitor.wait_for_lightning_ready"),
+        ):
+            outcome, reloaded = _save_contact_panel_after_reload(driver, 5)
+        self.assertEqual((outcome, reloaded), ("panel_tras_reload", True))
+        driver.refresh.assert_called_once()
+
+    def test_reload_retry_gives_up_when_refresh_is_unavailable(self):
+        from lead_monitor import _save_contact_panel_after_reload
+
+        outcome, reloaded = _save_contact_panel_after_reload(object(), 5)
+        self.assertEqual((outcome, reloaded), ("sin_panel", False))
+
     def test_toma_simple_o_reasignada_no_escribe_comentarios(self):
         """Tomar un lead no documenta contacto ni edita texto previo."""
         from lead_monitor import finalize_pick_up
@@ -213,7 +293,9 @@ class FinalizePickUpTests(unittest.TestCase):
                     patch("lead_monitor.reassign_owner", return_value="reasignado") as reassign,
                 ):
                     outcome, _ = finalize_pick_up(
-                        object(), 5, encargada=encargada,
+                        object(),
+                        5,
+                        encargada=encargada,
                         details={"preferencia_contacto": "vía whatsapp"},
                     )
                     mark.assert_not_called()
@@ -236,7 +318,9 @@ class FinalizePickUpTests(unittest.TestCase):
             PANEL_SAVE_CLICK_SCRIPT: "clicked",
         }
         with (
-            patch("lead_monitor.execute_in_any_frame", side_effect=lambda _d, s, *a: executed.append(s) or responses[s]),
+            patch(
+                "lead_monitor.execute_in_any_frame", side_effect=lambda _d, s, *a: executed.append(s) or responses[s]
+            ),
             patch("lead_monitor.field_result_if_found", side_effect=lambda *_: next(_field_reads("Nota previa"))),
             patch("lead_monitor._read_other_information_value", return_value="Nota previa"),
             patch("lead_monitor.prepare_other_information") as edit,
@@ -549,9 +633,7 @@ class FinalizePickUpTests(unittest.TestCase):
             current_window_handle="main",
             window_handles=["main", "consola"],
         )
-        driver.switch_to = SimpleNamespace(
-            window=lambda handle: setattr(driver, "current_window_handle", handle)
-        )
+        driver.switch_to = SimpleNamespace(window=lambda handle: setattr(driver, "current_window_handle", handle))
 
         def fake_exec(drv, script, *args):
             if script is PANEL_PRESENT_SCRIPT:
@@ -811,7 +893,9 @@ class WhatsappSendTests(unittest.TestCase):
             WA_TOAST_CLOSE_SCRIPT: "closed",
         }
         with (
-            patch("lead_monitor.execute_in_any_frame", side_effect=lambda _d, s, *a: executed.append(s) or responses[s]),
+            patch(
+                "lead_monitor.execute_in_any_frame", side_effect=lambda _d, s, *a: executed.append(s) or responses[s]
+            ),
             patch("lead_monitor.time.sleep"),
         ):
             outcome = send_whatsapp(object())
@@ -868,7 +952,9 @@ class RunBandejaCycleTests(unittest.TestCase):
             patch("lead_monitor.open_report"),
             patch("lead_monitor.report_session_lost", return_value=False),
             patch("lead_monitor.read_bandeja_leads", return_value=(2, leads)),
-            patch("lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Maria Perez", "panel_guardado/marca_ok", "")) as take,
+            patch(
+                "lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Maria Perez", "panel_guardado/marca_ok", "")
+            ) as take,
         ):
             events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         self.assertEqual(take.call_count, 2)
@@ -926,7 +1012,9 @@ class RunBandejaCycleTests(unittest.TestCase):
             patch("lead_monitor.open_report"),
             patch("lead_monitor.report_session_lost", return_value=False),
             patch("lead_monitor.read_bandeja_leads", return_value=(1, [lead()])),
-            patch("lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Maria Perez", "panel_guardado/marca_ok", "")) as take,
+            patch(
+                "lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Maria Perez", "panel_guardado/marca_ok", "")
+            ) as take,
         ):
             run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         take.assert_called_once()
@@ -943,7 +1031,9 @@ class RunBandejaCycleTests(unittest.TestCase):
             patch("lead_monitor.open_report"),
             patch("lead_monitor.report_session_lost", return_value=False),
             patch("lead_monitor.read_bandeja_leads", return_value=(1, [lead()])),
-            patch("lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Ana", "sin_panel/sin_comentario/reasignado", "")) as take,
+            patch(
+                "lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Ana", "sin_panel/sin_comentario/reasignado", "")
+            ) as take,
         ):
             run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         take.assert_called_once()
@@ -1009,9 +1099,7 @@ class RunBandejaCycleTests(unittest.TestCase):
         """Una franja con varias bandejas habilita la toma en cualquiera."""
         state = self._state()
         state["schedule"] = []
-        state["equipo"] = [
-            {"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR", "MX"]}]}
-        ]
+        state["equipo"] = [{"nombre": "Ana", "franjas": [{"start": "00:00", "end": "23:59", "bandejas": ["AR", "MX"]}]}]
         with (
             patch("lead_monitor.open_report"),
             patch("lead_monitor.report_session_lost", return_value=False),
@@ -1125,7 +1213,9 @@ class RunBandejaCycleTests(unittest.TestCase):
                 run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
             take.assert_not_called()
             state["solo_listar"] = False
-            with patch("lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Maria Perez", "panel_guardado/marca_ok", "")) as take:
+            with patch(
+                "lead_monitor.take_lead", return_value=(STATUS_TOMADO, "Maria Perez", "panel_guardado/marca_ok", "")
+            ) as take:
                 events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
             take.assert_called_once()
         lead_events = [e for e in events if e["type"] == "lead_result"]
@@ -1164,6 +1254,35 @@ class RunBandejaCycleTests(unittest.TestCase):
             events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         scan = next(e for e in events if e["type"] == "bandeja_scan")
         self.assertEqual(scan.get("skipped_status"), 1)
+
+    def test_bandeja_scan_includes_horizontal_scan_metadata(self):
+        """bandeja_scan expone los conteos del barrido: pasadas, ancho del
+        viewport, QUALIF sin ID y filas inestables — solo estructura, sin
+        valores de celda ni IDs."""
+        state = self._state()
+
+        def fake_read(_driver, _bandeja, _timeout, _obj, _fields, diagnostics):
+            diagnostics.append(
+                {
+                    "horizontal_passes": 3,
+                    "viewport_width": 1150,
+                    "owner_without_id": 1,
+                    "unstable_or_ambiguous_rows": 2,
+                }
+            )
+            return (5, [])
+
+        with (
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", side_effect=fake_read),
+        ):
+            events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        scan = next(e for e in events if e["type"] == "bandeja_scan")
+        self.assertEqual(scan["horizontal_passes"], 3)
+        self.assertEqual(scan["viewport_width"], 1150)
+        self.assertEqual(scan["owner_without_id"], 1)
+        self.assertEqual(scan["unstable_or_ambiguous_rows"], 2)
 
 
 class ReturnToQueueTests(unittest.TestCase):
@@ -1248,9 +1367,7 @@ class ReassignOwnerTests(unittest.TestCase):
         from lead_monitor import _encargada_activa
 
         equipo = [{"nombre": "Ana", "franjas": [{"start": "12:00", "end": "13:59"}]}]
-        self.assertEqual(
-            _encargada_activa(equipo, datetime(2026, 10, 15, 13, 59))["nombre"], "Ana"
-        )
+        self.assertEqual(_encargada_activa(equipo, datetime(2026, 10, 15, 13, 59))["nombre"], "Ana")
         self.assertIsNone(_encargada_activa(equipo, datetime(2026, 10, 15, 14, 0)))
 
     def test_encargada_para_lead_fecha_de_ayer_cae_a_hora_actual(self):
@@ -1267,9 +1384,7 @@ class ReassignOwnerTests(unittest.TestCase):
         now = datetime(2026, 10, 31, 14, 0)  # Beto cubre ahora; Ana cubría a las 07:00
         details = {"fecha_creacion": "30/10/2026 07:00 AM"}
         self.assertEqual(
-            _encargada_para_lead(equipo, "Jose Manuel", bandeja="AR", details=details, now=now)[
-                "nombre"
-            ],
+            _encargada_para_lead(equipo, "Jose Manuel", bandeja="AR", details=details, now=now)["nombre"],
             "Beto",
         )
 
@@ -1324,7 +1439,9 @@ class ReassignOwnerTests(unittest.TestCase):
         # el ingreso ni la toma -> sin reasignación.
         self.assertIsNone(
             _encargada_para_lead(
-                [roger], owner, bandeja="AR",
+                [roger],
+                owner,
+                bandeja="AR",
                 details={"fecha_creacion": "30/10/2026 10:57 AM"},
                 now=datetime(2026, 10, 30, 10, 58),
             )
@@ -1333,7 +1450,9 @@ class ReassignOwnerTests(unittest.TestCase):
         # tome a las 12:50, ya fuera de la franja -> igual va a Roger.
         self.assertIs(
             _encargada_para_lead(
-                [roger], owner, bandeja="AR",
+                [roger],
+                owner,
+                bandeja="AR",
                 details={"fecha_creacion": "30/10/2026 11:15 AM"},
                 now=datetime(2026, 10, 30, 12, 50),
             ),
@@ -1385,6 +1504,7 @@ class ReassignOwnerTests(unittest.TestCase):
             PICK_QUEUE_RESULT_SCRIPT: "clicked",
             MODAL_CONFIRM_SCRIPT: "clicked",
         }
+
         def fake_exec(_driver, script, *args):
             value = responses[script]
             return value() if callable(value) else value
@@ -1418,6 +1538,7 @@ class ReassignOwnerTests(unittest.TestCase):
             PICK_QUEUE_RESULT_SCRIPT: "clicked",
             MODAL_CONFIRM_SCRIPT: lambda: next(confirms),
         }
+
         def fake_exec(_driver, script, *args):
             value = responses[script]
             return value() if callable(value) else value
@@ -1546,7 +1667,10 @@ class ReassignOwnerTests(unittest.TestCase):
                 patch("lead_monitor.reassign_owner", return_value="reasignado") as reassign,
             ):
                 outcome, _ = finalize_pick_up(
-                    object(), 5, whatsapp=True, encargada={"nombre": "Ana Perez"},
+                    object(),
+                    5,
+                    whatsapp=True,
+                    encargada={"nombre": "Ana Perez"},
                     details={"preferencia_contacto": preferencia},
                 )
                 self.assertEqual(outcome, "panel_guardado/sin_comentario/reasignado")
@@ -1574,6 +1698,7 @@ class ReassignOwnerTests(unittest.TestCase):
             PICK_QUEUE_RESULT_SCRIPT: "clicked",
             MODAL_CONFIRM_SCRIPT: "clicked",
         }
+
         def fake_exec(_driver, script, *args):
             if script == RECORD_ACTION_SCRIPT:
                 return next(clicks)
@@ -1586,9 +1711,7 @@ class ReassignOwnerTests(unittest.TestCase):
             patch("lead_monitor.POLL_SECONDS", 0.001),
             patch("lead_monitor.time.sleep"),
         ):
-            self.assertEqual(
-                reassign_owner(unittest.mock.Mock(), "Micaela Caetano", 5), "reasignado"
-            )
+            self.assertEqual(reassign_owner(unittest.mock.Mock(), "Micaela Caetano", 5), "reasignado")
         reread.assert_not_called()
 
     def test_open_change_owner_dialog_second_click_opens(self):
@@ -1601,6 +1724,7 @@ class ReassignOwnerTests(unittest.TestCase):
         )
 
         state = {"clicks": 0}
+
         def fake_exec(_driver, script, *args):
             if script == RECORD_ACTION_SCRIPT:
                 state["clicks"] += 1
@@ -1753,9 +1877,7 @@ class PickOwnerOptionTests(unittest.TestCase):
             patch("lead_monitor.execute_in_any_frame", return_value="clicked"),
             patch("lead_monitor.time.sleep"),
         ):
-            self.assertTrue(
-                lead_monitor._pick_owner_option(unittest.mock.Mock(), search_input, "Ana Perez", 1)
-            )
+            self.assertTrue(lead_monitor._pick_owner_option(unittest.mock.Mock(), search_input, "Ana Perez", 1))
         names = [call[0] for call in search_input.mock_calls]
         self.assertEqual(names[:3], ["click", "clear", "send_keys"])
 
@@ -1833,9 +1955,7 @@ class EquipoParaLeadTests(unittest.TestCase):
         state = self._state()
         now = datetime.now().replace(hour=14, minute=1, second=0, microsecond=0)
         yesterday = (now - timedelta(days=1)).strftime("%d/%m/%Y") + " 01:59 PM"
-        self.assertIsNone(
-            _equipo_para_lead(state, "AR", {"fecha_creacion": yesterday}, now)
-        )
+        self.assertIsNone(_equipo_para_lead(state, "AR", {"fecha_creacion": yesterday}, now))
 
     def test_entrada_inparseable_cae_al_comportamiento_actual(self):
         """Sin fecha usable vale la regla de siempre: franja propia
@@ -1846,9 +1966,7 @@ class EquipoParaLeadTests(unittest.TestCase):
 
         state = self._state()
         now = datetime.now().replace(hour=14, minute=1, second=0, microsecond=0)
-        self.assertIsNone(
-            _equipo_para_lead(state, "AR", {"fecha_creacion": "sin formato"}, now)
-        )
+        self.assertIsNone(_equipo_para_lead(state, "AR", {"fecha_creacion": "sin formato"}, now))
         self.assertIsNone(_equipo_para_lead(state, "AR", None, now))
 
     def test_entrada_sin_cobertura_cae_al_comportamiento_actual(self):
@@ -1900,6 +2018,54 @@ class RunCycleTests(unittest.TestCase):
             events = run_cycle(object(), CONFIG, state, 5)
         self.assertEqual(cycle.call_count, 1)
         self.assertEqual(events[0]["type"], "session_lost")
+
+
+class ReadBandejaLeadsTests(unittest.TestCase):
+    def test_fragmented_ar_report_resolves_lead_across_horizontal_passes(self):
+        """El path del Monitor une propietario e ID repartidos en dos
+        viewports de la grilla ancha — la bandeja AR del incidente."""
+        from tests.test_report_reader import FakeCell, FakeHorizontalDriver, FakeRow
+
+        row_key = {"aria-rowindex": "2"}
+        driver = FakeHorizontalDriver(
+            [
+                {
+                    "headers": ["Propietario del candidato"],
+                    "rows": [FakeRow(cells=[FakeCell("AR_LEAD_QUALIF")], attributes=row_key)],
+                },
+                {
+                    "headers": ["Lead ID"],
+                    "rows": [FakeRow(cells=[FakeCell(LEAD_ID)], attributes=row_key)],
+                },
+            ]
+        )
+        target = bandeja("AR")
+        diagnostics = []
+
+        visible_rows, leads = read_bandeja_leads(driver, target, 1, "Lead", {"lead_id": ["Lead ID"]}, diagnostics)
+
+        self.assertEqual(visible_rows, 1)
+        self.assertEqual([item.lead_id for item in leads], [LEAD_ID])
+
+    def test_single_view_report_still_reads_in_one_pass(self):
+        """CO/MX (todo visible) se lee igual que antes: una sola pasada,
+        sin desplazamiento horizontal."""
+        from tests.test_report_reader import FakeCell, FakeHorizontalDriver, FakeRow
+
+        driver = FakeHorizontalDriver(
+            [
+                {
+                    "headers": ["Propietario del candidato", "Lead ID"],
+                    "rows": [FakeRow(cells=[FakeCell("CO_LEAD_QUALIF"), FakeCell(LEAD_ID)])],
+                },
+            ]
+        )
+        target = bandeja("CO", unassigned_owner="CO_LEAD_QUALIF")
+
+        _, leads = read_bandeja_leads(driver, target, 1, "Lead", {"lead_id": ["Lead ID"]}, [])
+
+        self.assertEqual([item.lead_id for item in leads], [LEAD_ID])
+        self.assertEqual(driver.horizontal_pass, 0)
 
 
 if __name__ == "__main__":

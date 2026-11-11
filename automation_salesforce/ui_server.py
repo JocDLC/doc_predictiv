@@ -288,9 +288,7 @@ def windows_toast(title: str, message: str) -> None:
             stderr=subprocess.DEVNULL,
             text=True,
             encoding="utf-8",  # los emoji del toast no entran en cp1252
-        ).communicate(
-            input=f"{title}\n" + "\n".join(lines) + "\n", timeout=10
-        )
+        ).communicate(input=f"{title}\n" + "\n".join(lines) + "\n", timeout=10)
     except (OSError, subprocess.SubprocessError) as exc:
         # El toast es best-effort, pero un fallo silencioso deja a la persona
         # sin avisos y sin diagnóstico (caso "no llegan los avisos de Windows").
@@ -390,8 +388,7 @@ def _note_browser_failure(failed: bool, config: dict) -> None:
     if time.monotonic() - browser_started_monotonic < AUTO_RESTART_COOLDOWN_SECONDS:
         return
     print(
-        f"[monitor] {consecutive_browser_failures} ciclos sin conectar al navegador: "
-        "reinicio automático",
+        f"[monitor] {consecutive_browser_failures} ciclos sin conectar al navegador: reinicio automático",
         flush=True,
     )
     consecutive_browser_failures = 0
@@ -461,6 +458,23 @@ def _close_tab_without_focus(driver, handle: str, debugger_address: str | None) 
     return False
 
 
+def _monitor_window_width(driver) -> int | None:
+    """Ancho adaptativo best-effort de la ventana dedicada.
+
+    Hasta 1600 px cuando el escritorio alcanza (con margen, sin cubrir la
+    pantalla entera): más columnas visibles = menos pasadas del barrido
+    horizontal en reportes anchos. ``None`` = usar el fallback de siempre.
+    """
+    try:
+        avail = driver.execute_script("return screen.availWidth")
+    except Exception:  # noqa: BLE001 — sondeo best-effort: nunca rompe la ventana
+        return None
+    if not isinstance(avail, (int, float)):
+        return None
+    width = min(1600, int(avail) - 140)
+    return width if width > 1150 else None
+
+
 def ensure_monitor_window(
     driver,
     adopt_urls: list[str] | None = None,
@@ -498,7 +512,7 @@ def ensure_monitor_window(
         # La ventana tiene que quedar visible (minimizada la grilla virtual
         # de Salesforce no renderiza), pero no maximizada tapando el trabajo.
         try:
-            driver.set_window_rect(x=60, y=60, width=1150, height=760)
+            driver.set_window_rect(x=60, y=60, width=_monitor_window_width(driver) or 1150, height=760)
         except WebDriverException:
             pass
     if work_tab and work_tab != monitor_window_handle and work_tab in driver.window_handles:
@@ -564,9 +578,7 @@ def _monitor_driver(config: dict, browser: str, executable: Path, debugger_addre
             return monitor_driver
         except Exception:  # noqa: BLE001 — sesión muerta: se descarta y recrea
             _drop_monitor_driver()
-    monitor_driver = create_driver(
-        browser, executable, local_path(config["profile_directory"]), debugger_address
-    )
+    monitor_driver = create_driver(browser, executable, local_path(config["profile_directory"]), debugger_address)
     return monitor_driver
 
 
@@ -593,20 +605,14 @@ def _bandeja_codes_disponibles(state: dict) -> set:
     """Bandejas utilizables por una franja: habilitadas Y con link de
     reporte. La validación de bandejas ya exige link para habilitar, pero
     el chequeo de URL blinda estados viejos o escritos a mano."""
-    return {
-        b.get("code")
-        for b in state.get("bandejas") or []
-        if b.get("enabled") and b.get("url")
-    }
+    return {b.get("code") for b in state.get("bandejas") or [] if b.get("enabled") and b.get("url")}
 
 
 def _franjas_con_bandeja_no_disponible(state: dict, franjas: list) -> set:
     """Códigos de bandeja que las franjas pretenden cubrir pero que no
     están disponibles: una franja solo puede cargarse sobre bandejas
     habilitadas con link."""
-    return {
-        code for slot in franjas for code in slot.get("bandejas") or []
-    } - _bandeja_codes_disponibles(state)
+    return {code for slot in franjas for code in slot.get("bandejas") or []} - _bandeja_codes_disponibles(state)
 
 
 def _any_turno_activo(state: dict) -> bool:
@@ -730,9 +736,15 @@ def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
             # mal configurado (o que la bandeja no tiene QUALIF ahora).
             owners = ", ".join(event.get("owners_seen") or [])
             skipped = event.get("skipped_status")
+            without_id = event.get("owner_without_id")
             print(
                 f"[monitor] {event.get('bandeja')} bandeja: {event.get('rows')} filas, "
                 f"{event.get('unassigned')} sin asignar ({event.get('unassigned_owner')})"
+                + (
+                    f" | {without_id} QUALIF sin ID (columnas del reporte)"
+                    if without_id
+                    else ""
+                )
                 + (f" | propietarios vistos: {owners}" if not event.get("unassigned") and owners else "")
                 + (f" | {skipped} omitidos por estado" if skipped else ""),
                 flush=True,
@@ -850,7 +862,7 @@ def dedicated_profile_pids(profile_directory: Path) -> list[str]:
     script = (
         "Get-CimInstance Win32_Process | "
         "Where-Object { $_.CommandLine -and ($_.Name -eq 'msedge.exe' -or $_.Name -eq 'chrome.exe') } | "
-        "ForEach-Object { \"$($_.ProcessId)|$($_.CommandLine)\" }"
+        'ForEach-Object { "$($_.ProcessId)|$($_.CommandLine)" }'
     )
     try:
         output = subprocess.run(
@@ -1230,8 +1242,12 @@ def make_handler(token: str, config: dict | None = None):
                         equipo = validate_equipo(payload.get("equipo"))
                         franjas = [slot for member in equipo for slot in member["franjas"]]
                         sin_bandeja = next(
-                            (f"{m['nombre']} {s['start']}–{s['end']}"
-                             for m in equipo for s in m["franjas"] if not s["bandejas"]),
+                            (
+                                f"{m['nombre']} {s['start']}–{s['end']}"
+                                for m in equipo
+                                for s in m["franjas"]
+                                if not s["bandejas"]
+                            ),
                             None,
                         )
                         if sin_bandeja:

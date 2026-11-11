@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import re
+import time
+from collections import Counter
 from dataclasses import dataclass, field
 
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -31,6 +33,8 @@ LEAD_ID_ATTRIBUTE_NAMES = (
     "data-key",
     "data-id",
 )
+ROW_POSITION_ATTRIBUTE_NAMES = ("aria-rowindex", "data-row-index", "data-row-number")
+RECORD_ATTRIBUTE_SELECTOR = ", ".join(f"[{name}]" for name in LEAD_ID_ATTRIBUTE_NAMES)
 DEEP_SELECTOR_SCRIPT = """
 const start = arguments[0] || document;
 const selector = arguments[1];
@@ -112,6 +116,112 @@ class VisibleLead:
     details: dict[str, str] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class RowFragment:
+    """Parte renderizada de una fila, sin usar datos personales como identidad."""
+
+    row_key: str
+    sequence_position: int
+    owner_found: bool
+    lead_id: str = ""
+    created_at: str = ""
+    status: str = "SIN_GESTION"
+    details: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class FragmentMergeResult:
+    leads: list[VisibleLead]
+    owner_without_id: int
+    unstable_or_ambiguous_rows: int
+
+
+def _materialize_fragment_group(fragments: list[RowFragment]) -> VisibleLead | None:
+    if not any(fragment.owner_found for fragment in fragments):
+        return None
+    lead_ids = {fragment.lead_id for fragment in fragments if fragment.lead_id}
+    if len(lead_ids) != 1:
+        return None
+    details: dict[str, str] = {}
+    for fragment in fragments:
+        details.update({key: value for key, value in fragment.details.items() if value})
+    first = fragments[0]
+    return VisibleLead(
+        lead_id=lead_ids.pop(),
+        created_at=next((fragment.created_at for fragment in fragments if fragment.created_at), ""),
+        grid_position=min(
+            (fragment.sequence_position for fragment in fragments if fragment.sequence_position > 0),
+            default=first.sequence_position,
+        ),
+        status=next((fragment.status for fragment in fragments if fragment.status), first.status),
+        details=details,
+    )
+
+
+def merge_row_fragments(passes: list[list[RowFragment]]) -> FragmentMergeResult:
+    """Une solo fragmentos con clave y secuencia estables; ante duda falla cerrado."""
+
+    grouped: dict[str, list[RowFragment]] = {}
+    ambiguous_keys: set[str] = set()
+    direct_leads: list[VisibleLead] = []
+    keyless_owner_without_id = 0
+    unstable_rows = 0
+    reference_sequence: tuple[str, ...] | None = None
+
+    for fragments in passes:
+        keys = [fragment.row_key for fragment in fragments if fragment.row_key]
+        duplicate_counts = {key: count for key, count in Counter(keys).items() if count > 1}
+        ambiguous_keys.update(duplicate_counts)
+        unstable_rows += sum(duplicate_counts.values())
+
+        if fragments and len(keys) == len(fragments) and not duplicate_counts:
+            sequence = tuple(keys)
+            if reference_sequence is None:
+                reference_sequence = sequence
+            elif sequence != reference_sequence:
+                ambiguous_keys.update(reference_sequence)
+                ambiguous_keys.update(sequence)
+                unstable_rows = max(unstable_rows, len(reference_sequence), len(sequence))
+
+        for fragment in fragments:
+            if fragment.owner_found and fragment.lead_id:
+                direct_lead = _materialize_fragment_group([fragment])
+                if direct_lead is not None:
+                    direct_leads.append(direct_lead)
+            if fragment.row_key:
+                grouped.setdefault(fragment.row_key, []).append(fragment)
+            elif not (fragment.owner_found and fragment.lead_id):
+                unstable_rows += 1
+                if fragment.owner_found:
+                    keyless_owner_without_id += 1
+
+    merged_leads = list(direct_leads)
+    owner_without_id_keys: set[str] = set()
+    for row_key, fragments in grouped.items():
+        if row_key in ambiguous_keys:
+            if any(fragment.owner_found for fragment in fragments):
+                owner_without_id_keys.add(row_key)
+            continue
+        lead_ids = {fragment.lead_id for fragment in fragments if fragment.lead_id}
+        if len(lead_ids) > 1:
+            unstable_rows += 1
+            if any(fragment.owner_found for fragment in fragments):
+                owner_without_id_keys.add(row_key)
+            continue
+        merged = _materialize_fragment_group(fragments)
+        if merged is None:
+            if any(fragment.owner_found for fragment in fragments):
+                owner_without_id_keys.add(row_key)
+            continue
+        merged_leads.append(merged)
+
+    return FragmentMergeResult(
+        leads=merge_visible_leads(merged_leads),
+        owner_without_id=keyless_owner_without_id + len(owner_without_id_keys),
+        unstable_or_ambiguous_rows=unstable_rows,
+    )
+
+
 def deduplicate_visible_leads(leads: list[VisibleLead]) -> list[VisibleLead]:
     """Elimina representaciones DOM repetidas sin descartar filas sin ID."""
     seen_lead_ids = set()
@@ -171,20 +281,30 @@ def read_full_report(
             table = find_report_table(driver, timeout_seconds)
             scroll_table_right(driver, table, reset=True)
             known_ids = {lead.lead_id for lead in collected}
+            horizontal_fragments: list[list[RowFragment]] = []
             for _ in range(max_horizontal_passes):
-                visible_rows, leads = read_visible_unassigned_leads(
+                table = find_report_table(driver, timeout_seconds)
+                visible_rows, fragments = capture_visible_row_fragments(
                     driver,
-                    timeout_seconds,
+                    table,
                     record_object_api_name,
                     field_aliases,
                     diagnostics,
                     unassigned_owner,
                 )
                 total_rows_seen = max(total_rows_seen, visible_rows)
-                collected.extend(leads)
+                horizontal_fragments.append(fragments)
                 table = find_report_table(driver, timeout_seconds)
                 if not scroll_table_right(driver, table, reset=False):
                     break
+            merge_result = merge_row_fragments(horizontal_fragments)
+            collected.extend(merge_result.leads)
+            diagnostics.append(
+                {
+                    "owner_without_id": merge_result.owner_without_id,
+                    "unstable_or_ambiguous_rows": merge_result.unstable_or_ambiguous_rows,
+                }
+            )
             new_ids = {lead.lead_id for lead in collected} - known_ids
             table = find_report_table(driver, timeout_seconds)
             if not scroll_table_down(driver, table) and not new_ids:
@@ -192,6 +312,77 @@ def read_full_report(
     except ReportEmptyError:
         pass
     return total_rows_seen, merge_visible_leads(collected)
+
+
+# Espera breve tras cada pasada horizontal: Lightning re-renderiza las
+# columnas de forma asíncrona y sin ella la siguiente captura lee el DOM viejo.
+HORIZONTAL_SETTLE_SECONDS = 0.4
+
+
+def _viewport_width(driver) -> int | None:
+    try:
+        width = driver.execute_script("return window.innerWidth")
+    except (WebDriverException, AttributeError):
+        return None
+    return width if isinstance(width, (int, float)) else None
+
+
+def read_report_horizontal(
+    driver,
+    timeout_seconds: int,
+    record_object_api_name: str = DEFAULT_RECORD_OBJECT_API_NAME,
+    field_aliases: dict[str, list[str]] | None = None,
+    diagnostics: list[dict[str, object]] | None = None,
+    unassigned_owner: str = UNASSIGNED_OWNER,
+    max_horizontal_passes: int = 20,
+) -> tuple[int, list[VisibleLead]]:
+    """Barrido horizontal acotado del reporte, sin scroll vertical.
+
+    Recorre las columnas de izquierda a derecha uniendo los fragmentos de
+    cada fila por su identidad estructural: propietario, detalles e
+    identidad del Lead no tienen que coexistir en un mismo viewport (el
+    caso de la bandeja AR ancha donde ``Lead ID`` quedaba virtualizado).
+    La grilla vuelve al extremo izquierdo al terminar.
+    """
+    try:
+        table = find_report_table(driver, timeout_seconds)
+    except ReportEmptyError:
+        return 0, []
+    viewport_width = _viewport_width(driver)
+    scroll_table_right(driver, table, reset=True)
+    horizontal_fragments: list[list[RowFragment]] = []
+    total_rows_seen = 0
+    for _ in range(max_horizontal_passes):
+        table = find_report_table(driver, timeout_seconds)
+        visible_rows, fragments = capture_visible_row_fragments(
+            driver,
+            table,
+            record_object_api_name,
+            field_aliases,
+            diagnostics,
+            unassigned_owner,
+        )
+        total_rows_seen = max(total_rows_seen, visible_rows)
+        horizontal_fragments.append(fragments)
+        if not scroll_table_right(driver, table, reset=False):
+            break
+        time.sleep(HORIZONTAL_SETTLE_SECONDS)
+    try:
+        table = find_report_table(driver, timeout_seconds)
+        scroll_table_right(driver, table, reset=True)
+    except (WebDriverException, TimeoutException, ReportEmptyError):
+        pass
+    merge_result = merge_row_fragments(horizontal_fragments)
+    if diagnostics is not None:
+        diagnostics.append(
+            {
+                "horizontal_passes": len(horizontal_fragments),
+                "viewport_width": viewport_width,
+                "owner_without_id": merge_result.owner_without_id,
+                "unstable_or_ambiguous_rows": merge_result.unstable_or_ambiguous_rows,
+            }
+        )
+    return total_rows_seen, merge_result.leads
 
 
 def normalize_label(value: str) -> str:
@@ -301,6 +492,44 @@ def record_route_pattern(record_object_api_name: str) -> re.Pattern:
     )
 
 
+ANY_RECORD_ROUTE_PATTERN = re.compile(
+    r"/(?:lightning/r/)?(?P<object>[A-Za-z0-9_]+)/"
+    r"(?P<record_id>[A-Za-z0-9]{15}(?:[A-Za-z0-9]{3})?)(?:/view|[/?#]|$)",
+    re.IGNORECASE,
+)
+
+
+def record_attribute_elements(row_element, driver=None) -> list:
+    search_driver = driver or row_element
+    descendants = find_elements(search_driver, row_element, RECORD_ATTRIBUTE_SELECTOR)
+    elements = [row_element]
+    elements.extend(element for element in descendants if element is not row_element)
+    return elements
+
+
+def element_routes_to_other_object(element, record_object_api_name: str) -> bool:
+    match = ANY_RECORD_ROUTE_PATTERN.search(element.get_attribute("href") or "")
+    if not match:
+        return False
+    expected = record_object_api_name or DEFAULT_RECORD_OBJECT_API_NAME
+    return match.group("object").casefold() != expected.casefold()
+
+
+def extract_row_key(row_element, driver=None) -> str:
+    """Resuelve solo identidad estructural; nunca usa nombre, correo ni texto de celdas."""
+
+    for attribute_name in (*LEAD_ID_ATTRIBUTE_NAMES, *ROW_POSITION_ATTRIBUTE_NAMES):
+        value = str(row_element.get_attribute(attribute_name) or "").strip()
+        if value:
+            return f"{attribute_name}:{value}"
+    for element in record_attribute_elements(row_element, driver)[1:]:
+        for attribute_name in LEAD_ID_ATTRIBUTE_NAMES:
+            value = str(element.get_attribute(attribute_name) or "").strip()
+            if value:
+                return f"{attribute_name}:{value}"
+    return ""
+
+
 def extract_lead_id(
     row_element,
     driver=None,
@@ -314,7 +543,9 @@ def extract_lead_id(
         if match:
             return match.group(1)
 
-    for element in [row_element]:
+    for element in record_attribute_elements(row_element, driver):
+        if element_routes_to_other_object(element, record_object_api_name):
+            continue
         for attribute_name in LEAD_ID_ATTRIBUTE_NAMES:
             match = SALESFORCE_ID_PATTERN.search(element.get_attribute(attribute_name) or "")
             if match:
@@ -565,18 +796,14 @@ def find_report_table(driver, timeout_seconds: int):
     return WebDriverWait(driver, timeout_seconds).until(table_with_owner_header)
 
 
-def read_visible_unassigned_leads(
+def capture_visible_row_fragments(
     driver,
-    timeout_seconds: int,
-    record_object_api_name: str = DEFAULT_RECORD_OBJECT_API_NAME,
-    field_aliases: dict[str, list[str]] | None = None,
-    diagnostics: list[dict[str, object]] | None = None,
-    unassigned_owner: str = UNASSIGNED_OWNER,
-) -> tuple[int, list[VisibleLead]]:
-    try:
-        table = find_report_table(driver, timeout_seconds)
-    except ReportEmptyError:
-        return 0, []
+    table,
+    record_object_api_name: str,
+    field_aliases: dict[str, list[str]] | None,
+    diagnostics: list[dict[str, object]] | None,
+    unassigned_owner: str,
+) -> tuple[int, list[RowFragment]]:
     headers = report_header_labels(table, driver)
     date_index = find_header_index(headers, DATE_HEADER)
     field_indexes = resolve_field_indexes(headers, field_aliases or {})
@@ -589,6 +816,7 @@ def read_visible_unassigned_leads(
         diagnostics.append(summary)
     else:
         summary = None
+
     row_elements = find_report_rows(driver, table)
     data_rows = [
         row
@@ -597,7 +825,7 @@ def read_visible_unassigned_leads(
     ]
     owner_index = find_owner_header_index(headers)
     owner_values: dict[str, int] = {}
-    visible_rows = []
+    fragments: list[RowFragment] = []
     for grid_position, row in enumerate(data_rows, start=1):
         raw_values = row_values(row, driver)
         owner_found = row_has_unassigned_owner(raw_values, row.text, unassigned_owner)
@@ -606,32 +834,56 @@ def read_visible_unassigned_leads(
             owner_text = values[owner_index].strip()
             if owner_text:
                 owner_values[owner_text] = owner_values.get(owner_text, 0) + 1
-        lead_id = extract_lead_id(row, driver, record_object_api_name) if owner_found else ""
-        if owner_found and not lead_id:
+
+        lead_id = extract_lead_id(row, driver, record_object_api_name)
+        if not lead_id:
             lead_id = lead_id_from_values(values, lead_id_index) or lead_id_from_values(raw_values, None)
-        if diagnostics is not None:
-            diagnostics.append(row_diagnostics(row, owner_found, bool(lead_id)))
-        if not owner_found or not lead_id:
-            continue
         created_at = extract_created_at(values, date_index)
         details = extract_row_details(values, field_indexes) if field_aliases else {}
         if details:
-            details["lead_id"] = lead_id
+            if lead_id:
+                details["lead_id"] = lead_id
             if not details.get("fecha_creacion"):
                 details["fecha_creacion"] = created_at
-            if not details.get("propietario_candidato"):
-                details["propietario_candidato"] = UNASSIGNED_OWNER
+            if owner_found and not details.get("propietario_candidato"):
+                details["propietario_candidato"] = unassigned_owner
             details.update(unmapped_columns(headers, values, field_indexes))
-        visible_rows.append(
-            VisibleLead(
+        fragments.append(
+            RowFragment(
+                row_key=extract_row_key(row, driver),
+                sequence_position=grid_position,
+                owner_found=owner_found,
                 lead_id=lead_id,
                 created_at=created_at,
-                grid_position=grid_position,
                 details=details,
             )
         )
+        if diagnostics is not None:
+            diagnostics.append(row_diagnostics(row, owner_found, bool(lead_id)))
+
     if summary is not None:
-        # Qué propietarios se vieron en la columna de owner: si ninguno
-        # coincide con el "sin asignar" configurado, el nombre está mal.
         summary["owners_seen"] = sorted(owner_values, key=owner_values.get, reverse=True)[:8]
-    return len(data_rows), deduplicate_visible_leads(visible_rows)
+    return len(data_rows), fragments
+
+
+def read_visible_unassigned_leads(
+    driver,
+    timeout_seconds: int,
+    record_object_api_name: str = DEFAULT_RECORD_OBJECT_API_NAME,
+    field_aliases: dict[str, list[str]] | None = None,
+    diagnostics: list[dict[str, object]] | None = None,
+    unassigned_owner: str = UNASSIGNED_OWNER,
+) -> tuple[int, list[VisibleLead]]:
+    try:
+        table = find_report_table(driver, timeout_seconds)
+    except ReportEmptyError:
+        return 0, []
+    visible_rows, fragments = capture_visible_row_fragments(
+        driver,
+        table,
+        record_object_api_name,
+        field_aliases,
+        diagnostics,
+        unassigned_owner,
+    )
+    return visible_rows, merge_row_fragments([fragments]).leads

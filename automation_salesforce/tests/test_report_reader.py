@@ -23,6 +23,8 @@ from report_reader import (
     is_unassigned_owner,
     is_visible_element,
     merge_visible_leads,
+    read_full_report,
+    read_report_horizontal,
     read_visible_unassigned_leads,
     report_accessibility_summary,
     report_structure_summary,
@@ -110,6 +112,56 @@ class FakeFrameDriver:
         return []
 
 
+class FakeHorizontalTable:
+    tag_name = "table"
+
+    def __init__(self, driver, passes):
+        self.driver = driver
+        self.passes = passes
+
+    def find_elements(self, by, selector):
+        current = self.passes[self.driver.horizontal_pass]
+        if selector in {"thead th, [role='columnheader']", "tr:first-of-type th, tr:first-child th"}:
+            return [FakeCell(header) for header in current["headers"]]
+        if selector in {"tbody tr, [role='row']", "tbody tr", "[role='row']"}:
+            return current["rows"]
+        return []
+
+    def get_attribute(self, name):
+        return "grid" if name == "role" else ""
+
+
+class FakeHorizontalDriver:
+    def __init__(self, passes):
+        self.horizontal_pass = 0
+        self.passes = passes
+        self.table = FakeHorizontalTable(self, passes)
+        self.switch_to = FakeSwitchTo(self)
+        self.context = "main"
+
+    def find_elements(self, by, selector):
+        if selector == "iframe, frame":
+            return []
+        if selector == REPORT_CANDIDATE_SELECTOR:
+            return [self.table]
+        return []
+
+    def execute_script(self, script, *args):
+        if len(args) == 2 and isinstance(args[1], bool):
+            reset = args[1]
+            if reset:
+                self.horizontal_pass = 0
+                return {"moved": False}
+            if self.horizontal_pass + 1 < len(self.passes):
+                self.horizontal_pass += 1
+                return {"moved": True}
+            return {"moved": False}
+        if len(args) == 2 and isinstance(args[1], str):
+            root, selector = args
+            return (root or self).find_elements(By.CSS_SELECTOR, selector)
+        return {"moved": False}
+
+
 class FakeLink:
     def __init__(self, href: str):
         self.href = href
@@ -120,12 +172,21 @@ class FakeLink:
         return self.href
 
 
+class FakeAttributeElement:
+    def __init__(self, attributes=None):
+        self.attributes = attributes or {}
+
+    def get_attribute(self, name: str) -> str:
+        return self.attributes.get(name, "")
+
+
 class FakeRow:
-    def __init__(self, cells=None, links=None, displayed=True, attributes=None):
+    def __init__(self, cells=None, links=None, displayed=True, attributes=None, descendants=None):
         self.cells = cells or []
         self.links = links or []
         self.displayed = displayed
         self.attributes = attributes or {}
+        self.descendants = descendants or []
         self.text = "\n".join(cell.text for cell in self.cells)
         self.requests = []
 
@@ -138,6 +199,8 @@ class FakeRow:
             return self.cells
         if selector == "a[href]":
             return self.links
+        if "data-recordid" in selector:
+            return self.descendants
         return []
 
     def get_attribute(self, name):
@@ -290,6 +353,21 @@ class ReportReaderTests(unittest.TestCase):
 
         self.assertEqual(lead_id, "a1B000000000003AAA")
 
+    def test_extract_lead_id_reads_descendant_record_attributes(self):
+        other_object = FakeAttributeElement(
+            {
+                "href": "https://example.invalid/lightning/r/Group/00G000000000001AAA/view",
+                "data-recordid": "00G000000000001AAA",
+            }
+        )
+        lead = FakeAttributeElement({"data-record-id": "00Q000000000004AAA"})
+
+        self.assertEqual(
+            extract_lead_id(FakeRow(descendants=[other_object, lead])),
+            "00Q000000000004AAA",
+        )
+        self.assertEqual(extract_lead_id(FakeRow(descendants=[other_object])), "")
+
     def test_deduplicate_visible_leads_uses_salesforce_lead_id(self):
         first_lead = VisibleLead("00Q000000000001AAA", "2026-09-09")
         duplicate_dom_row = VisibleLead("00Q000000000001AAA", "2026-09-09")
@@ -416,6 +494,188 @@ class ReportReaderTests(unittest.TestCase):
 
         self.assertEqual(len(leads), 1)
         self.assertEqual(leads[0].details, {"campana": "A", "email": "a@example.invalid"})
+
+    def test_horizontal_scan_merges_stable_row_fragments(self):
+        row_key = {"aria-rowindex": "2"}
+        driver = FakeHorizontalDriver(
+            [
+                {
+                    "headers": ["Propietario del candidato"],
+                    "rows": [FakeRow(cells=[FakeCell("AR_LEAD_QUALIF")], attributes=row_key)],
+                },
+                {
+                    "headers": ["Lead ID"],
+                    "rows": [FakeRow(cells=[FakeCell("00Q000000000005AAA")], attributes=row_key)],
+                },
+            ]
+        )
+
+        visible_rows, leads = read_full_report(
+            driver,
+            timeout_seconds=1,
+            record_object_api_name="Lead",
+            field_aliases={"lead_id": ["Lead ID"]},
+            diagnostics=[],
+            max_vertical_passes=1,
+        )
+
+        self.assertEqual(visible_rows, 1)
+        self.assertEqual([lead.lead_id for lead in leads], ["00Q000000000005AAA"])
+
+    def test_horizontal_reader_merges_fragments_and_restores_scroll(self):
+        """El barrido del Monitor une propietario e ID de pasadas distintas
+        con la misma clave y deja la grilla de vuelta a la izquierda."""
+        row_key = {"aria-rowindex": "2"}
+        driver = FakeHorizontalDriver(
+            [
+                {
+                    "headers": ["Propietario del candidato"],
+                    "rows": [FakeRow(cells=[FakeCell("AR_LEAD_QUALIF")], attributes=row_key)],
+                },
+                {
+                    "headers": ["Lead ID"],
+                    "rows": [FakeRow(cells=[FakeCell("00Q000000000005AAA")], attributes=row_key)],
+                },
+            ]
+        )
+        diagnostics = []
+
+        visible_rows, leads = read_report_horizontal(
+            driver,
+            timeout_seconds=1,
+            record_object_api_name="Lead",
+            field_aliases={"lead_id": ["Lead ID"]},
+            diagnostics=diagnostics,
+        )
+
+        self.assertEqual(visible_rows, 1)
+        self.assertEqual([lead.lead_id for lead in leads], ["00Q000000000005AAA"])
+        self.assertEqual(driver.horizontal_pass, 0)
+        summary = diagnostics[-1]
+        self.assertEqual(summary["horizontal_passes"], 2)
+        self.assertEqual(summary["owner_without_id"], 0)
+        self.assertEqual(summary["unstable_or_ambiguous_rows"], 0)
+
+    def test_horizontal_reader_counts_qualif_without_id(self):
+        """Una fila QUALIF sin identidad resoluble no produce Lead y queda
+        contada para el log — el caso '0 sin asignar con QUALIF a la vista'."""
+        driver = FakeHorizontalDriver(
+            [
+                {
+                    "headers": ["Propietario del candidato"],
+                    "rows": [FakeRow(cells=[FakeCell("AR_LEAD_QUALIF")])],
+                },
+            ]
+        )
+        diagnostics = []
+
+        _, leads = read_report_horizontal(
+            driver,
+            timeout_seconds=1,
+            record_object_api_name="Lead",
+            field_aliases={"lead_id": ["Lead ID"]},
+            diagnostics=diagnostics,
+        )
+
+        self.assertEqual(leads, [])
+        self.assertEqual(diagnostics[-1]["owner_without_id"], 1)
+        self.assertEqual(diagnostics[-1]["horizontal_passes"], 1)
+
+    def test_horizontal_scan_rejects_fragments_without_stable_key(self):
+        driver = FakeHorizontalDriver(
+            [
+                {
+                    "headers": ["Propietario del candidato"],
+                    "rows": [FakeRow(cells=[FakeCell("AR_LEAD_QUALIF")])],
+                },
+                {
+                    "headers": ["Lead ID"],
+                    "rows": [FakeRow(cells=[FakeCell("00Q000000000006AAA")])],
+                },
+            ]
+        )
+        diagnostics = []
+
+        _, leads = read_full_report(
+            driver,
+            timeout_seconds=1,
+            record_object_api_name="Lead",
+            field_aliases={"lead_id": ["Lead ID"]},
+            diagnostics=diagnostics,
+            max_vertical_passes=1,
+        )
+
+        self.assertEqual(leads, [])
+        self.assertGreater(sum(item.get("unstable_or_ambiguous_rows", 0) for item in diagnostics), 0)
+
+    def test_horizontal_scan_rejects_duplicate_row_keys(self):
+        duplicate_key = {"aria-rowindex": "2"}
+        driver = FakeHorizontalDriver(
+            [
+                {
+                    "headers": ["Propietario del candidato"],
+                    "rows": [
+                        FakeRow(cells=[FakeCell("AR_LEAD_QUALIF")], attributes=duplicate_key),
+                        FakeRow(cells=[FakeCell("AR_LEAD_QUALIF")], attributes=duplicate_key),
+                    ],
+                },
+                {
+                    "headers": ["Lead ID"],
+                    "rows": [
+                        FakeRow(cells=[FakeCell("00Q000000000007AAA")], attributes=duplicate_key),
+                        FakeRow(cells=[FakeCell("00Q000000000008AAA")], attributes=duplicate_key),
+                    ],
+                },
+            ]
+        )
+        diagnostics = []
+
+        _, leads = read_full_report(
+            driver,
+            timeout_seconds=1,
+            record_object_api_name="Lead",
+            field_aliases={"lead_id": ["Lead ID"]},
+            diagnostics=diagnostics,
+            max_vertical_passes=1,
+        )
+
+        self.assertEqual(leads, [])
+        self.assertGreaterEqual(sum(item.get("unstable_or_ambiguous_rows", 0) for item in diagnostics), 2)
+
+    def test_horizontal_scan_rejects_changed_row_sequence(self):
+        row_2 = {"aria-rowindex": "2"}
+        row_3 = {"aria-rowindex": "3"}
+        driver = FakeHorizontalDriver(
+            [
+                {
+                    "headers": ["Propietario del candidato"],
+                    "rows": [
+                        FakeRow(cells=[FakeCell("AR_LEAD_QUALIF")], attributes=row_2),
+                        FakeRow(cells=[FakeCell("AR_LEAD_QUALIF")], attributes=row_3),
+                    ],
+                },
+                {
+                    "headers": ["Lead ID"],
+                    "rows": [
+                        FakeRow(cells=[FakeCell("00Q000000000009AAA")], attributes=row_3),
+                        FakeRow(cells=[FakeCell("00Q000000000010AAA")], attributes=row_2),
+                    ],
+                },
+            ]
+        )
+        diagnostics = []
+
+        _, leads = read_full_report(
+            driver,
+            timeout_seconds=1,
+            record_object_api_name="Lead",
+            field_aliases={"lead_id": ["Lead ID"]},
+            diagnostics=diagnostics,
+            max_vertical_passes=1,
+        )
+
+        self.assertEqual(leads, [])
+        self.assertGreaterEqual(sum(item.get("unstable_or_ambiguous_rows", 0) for item in diagnostics), 2)
 
     def test_report_structure_summary_excludes_header_text_and_row_values(self):
         driver = FakeDriver([FakeTable(["Propietario", "Dato interno"], row_count=4)])

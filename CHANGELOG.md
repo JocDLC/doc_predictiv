@@ -15,10 +15,37 @@ Los cambios hechos por la vía **TDD** (Fase 0.5 de `AGENTS.md`) se registran
 acá en `[Sin publicar]` — sin artefactos OpenSpec — nombrando el test que
 queda como regla permanente (no se borra ni se debilita sin autorización).
 
-## [Sin publicar]
+## [1.5.1] — 2026-11-10
 
 ### Corregido
 
+- **La bandeja AR volvía "0 sin asignar" con QUALIF a la vista**: la grilla
+  de reportes de Lightning solo renderiza las columnas del viewport — con
+  `Propietario` a la izquierda y el enlace/`Lead ID` a la derecha de la
+  columna ancha `Campaña`, la fila QUALIF se descartaba sin rastro (el caso
+  de la PC de Roger, y reproducible en notebooks de 13"). El Monitor ahora
+  barre el reporte horizontalmente (hasta 20 pasadas, sin scroll vertical)
+  y une los fragmentos de cada fila por su identidad estructural — clave
+  `data-row-*`/`aria-rowindex` estable, jamás por nombre ni datos
+  personales — fallando cerrado ante claves ausentes, duplicadas u orden
+  cambiante. El escaneo reporta `horizontal_passes`, `viewport_width`,
+  `owner_without_id` y `unstable_or_ambiguous_rows`, y el log distingue
+  bandeja vacía de `N QUALIF sin ID`. La ventana dedicada además usa hasta
+  1600 px cuando el escritorio lo permite (fallback 1150×760). Tests-regla:
+  `tests.test_report_reader.ReportReaderTests.test_horizontal_reader_merges_fragments_and_restores_scroll`,
+  `...test_horizontal_reader_counts_qualif_without_id`,
+  `tests.test_lead_monitor.ReadBandejaLeadsTests`.
+- **Lead tomado que quedaba en "Nuevo" cuando el panel no renderizaba**:
+  ~17% de las tomas terminaban `sin_panel` — el panel "Contact Client" no
+  montaba por error transitorio de Salesforce (o un formulario de edición
+  colgado tapándolo) y su Save, que pasa el estado a "En curso", nunca se
+  ejecutaba. Tras las ventanas de espera el Monitor ahora aguarda ≤3 s,
+  **recarga la ficha** y reintenta la búsqueda/Guardado del panel
+  (`finalizacion: panel_tras_reload`), re-verificando la marca de `Otra
+  información` porque el reload descarta ediciones inline abiertas.
+  Tests-regla:
+  `tests.test_lead_monitor.FinalizePickUpTests.test_missing_panel_reloads_page_and_retries`,
+  `...test_reload_retry_reverifies_the_attempt_mark`.
 - **"Asignado" inyectado por Salesforce ya no queda en el lead**: el Save
   del panel "Contact Client" (o un flow) puede escribir `Asignado` en
   `Otra información` de forma asíncrona — ante Compliance cuenta como

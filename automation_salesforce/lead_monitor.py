@@ -48,7 +48,7 @@ from monitor_store import (
     should_process,
     within_schedule,
 )
-from report_reader import read_visible_unassigned_leads
+from report_reader import read_report_horizontal
 from salesforce_session import is_authenticated, wait_for_lightning_ready
 
 # El botón de la barra de acciones del registro; normalize() en el script
@@ -81,6 +81,10 @@ PANEL_WAIT_SECONDS = 15
 # Reintento corto tras la espera inicial: el panel puede renderizar tarde
 # (bajo carga) y quedar abierto sin su Save si no se vuelve a mirar.
 LATE_PANEL_WAIT_SECONDS = 4
+# Último recurso cuando el panel nunca apareció: espera breve y recarga de
+# la ficha — a veces es un error transitorio de Salesforce al montarlo (el
+# reload además descarta formularios de edición colgados que lo tapan).
+RELOAD_PANEL_WAIT_SECONDS = 3
 
 # Primer contacto por WhatsApp (cambio envio-whatsapp-automatico): solo
 # bandeja AR + toggle de UI + preferencia "vía whatsapp". El intento se
@@ -240,8 +244,7 @@ function confirmationToast() {
 """
 )
 SEND_WHATSAPP_CLICK_SCRIPT = (
-    _SEND_WHATSAPP_HELPERS
-    + "const b = whatsappSendButton(); if (!b) return 'sin_boton'; b.click(); return 'clicked';"
+    _SEND_WHATSAPP_HELPERS + "const b = whatsappSendButton(); if (!b) return 'sin_boton'; b.click(); return 'clicked';"
 )
 WA_TOAST_PRESENT_SCRIPT = _SEND_WHATSAPP_HELPERS + "return confirmationToast() ? 'found' : 'missing';"
 WA_TOAST_CLOSE_SCRIPT = (
@@ -473,7 +476,7 @@ def read_bandeja_leads(
     field_aliases: dict[str, list[str]],
     diagnostics: list | None = None,
 ):
-    return read_visible_unassigned_leads(
+    return read_report_horizontal(
         driver,
         timeout_seconds,
         record_object_api_name,
@@ -761,6 +764,7 @@ def _ensure_take_mark(
 
 # --- Reasignación por turno -------------------------------------------------
 
+
 def _encargada_activa(
     equipo: list[dict] | None,
     moment: datetime | None = None,
@@ -826,15 +830,11 @@ def _equipo_para_lead(
     """
     entry = _usable_entry_moment(details, now)
     if entry is not None:
-        if state.get("schedule") and within_schedule(
-            state["schedule"], moment=entry, bandeja=bandeja_code
-        ):
+        if state.get("schedule") and within_schedule(state["schedule"], moment=entry, bandeja=bandeja_code):
             return None
         if _encargada_activa(state.get("equipo"), moment=entry, bandeja=bandeja_code):
             return state.get("equipo")
-    if state.get("schedule") and within_schedule(
-        state["schedule"], moment=now, bandeja=bandeja_code
-    ):
+    if state.get("schedule") and within_schedule(state["schedule"], moment=now, bandeja=bandeja_code):
         return None
     return state.get("equipo")
 
@@ -894,7 +894,9 @@ def _wait_owner_search_input(driver, timeout_seconds: float):
     return None
 
 
-OWNER_LOOKUP_DUMP_SCRIPT = _OWNER_DIALOG_HELPERS + r"""
+OWNER_LOOKUP_DUMP_SCRIPT = (
+    _OWNER_DIALOG_HELPERS
+    + r"""
 const dialog = ownerDialog();
 const input = ownerSearchInput(dialog);
 const seen = [];
@@ -911,6 +913,7 @@ if (dialog) {
 }
 return { inputValue: input ? input.value : null, options: seen };
 """
+)
 
 
 def _owner_lookup_snapshot(driver) -> dict:
@@ -923,9 +926,7 @@ def _owner_lookup_snapshot(driver) -> dict:
     return snapshot if isinstance(snapshot, dict) else {}
 
 
-def _pick_owner_option(
-    driver, search_input, wanted: str, timeout_seconds: float, diagnostics=None
-) -> bool:
+def _pick_owner_option(driver, search_input, wanted: str, timeout_seconds: float, diagnostics=None) -> bool:
     """Tipea ``wanted`` en el lookup y elige la opción. Si el primer tipeo
     cayó antes de que el combobox quedara listo (texto escrito pero sin
     resultados), reescribe una vez más — reintenta el tipeo, nunca el clic
@@ -956,9 +957,7 @@ def _confirm_owner_dialog(driver, timeout_seconds: float) -> bool:
     re-renderiza el footer y el botón tarda un instante en volver."""
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
-        if execute_in_any_frame(
-            driver, MODAL_CONFIRM_SCRIPT, list(CHANGE_OWNER_CONFIRM_LABELS)
-        ) == "clicked":
+        if execute_in_any_frame(driver, MODAL_CONFIRM_SCRIPT, list(CHANGE_OWNER_CONFIRM_LABELS)) == "clicked":
             return True
         time.sleep(POLL_SECONDS)
     return False
@@ -1153,6 +1152,31 @@ def save_contact_panel_if_present(driver, timeout_seconds: int) -> str:
     return outcome
 
 
+def _save_contact_panel_after_reload(driver, timeout_seconds: int) -> tuple[str, bool]:
+    """Último recurso tras ``sin_panel``: espera ≤3 s y recarga la ficha.
+
+    El panel "Contact Client" a veces no renderiza por un error transitorio
+    de Salesforce; recargar la página del lead lo vuelve a montar (y limpia
+    un formulario de edición colgado que podría estar tapándolo). Devuelve
+    ``(outcome, reloaded)`` — ``panel_tras_reload`` cuando el Save sale
+    solo después del reload; ``reloaded`` avisa que la página se recargó y
+    hay que re-verificar lo escrito en ``Otra información``.
+    """
+    time.sleep(RELOAD_PANEL_WAIT_SECONDS)
+    try:
+        driver.refresh()
+    except (WebDriverException, AttributeError):
+        return "sin_panel", False
+    try:
+        wait_for_lightning_ready(driver, timeout_seconds)
+    except WebDriverException:
+        return "sin_panel", True
+    outcome = _save_contact_panel_initial(driver, timeout_seconds)
+    if outcome == "panel_guardado":
+        return "panel_tras_reload", True
+    return outcome, True
+
+
 def finalize_pick_up(
     driver,
     timeout_seconds: int,
@@ -1198,6 +1222,18 @@ def finalize_pick_up(
     # Chequeo tardío: el panel puede aparecer pasada la ventana inicial.
     if outcome == "sin_panel":
         outcome = _save_contact_panel_late(driver)
+    # Último recurso: el panel puede no haber renderizado por un error
+    # transitorio de Salesforce — recargar la ficha lo vuelve a intentar.
+    # Sin ese Save el lead queda "Nuevo" aunque la toma haya salido.
+    if outcome == "sin_panel":
+        outcome, reloaded = _save_contact_panel_after_reload(driver, timeout_seconds)
+        if reloaded and mark_text is not None:
+            # El reload descarta una edición inline abierta: hay que
+            # confirmar que la marca quedó persistida (idempotente).
+            try:
+                mark = _ensure_take_mark(driver, timeout_seconds, mark_text, drop_take_mark=whatsapp)
+            except (TimeoutException, WebDriverException, ValueError) as error:
+                mark = f"marca_error:{type(error).__name__}"
     if outcome == "sin_panel":
         try:
             findings = execute_in_any_frame(driver, PANEL_DIAGNOSTIC_SCRIPT)
@@ -1324,17 +1360,11 @@ def open_change_owner_dialog(driver, timeout_seconds: int) -> bool:
     deadline = time.monotonic() + timeout_seconds
     clicks = 0
     while time.monotonic() < deadline and clicks < 2:
-        outcome = execute_in_any_frame(
-            driver, RECORD_ACTION_SCRIPT, list(CHANGE_OWNER_ACTION_LABELS)
-        )
+        outcome = execute_in_any_frame(driver, RECORD_ACTION_SCRIPT, list(CHANGE_OWNER_ACTION_LABELS))
         if outcome != "clicked":
-            if execute_in_any_frame(
-                driver, OPEN_OVERFLOW_MENU_SCRIPT, list(OVERFLOW_MENU_LABELS)
-            ) == "clicked":
+            if execute_in_any_frame(driver, OPEN_OVERFLOW_MENU_SCRIPT, list(OVERFLOW_MENU_LABELS)) == "clicked":
                 time.sleep(POLL_SECONDS)
-                outcome = execute_in_any_frame(
-                    driver, RECORD_ACTION_SCRIPT, list(CHANGE_OWNER_ACTION_LABELS)
-                )
+                outcome = execute_in_any_frame(driver, RECORD_ACTION_SCRIPT, list(CHANGE_OWNER_ACTION_LABELS))
         if outcome != "clicked":
             time.sleep(POLL_SECONDS)
             continue
@@ -1410,9 +1440,8 @@ def run_bandeja_cycle(
     # Scan visible: sin esta línea un reporte leído con 0 coincidencias del
     # propietario "sin asignar" es indistinguible de un reporte vacío —
     # fue el caso de "abre la bandeja pero no toma ni lista nada".
-    owners_seen = next(
-        (d.get("owners_seen") for d in diagnostics if d.get("owners_seen")), []
-    )
+    owners_seen = next((d.get("owners_seen") for d in diagnostics if d.get("owners_seen")), [])
+    scan = next((d for d in reversed(diagnostics) if "horizontal_passes" in d), {})
     events.append(
         {
             "type": "bandeja_scan",
@@ -1421,6 +1450,10 @@ def run_bandeja_cycle(
             "unassigned": len(leads),
             "unassigned_owner": bandeja["unassigned_owner"],
             "owners_seen": owners_seen,
+            "horizontal_passes": scan.get("horizontal_passes", 1),
+            "viewport_width": scan.get("viewport_width"),
+            "owner_without_id": scan.get("owner_without_id", 0),
+            "unstable_or_ambiguous_rows": scan.get("unstable_or_ambiguous_rows", 0),
         }
     )
     skipped_status = 0
@@ -1431,9 +1464,7 @@ def run_bandeja_cycle(
     # vigente de AR no impide que el equipo reciba los leads de MX.
     # Franja propia sin bandejas tildadas = cubre todas, como siempre.
     equipo = state.get("equipo")
-    propio_activo = bool(state.get("schedule")) and within_schedule(
-        state["schedule"], bandeja=bandeja["code"]
-    )
+    propio_activo = bool(state.get("schedule")) and within_schedule(state["schedule"], bandeja=bandeja["code"])
     # Cobertura por bandeja: sin franja propia que cubra ESTA bandeja, solo
     # la persona del equipo cuya franja activa la cubre habilita la toma.
     # Un lead MX con franja AR vigente queda detectado "sin cobertura" —
@@ -1520,9 +1551,7 @@ def run_cycle(
     events: list[dict] = []
     for bandeja in (b for b in state.get("bandejas", []) if b.get("enabled")):
         try:
-            bandeja_events = run_bandeja_cycle(
-                driver, config, bandeja, state, timeout_seconds, diag_dir=diag_dir
-            )
+            bandeja_events = run_bandeja_cycle(driver, config, bandeja, state, timeout_seconds, diag_dir=diag_dir)
         except Exception as error:  # noqa: BLE001 — una bandeja caída no frena a las demás
             events.append(
                 {

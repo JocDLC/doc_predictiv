@@ -1,0 +1,1820 @@
+{
+  ".codex/hooks.json": {
+    "mtime": 1787593404.6394477,
+    "seen": 1794346111.6358228,
+    "ast_hash": "e28e7b973efdc136328968518313f1f1",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1794345696.793744,
+    "seen": 1794346111.6358376,
+    "ast_hash": "de9df55be20f4272883709ccc652ab4f",
+    "semantic_hash": ""
+  },
+  "_analyze.py": {
+    "mtime": 1787840400.3680048,
+    "seen": 1794346111.635843,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/attempt_identity.py": {
+    "mtime": 1791337675.6031315,
+    "seen": 1794346111.6358466,
+    "ast_hash": "9911cfbb10622612d257fad406e63323",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/browser_factory.py": {
+    "mtime": 1793201803.4148798,
+    "seen": 1794346111.6358502,
+    "ast_hash": "9c7ff8000949250e676683ab8c5a5843",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/closure_store.py": {
+    "mtime": 1791305010.1167645,
+    "seen": 1794346111.6358526,
+    "ast_hash": "8d8724e5d8719129ece47eeeff3a05ae",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/comment_reader.py": {
+    "mtime": 1794345681.3205893,
+    "seen": 1794346111.635856,
+    "ast_hash": "f21695b042620215f433f45c2d1167fd",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/comment_writer.py": {
+    "mtime": 1794345681.3215857,
+    "seen": 1794346111.635858,
+    "ast_hash": "dc5ca04f6917b76c46fd9d46d0624247",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/config.example.json": {
+    "mtime": 1793387746.979944,
+    "seen": 1794346111.6358604,
+    "ast_hash": "3823adabf62855fda48a2a1f27071b19",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/correction_loader.py": {
+    "mtime": 1791305031.3040397,
+    "seen": 1794346111.6358628,
+    "ast_hash": "981c3e5626f475cbc1a64d6107985756",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/country_fields.py": {
+    "mtime": 1791402579.809038,
+    "seen": 1794346111.6358647,
+    "ast_hash": "6db59dfc1e5e4d01f0ded3ce899a201f",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/debug_owner_lookup.py": {
+    "mtime": 1794345681.3215857,
+    "seen": 1794346111.6358678,
+    "ast_hash": "981b6488a9a4e17f285398d57c30bb00",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/distribucion_loader.py": {
+    "mtime": 1793808237.258892,
+    "seen": 1794346111.6358705,
+    "ast_hash": "7b3512cccdf4dcfd3e41aa06b5262a92",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/harness.py": {
+    "mtime": 1794345681.3271096,
+    "seen": 1794346111.6358726,
+    "ast_hash": "ca7b879c718dfefa4be0fdec80e7be0c",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/lead_closure.py": {
+    "mtime": 1794345681.3296633,
+    "seen": 1794346111.6358747,
+    "ast_hash": "5ae059ebc8a364bf6636c8c7e0ddb817",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/lead_monitor.py": {
+    "mtime": 1794353788.9662232,
+    "seen": 1794354116.9861999,
+    "ast_hash": "242f26d57356c69687fbb515f82a5c1a",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/leads_ui.py": {
+    "mtime": 1790811789.7902122,
+    "seen": 1794346111.6358788,
+    "ast_hash": "e805a881205c89357fbca20fe1ac6f66",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/local_audit.py": {
+    "mtime": 1788972569.2664628,
+    "seen": 1794346111.635881,
+    "ast_hash": "bbf11354185a35a034b6bb075481edbf",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/local_report.py": {
+    "mtime": 1789534649.7131615,
+    "seen": 1794346111.635883,
+    "ast_hash": "2b608545d560b18e92e8f6e7a40d4908",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/monitor_store.py": {
+    "mtime": 1794345681.3316758,
+    "seen": 1794346111.635885,
+    "ast_hash": "541ed83569f1759dbf776a390ef7a2f0",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/open_persistent_browser.py": {
+    "mtime": 1794345681.3205893,
+    "seen": 1794346111.635887,
+    "ast_hash": "5177a1315ee2ed38bdbbf66d931d1e33",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/productivity_metrics.py": {
+    "mtime": 1790896142.2091737,
+    "seen": 1794346111.6358888,
+    "ast_hash": "635fdd1623f8783d4cbadc48a2c47b1c",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/queue_loader.py": {
+    "mtime": 1791305006.9927955,
+    "seen": 1794346111.6358922,
+    "ast_hash": "9a145a83ee725ef7589d527e3b5dd9ac",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/reparto_equitativo.py": {
+    "mtime": 1793684150.1717017,
+    "seen": 1794346111.6358943,
+    "ast_hash": "64ebaf675fbe435599c7a5a6f344eaab",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/report_reader.py": {
+    "mtime": 1794348864.41449,
+    "seen": 1794354116.9877415,
+    "ast_hash": "e497ad1cc6a3d479d7aea04e41c2655c",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_close_queue.py": {
+    "mtime": 1794345681.3235834,
+    "seen": 1794346111.635898,
+    "ast_hash": "8bb3570f8306bd30692354437f1566db",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_comment_assisted.py": {
+    "mtime": 1790811789.7902122,
+    "seen": 1794346111.6359003,
+    "ast_hash": "17b89e02d077596a46d77bb3859eecd5",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_comment_read_only.py": {
+    "mtime": 1789696241.903973,
+    "seen": 1794346111.635902,
+    "ast_hash": "7cc0b7c5e5d69bf4e1ac368fefb51f54",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_corrections.py": {
+    "mtime": 1791306339.6623216,
+    "seen": 1794346111.6359038,
+    "ast_hash": "09aacdb216191782fcd5fd97a0dec645",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_distribucion_queue.py": {
+    "mtime": 1794345681.3215857,
+    "seen": 1794346111.6359057,
+    "ast_hash": "633d97c2fb3c4b7aee92ef0edf476d9c",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_document_queue.py": {
+    "mtime": 1794345681.3235834,
+    "seen": 1794346111.6359074,
+    "ast_hash": "d8d8b79a490f8dda167201b9eed9e682",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_leads_ui.py": {
+    "mtime": 1789696313.3865025,
+    "seen": 1794346111.635909,
+    "ast_hash": "b6b636b0d999971b25a64aa55094aaeb",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_read_only.py": {
+    "mtime": 1789696313.3865025,
+    "seen": 1794346111.635911,
+    "ast_hash": "facf1548b2657dda39c3d77360966436",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_report_read_only.py": {
+    "mtime": 1789696250.5011177,
+    "seen": 1794346111.6359127,
+    "ast_hash": "cb6c6e45b58bd6a6cb70a5c4ce731932",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/salesforce_session.py": {
+    "mtime": 1790811789.7942603,
+    "seen": 1794346111.6359146,
+    "ast_hash": "944178644819f90a1766a85eca98ae95",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/server_guardian.py": {
+    "mtime": 1791910800.7477603,
+    "seen": 1794346111.6359162,
+    "ast_hash": "69353ceb88a4072266673d14c2d3f4d5",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/snapshot_store.py": {
+    "mtime": 1794345681.3205893,
+    "seen": 1794346111.6359186,
+    "ast_hash": "df4137962a01c7d8268f5cf816ece915",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_attempt_identity.py": {
+    "mtime": 1794345681.3296633,
+    "seen": 1794346111.6359205,
+    "ast_hash": "16285aaaa5a2e403ff28f7f7300711c8",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_browser_factory.py": {
+    "mtime": 1792600134.7433174,
+    "seen": 1794346111.6359227,
+    "ast_hash": "1314bf9973c82a05c7d8f75608245d53",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_closure_store.py": {
+    "mtime": 1791306178.0417676,
+    "seen": 1794346111.6359248,
+    "ast_hash": "08158d49fae6075553686d5245b0e0ad",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_comment_reader.py": {
+    "mtime": 1790811789.7865841,
+    "seen": 1794346111.6359267,
+    "ast_hash": "b527f7d9e0cc691c21032da3956ae11f",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_comment_writer.py": {
+    "mtime": 1789746293.9792063,
+    "seen": 1794346111.6359286,
+    "ast_hash": "312b77479e791525ac068d8ec0c95e64",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_corrections.py": {
+    "mtime": 1791306197.252745,
+    "seen": 1794346111.6359303,
+    "ast_hash": "fcbbebfb8fa697688aa5dd852082dabb",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_country_fields.py": {
+    "mtime": 1791306174.9174674,
+    "seen": 1794346111.635934,
+    "ast_hash": "47aa7aaf915aacc1371f4e51fb70907a",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_distribucion_loader.py": {
+    "mtime": 1793808211.7334752,
+    "seen": 1794346111.635936,
+    "ast_hash": "d493a73e8f723dbe15fd99b75b198c91",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_harness_smoke.py": {
+    "mtime": 1790866052.2590356,
+    "seen": 1794346111.6359377,
+    "ast_hash": "9c7b34ecb245be0602ca4e3b26255aac",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_harness_tdd.py": {
+    "mtime": 1793317212.3940969,
+    "seen": 1794346111.6359396,
+    "ast_hash": "c75555c4ef878ada44651587ab56370f",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_lead_closure.py": {
+    "mtime": 1794345681.3215857,
+    "seen": 1794346111.6359413,
+    "ast_hash": "40523dc5e647323ba8aefd089a738a90",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_lead_monitor.py": {
+    "mtime": 1794353855.6465175,
+    "seen": 1794354116.9913445,
+    "ast_hash": "0fccbf6214c1880ee855bbabc4710de9",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_leads_ui.py": {
+    "mtime": 1790811789.7902122,
+    "seen": 1794346111.6359453,
+    "ast_hash": "8ff00e84065f32231f2c0b7b6002bd2c",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_local_audit.py": {
+    "mtime": 1788972599.2580006,
+    "seen": 1794346111.6359472,
+    "ast_hash": "ea819fc4b2b47b722f0dc5a5549c491d",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_local_report.py": {
+    "mtime": 1789002107.179089,
+    "seen": 1794346111.6359494,
+    "ast_hash": "30da86f3653595710936aa8406ad4e82",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_monitor_store.py": {
+    "mtime": 1794345681.3271096,
+    "seen": 1794346111.635951,
+    "ast_hash": "8c38fbee4589d3b53fe60541111521a8",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_productivity_metrics.py": {
+    "mtime": 1790896437.9219337,
+    "seen": 1794346111.635953,
+    "ast_hash": "42605538b22bfaf6d81e0b148ae62ab2",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_queue_loader.py": {
+    "mtime": 1791306176.4445376,
+    "seen": 1794346111.6359546,
+    "ast_hash": "9d7177e5f781be3155bfe28348c2bfe7",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_reparto_equitativo.py": {
+    "mtime": 1793684150.275617,
+    "seen": 1794346111.6359565,
+    "ast_hash": "223949310d55a26274f7f4f10451e3bf",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_report_reader.py": {
+    "mtime": 1794348851.1590412,
+    "seen": 1794354116.99243,
+    "ast_hash": "ee74341010aeda7aedd3ff5d78bda46f",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_run_close_queue.py": {
+    "mtime": 1794345681.3215857,
+    "seen": 1794346111.6359606,
+    "ast_hash": "edebfbf232897a645a7333ac36c1e3d2",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_run_comment_assisted.py": {
+    "mtime": 1789006780.4635713,
+    "seen": 1794346111.6359625,
+    "ast_hash": "8cd85faa5130626c070e94a95dd4da6c",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_run_comment_read_only.py": {
+    "mtime": 1789003999.4813643,
+    "seen": 1794346111.6359642,
+    "ast_hash": "cfa05915b3412753c3420d16d477e4b4",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_run_corrections.py": {
+    "mtime": 1791306392.829924,
+    "seen": 1794346111.6359656,
+    "ast_hash": "01eeb9d1c245e49761d566105405f823",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_run_distribucion_queue.py": {
+    "mtime": 1794345681.3260992,
+    "seen": 1794346111.6359675,
+    "ast_hash": "fb10be421fe1ad8ffbe41c0009105f76",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_run_document_queue.py": {
+    "mtime": 1794345681.3306787,
+    "seen": 1794346111.6359692,
+    "ast_hash": "3308db161aa2190beea7225c4fb2e2eb",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_run_leads_ui.py": {
+    "mtime": 1790811789.7865841,
+    "seen": 1794346111.635971,
+    "ast_hash": "6cbe47f74c84d1332e07db6e015a4a82",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_run_report_read_only.py": {
+    "mtime": 1789000865.0723567,
+    "seen": 1794346111.6359732,
+    "ast_hash": "c582064929e338828926bc0ced2d459e",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_salesforce_session.py": {
+    "mtime": 1790866213.7043574,
+    "seen": 1794346111.635975,
+    "ast_hash": "47474dcd256bc8d9e00fd365734e2715",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_server_guardian.py": {
+    "mtime": 1794345681.3225842,
+    "seen": 1794346111.6359768,
+    "ast_hash": "35440b41455bc6b8bda9e5991ca5e4c3",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_snapshot_store.py": {
+    "mtime": 1791306198.1213875,
+    "seen": 1794346111.6359785,
+    "ast_hash": "77bac1130da77d65b02b86784d2f8ff3",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_ui_closure.py": {
+    "mtime": 1791306258.6021068,
+    "seen": 1794346111.6359804,
+    "ast_hash": "2d8dedf24977ecbcdabf4877b88cbe2b",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_ui_distribucion.py": {
+    "mtime": 1794345681.32865,
+    "seen": 1794346111.6359823,
+    "ast_hash": "97a7e8ba26e0768f56ca70e157bb02cb",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_ui_documentation_state.py": {
+    "mtime": 1791339100.6582932,
+    "seen": 1794346111.6359842,
+    "ast_hash": "84e382b470580cb848ba094bc3ed2696",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_ui_monitor.py": {
+    "mtime": 1793889712.9819694,
+    "seen": 1794346111.6359859,
+    "ast_hash": "312e104ee293724c4f75cd119e2dc57e",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_ui_server.py": {
+    "mtime": 1794349185.65412,
+    "seen": 1794354116.9953964,
+    "ast_hash": "27d64ab6b77bd6dee019935996dfd858",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_verificar_pc.py": {
+    "mtime": 1793387840.9330845,
+    "seen": 1794346111.6359894,
+    "ast_hash": "f024f39541cdfc97a61823fb84e5cb0a",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/ui_server.py": {
+    "mtime": 1794349191.0743563,
+    "seen": 1794354116.9955807,
+    "ast_hash": "9b2e5d8bc9cec97e31b8870a1057a467",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/verificar_pc.py": {
+    "mtime": 1793387856.0242248,
+    "seen": 1794346111.6359932,
+    "ast_hash": "48adbba98493723eba0894a7bc0b955c",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/__init__.py": {
+    "mtime": 1790900141.274937,
+    "seen": 1794346111.6359954,
+    "ast_hash": "83acca724622ad8b0ba69726f321336a",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/__main__.py": {
+    "mtime": 1790900015.205336,
+    "seen": 1794346111.6359975,
+    "ast_hash": "343fe7efacf369c27bdbb116e8ec8b82",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/contracts.json": {
+    "mtime": 1791176604.9584956,
+    "seen": 1794346111.6359997,
+    "ast_hash": "800bb46ca2b03cd73412fbe388d8b1ff",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/generator.py": {
+    "mtime": 1791041092.6060581,
+    "seen": 1794346111.6360018,
+    "ast_hash": "12112f2a2b913b66f996752efe5665a6",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/paths.py": {
+    "mtime": 1791040967.1949773,
+    "seen": 1794346111.6360042,
+    "ast_hash": "ebe802b4b2828fee58af460bfc611772",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/smoke.py": {
+    "mtime": 1790994106.5042417,
+    "seen": 1794346111.6360064,
+    "ast_hash": "61e338aabd714191d315127b35c82a44",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/tests/__init__.py": {
+    "mtime": 1790872789.5695233,
+    "seen": 1794346111.6360083,
+    "ast_hash": "d88f8e01b26b5c17d1e8c5aa39997f1d",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/tests/test_cli.py": {
+    "mtime": 1790900104.4817338,
+    "seen": 1794346111.6360104,
+    "ast_hash": "adbf66160b4291df8d3a8ff785babe30",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/tests/test_generator.py": {
+    "mtime": 1791040952.2680426,
+    "seen": 1794346111.6360126,
+    "ast_hash": "25da7d054b6416cade20ff38bd78dbda",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/tests/test_validator.py": {
+    "mtime": 1791040935.901408,
+    "seen": 1794346111.636015,
+    "ast_hash": "740e2b4897b8a857a730f668decbda72",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/validator.py": {
+    "mtime": 1791040935.89318,
+    "seen": 1794346111.6360192,
+    "ast_hash": "3e090caefc55ccc79b2cf80d1da50fca",
+    "semantic_hash": ""
+  },
+  "entregables/generar_docs.py": {
+    "mtime": 1792108682.5325823,
+    "seen": 1794346111.6360211,
+    "ast_hash": "c7afa233e6f057990cbfc93c7f0c712b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/agregar-favicons-paginas-locales/.openspec.yaml": {
+    "mtime": 1790953899.6976018,
+    "seen": 1794346111.6360233,
+    "ast_hash": "6555e3e3c66b98bedac135ad2063cc47",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-27-mejorar-ui-estado-monitor/.openspec.yaml": {
+    "mtime": 1793114021.2738013,
+    "seen": 1794346111.6360254,
+    "ast_hash": "9647580428efcef2cc453d72112b49be",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-30-renombrar-ui-gestion-leads/.openspec.yaml": {
+    "mtime": 1793040532.3122425,
+    "seen": 1794346111.6360273,
+    "ast_hash": "3ce363b0ba4427eec150032196c5725b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/.openspec.yaml": {
+    "mtime": 1790782009.366255,
+    "seen": 1794346111.6360297,
+    "ast_hash": "9732e53f3ecbde4dee3453a20c75be50",
+    "semantic_hash": ""
+  },
+  "openspec/changes/corregir-lectura-reportes-virtualizados/.openspec.yaml": {
+    "mtime": 1794332477.0480242,
+    "seen": 1794346111.6360316,
+    "ast_hash": "6ef4f7747aa531c58d589ea284dca8d9",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/.openspec.yaml": {
+    "mtime": 1790871494.223126,
+    "seen": 1794346111.6360338,
+    "ast_hash": "8ad67b8d97c8d7328067a18e2c9ef065",
+    "semantic_hash": ""
+  },
+  "openspec/changes/distribuir-leads-desde-archivo/.openspec.yaml": {
+    "mtime": 1792848451.1706812,
+    "seen": 1794346111.636036,
+    "ast_hash": "c444fcf17b3995a1adb9003558ca6fd2",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-leads-desde-ui/.openspec.yaml": {
+    "mtime": 1789705517.9020267,
+    "seen": 1794346111.6360378,
+    "ast_hash": "b70cd8df0676b036bbf0f90970abeb32",
+    "semantic_hash": ""
+  },
+  "openspec/changes/envio-whatsapp-automatico/.openspec.yaml": {
+    "mtime": 1792004410.498472,
+    "seen": 1794346111.6360397,
+    "ast_hash": "b1d4ed5da7926c70e32d2d0c0c6574f2",
+    "semantic_hash": ""
+  },
+  "openspec/changes/integrar-expertos-ecc/.openspec.yaml": {
+    "mtime": 1791641333.2181282,
+    "seen": 1794346111.6360416,
+    "ast_hash": "a202dd1c5dfd91de7da211085e104fad",
+    "semantic_hash": ""
+  },
+  "openspec/config.yaml": {
+    "mtime": 1787593537.0228112,
+    "seen": 1794346111.6360435,
+    "ast_hash": "9e3e7672b387a282583011181ab35f9a",
+    "semantic_hash": ""
+  },
+  "packaging/build_zip.py": {
+    "mtime": 1793387967.6186666,
+    "seen": 1794346111.6360452,
+    "ast_hash": "9b4d42da78e0b9789e8e130b29685bf5",
+    "semantic_hash": ""
+  },
+  "page_identity.py": {
+    "mtime": 1790994010.4477742,
+    "seen": 1794346111.6360471,
+    "ast_hash": "80a4a95146d97fee3b60f83f04d3fc5a",
+    "semantic_hash": ""
+  },
+  "scripts/bootstrap.ps1": {
+    "mtime": 1794345642.3275354,
+    "seen": 1794346111.6360493,
+    "ast_hash": "d34e4e62aabd72fdb4e5708f9bbdac11",
+    "semantic_hash": ""
+  },
+  "scripts/bootstrap.sh": {
+    "mtime": 1794345643.0018976,
+    "seen": 1794346111.636051,
+    "ast_hash": "26898db335673a2c39be5412f62b4908",
+    "semantic_hash": ""
+  },
+  "scripts/install.ps1": {
+    "mtime": 1787593404.7164228,
+    "seen": 1794346111.6360528,
+    "ast_hash": "bb8c6016342bfd2cfb148a398f23efc6",
+    "semantic_hash": ""
+  },
+  "scripts/install.sh": {
+    "mtime": 1787593404.719458,
+    "seen": 1794346111.6360545,
+    "ast_hash": "83db125ec96752fdc58f33b0e4f6acd2",
+    "semantic_hash": ""
+  },
+  "scripts/setup-project.ps1": {
+    "mtime": 1787593531.4417353,
+    "seen": 1794346111.6360564,
+    "ast_hash": "01f466f84ec71c33889722e904eef326",
+    "semantic_hash": ""
+  },
+  "scripts/setup-project.sh": {
+    "mtime": 1787593404.7267816,
+    "seen": 1794346111.6360579,
+    "ast_hash": "4589f61c5c92674b52b2fe1f30de80c6",
+    "semantic_hash": ""
+  },
+  "scripts/verify-setup.ps1": {
+    "mtime": 1794345643.734249,
+    "seen": 1794346111.6360598,
+    "ast_hash": "d6796e529fb8feabff6a5f4a5f279bf1",
+    "semantic_hash": ""
+  },
+  "scripts/verify-setup.sh": {
+    "mtime": 1794345644.307057,
+    "seen": 1794346111.6360614,
+    "ast_hash": "e4a31bb1f49a7e02e0cf0f6f92c63a29",
+    "semantic_hash": ""
+  },
+  "tests/test_page_identity.py": {
+    "mtime": 1790994010.4477742,
+    "seen": 1794346111.6360633,
+    "ast_hash": "7df274cb9ae327eedf7f5d340b7a57d5",
+    "semantic_hash": ""
+  },
+  ".agent/skills/openspec-apply-change/SKILL.md": {
+    "mtime": 1787593536.8926308,
+    "seen": 1794346111.6360652,
+    "ast_hash": "73640d98e355e3e4a5ecaa6116865a82",
+    "semantic_hash": ""
+  },
+  ".agent/skills/openspec-archive-change/SKILL.md": {
+    "mtime": 1787593536.9052198,
+    "seen": 1794346111.636067,
+    "ast_hash": "ee587087578ab9d2d283ad5b1f76371e",
+    "semantic_hash": ""
+  },
+  ".agent/skills/openspec-explore/SKILL.md": {
+    "mtime": 1787593536.887565,
+    "seen": 1794346111.6360686,
+    "ast_hash": "c4c6fe598e86d13378e0b5ecd202cec6",
+    "semantic_hash": ""
+  },
+  ".agent/skills/openspec-propose/SKILL.md": {
+    "mtime": 1787593536.907731,
+    "seen": 1794346111.6360705,
+    "ast_hash": "140ba650e1a73dbb6d77948ccc1e2e59",
+    "semantic_hash": ""
+  },
+  ".agent/skills/openspec-sync-specs/SKILL.md": {
+    "mtime": 1787593536.9011035,
+    "seen": 1794346111.6360722,
+    "ast_hash": "079b8e1435f5044f2563b273bd192616",
+    "semantic_hash": ""
+  },
+  ".agent/skills/openspec-update-change/SKILL.md": {
+    "mtime": 1787593536.8977678,
+    "seen": 1794346111.636074,
+    "ast_hash": "bad1ef5d059980feeb2852f5f42367bb",
+    "semantic_hash": ""
+  },
+  ".agent/workflows/opsx-apply.md": {
+    "mtime": 1787593536.9158864,
+    "seen": 1794346111.6360755,
+    "ast_hash": "37477a6b881ff2f51326c95c559c32dd",
+    "semantic_hash": ""
+  },
+  ".agent/workflows/opsx-archive.md": {
+    "mtime": 1787593536.9240363,
+    "seen": 1794346111.6360776,
+    "ast_hash": "fb11cb4f32d37d1287121c0e8675ab1b",
+    "semantic_hash": ""
+  },
+  ".agent/workflows/opsx-explore.md": {
+    "mtime": 1787593536.912269,
+    "seen": 1794346111.6360795,
+    "ast_hash": "3b4fefe235c32a2daa05c6dbc405f599",
+    "semantic_hash": ""
+  },
+  ".agent/workflows/opsx-propose.md": {
+    "mtime": 1787593536.9270356,
+    "seen": 1794346111.6360815,
+    "ast_hash": "aced2115213bf217e5c46e4c0a37947d",
+    "semantic_hash": ""
+  },
+  ".agent/workflows/opsx-sync.md": {
+    "mtime": 1787593536.9214873,
+    "seen": 1794346111.6360834,
+    "ast_hash": "5e74fe01eb12006d9e882105615e2435",
+    "semantic_hash": ""
+  },
+  ".agent/workflows/opsx-update.md": {
+    "mtime": 1787593536.918394,
+    "seen": 1794346111.6360853,
+    "ast_hash": "01d4349478b91fd28951e5fdc3130660",
+    "semantic_hash": ""
+  },
+  ".agents/rules/harness.md": {
+    "mtime": 1793317295.2479956,
+    "seen": 1794346111.636087,
+    "ast_hash": "b93423192b947cce84abd5dee29a0181",
+    "semantic_hash": ""
+  },
+  ".agents/workflows/harness.md": {
+    "mtime": 1787593404.628667,
+    "seen": 1794346111.6360888,
+    "ast_hash": "37bc89035fc3929c069d136ac8ec90e5",
+    "semantic_hash": ""
+  },
+  ".agents/workflows/tdd.md": {
+    "mtime": 1793317309.6421814,
+    "seen": 1794346111.6360905,
+    "ast_hash": "5f99c09da90a96275c41db0a66b93827",
+    "semantic_hash": ""
+  },
+  ".claude/CLAUDE.md": {
+    "mtime": 1793317308.7169473,
+    "seen": 1794346111.6360924,
+    "ast_hash": "68de57b9376f20d2ff67bab71a9e9e7f",
+    "semantic_hash": ""
+  },
+  ".codex/AGENTS.md": {
+    "mtime": 1793317308.5432115,
+    "seen": 1794346111.636094,
+    "ast_hash": "91dfffcc13bc5617fc98bfc557056e6b",
+    "semantic_hash": ""
+  },
+  ".codex/skills/openspec-apply-change/SKILL.md": {
+    "mtime": 1787593536.9872184,
+    "seen": 1794346111.636096,
+    "ast_hash": "73640d98e355e3e4a5ecaa6116865a82",
+    "semantic_hash": ""
+  },
+  ".codex/skills/openspec-archive-change/SKILL.md": {
+    "mtime": 1787593536.9970696,
+    "seen": 1794346111.636098,
+    "ast_hash": "ee587087578ab9d2d283ad5b1f76371e",
+    "semantic_hash": ""
+  },
+  ".codex/skills/openspec-explore/SKILL.md": {
+    "mtime": 1787593536.9816723,
+    "seen": 1794346111.6360996,
+    "ast_hash": "c4c6fe598e86d13378e0b5ecd202cec6",
+    "semantic_hash": ""
+  },
+  ".codex/skills/openspec-propose/SKILL.md": {
+    "mtime": 1787593537.0007594,
+    "seen": 1794346111.636101,
+    "ast_hash": "140ba650e1a73dbb6d77948ccc1e2e59",
+    "semantic_hash": ""
+  },
+  ".codex/skills/openspec-sync-specs/SKILL.md": {
+    "mtime": 1787593536.993491,
+    "seen": 1794346111.636103,
+    "ast_hash": "079b8e1435f5044f2563b273bd192616",
+    "semantic_hash": ""
+  },
+  ".codex/skills/openspec-update-change/SKILL.md": {
+    "mtime": 1787593536.9908063,
+    "seen": 1794346111.6361048,
+    "ast_hash": "bad1ef5d059980feeb2852f5f42367bb",
+    "semantic_hash": ""
+  },
+  ".codex/skills/tdd/SKILL.md": {
+    "mtime": 1793317271.7375734,
+    "seen": 1794346111.6361065,
+    "ast_hash": "e508b761e52d63ace2bf2d7fa5d80607",
+    "semantic_hash": ""
+  },
+  ".cursor/rules/harness.md": {
+    "mtime": 1793317296.0929677,
+    "seen": 1794346111.6361084,
+    "ast_hash": "f50e0ef206cd5e2fb0b1091c79ae9a04",
+    "semantic_hash": ""
+  },
+  ".devin/skills/tdd/SKILL.md": {
+    "mtime": 1793317271.283714,
+    "seen": 1794346111.63611,
+    "ast_hash": "e508b761e52d63ace2bf2d7fa5d80607",
+    "semantic_hash": ""
+  },
+  ".windsurf/rules/harness.md": {
+    "mtime": 1793317294.448677,
+    "seen": 1794346111.6361122,
+    "ast_hash": "570c69ada9aba47e1953403d3ead89fe",
+    "semantic_hash": ""
+  },
+  ".windsurf/skills/openspec-apply-change/SKILL.md": {
+    "mtime": 1787593536.9358866,
+    "seen": 1794346111.6361144,
+    "ast_hash": "73640d98e355e3e4a5ecaa6116865a82",
+    "semantic_hash": ""
+  },
+  ".windsurf/skills/openspec-archive-change/SKILL.md": {
+    "mtime": 1787593536.9481983,
+    "seen": 1794346111.6361163,
+    "ast_hash": "ee587087578ab9d2d283ad5b1f76371e",
+    "semantic_hash": ""
+  },
+  ".windsurf/skills/openspec-explore/SKILL.md": {
+    "mtime": 1787593536.9328914,
+    "seen": 1794346111.636118,
+    "ast_hash": "c4c6fe598e86d13378e0b5ecd202cec6",
+    "semantic_hash": ""
+  },
+  ".windsurf/skills/openspec-propose/SKILL.md": {
+    "mtime": 1787593536.9529824,
+    "seen": 1794346111.6361198,
+    "ast_hash": "140ba650e1a73dbb6d77948ccc1e2e59",
+    "semantic_hash": ""
+  },
+  ".windsurf/skills/openspec-sync-specs/SKILL.md": {
+    "mtime": 1787593536.9440124,
+    "seen": 1794346111.6361215,
+    "ast_hash": "079b8e1435f5044f2563b273bd192616",
+    "semantic_hash": ""
+  },
+  ".windsurf/skills/openspec-update-change/SKILL.md": {
+    "mtime": 1787593536.939469,
+    "seen": 1794346111.6361234,
+    "ast_hash": "bad1ef5d059980feeb2852f5f42367bb",
+    "semantic_hash": ""
+  },
+  ".windsurf/skills/tdd/SKILL.md": {
+    "mtime": 1793317271.4991786,
+    "seen": 1794346111.636125,
+    "ast_hash": "e508b761e52d63ace2bf2d7fa5d80607",
+    "semantic_hash": ""
+  },
+  ".windsurf/workflows/nuevo-cambio.md": {
+    "mtime": 1787593404.6607735,
+    "seen": 1794346111.636127,
+    "ast_hash": "6fadf41ed071241ed9ba604988cd1369",
+    "semantic_hash": ""
+  },
+  ".windsurf/workflows/opsx-apply.md": {
+    "mtime": 1787593536.9626575,
+    "seen": 1794346111.6361287,
+    "ast_hash": "0db6d3f271815c08cfee68553f687bb8",
+    "semantic_hash": ""
+  },
+  ".windsurf/workflows/opsx-archive.md": {
+    "mtime": 1787593536.972782,
+    "seen": 1794346111.6361306,
+    "ast_hash": "ae42a14739376c7a12fefa49fa5b83de",
+    "semantic_hash": ""
+  },
+  ".windsurf/workflows/opsx-explore.md": {
+    "mtime": 1787593536.9580386,
+    "seen": 1794346111.6361322,
+    "ast_hash": "cee4bfba615d8b8b562c7655f2ecb172",
+    "semantic_hash": ""
+  },
+  ".windsurf/workflows/opsx-propose.md": {
+    "mtime": 1787593536.974928,
+    "seen": 1794346111.6361344,
+    "ast_hash": "c43a074155382075bcb13e46f0191d36",
+    "semantic_hash": ""
+  },
+  ".windsurf/workflows/opsx-sync.md": {
+    "mtime": 1787593536.9692335,
+    "seen": 1794346111.6361365,
+    "ast_hash": "2d532a088d7a227bfd274a1682ffdb72",
+    "semantic_hash": ""
+  },
+  ".windsurf/workflows/opsx-update.md": {
+    "mtime": 1787593536.9662023,
+    "seen": 1794346111.6361382,
+    "ast_hash": "6aad85a1bc9d29572ac20e55c006d94e",
+    "semantic_hash": ""
+  },
+  ".windsurf/workflows/tdd.md": {
+    "mtime": 1793317309.462911,
+    "seen": 1794346111.63614,
+    "ast_hash": "1350e734d2e5baab91f4fc1e8ebccb80",
+    "semantic_hash": ""
+  },
+  ".windsurf/workflows/verificar-harness.md": {
+    "mtime": 1787593404.6648521,
+    "seen": 1794346111.636142,
+    "ast_hash": "869741c0213a98e95271b88e06ac5a00",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1793317282.0668051,
+    "seen": 1794346111.6361442,
+    "ast_hash": "a6f92d90eed97bd920c1cc60c50375ba",
+    "semantic_hash": ""
+  },
+  "CHANGELOG.md": {
+    "mtime": 1794354027.016945,
+    "seen": 1794354117.0191557,
+    "ast_hash": "9365847b3b2d98ff5609dfa4902198cb",
+    "semantic_hash": ""
+  },
+  "MEMORY.md": {
+    "mtime": 1793827564.3791096,
+    "seen": 1794346111.636148,
+    "ast_hash": "9ab495c6774af74f1de11ea0e06efb02",
+    "semantic_hash": ""
+  },
+  "RESULTADOS_DE_PRUEBA.md": {
+    "mtime": 1789608838.9205625,
+    "seen": 1794346111.6361496,
+    "ast_hash": "ef2aa1dc91fd5ab002ca8aaa6d807dd6",
+    "semantic_hash": ""
+  },
+  "TROUBLESHOOTING.md": {
+    "mtime": 1787593404.6755674,
+    "seen": 1794346111.6361516,
+    "ast_hash": "19aa754d3ba463efc29623a2d2c902cd",
+    "semantic_hash": ""
+  },
+  "VERSIONS.md": {
+    "mtime": 1794345641.6566944,
+    "seen": 1794346111.6361535,
+    "ast_hash": "0501a5345ef7230b58940e4963618ffe",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/HANDOFF.md": {
+    "mtime": 1790893489.726957,
+    "seen": 1794346111.6361551,
+    "ast_hash": "5080e6057d5aa906475d614c2c8ebdd4",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/README.md": {
+    "mtime": 1791176822.8052602,
+    "seen": 1794346111.636157,
+    "ast_hash": "2d43ff93030029c5ce3c32cf2038b8bb",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/requirements-dev.txt": {
+    "mtime": 1790811469.3382719,
+    "seen": 1794346111.6361587,
+    "ast_hash": "cb1c5c21f1d2b98da6654fca19fc830d",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/requirements.txt": {
+    "mtime": 1792850432.7004154,
+    "seen": 1794346111.6361606,
+    "ast_hash": "9892b0bb1f1f453b175f20172334b192",
+    "semantic_hash": ""
+  },
+  "business_contract_graph/template.html": {
+    "mtime": 1790890300.0038464,
+    "seen": 1794346111.6361623,
+    "ast_hash": "11decab0aaa86be2e066c7b77006ee24",
+    "semantic_hash": ""
+  },
+  "documentador_predictivo.html": {
+    "mtime": 1794346367.0070586,
+    "seen": 1794354117.0206604,
+    "ast_hash": "0bbbd6505bab4e5c59452e71fab7d837",
+    "semantic_hash": ""
+  },
+  "openspec/changes/agregar-favicons-paginas-locales/design.md": {
+    "mtime": 1790993933.9196477,
+    "seen": 1794346111.6361659,
+    "ast_hash": "c4967a4563005e3ee023c59c4c077fb6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/agregar-favicons-paginas-locales/proposal.md": {
+    "mtime": 1790993913.3394198,
+    "seen": 1794346111.6361678,
+    "ast_hash": "97de35e53e38ca3cee7608929a462434",
+    "semantic_hash": ""
+  },
+  "openspec/changes/agregar-favicons-paginas-locales/specs/identidad-visual-paginas-locales/spec.md": {
+    "mtime": 1790993913.3459506,
+    "seen": 1794346111.6361694,
+    "ast_hash": "fa779217e8318ad18e150727d855f39f",
+    "semantic_hash": ""
+  },
+  "openspec/changes/agregar-favicons-paginas-locales/tasks.md": {
+    "mtime": 1790995759.0061507,
+    "seen": 1794346111.6361713,
+    "ast_hash": "b93afa3a43ce181847815eaf4f5e7cf7",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-09-16-ui-leads-ar-lead-qualif/design.md": {
+    "mtime": 1789537659.6623428,
+    "seen": 1794346111.636173,
+    "ast_hash": "9f543656b56498ed82a783110dd0c2f3",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-09-16-ui-leads-ar-lead-qualif/proposal.md": {
+    "mtime": 1789537671.3402174,
+    "seen": 1794346111.6361752,
+    "ast_hash": "065e79e2fcf6924b9d46fbe8392d539c",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-09-16-ui-leads-ar-lead-qualif/specs/lista-leads-sin-gestion/spec.md": {
+    "mtime": 1789537660.1708913,
+    "seen": 1794346111.6361804,
+    "ast_hash": "fa83b7ccc0df52e1e155e65e1f53a93e",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-09-16-ui-leads-ar-lead-qualif/tasks.md": {
+    "mtime": 1789608838.9066145,
+    "seen": 1794346111.6361825,
+    "ast_hash": "ccd608ce613068863e0afe238e5b19f4",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-27-mejorar-ui-estado-monitor/design.md": {
+    "mtime": 1793114119.2087252,
+    "seen": 1794346111.6361842,
+    "ast_hash": "a264f9f0f194f40bf00efe2feaf0afbd",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-27-mejorar-ui-estado-monitor/proposal.md": {
+    "mtime": 1793114066.2337368,
+    "seen": 1794346111.6361864,
+    "ast_hash": "1b9644ba33b70d419e39089a1724d76e",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-27-mejorar-ui-estado-monitor/specs/monitor-ui-estado/spec.md": {
+    "mtime": 1793114119.0917656,
+    "seen": 1794346111.6361885,
+    "ast_hash": "a4bf6669e78e62d583bc153bd0f041cb",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-27-mejorar-ui-estado-monitor/tasks.md": {
+    "mtime": 1793130119.545575,
+    "seen": 1794346111.6361902,
+    "ast_hash": "8f3d298650d46fe2fb677eeef6f316fe",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-29-agregar-via-tdd/proposal.md": {
+    "mtime": 1793317159.2907383,
+    "seen": 1794346111.6361923,
+    "ast_hash": "7ffba60826662d8b38065cac8392082b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-29-agregar-via-tdd/specs/via-tdd/spec.md": {
+    "mtime": 1793317184.676565,
+    "seen": 1794346111.6361942,
+    "ast_hash": "b13510d4a952f8f62b02819827cae38a",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-29-agregar-via-tdd/tasks.md": {
+    "mtime": 1793317327.3476467,
+    "seen": 1794346111.6361961,
+    "ast_hash": "4b31b46e77bff802a8b2bb26a618a50b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-30-renombrar-ui-gestion-leads/design.md": {
+    "mtime": 1793337864.613095,
+    "seen": 1794346111.6361983,
+    "ast_hash": "0160b9040678881c429b646ac8f7ab30",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-30-renombrar-ui-gestion-leads/proposal.md": {
+    "mtime": 1793337864.847291,
+    "seen": 1794346111.6362002,
+    "ast_hash": "5cb9950401d945d2df1ffb07eb8586f4",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-30-renombrar-ui-gestion-leads/specs/identidad-visual-ui/spec.md": {
+    "mtime": 1793337865.0935824,
+    "seen": 1794346111.636202,
+    "ast_hash": "945588c42f69d0c3a13d1cd0c8438e34",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-10-30-renombrar-ui-gestion-leads/tasks.md": {
+    "mtime": 1793387346.331584,
+    "seen": 1794346111.636204,
+    "ast_hash": "76eb68bb2a191f516d4bbdfce4400b44",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-11-10-distribuir-leads-modo-prueba/proposal.md": {
+    "mtime": 1793653650.4496095,
+    "seen": 1794346111.6362062,
+    "ast_hash": "a943a3a409239b468b8216f783a63545",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-11-10-distribuir-leads-modo-prueba/specs/distribucion-leads-archivo/spec.md": {
+    "mtime": 1793653672.8056238,
+    "seen": 1794346111.636208,
+    "ast_hash": "02ca5038f4bf66f6a334c392353e5675",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-11-10-distribuir-leads-modo-prueba/tasks.md": {
+    "mtime": 1793654044.7680235,
+    "seen": 1794346111.6362104,
+    "ast_hash": "f59e80eaca0c06b8142cd21e9851a30c",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/design.md": {
+    "mtime": 1790782425.1136076,
+    "seen": 1794346111.636213,
+    "ast_hash": "74517807358ca20abb455ade56c57ad6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/evidence/baseline-2026-09-30.md": {
+    "mtime": 1790811644.0554023,
+    "seen": 1794346111.636215,
+    "ast_hash": "90bd8d0971bc81f7d5ce0c8495533f4c",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/evidence/coverage-baseline-2026-10-01.md": {
+    "mtime": 1790866112.2699494,
+    "seen": 1794346111.6362169,
+    "ast_hash": "e1cfc6a2327a798a3f0f7118feb795cb",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/harness.md": {
+    "mtime": 1790782425.1529458,
+    "seen": 1794346111.6362185,
+    "ast_hash": "04d48b60308442810cd27a2f481b7ca6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/proposal.md": {
+    "mtime": 1790782106.5065508,
+    "seen": 1794346111.6362205,
+    "ast_hash": "552cc95d6b96dc6e198b320a44f12a83",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/specs/automated-quality-harness/spec.md": {
+    "mtime": 1790782425.1393976,
+    "seen": 1794346111.6362221,
+    "ast_hash": "cd45eab0e9bcc7099da4ee3bc5dff79d",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/specs/quality-evidence-traceability/spec.md": {
+    "mtime": 1790782425.1452875,
+    "seen": 1794346111.6362243,
+    "ast_hash": "cc9af7b83f5b265a0b9cb6585e0b3485",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/specs/supervised-salesforce-validation/spec.md": {
+    "mtime": 1790782425.1482692,
+    "seen": 1794346111.636226,
+    "ast_hash": "73ab8fccbb1754f0cc17f201dc94046c",
+    "semantic_hash": ""
+  },
+  "openspec/changes/auditar-calidad-integral/tasks.md": {
+    "mtime": 1790866370.0645516,
+    "seen": 1794346111.6362278,
+    "ast_hash": "eadc9dfeb937183e8eaa4cef1a1ae756",
+    "semantic_hash": ""
+  },
+  "openspec/changes/automatizar-lectura-salesforce/design.md": {
+    "mtime": 1789002242.5767846,
+    "seen": 1794346111.6362295,
+    "ast_hash": "34095d23155369583714225d7076690d",
+    "semantic_hash": ""
+  },
+  "openspec/changes/automatizar-lectura-salesforce/proposal.md": {
+    "mtime": 1788969923.0727508,
+    "seen": 1794346111.6362314,
+    "ast_hash": "bc75c8382ca230a33ef74945d6ba8372",
+    "semantic_hash": ""
+  },
+  "openspec/changes/automatizar-lectura-salesforce/specs/lectura-salesforce/spec.md": {
+    "mtime": 1789002242.5746582,
+    "seen": 1794346111.6362336,
+    "ast_hash": "1153e5368f02cdb46cf3af9afb5931d2",
+    "semantic_hash": ""
+  },
+  "openspec/changes/automatizar-lectura-salesforce/tasks.md": {
+    "mtime": 1789531185.206445,
+    "seen": 1794346111.6362352,
+    "ast_hash": "1f1ee00123dc782eb3af32b02355beab",
+    "semantic_hash": ""
+  },
+  "openspec/changes/cerrar-leads-por-motivo/design.md": {
+    "mtime": 1791187835.4023483,
+    "seen": 1794346111.6362371,
+    "ast_hash": "1cd27a83f8ced3ada8a31e7b73db265b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/cerrar-leads-por-motivo/proposal.md": {
+    "mtime": 1791187834.4805548,
+    "seen": 1794346111.6362388,
+    "ast_hash": "7ad16097d8e207c28feb82fd1f9eff7f",
+    "semantic_hash": ""
+  },
+  "openspec/changes/cerrar-leads-por-motivo/specs/cierre-leads-por-motivo/spec.md": {
+    "mtime": 1791187846.4427087,
+    "seen": 1794346111.636241,
+    "ast_hash": "52c2c24a7c050b886e90b78d1dce2364",
+    "semantic_hash": ""
+  },
+  "openspec/changes/cerrar-leads-por-motivo/tasks.md": {
+    "mtime": 1791188532.338496,
+    "seen": 1794346111.6362426,
+    "ast_hash": "6def548b4badfcaedffc242c6505c146",
+    "semantic_hash": ""
+  },
+  "openspec/changes/corregir-documentacion-por-intento/design.md": {
+    "mtime": 1790896026.8149252,
+    "seen": 1794346111.6362445,
+    "ast_hash": "da93c9368448b357fca5b13f66e9902e",
+    "semantic_hash": ""
+  },
+  "openspec/changes/corregir-documentacion-por-intento/proposal.md": {
+    "mtime": 1790895998.5180478,
+    "seen": 1794346111.6362462,
+    "ast_hash": "4b4e20ddb9120f3554f597ac8541ce21",
+    "semantic_hash": ""
+  },
+  "openspec/changes/corregir-documentacion-por-intento/specs/documentacion-por-intento/spec.md": {
+    "mtime": 1790896054.871665,
+    "seen": 1794346111.636248,
+    "ast_hash": "17deace3b22fbb19e5969fd082ba7129",
+    "semantic_hash": ""
+  },
+  "openspec/changes/corregir-documentacion-por-intento/tasks.md": {
+    "mtime": 1790897757.6709836,
+    "seen": 1794346111.6362498,
+    "ast_hash": "8a52aaef15d75cdd63019278ce450479",
+    "semantic_hash": ""
+  },
+  "openspec/changes/corregir-lectura-reportes-virtualizados/design.md": {
+    "mtime": 1794332593.9386961,
+    "seen": 1794346111.6362517,
+    "ast_hash": "e2754519c533d2795e2c1a497c84b0dc",
+    "semantic_hash": ""
+  },
+  "openspec/changes/corregir-lectura-reportes-virtualizados/proposal.md": {
+    "mtime": 1794332513.596789,
+    "seen": 1794346111.6362534,
+    "ast_hash": "bfc39b63d303947f8f9060df6717fbea",
+    "semantic_hash": ""
+  },
+  "openspec/changes/corregir-lectura-reportes-virtualizados/specs/lectura-reportes-virtualizados/spec.md": {
+    "mtime": 1794332594.618458,
+    "seen": 1794346111.6362555,
+    "ast_hash": "1b382d58bcd11f02e1a2b5fcbc61ede3",
+    "semantic_hash": ""
+  },
+  "openspec/changes/corregir-lectura-reportes-virtualizados/tasks.md": {
+    "mtime": 1794353737.3358846,
+    "seen": 1794354117.035659,
+    "ast_hash": "918b1977ed532dba3afda5faf369cce3",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/design.md": {
+    "mtime": 1790899216.9941552,
+    "seen": 1794346111.636259,
+    "ast_hash": "c34f23535dde0ae42a060efc1a253d91",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/evidence/phase-3-harness-baseline-2026-10-01.md": {
+    "mtime": 1790872204.646392,
+    "seen": 1794346111.6362612,
+    "ast_hash": "e8a6f976fc1915ece52c8e3507b4a486",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/evidence/phase-4-archify-correction-2026-10-01.md": {
+    "mtime": 1790900658.6945307,
+    "seen": 1794346111.636263,
+    "ast_hash": "39630b12a013c1e88ce80784a5a7ba6b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/evidence/phase-4-implementation-2026-10-01.md": {
+    "mtime": 1790900658.6861048,
+    "seen": 1794346111.6362648,
+    "ast_hash": "be23e89a0bf56f1e11ca73651f16a6d1",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/evidence/phase-5-archify-verification-2026-10-01.md": {
+    "mtime": 1790900847.828403,
+    "seen": 1794346111.6362665,
+    "ast_hash": "89cb7e882d54d244dd1e629f3c285c2c",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/evidence/phase-5-review-rejected-2026-10-01.md": {
+    "mtime": 1790900658.689172,
+    "seen": 1794346111.6362684,
+    "ast_hash": "95e81a0b700b58494762e147ffba7b7f",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/evidence/phase-6-salesforce-external-correction-2026-10-01.md": {
+    "mtime": 1790903231.537973,
+    "seen": 1794346111.63627,
+    "ast_hash": "1058b44ca2ce8ded6ebd9acbcefd6d4e",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/harness.md": {
+    "mtime": 1790900670.9861548,
+    "seen": 1794346111.6362724,
+    "ast_hash": "7acc3f88c2e28bf6dac44d81ff0140ce",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/proposal.md": {
+    "mtime": 1790899132.4482882,
+    "seen": 1794346111.6362743,
+    "ast_hash": "a0af932a0c48387ed1da25755046b075",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/specs/business-contract-graph/spec.md": {
+    "mtime": 1790899171.2650957,
+    "seen": 1794346111.6362762,
+    "ast_hash": "c1afc9c48e1835e6848de59e6408e274",
+    "semantic_hash": ""
+  },
+  "openspec/changes/crear-grafo-contratos-negocio/tasks.md": {
+    "mtime": 1790903231.5333135,
+    "seen": 1794346111.636278,
+    "ast_hash": "6cd21d689401cc1921e246bfd94ce231",
+    "semantic_hash": ""
+  },
+  "openspec/changes/distribuir-leads-desde-archivo/design.md": {
+    "mtime": 1792852198.969728,
+    "seen": 1794346111.6362798,
+    "ast_hash": "9153d8ead25a665e132fba88a117d8a3",
+    "semantic_hash": ""
+  },
+  "openspec/changes/distribuir-leads-desde-archivo/proposal.md": {
+    "mtime": 1792852198.9654174,
+    "seen": 1794346111.6362815,
+    "ast_hash": "5b9dfa4a5196128aa4d3e98c72f03d77",
+    "semantic_hash": ""
+  },
+  "openspec/changes/distribuir-leads-desde-archivo/specs/distribucion-leads-archivo/spec.md": {
+    "mtime": 1792852198.973271,
+    "seen": 1794346111.6362834,
+    "ast_hash": "c1cb51a5c3befa2f9029c0dfae86484a",
+    "semantic_hash": ""
+  },
+  "openspec/changes/distribuir-leads-desde-archivo/tasks.md": {
+    "mtime": 1792852396.702434,
+    "seen": 1794346111.636285,
+    "ast_hash": "303b062223ecaa44485820bf81de1153",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-automatico-guardado/design.md": {
+    "mtime": 1790624658.479843,
+    "seen": 1794346111.636287,
+    "ast_hash": "b9ebecb3176cfc94c9e5a6fdea3cb78f",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-automatico-guardado/proposal.md": {
+    "mtime": 1790624657.7491784,
+    "seen": 1794346111.636289,
+    "ast_hash": "aa81de18da12a7fb2eb5e2cc5e411ffe",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-automatico-guardado/specs/guardado-automatico/spec.md": {
+    "mtime": 1790624666.1294022,
+    "seen": 1794346111.6362908,
+    "ast_hash": "efec2208d4744a6de7251f41b5f5fe9d",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-automatico-guardado/tasks.md": {
+    "mtime": 1790625233.4722376,
+    "seen": 1794346111.6362927,
+    "ast_hash": "71e643cd3f3e490fba6f3b66dfb6c430",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-desde-html-supervisado/design.md": {
+    "mtime": 1789699094.0315874,
+    "seen": 1794346111.6362944,
+    "ast_hash": "fd23694bcbf88477fc1df4308946d789",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-desde-html-supervisado/proposal.md": {
+    "mtime": 1789699104.8041675,
+    "seen": 1794346111.6362963,
+    "ast_hash": "a150b3e12f4ea99e0cc1b16919b147f3",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-desde-html-supervisado/specs/documentar-cola-supervisada/spec.md": {
+    "mtime": 1789699089.4554787,
+    "seen": 1794346111.6362982,
+    "ast_hash": "4177bcb9c10260ff808785072d8d1c63",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-desde-html-supervisado/tasks.md": {
+    "mtime": 1789703655.06777,
+    "seen": 1794346111.6363,
+    "ast_hash": "053ddcdd51ecf4c5383cebe5050ddc87",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-leads-desde-ui/design.md": {
+    "mtime": 1789705592.7594285,
+    "seen": 1794346111.636302,
+    "ast_hash": "4784bf3aa194c6b73c209dd45e9e01a3",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-leads-desde-ui/proposal.md": {
+    "mtime": 1789705535.3761804,
+    "seen": 1794346111.6363037,
+    "ast_hash": "c29f41de05655c15bf8a61606c79c41e",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-leads-desde-ui/specs/documentacion-automatica-desde-ui/spec.md": {
+    "mtime": 1789705592.766021,
+    "seen": 1794346111.6363056,
+    "ast_hash": "5acfc658b3d0814a963dde722d1a45c6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-leads-desde-ui/specs/lista-leads-sin-gestion/spec.md": {
+    "mtime": 1789705592.7682028,
+    "seen": 1794346111.6363075,
+    "ast_hash": "e9a5b880f954f4759b67991d9f40e752",
+    "semantic_hash": ""
+  },
+  "openspec/changes/documentar-leads-desde-ui/tasks.md": {
+    "mtime": 1789705618.9936652,
+    "seen": 1794346111.636309,
+    "ast_hash": "c2ff1a09132289c57f867bfacaedabc6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-servidor-navegador/design.md": {
+    "mtime": 1791910439.669593,
+    "seen": 1794346111.6363108,
+    "ast_hash": "dc19d0f7af0daca0198e03b0253743a7",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-servidor-navegador/proposal.md": {
+    "mtime": 1791910439.485695,
+    "seen": 1794346111.6363127,
+    "ast_hash": "1e8d96bef9337d61db615f2317c3eec7",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-servidor-navegador/specs/estabilidad-servidor-navegador/spec.md": {
+    "mtime": 1791910460.561367,
+    "seen": 1794346111.6363146,
+    "ast_hash": "d497cdb9053b5b4ed20d998f05227112",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-servidor-navegador/tasks.md": {
+    "mtime": 1791912545.9494529,
+    "seen": 1794346111.6363163,
+    "ast_hash": "e0ff7eabdc8f313c345b49bb300eb7c1",
+    "semantic_hash": ""
+  },
+  "openspec/changes/envio-whatsapp-automatico/design.md": {
+    "mtime": 1793827566.2281678,
+    "seen": 1794346111.6363184,
+    "ast_hash": "3edfec707a2317b9807dafd3de49bed7",
+    "semantic_hash": ""
+  },
+  "openspec/changes/envio-whatsapp-automatico/proposal.md": {
+    "mtime": 1793827566.0162396,
+    "seen": 1794346111.6363206,
+    "ast_hash": "734722f9713a7d8bed88fca92220c8d9",
+    "semantic_hash": ""
+  },
+  "openspec/changes/envio-whatsapp-automatico/specs/monitor-bandeja-leads/spec.md": {
+    "mtime": 1793827565.829202,
+    "seen": 1794346111.6363223,
+    "ast_hash": "94135b3aa4b45607712faba16f37435a",
+    "semantic_hash": ""
+  },
+  "openspec/changes/envio-whatsapp-automatico/tasks.md": {
+    "mtime": 1793827566.4312027,
+    "seen": 1794346111.6363244,
+    "ast_hash": "83e5079a57762f0dac0ec141a29462cd",
+    "semantic_hash": ""
+  },
+  "openspec/changes/escritura-asistida-salesforce/design.md": {
+    "mtime": 1789699149.5881484,
+    "seen": 1794346111.636326,
+    "ast_hash": "21f3ab04e3f4f639faf91d641a7809e2",
+    "semantic_hash": ""
+  },
+  "openspec/changes/escritura-asistida-salesforce/proposal.md": {
+    "mtime": 1789699184.618612,
+    "seen": 1794346111.636328,
+    "ast_hash": "c7e2cb1f954f71fa47a34bbd36ba6130",
+    "semantic_hash": ""
+  },
+  "openspec/changes/escritura-asistida-salesforce/specs/escritura-asistida-salesforce/spec.md": {
+    "mtime": 1789699161.2160854,
+    "seen": 1794346111.6363294,
+    "ast_hash": "b91a4d5d357af9c145c6889f60d82e30",
+    "semantic_hash": ""
+  },
+  "openspec/changes/escritura-asistida-salesforce/tasks.md": {
+    "mtime": 1789699170.3903265,
+    "seen": 1794346111.6363318,
+    "ast_hash": "cd36a5a7e8b5f6a9ba0dc594cec534a1",
+    "semantic_hash": ""
+  },
+  "openspec/changes/integrar-expertos-ecc/design.md": {
+    "mtime": 1791641557.762518,
+    "seen": 1794346111.636334,
+    "ast_hash": "90c6b84cfd1aa8deb8e21cab97a75f6e",
+    "semantic_hash": ""
+  },
+  "openspec/changes/integrar-expertos-ecc/proposal.md": {
+    "mtime": 1791641380.3807502,
+    "seen": 1794346111.6363358,
+    "ast_hash": "b42773dbcc8593845bc519748c4751b6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/integrar-expertos-ecc/specs/expert-agent-workflows/spec.md": {
+    "mtime": 1791641549.330228,
+    "seen": 1794346111.6363378,
+    "ast_hash": "c67261f8e1e222e16cde343013065a85",
+    "semantic_hash": ""
+  },
+  "openspec/changes/integrar-expertos-ecc/specs/governed-continuous-learning/spec.md": {
+    "mtime": 1791641549.3352675,
+    "seen": 1794346111.6363392,
+    "ast_hash": "48f51a4222d51efb1dbcdcedc7831264",
+    "semantic_hash": ""
+  },
+  "openspec/changes/integrar-expertos-ecc/specs/harness-engineering/spec.md": {
+    "mtime": 1791641549.3418446,
+    "seen": 1794346111.636341,
+    "ast_hash": "ead20d4e6eaa3ebc67a6fec9adca4e5b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/integrar-expertos-ecc/tasks.md": {
+    "mtime": 1791641690.5109723,
+    "seen": 1794346111.6363428,
+    "ast_hash": "2766b52f318322644b4c9985a1cde339",
+    "semantic_hash": ""
+  },
+  "openspec/changes/medir-productividad-documentacion/design.md": {
+    "mtime": 1790638718.8035657,
+    "seen": 1794346111.6363447,
+    "ast_hash": "bd1586b7274fd12bba17e26f631a432e",
+    "semantic_hash": ""
+  },
+  "openspec/changes/medir-productividad-documentacion/proposal.md": {
+    "mtime": 1790627721.400703,
+    "seen": 1794346111.6363463,
+    "ast_hash": "a9546118e50004b660aad035e5512948",
+    "semantic_hash": ""
+  },
+  "openspec/changes/medir-productividad-documentacion/specs/medicion-productividad/spec.md": {
+    "mtime": 1790638718.3977485,
+    "seen": 1794346111.6363482,
+    "ast_hash": "9a9ab2ff3c2bd8a258edb5e061e85197",
+    "semantic_hash": ""
+  },
+  "openspec/changes/medir-productividad-documentacion/tasks.md": {
+    "mtime": 1790640084.2563581,
+    "seen": 1794346111.6363504,
+    "ast_hash": "5ea1a1a3dcb1f6b5b9be86ed7030d857",
+    "semantic_hash": ""
+  },
+  "openspec/changes/multi-ide-harness/design.md": {
+    "mtime": 1787593404.694173,
+    "seen": 1794346111.6363523,
+    "ast_hash": "cf127dcb354951a4f09a86236a934f0c",
+    "semantic_hash": ""
+  },
+  "openspec/changes/multi-ide-harness/proposal.md": {
+    "mtime": 1787593404.6972656,
+    "seen": 1794346111.6363542,
+    "ast_hash": "33d83e1eec5f68abe0233f23a75a390a",
+    "semantic_hash": ""
+  },
+  "openspec/changes/multi-ide-harness/specs/harness/spec.md": {
+    "mtime": 1787593404.70184,
+    "seen": 1794346111.636356,
+    "ast_hash": "bfb24c8d1b3502c5ece64b92950bc026",
+    "semantic_hash": ""
+  },
+  "openspec/changes/multi-ide-harness/tasks.md": {
+    "mtime": 1787593404.7038417,
+    "seen": 1794346111.6363578,
+    "ast_hash": "ac906f7389a8401c02eaa8fc973e6ff9",
+    "semantic_hash": ""
+  },
+  "openspec/changes/preparar-predictivo/design.md": {
+    "mtime": 1788898471.9632504,
+    "seen": 1794346111.6363597,
+    "ast_hash": "3e4850d54aa9c25ad736be6bf65f41f1",
+    "semantic_hash": ""
+  },
+  "openspec/changes/preparar-predictivo/proposal.md": {
+    "mtime": 1788898440.292791,
+    "seen": 1794346111.6363618,
+    "ast_hash": "47f3ce5afc4ce72d408e0523bf3343de",
+    "semantic_hash": ""
+  },
+  "openspec/changes/preparar-predictivo/specs/preparar-campana/spec.md": {
+    "mtime": 1788898667.2343395,
+    "seen": 1794346111.6363637,
+    "ast_hash": "fa07d0780813847a9ccd863008bc925a",
+    "semantic_hash": ""
+  },
+  "openspec/changes/preparar-predictivo/tasks.md": {
+    "mtime": 1788898681.5569346,
+    "seen": 1794346111.6363657,
+    "ast_hash": "9566b4dd8c2c3534f861c15f1cbb17db",
+    "semantic_hash": ""
+  },
+  "openspec/changes/reasignacion-por-turno/design.md": {
+    "mtime": 1793827565.3821547,
+    "seen": 1794346111.6363676,
+    "ast_hash": "1a75beb7cd35698a173d8301dede2a2d",
+    "semantic_hash": ""
+  },
+  "openspec/changes/reasignacion-por-turno/proposal.md": {
+    "mtime": 1793827565.155173,
+    "seen": 1794346111.6363695,
+    "ast_hash": "c4e9e5cd17f0b2662455334fb30d178b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/reasignacion-por-turno/specs/monitor-bandeja-leads/spec.md": {
+    "mtime": 1793827564.9310894,
+    "seen": 1794346111.6363714,
+    "ast_hash": "321c4b4945d80339f7f3e573f263e37d",
+    "semantic_hash": ""
+  },
+  "openspec/changes/reasignacion-por-turno/tasks.md": {
+    "mtime": 1793827565.624188,
+    "seen": 1794346111.6363735,
+    "ast_hash": "f21f16e651fbd5c48ab11d7003252a3f",
+    "semantic_hash": ""
+  },
+  "openspec/changes/reparto-equitativo-leads/proposal.md": {
+    "mtime": 1793683271.593133,
+    "seen": 1794346111.6363752,
+    "ast_hash": "88beb9d6aba6e64176942327e93d438c",
+    "semantic_hash": ""
+  },
+  "openspec/changes/reparto-equitativo-leads/specs/distribucion-leads-archivo/spec.md": {
+    "mtime": 1793683762.5763867,
+    "seen": 1794346111.636377,
+    "ast_hash": "97c1bec5280be608819921422a43b2d8",
+    "semantic_hash": ""
+  },
+  "openspec/changes/reparto-equitativo-leads/tasks.md": {
+    "mtime": 1793684139.5405014,
+    "seen": 1794346111.6363788,
+    "ast_hash": "a709046eed04995ebf3798bc14e16a13",
+    "semantic_hash": ""
+  },
+  "openspec/changes/seleccionar-campos-por-pais/design.md": {
+    "mtime": 1791337751.7169068,
+    "seen": 1794346111.6363807,
+    "ast_hash": "f96743de933a78fe4b37981bc236d7d6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/seleccionar-campos-por-pais/proposal.md": {
+    "mtime": 1791304007.2650347,
+    "seen": 1794346111.6363828,
+    "ast_hash": "3343e106905bfdeeabbe3ce43abc6995",
+    "semantic_hash": ""
+  },
+  "openspec/changes/seleccionar-campos-por-pais/specs/campos-salesforce-por-pais/spec.md": {
+    "mtime": 1791337785.4262552,
+    "seen": 1794346111.6363845,
+    "ast_hash": "dcd99c30ed5503e60fcc675d49558825",
+    "semantic_hash": ""
+  },
+  "openspec/changes/seleccionar-campos-por-pais/tasks.md": {
+    "mtime": 1791338996.8712077,
+    "seen": 1794346111.6363864,
+    "ast_hash": "7567ffc47ea761a29657dafbab7706b6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tomar-leads-automatico/design.md": {
+    "mtime": 1791510453.7702806,
+    "seen": 1794346111.636388,
+    "ast_hash": "4e018625e677d29a27d7642364235290",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tomar-leads-automatico/proposal.md": {
+    "mtime": 1791510418.492972,
+    "seen": 1794346111.63639,
+    "ast_hash": "1deb727a5615b78af6595a1fead60aab",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tomar-leads-automatico/specs/monitor-bandeja-leads/spec.md": {
+    "mtime": 1793827564.728544,
+    "seen": 1794346111.6363919,
+    "ast_hash": "852fd59fb49b899a57968568847b20ee",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tomar-leads-automatico/tasks.md": {
+    "mtime": 1791512970.0812871,
+    "seen": 1794346111.636394,
+    "ast_hash": "2e6ca31fa8e1a26d78fb53d9350cdba1",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tomar-leads-selectivo/design.md": {
+    "mtime": 1791642831.1310377,
+    "seen": 1794346111.6363957,
+    "ast_hash": "3c26f17a197abc4e860b37d479651a80",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tomar-leads-selectivo/proposal.md": {
+    "mtime": 1791642824.653645,
+    "seen": 1794346111.6363976,
+    "ast_hash": "7c16948c9fb9bb7f7ee70935c18936af",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tomar-leads-selectivo/specs/toma-selectiva-leads/spec.md": {
+    "mtime": 1791643035.8389494,
+    "seen": 1794346111.6363993,
+    "ast_hash": "ff0a220c042446fb78b0010ecb73f8e6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tomar-leads-selectivo/tasks.md": {
+    "mtime": 1791643307.2789202,
+    "seen": 1794346111.6364012,
+    "ast_hash": "ce6d943fd6ceb1b49e14d926f897fc46",
+    "semantic_hash": ""
+  },
+  "openspec/specs/distribucion-leads-archivo/spec.md": {
+    "mtime": 1794324374.2561226,
+    "seen": 1794346111.6364028,
+    "ast_hash": "173f8d53d5d60c12e3896c07664ac249",
+    "semantic_hash": ""
+  },
+  "openspec/specs/harness-engineering.md": {
+    "mtime": 1787593404.7078643,
+    "seen": 1794346111.6364048,
+    "ast_hash": "bedc0118b27785dee97a8cdb4843df67",
+    "semantic_hash": ""
+  },
+  "openspec/specs/identidad-visual-ui/spec.md": {
+    "mtime": 1793387361.3901658,
+    "seen": 1794346111.636407,
+    "ast_hash": "d4fc0acc91db9852e4e7aa6a8ee76629",
+    "semantic_hash": ""
+  },
+  "openspec/specs/lista-leads-sin-gestion/spec.md": {
+    "mtime": 1789609002.7588375,
+    "seen": 1794346111.6364088,
+    "ast_hash": "c3a87611532d8ce2dd54215cb79e2ff3",
+    "semantic_hash": ""
+  },
+  "openspec/specs/monitor-ui-estado/spec.md": {
+    "mtime": 1793473724.7376606,
+    "seen": 1794346111.6364107,
+    "ast_hash": "ede6b06e7a5b1a247782394662d64dea",
+    "semantic_hash": ""
+  },
+  "openspec/specs/via-tdd/spec.md": {
+    "mtime": 1793317573.7647524,
+    "seen": 1794346111.6364124,
+    "ast_hash": "3a12114ed5ef038a46484055e00e6c40",
+    "semantic_hash": ""
+  },
+  "packaging/LEEME.txt": {
+    "mtime": 1793387782.426192,
+    "seen": 1794346111.6364145,
+    "ast_hash": "7c75434e92bf02131358883a0de63a60",
+    "semantic_hash": ""
+  },
+  "presentacion_productividad.html": {
+    "mtime": 1791213947.3042789,
+    "seen": 1794346111.6364164,
+    "ast_hash": "00ba5c7a845600ddf0aa65ce19251617",
+    "semantic_hash": ""
+  },
+  "served.html": {
+    "mtime": 1793880853.9552581,
+    "seen": 1794346111.6364186,
+    "ast_hash": "bd0d1eb6be0f694330ad3783ddf455e8",
+    "semantic_hash": ""
+  },
+  "diagrama_flujo_documentador.svg": {
+    "mtime": 1787669576.3933303,
+    "seen": 1794346111.6364207,
+    "ast_hash": "41e5ad7c774eea694f549fb33d378103",
+    "semantic_hash": ""
+  },
+  "entregables/diagrama_flujo.png": {
+    "mtime": 1792014185.5807817,
+    "seen": 1794346111.6364224,
+    "ast_hash": "14e11a75e63bfc67a943ccaf79bd45f1",
+    "semantic_hash": ""
+  },
+  "openspec/changes/panel-contact-client-recarga/proposal.md": {
+    "mtime": 1794353883.0270228,
+    "seen": 1794354117.0472267,
+    "ast_hash": "9d598be41d2a4209354bd94f1affbbbc",
+    "semantic_hash": ""
+  },
+  "openspec/changes/panel-contact-client-recarga/specs/panel-contact-client/spec.md": {
+    "mtime": 1794353883.459357,
+    "seen": 1794354117.0472295,
+    "ast_hash": "1776b66ea5a5d47c7f393972db8fc6a0",
+    "semantic_hash": ""
+  },
+  "openspec/changes/panel-contact-client-recarga/tasks.md": {
+    "mtime": 1794353883.2464702,
+    "seen": 1794354117.0472317,
+    "ast_hash": "1dd04b98332273daafb739aa61b96e65",
+    "semantic_hash": ""
+  }
+}

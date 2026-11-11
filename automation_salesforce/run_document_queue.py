@@ -257,9 +257,7 @@ def fail_lead(
     screenshot = capture_failure(driver, screenshot_directory, "queue_error")
     # Las excepciones de Selenium suelen tener mensaje vacío ("Message:"); el
     # tipo (TimeoutException, StaleElementReference…) es lo que diagnostica.
-    reason_text = (
-        f"{type(reason).__name__}: {reason}" if isinstance(reason, Exception) else str(reason)
-    )
+    reason_text = f"{type(reason).__name__}: {reason}" if isinstance(reason, Exception) else str(reason)
     logger.error(
         "Error procesando Lead: lead=%s captura=%s motivo=%s",
         mask_lead_id(lead_id),
@@ -329,6 +327,7 @@ def main(argv: list[str] | None = None) -> int:
         if not attempt_labels or attempt_labels == OTHER_INFORMATION_LABELS:
             return find_other_information(current_driver, timeout)
         return find_field_value(current_driver, timeout, attempt_labels)
+
     stats = {
         "preparado": 0,
         "guardado": 0,
@@ -440,13 +439,13 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 record_result(results_path, entry)
                 record_snapshot(
-                snapshot_path,
-                lead_id,
-                existing_comment,
-                run_id,
-                field=attempt_field_key,
-                country=country,
-            )
+                    snapshot_path,
+                    lead_id,
+                    existing_comment,
+                    run_id,
+                    field=attempt_field_key,
+                    country=country,
+                )
                 if auto_mode:
                     batch_results.append(entry)
                 logger.info(

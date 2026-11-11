@@ -322,6 +322,7 @@ def close_one_lead(
                     timeout_seconds,
                     motive_display,
                 )
+
                 def motive_check(text: str) -> bool:
                     return normalized_value(text) == normalized_value(expected_motive)
             else:
@@ -345,6 +346,7 @@ def close_one_lead(
                             COMMENT_FIELD_LABELS,
                             attempts_before_text,
                         )
+
                 select_picklist_option(
                     driver,
                     QUALIFICATION_FIELD_LABELS,

@@ -25,12 +25,10 @@ class RunDocumentQueueTests(unittest.TestCase):
     def test_mexico_existing_opaque_ids_skip_editor_and_save_in_both_modes(self):
         ids = ["178000001.000002.123456.01", "MX-lote_0001", "000001"]
         attempts = [
-            {"result": "Fallo de línea", "date": "5/10/2026", "time": "17:38", "call_id": value}
-            for value in ids
+            {"result": "Fallo de línea", "date": "5/10/2026", "time": "17:38", "call_id": value} for value in ids
         ]
         field = "\n".join(
-            f"{number} INT Fallo de línea 5/10/2026 17:38 {value}"
-            for number, value in enumerate(ids, start=4)
+            f"{number} INT Fallo de línea 5/10/2026 17:38 {value}" for number, value in enumerate(ids, start=4)
         )
         for auto in (True, False):
             with self.subTest(auto=auto), TemporaryDirectory() as directory:
@@ -38,24 +36,39 @@ class RunDocumentQueueTests(unittest.TestCase):
                 queue_directory = root / "queues"
                 queue_directory.mkdir()
                 queue_path = queue_directory / "synthetic.json"
-                queue_path.write_text(json.dumps({
-                    "country": "colombia_mexico", "run_id": "synthetic",
-                    "leads": [{"lead_id": "00Q000000000001AAA", "attempts": attempts}],
-                }), encoding="utf-8")
+                queue_path.write_text(
+                    json.dumps(
+                        {
+                            "country": "colombia_mexico",
+                            "run_id": "synthetic",
+                            "leads": [{"lead_id": "00Q000000000001AAA", "attempts": attempts}],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
                 config = {
-                    "browser": "edge", "profile_directory": str(root / "profile"),
-                    "salesforce_url": "https://synthetic.example", "log_directory": "logs",
-                    "screenshot_directory": "screenshots", "queue_directory": "queues",
+                    "browser": "edge",
+                    "profile_directory": str(root / "profile"),
+                    "salesforce_url": "https://synthetic.example",
+                    "log_directory": "logs",
+                    "screenshot_directory": "screenshots",
+                    "queue_directory": "queues",
                     "timeouts": {"page_load_seconds": 5},
                 }
                 mocks = {
-                    "load_config": Mock(return_value=config), "create_logger": Mock(),
+                    "load_config": Mock(return_value=config),
+                    "create_logger": Mock(),
                     "detect_browser": Mock(return_value=("edge", root / "edge.exe")),
-                    "create_driver": Mock(), "release_driver": Mock(),
-                    "prompt_for_manual_authentication": Mock(), "wait_for_lightning_ready": Mock(),
-                    "find_field_text": Mock(return_value=""), "find_field_value": Mock(return_value=field),
-                    "find_other_information": Mock(), "prepare_other_information": Mock(),
-                    "save_edit_form": Mock(), "ask_lead_action": Mock(),
+                    "create_driver": Mock(),
+                    "release_driver": Mock(),
+                    "prompt_for_manual_authentication": Mock(),
+                    "wait_for_lightning_ready": Mock(),
+                    "find_field_text": Mock(return_value=""),
+                    "find_field_value": Mock(return_value=field),
+                    "find_other_information": Mock(),
+                    "prepare_other_information": Mock(),
+                    "save_edit_form": Mock(),
+                    "ask_lead_action": Mock(),
                 }
                 with (
                     patch.object(run_document_queue, "ROOT", root),
@@ -67,7 +80,12 @@ class RunDocumentQueueTests(unittest.TestCase):
                 mocks["find_field_value"].assert_called_once_with(
                     mocks["create_driver"].return_value, 5, ("comentario",)
                 )
-                for name in ("prepare_other_information", "save_edit_form", "find_other_information", "ask_lead_action"):
+                for name in (
+                    "prepare_other_information",
+                    "save_edit_form",
+                    "find_other_information",
+                    "ask_lead_action",
+                ):
                     mocks[name].assert_not_called()
                 saved = json.loads(queue_path.with_suffix(".resultado.json").read_text(encoding="utf-8"))[0]
                 self.assertEqual(saved["status"], "ya_documentado")
@@ -302,9 +320,7 @@ class RunDocumentQueueTests(unittest.TestCase):
     def test_runner_checks_duplicates_before_opening_the_editor(self):
         source = inspect.getsource(run_document_queue)
 
-        self.assertLess(
-            source.index("is_duplicate_lead(find_field_text"), source.index("prepare_other_information(")
-        )
+        self.assertLess(source.index("is_duplicate_lead(find_field_text"), source.index("prepare_other_information("))
         self.assertIn('"duplicado"', source)
 
     def test_runner_records_each_stage_of_the_flow(self):

@@ -27,20 +27,20 @@ Test-Requirement "Node.js 20.19.0+" `
     "Instala Node.js 20.19.0+ desde https://nodejs.org"
 
 Test-Requirement "Python 3.10+" `
-    { (Get-Command python -ErrorAction SilentlyContinue) -or (Get-Command py -ErrorAction SilentlyContinue) } `
+    { (Get-Command python -ErrorAction SilentlyContinue) -and ([version](python -c "import platform; print(platform.python_version())") -ge [version]'3.10') } `
     "Instala Python 3.10+ desde https://python.org"
 
-Test-Requirement "Git" `
-    { Get-Command git -ErrorAction SilentlyContinue } `
-    "Instala Git desde https://git-scm.com"
+Test-Requirement "Git 2.40+" `
+    { (Get-Command git -ErrorAction SilentlyContinue) -and ([version]((git --version) -replace '^git version\s+','' -replace '\.windows\..*$','') -ge [version]'2.40') } `
+    "Instala Git 2.40+ desde https://git-scm.com"
 
 Test-Requirement "OpenSpec CLI 1.6.0" `
-    { (Get-Command openspec -ErrorAction SilentlyContinue) -or (Test-Path (Join-Path $npmBin "openspec.cmd")) } `
+    { ((Get-Command openspec -ErrorAction SilentlyContinue) -or (Test-Path (Join-Path $npmBin "openspec.cmd"))) -and (((openspec --version | Select-Object -Last 1).Trim()) -eq '1.6.0') } `
     "Ejecuta: npm install -g @fission-ai/openspec@1.6.0"
 
-Test-Requirement "Graphify CLI 0.10.0" `
-    { (Get-Command graphify -ErrorAction SilentlyContinue) -or (Test-Path (Join-Path $env:USERPROFILE ".local\bin\graphify.exe")) } `
-    "Ejecuta: pipx install graphifyy==0.10.0 (o corre ./scripts/bootstrap.ps1)"
+Test-Requirement "Graphify CLI 0.9.105" `
+    { ((Get-Command graphify -ErrorAction SilentlyContinue) -or (Test-Path (Join-Path $env:USERPROFILE ".local\bin\graphify.exe"))) -and (((graphify --version | Select-Object -Last 1).Trim()) -eq 'graphify 0.9.105') } `
+    "Ejecuta: pipx install graphifyy==0.9.105 (o corre ./scripts/bootstrap.ps1)"
 
 Test-Requirement "Skill de Graphify para agentes (~/.agents/skills)" `
     { Test-Path (Join-Path $env:USERPROFILE ".agents\skills\graphify\SKILL.md") } `

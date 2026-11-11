@@ -23,7 +23,7 @@ Assert-Command "git" "Instala Git desde https://git-scm.com"
 $python = Get-PythonCommand
 
 $openSpecVersion = "1.6.0"
-$graphifyVersion = "0.10.0"
+$graphifyVersion = "0.9.105"
 $uvVersion = "0.11.25"
 
 Write-Host "==> Instalando OpenSpec CLI (global) v$openSpecVersion..." -ForegroundColor Cyan

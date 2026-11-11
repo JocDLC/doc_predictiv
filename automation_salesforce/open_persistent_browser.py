@@ -46,7 +46,9 @@ def main() -> int:
         if opened:
             print(f"Ya había un navegador en {debugger_address}; se abrieron solo las pestañas que faltaban.")
         else:
-            print(f"Ya había un navegador en {debugger_address} con la app y Salesforce abiertos; no se duplicaron pestañas.")
+            print(
+                f"Ya había un navegador en {debugger_address} con la app y Salesforce abiertos; no se duplicaron pestañas."
+            )
     else:
         launch_persistent_browser(executable, profile_directory, debugger_address, urls)
         print(f"{browser.capitalize()} abierto con el perfil dedicado en {debugger_address}.")

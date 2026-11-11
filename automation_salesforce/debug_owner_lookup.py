@@ -25,7 +25,9 @@ from run_distribucion_queue import open_record
 from salesforce_session import is_authenticated, load_config, local_path
 from browser_factory import create_driver, detect_browser, release_driver
 
-DUMP_SCRIPT = _OWNER_DIALOG_HELPERS + r"""
+DUMP_SCRIPT = (
+    _OWNER_DIALOG_HELPERS
+    + r"""
 const dialog = ownerDialog();
 const input = ownerSearchInput(dialog);
 const seen = [];
@@ -47,6 +49,7 @@ return {
     options: seen,
 };
 """
+)
 
 
 def main() -> int:
@@ -77,7 +80,7 @@ def main() -> int:
         deadline = time.monotonic() + QUEUE_SEARCH_TIMEOUT_SECONDS
         while time.monotonic() < deadline:
             snap = execute_in_any_frame(driver, DUMP_SCRIPT)
-            print(f"[{round(QUEUE_SEARCH_TIMEOUT_SECONDS - (deadline - time.monotonic()),1)}s]", snap)
+            print(f"[{round(QUEUE_SEARCH_TIMEOUT_SECONDS - (deadline - time.monotonic()), 1)}s]", snap)
             time.sleep(2)
         _dismiss_owner_dialog(driver)
         return 0

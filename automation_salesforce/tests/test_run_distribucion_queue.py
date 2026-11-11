@@ -105,7 +105,12 @@ class DistributeOneLeadTests(unittest.TestCase):
             entry = distribute_one_lead(
                 self.driver,
                 {**LEAD, "nombre": "Juan Cliente"},
-                CONFIG, INGRESO, self.results_path, self.screenshots, Mock(), "run_x"
+                CONFIG,
+                INGRESO,
+                self.results_path,
+                self.screenshots,
+                Mock(),
+                "run_x",
             )
         self.assertEqual(entry["nombre"], "Juan Cliente")
 
@@ -157,9 +162,7 @@ class DistributeOneLeadTests(unittest.TestCase):
     def test_pickup_owner_never_changes(self):
         # Tras el Pick Up el propietario sigue siendo la cola, incluso tras refresh.
         with patch("run_distribucion_queue.OWNER_VERIFY_TIMEOUT_SECONDS", 0.001):
-            entry, _ = self.run_lead(
-                ["AR_LEAD_QUALIF"] * 20, reread=Mock(return_value="AR_LEAD_QUALIF")
-            )
+            entry, _ = self.run_lead(["AR_LEAD_QUALIF"] * 20, reread=Mock(return_value="AR_LEAD_QUALIF"))
         self.assertEqual(entry["status"], "pickup_error")
         self.assertEqual(entry["detalle"], "propietario_no_cambio")
 
@@ -278,6 +281,7 @@ class SimulateOneLeadTests(unittest.TestCase):
         """Si la opción no aparece, el detalle cuenta qué vio el desplegable:
         el texto tipeado y las opciones visibles — el diagnóstico que
         faltaba para el caso 'nombre no encontrado en Salesforce'."""
+
         def fake_verify(driver, nombre, timeout, diagnostics):
             diagnostics.update({"inputValue": nombre, "options": ["ana perez"]})
             return "reasignacion_error:opcion"

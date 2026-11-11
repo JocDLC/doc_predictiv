@@ -110,9 +110,7 @@ class ScheduleValidationTests(unittest.TestCase):
         )
 
     def test_slots_keep_bandejas(self):
-        result = validate_schedule(
-            [{"start": "08:00", "end": "12:00", "bandejas": ["AR", "MX", "AR"]}]
-        )
+        result = validate_schedule([{"start": "08:00", "end": "12:00", "bandejas": ["AR", "MX", "AR"]}])
         self.assertEqual(result, [{"start": "08:00", "end": "12:00", "bandejas": ["AR", "MX"]}])
 
     def test_overlap_same_bandeja_rejected(self):

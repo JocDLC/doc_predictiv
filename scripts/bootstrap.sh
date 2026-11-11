@@ -13,7 +13,7 @@ assert_command python3 "Instala Python 3.10+ desde https://python.org"
 assert_command git "Instala Git desde https://git-scm.com"
 
 OPEN_SPEC_VERSION="1.6.0"
-GRAPHIFY_VERSION="0.10.0"
+GRAPHIFY_VERSION="0.9.105"
 UV_VERSION="0.11.25"
 
 echo "==> Instalando OpenSpec CLI (global) v${OPEN_SPEC_VERSION}..."

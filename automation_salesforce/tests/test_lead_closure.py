@@ -128,7 +128,10 @@ class FieldTextDomTests(unittest.TestCase):
 
     def test_mexico_subqualification_read_uses_the_spaced_label(self):
         self.run_dom(
-            "const mexicoLabels = " + json.dumps(closure.SUBQUALIFICATION_FIELD_LABELS) + ";" + """
+            "const mexicoLabels = "
+            + json.dumps(closure.SUBQUALIFICATION_FIELD_LABELS)
+            + ";"
+            + """
             const other = document.append(new Element('records-record-layout-item'));
             other.append(new Element('span', {}, 'Cualificación'));
             other.append(new Element('lightning-formatted-text', {}, 'Rechazo no argumentado'));
@@ -290,7 +293,10 @@ class PicklistDomTests(unittest.TestCase):
             with self.subTest(label=label):
                 self.run_dom(
                     "const mexicoLabels = " + json.dumps(closure.SUBQUALIFICATION_FIELD_LABELS) + ";"
-                    "const fieldLabel = " + json.dumps(label) + ";" + """
+                    "const fieldLabel = "
+                    + json.dumps(label)
+                    + ";"
+                    + """
                     const qualification = field('Cualificación', 'Rechazo no argumentado');
                     const wrong = qualification.option('Ilocalizable');
                     const active = field(fieldLabel, '--Ninguno--', {input:true});

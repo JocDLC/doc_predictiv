@@ -256,9 +256,7 @@ def field_result_with_text(driver, labels: tuple[str, ...] = OTHER_INFORMATION_L
 def find_field_value(driver, timeout_seconds: int, labels: tuple[str, ...] = OTHER_INFORMATION_LABELS) -> str:
     """Lee el campo físico indicado, esperando a que sea visible si hace falta."""
     try:
-        result = WebDriverWait(driver, timeout_seconds).until(
-            lambda current: field_result_with_text(current, labels)
-        )
+        result = WebDriverWait(driver, timeout_seconds).until(lambda current: field_result_with_text(current, labels))
     except TimeoutException:
         result = field_result_if_found(driver, labels)
         if not result:

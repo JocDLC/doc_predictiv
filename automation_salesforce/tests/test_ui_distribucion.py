@@ -64,17 +64,22 @@ class UiDistribucionTests(unittest.TestCase):
         self.assertEqual(body["sheets"][0]["rows"][0]["Otra información"], "Ana Perez")
 
     def test_parse_requires_token_and_valid_file(self):
-        status, _ = self._call("POST", "/api/distribucion/parse", {"filename": "a.xlsx", "content_b64": "eA=="}, token=None)
+        status, _ = self._call(
+            "POST", "/api/distribucion/parse", {"filename": "a.xlsx", "content_b64": "eA=="}, token=None
+        )
         self.assertEqual(status, 403)
         status, body = self._call(
-            "POST", "/api/distribucion/parse", {"filename": "a.xlsx", "content_b64": base64.b64encode(b"basura").decode()}
+            "POST",
+            "/api/distribucion/parse",
+            {"filename": "a.xlsx", "content_b64": base64.b64encode(b"basura").decode()},
         )
         self.assertEqual(status, 400)
         self.assertIn("error", body)
 
     def test_put_queue_persists_only_pairs_and_warns_monitor(self):
-        with TemporaryDirectory() as tmp, patch(
-            "ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}
+        with (
+            TemporaryDirectory() as tmp,
+            patch("ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}),
         ):
             status, body = self._call("PUT", "/api/distribucion-queue", QUEUE)
             self.assertEqual(status, 200)
@@ -83,8 +88,9 @@ class UiDistribucionTests(unittest.TestCase):
             self.assertEqual(written["leads"], QUEUE["leads"])
 
     def test_put_queue_rejects_invalid(self):
-        with TemporaryDirectory() as tmp, patch(
-            "ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}
+        with (
+            TemporaryDirectory() as tmp,
+            patch("ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}),
         ):
             status, _ = self._call("PUT", "/api/distribucion-queue", {"operation": "otra", "leads": [1]})
             self.assertEqual(status, 400)
@@ -92,8 +98,9 @@ class UiDistribucionTests(unittest.TestCase):
 
     def test_put_queue_accepts_and_persists_modo_prueba(self):
         queue = {**QUEUE, "modo": "prueba"}
-        with TemporaryDirectory() as tmp, patch(
-            "ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}
+        with (
+            TemporaryDirectory() as tmp,
+            patch("ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}),
         ):
             status, _ = self._call("PUT", "/api/distribucion-queue", queue)
             self.assertEqual(status, 200)
@@ -101,16 +108,18 @@ class UiDistribucionTests(unittest.TestCase):
             self.assertEqual(written["modo"], "prueba")
 
     def test_put_queue_rejects_modo_desconocido(self):
-        with TemporaryDirectory() as tmp, patch(
-            "ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}
+        with (
+            TemporaryDirectory() as tmp,
+            patch("ui_server.API_FILES", {"/api/distribucion-queue": Path(tmp) / "cola.json"}),
         ):
             status, _ = self._call("PUT", "/api/distribucion-queue", {**QUEUE, "modo": "demo"})
             self.assertEqual(status, 400)
             self.assertFalse((Path(tmp) / "cola.json").exists())
 
     def test_results_reads_missing_file_as_empty(self):
-        with TemporaryDirectory() as tmp, patch(
-            "ui_server.API_FILES", {"/api/distribucion-results": Path(tmp) / "r.json"}
+        with (
+            TemporaryDirectory() as tmp,
+            patch("ui_server.API_FILES", {"/api/distribucion-results": Path(tmp) / "r.json"}),
         ):
             request = urllib.request.Request(f"http://127.0.0.1:{self.port}/api/distribucion-results")
             request.add_header("X-Bot-Token", "token-x")
@@ -329,9 +338,7 @@ class UiDistribucionExportarTests(unittest.TestCase):
         self.assertEqual(status, 400)
 
     def test_export_requires_token(self):
-        status, _, _ = self._export(
-            {"tipo": "distribucion", "filas": [{"lead_id": "00Q000000000001AAA"}]}, token=None
-        )
+        status, _, _ = self._export({"tipo": "distribucion", "filas": [{"lead_id": "00Q000000000001AAA"}]}, token=None)
         self.assertEqual(status, 403)
 
 

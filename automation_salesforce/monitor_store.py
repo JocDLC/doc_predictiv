@@ -181,11 +181,7 @@ def _franjas_se_solapan(first: dict, second: dict) -> bool:
     13:59–15:00 comparten el minuto 13:59."""
     if second["_start_minutes"] > first["_end_minutes"]:
         return False
-    return (
-        not first["bandejas"]
-        or not second["bandejas"]
-        or bool(set(first["bandejas"]) & set(second["bandejas"]))
-    )
+    return not first["bandejas"] or not second["bandejas"] or bool(set(first["bandejas"]) & set(second["bandejas"]))
 
 
 def validate_schedule(slots: object) -> list[dict]:
@@ -203,10 +199,7 @@ def validate_schedule(slots: object) -> list[dict]:
                     f"Las franjas {previous['start']}–{previous['end']} y "
                     f"{current['start']}–{current['end']} se solapan en la misma bandeja."
                 )
-    return [
-        {"start": item["start"], "end": item["end"], "bandejas": item["bandejas"]}
-        for item in normalized
-    ]
+    return [{"start": item["start"], "end": item["end"], "bandejas": item["bandejas"]} for item in normalized]
 
 
 def _validate_equipo_franjas(slots: object, nombre: str) -> list[dict]:
@@ -230,16 +223,12 @@ def _check_bandeja_overlaps(validated: list[dict]) -> None:
         for slot in member["franjas"]:
             label = f"{member['nombre']} {slot['start']}–{slot['end']}"
             for code in slot["bandejas"]:
-                coverage.setdefault(code, []).append(
-                    (slot["_start_minutes"], slot["_end_minutes"], label)
-                )
+                coverage.setdefault(code, []).append((slot["_start_minutes"], slot["_end_minutes"], label))
     for code, intervals in coverage.items():
         intervals.sort(key=lambda item: item[0])
         for previous, current in zip(intervals, intervals[1:]):
             if current[0] <= previous[1]:
-                raise ValueError(
-                    f"Franjas de {code} solapadas: {previous[2]} y {current[2]}."
-                )
+                raise ValueError(f"Franjas de {code} solapadas: {previous[2]} y {current[2]}.")
 
 
 def validate_equipo(members: object) -> list[dict]:
@@ -272,8 +261,7 @@ def validate_equipo(members: object) -> list[dict]:
         {
             "nombre": member["nombre"],
             "franjas": [
-                {"start": slot["start"], "end": slot["end"], "bandejas": slot["bandejas"]}
-                for slot in member["franjas"]
+                {"start": slot["start"], "end": slot["end"], "bandejas": slot["bandejas"]} for slot in member["franjas"]
             ],
         }
         for member in validated

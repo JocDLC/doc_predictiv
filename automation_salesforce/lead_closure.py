@@ -80,8 +80,12 @@ def subqualification_options(contract: dict[str, object]) -> tuple[str, ...]:
 COMMENT_FIELD_LABELS = ("comentario",)
 QUALIFICATION_FIELD_LABELS = ("cualificación", "cualificacion")
 SUBQUALIFICATION_FIELD_LABELS = (
-    "sub-cualificación", "sub-cualificacion", "subcualificación", "subcualificacion",
-    "sub cualificación", "sub cualificacion",
+    "sub-cualificación",
+    "sub-cualificacion",
+    "subcualificación",
+    "subcualificacion",
+    "sub cualificación",
+    "sub cualificacion",
 )
 STATE_FIELD_LABELS = ("estado de candidato", "estado del candidato")
 OWNER_FIELD_LABELS = ("propietario del candidato",)
@@ -498,9 +502,7 @@ def read_closure_state(driver, motive_labels: tuple[str, ...] = COMMENT_FIELD_LA
         "estado": find_field_text(driver, STATE_FIELD_LABELS),
         "propietario": find_field_text(driver, OWNER_FIELD_LABELS),
         "comentario": comentario,
-        "motivo": comentario
-        if motive_labels == COMMENT_FIELD_LABELS
-        else find_field_text(driver, motive_labels),
+        "motivo": comentario if motive_labels == COMMENT_FIELD_LABELS else find_field_text(driver, motive_labels),
     }
 
 
@@ -753,14 +755,13 @@ def verify_persisted_fields(
 def is_final_closed(state: dict[str, str], country: object = ARGENTINA) -> bool:
     """Éxito real del cierre: estado Cerrado y propietario en la cola fría
     del país (AR_LEAD_COLD en Argentina, MX_/CO_LEAD_COLD en el otro modo)."""
-    return (
-        normalized_value(state.get("estado", "")) == CLOSED_STATE
-        and normalized_value(state.get("propietario", "")) in final_owners(country)
-    )
+    return normalized_value(state.get("estado", "")) == CLOSED_STATE and normalized_value(
+        state.get("propietario", "")
+    ) in final_owners(country)
 
 
 def already_closed(state: dict[str, str], contract: dict[str, object], country: object = ARGENTINA) -> bool:
     """Resultado final ya presente y compatible con el motivo pedido."""
-    return is_final_closed(state, country) and normalized_value(
-        state.get("comentario", "")
-    ) == contract_text(contract, "comentario")
+    return is_final_closed(state, country) and normalized_value(state.get("comentario", "")) == contract_text(
+        contract, "comentario"
+    )

@@ -491,15 +491,11 @@ def prepare_other_information(
     labels: tuple = OTHER_INFORMATION_LABELS,
     display_name: str = "Otra información",
 ) -> None:
-    edit_control = WebDriverWait(driver, timeout_seconds).until(
-        lambda current: find_edit_control(current, labels)
-    )
+    edit_control = WebDriverWait(driver, timeout_seconds).until(lambda current: find_edit_control(current, labels))
     driver.execute_script(CLICK_EDIT_CONTROL_SCRIPT, edit_control)
     driver.switch_to.default_content()
     try:
-        editor = WebDriverWait(driver, timeout_seconds).until(
-            lambda current: find_editor_control(current, labels)
-        )
+        editor = WebDriverWait(driver, timeout_seconds).until(lambda current: find_editor_control(current, labels))
     except TimeoutException:
         diagnostic = describe_editor_candidates(driver)
         raise ValueError(f"No apareció el editor de '{display_name}'. Diagnóstico: {diagnostic}") from None

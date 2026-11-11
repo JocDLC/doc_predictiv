@@ -156,10 +156,7 @@ def run_tdd_red(test_id: str) -> None:
     if completed.stderr:
         print(completed.stderr, end="", file=sys.stderr, flush=True)
     if completed.returncode == 0:
-        raise SystemExit(
-            "[tdd-red] El test pasa: no prueba comportamiento nuevo. "
-            "Ajustá el test antes de implementar."
-        )
+        raise SystemExit("[tdd-red] El test pasa: no prueba comportamiento nuevo. Ajustá el test antes de implementar.")
     output = completed.stdout + completed.stderr
     if "failures=" in output:
         print("[tdd-red] OK: el test falla como se esperaba. Pasá a GREEN.")

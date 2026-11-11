@@ -38,8 +38,12 @@ class DocumentedCallIdsTests(unittest.TestCase):
 
     def test_call_ids_are_opaque_values_after_date_and_time(self):
         for call_id in (
-            "178000001.000002.123456.01", "000001", "CALL-MX_A:b/7",
-            "b8c26780-2997-4441-811a-349135660001", "CELULAR", "MX lote 0001",
+            "178000001.000002.123456.01",
+            "000001",
+            "CALL-MX_A:b/7",
+            "b8c26780-2997-4441-811a-349135660001",
+            "CELULAR",
+            "MX lote 0001",
         ):
             with self.subTest(call_id=call_id):
                 for separator in (" ", "\t"):

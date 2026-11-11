@@ -43,7 +43,7 @@ def record_snapshot(
         try:
             for item in json.loads(snapshot_path.read_text(encoding="utf-8")):
                 # Los registros históricos sin "field" son del esquema Argentina.
-                key = f'{item["lead_id"]}|{item.get("field") or "otra_informacion"}'
+                key = f"{item['lead_id']}|{item.get('field') or 'otra_informacion'}"
                 snapshots[key] = item
         except (json.JSONDecodeError, KeyError, TypeError):
             snapshots = {}

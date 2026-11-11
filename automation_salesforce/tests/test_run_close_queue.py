@@ -260,8 +260,10 @@ class CloseOneLeadTests(unittest.TestCase):
         """La conversión en México asigna MX_LEAD_COLD: verificarla contra
         AR_LEAD_COLD declaraba conversion_no_verificada un cierre exitoso."""
         partial = {
-            "estado": "Cerrado", "propietario": "Auxiliar X",
-            "comentario": "INT 1 previo", "motivo": "Texto\nIlocalizable",
+            "estado": "Cerrado",
+            "propietario": "Auxiliar X",
+            "comentario": "INT 1 previo",
+            "motivo": "Texto\nIlocalizable",
         }
         mx_final = {**partial, "propietario": "MX_LEAD_COLD"}
         entry, _ = self.run_lead([partial, mx_final], country="colombia_mexico")
@@ -272,12 +274,20 @@ class CloseOneLeadTests(unittest.TestCase):
         """AR_LEAD_COLD no es el propietario final válido del modo
         Colombia/México: una cola equivocada no cuenta como cierre."""
         wrong_queue = {
-            "estado": "Cerrado", "propietario": "AR_LEAD_COLD",
-            "comentario": "INT 1 previo", "motivo": "Texto\nIlocalizable",
+            "estado": "Cerrado",
+            "propietario": "AR_LEAD_COLD",
+            "comentario": "INT 1 previo",
+            "motivo": "Texto\nIlocalizable",
         }
         entry, _ = self.run_lead(
-            [{"estado": "Cerrado", "propietario": "Auxiliar X",
-              "comentario": "INT 1 previo", "motivo": "Texto\nIlocalizable"}]
+            [
+                {
+                    "estado": "Cerrado",
+                    "propietario": "Auxiliar X",
+                    "comentario": "INT 1 previo",
+                    "motivo": "Texto\nIlocalizable",
+                }
+            ]
             + [wrong_queue] * 10,
             country="colombia_mexico",
         )
@@ -330,16 +340,20 @@ class CloseOneLeadTests(unittest.TestCase):
         def field_text(_driver, labels):
             if tuple(labels) == tuple(OTHER_INFORMATION_LABELS):
                 return "Ilocalizable"  # Otra información tras anexar el motivo
-            return "INT 1 previo"      # Comentario conserva los intentos
+            return "INT 1 previo"  # Comentario conserva los intentos
 
         col_open = {
-            "estado": "Nuevo", "propietario": "Auxiliar X",
-            "comentario": "INT 1 previo", "motivo": "",
+            "estado": "Nuevo",
+            "propietario": "Auxiliar X",
+            "comentario": "INT 1 previo",
+            "motivo": "",
         }
         col_saved = {**col_open, "estado": "Cerrado", "motivo": "Ilocalizable"}
         col_final = {
-            "estado": "Cerrado", "propietario": "MX_LEAD_COLD",
-            "comentario": "INT 1 previo", "motivo": "Ilocalizable",
+            "estado": "Cerrado",
+            "propietario": "MX_LEAD_COLD",
+            "comentario": "INT 1 previo",
+            "motivo": "Ilocalizable",
         }
         entry, patches = self.run_lead(
             [col_open, col_saved, col_final],
@@ -379,13 +393,17 @@ class CloseOneLeadTests(unittest.TestCase):
             return "INT 1 previo"
 
         col_open = {
-            "estado": "Nuevo", "propietario": "Auxiliar X",
-            "comentario": "INT 1 previo", "motivo": previo,
+            "estado": "Nuevo",
+            "propietario": "Auxiliar X",
+            "comentario": "INT 1 previo",
+            "motivo": previo,
         }
         col_saved = {**col_open, "estado": "Cerrado", "motivo": appended}
         col_final = {
-            "estado": "Cerrado", "propietario": "MX_LEAD_COLD",
-            "comentario": "INT 1 previo", "motivo": appended,
+            "estado": "Cerrado",
+            "propietario": "MX_LEAD_COLD",
+            "comentario": "INT 1 previo",
+            "motivo": appended,
         }
         entry, patches = self.run_lead(
             [col_open, col_saved, col_final],
@@ -412,16 +430,16 @@ class CloseOneLeadTests(unittest.TestCase):
             return "INT 1 previo"
 
         col_open = {
-            "estado": "Nuevo", "propietario": "Auxiliar X",
-            "comentario": "INT 1 previo", "motivo": "",
+            "estado": "Nuevo",
+            "propietario": "Auxiliar X",
+            "comentario": "INT 1 previo",
+            "motivo": "",
         }
         col_saved = {**col_open, "estado": "Cerrado", "motivo": "Ilocalizable"}
         entry, _ = self.run_lead(
             [col_open, col_saved],
             country="colombia_mexico",
-            find_field_value=unittest.mock.Mock(
-                side_effect=lambda *_args: next(preserved_reads)
-            ),
+            find_field_value=unittest.mock.Mock(side_effect=lambda *_args: next(preserved_reads)),
             find_field_text=unittest.mock.Mock(side_effect=field_text),
         )
 

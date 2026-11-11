@@ -8,7 +8,7 @@ Estas son las versiones mínimas y fijadas que usa el arnés. No usar `@latest` 
 | Python | `3.10` | Para Graphify y uv. |
 | Git | `2.40` | Para worktrees y hooks. |
 | `@fission-ai/openspec` | `1.6.0` | Instalación global vía `npm install -g @fission-ai/openspec@1.6.0`. |
-| `graphifyy` | `0.10.0` | Instalación vía `pipx install graphifyy==0.10.0`. |
+| `graphifyy` | `0.9.105` | Instalación vía `pipx install graphifyy==0.9.105`. |
 | `uv` | `0.11.25` | Para MCP server de Graphify; versión validada en Windows. |
 
 Todas las instalaciones automatizadas deben usar estas versiones fijadas.

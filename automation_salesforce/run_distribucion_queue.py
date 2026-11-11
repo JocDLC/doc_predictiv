@@ -166,7 +166,9 @@ def distribute_one_lead(
     started_at = time.monotonic()
 
     def record(status: str, propietario: str = "", detail: str = "") -> dict:
-        entry = _result_entry(lead_id, persona, status, run_id, started_at, propietario, detail, modo="real", nombre=nombre)
+        entry = _result_entry(
+            lead_id, persona, status, run_id, started_at, propietario, detail, modo="real", nombre=nombre
+        )
         record_result(results_path, entry)
         return entry
 
@@ -232,7 +234,9 @@ def simulate_one_lead(
     started_at = time.monotonic()
 
     def record(status: str, propietario: str = "", detail: str = "") -> dict:
-        entry = _result_entry(lead_id, persona, status, run_id, started_at, propietario, detail, modo="prueba", nombre=nombre)
+        entry = _result_entry(
+            lead_id, persona, status, run_id, started_at, propietario, detail, modo="prueba", nombre=nombre
+        )
         record_result(results_path, entry)
         return entry
 

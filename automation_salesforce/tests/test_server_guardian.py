@@ -188,6 +188,7 @@ class GuardianTests(unittest.TestCase):
     def test_supervise_adopts_when_the_port_survives_the_child(self):
         """El hijo murió pero otro proceso quedó sirviendo: se adopta, no se
         spawnea encima."""
+
         # True solo cuando el último hijo murió = el puerto lo ocupa otro.
         def foreign(spawned):
             return lambda: bool(spawned) and not spawned[-1].is_alive()

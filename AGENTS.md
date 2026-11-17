@@ -126,6 +126,14 @@ Para ahorrar dinero y evitar "context rot":
 - No re-leas archivos que no cambiaron.
 - Cierra `/opsx:archive` y actualiza `graphify` al finalizar.
 
+## Estilo de respuesta
+
+- Primera línea: la respuesta o la acción. Sin introducción ni cierre de cortesía.
+- Frases cortas (máx. 20 palabras), voz activa, una idea por frase.
+- Pasos numerados si hay más de uno. Máximo 5 ítems por lista.
+- Termina con UNA acción concreta si queda algo pendiente.
+- Sin resúmenes de lo que ya hiciste. Explica en detalle solo si te lo piden.
+
 ## Memoria
 
 - `MEMORY.md`: non-goals, decisiones arquitectónicas, failure patterns, estado del proyecto.

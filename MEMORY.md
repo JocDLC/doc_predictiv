@@ -52,6 +52,10 @@
   (b) `navegador_trabado` residual: una pestaña del usuario cargando sin
   commit también cuelga NEW_SESSION — si vuelve a pasar, evaluar reload
   del target por CDP o aislar la ventana del monitor en un Edge aparte.
+- **PENDIENTE — ahorro de tokens en herramientas (2026-11-17)**: limitar
+  cuánto leen las herramientas (`head`/`tail` en logs, rangos de líneas en
+  vez de archivos completos). Es la mayor parte del gasto de una sesión. Ya
+  aplicado: "Estilo de respuesta" en `AGENTS.md` (respuestas −66% en prueba).
 - **Repo vs dist (2026-10-27)**: el `INICIAR.bat` de
   `dist\DocumentadorPredictivo` corre su propia copia de la app
   (`dist\...\app\documentador_predictivo.html` + `app\automation_salesforce\`).

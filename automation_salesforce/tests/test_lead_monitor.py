@@ -1902,6 +1902,30 @@ class PickOwnerOptionTests(unittest.TestCase):
         self.assertEqual(diagnostics["inputValue"], "Ana Perez")
         self.assertEqual(diagnostics["options"], ["x", "y"])
 
+    def test_dump_skipped_when_dialog_closed(self):
+        """Modal cerrado antes del volcado: el diagnóstico lo declara en
+        vez de volcar opciones de un contenedor ajeno de la página — el
+        caso 'input vacío + notas y archivos adjuntos' del lote 17/11."""
+        import lead_monitor
+
+        diagnostics = {}
+
+        def scripts(_d, script, *a):
+            return "closed" if script == lead_monitor.OWNER_DIALOG_OPEN_SCRIPT else "not_found"
+
+        with (
+            patch("lead_monitor.execute_in_any_frame", side_effect=scripts),
+            patch("lead_monitor.time.sleep"),
+            patch("lead_monitor._owner_lookup_snapshot") as snapshot,
+        ):
+            self.assertFalse(
+                lead_monitor._pick_owner_option(
+                    unittest.mock.Mock(), unittest.mock.Mock(), "Ana Perez", 0.01, diagnostics
+                )
+            )
+        snapshot.assert_not_called()
+        self.assertTrue(diagnostics["dialog_cerrado"])
+
 
 class EquipoParaLeadTests(unittest.TestCase):
     def _state(self):

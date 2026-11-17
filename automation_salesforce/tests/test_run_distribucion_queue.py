@@ -78,6 +78,7 @@ class DistributeOneLeadTests(unittest.TestCase):
             "reassign_owner": overrides.get("reassign_owner", Mock(return_value=reassign)),
             "save_contact_panel_if_present": overrides.get("panel", Mock(return_value="panel_guardado")),
             "_reread_owner_after_refresh": overrides.get("reread", Mock(return_value="Usuario Bot")),
+            "owner_page_diagnostic": overrides.get("diag", Mock(return_value="titulo:'x' | etiqueta_owner:no")),
             "capture_failure": Mock(return_value=Path("cap.png")),
         }
         with patch.multiple(run_distribucion_queue, **patches), patch("run_distribucion_queue.time.sleep"):
@@ -167,8 +168,25 @@ class DistributeOneLeadTests(unittest.TestCase):
         self.assertEqual(entry["detalle"], "propietario_no_cambio")
 
     def test_unreadable_owner_is_inaccesible(self):
-        entry, _ = self.run_lead([""])
+        entry, _ = self.run_lead([""], reread=Mock(return_value=""))
         self.assertEqual(entry["status"], "lead_inaccesible")
+
+    def test_unreadable_owner_retries_with_refresh_reread(self):
+        """Bug del lote 17/11: el campo Propietario no apareció en la
+        primera lectura pero sí tras recargar — el lead no es inaccesible,
+        solo lento. Se reintenta con refresh antes de declarar."""
+        entry, _ = self.run_lead([""], reread=Mock(return_value="Ana Perez"))
+        self.assertEqual(entry["status"], "ya_asignado")
+
+    def test_unreadable_owner_reports_page_diagnostic(self):
+        """Si ni tras refresh aparece el campo, el detalle trae evidencia
+        de la página (título/url/etiqueta de propietario) — el dato que
+        distingue 'lead sin permiso' de 'campo con otra etiqueta'."""
+        entry, patches = self.run_lead([""], reread=Mock(return_value=""))
+        self.assertEqual(entry["status"], "lead_inaccesible")
+        self.assertIn("propietario_ilegible", entry["detalle"])
+        self.assertIn("etiqueta_owner", entry["detalle"])
+        patches["capture_failure"].assert_called_once()
 
     def test_navigation_failure_records_inaccesible(self):
         from selenium.common.exceptions import TimeoutException
@@ -208,15 +226,17 @@ class SimulateOneLeadTests(unittest.TestCase):
     def tearDown(self):
         self.temporary.cleanup()
 
-    def run_lead(self, owner, verify="opcion_ok"):
+    def run_lead(self, owner, verify="opcion_ok", reread=None):
         patches = {
             "open_record": Mock(),
             "wait_record_owner": Mock(return_value=owner),
+            "_reread_owner_after_refresh": reread if reread is not None else Mock(return_value=""),
             "verify_persona_option": Mock(return_value=verify) if isinstance(verify, str) else Mock(side_effect=verify),
             "press_pick_up": Mock(),
             "reassign_owner": Mock(),
             "save_contact_panel_if_present": Mock(),
             "capture_failure": Mock(return_value=Path("cap.png")),
+            "owner_page_diagnostic": Mock(return_value="titulo:'x' | etiqueta_owner:no"),
         }
         with patch.multiple(run_distribucion_queue, **patches):
             entry = simulate_one_lead(
@@ -274,8 +294,31 @@ class SimulateOneLeadTests(unittest.TestCase):
     def test_unreadable_owner_is_prueba_inaccesible(self):
         entry, patches = self.run_lead("")
         self.assertEqual(entry["status"], "prueba_inaccesible")
-        self.assertEqual(entry["detalle"], "propietario_ilegible")
+        self.assertIn("propietario_ilegible", entry["detalle"])
         patches["verify_persona_option"].assert_not_called()
+
+    def test_unreadable_owner_retries_with_refresh_reread(self):
+        """Réplica del lote 17/11: 133 leads 'inaccesibles' que a mano
+        muestran el propietario — el campo llega tarde, no falta."""
+        entry, patches = self.run_lead("", reread=Mock(return_value="Ana Perez"))
+        self.assertEqual(entry["status"], "prueba_ok:ya_asignado")
+        patches["verify_persona_option"].assert_not_called()
+
+    def test_unreadable_owner_reports_page_diagnostic(self):
+        entry, patches = self.run_lead("", reread=Mock(return_value=""))
+        self.assertEqual(entry["status"], "prueba_inaccesible")
+        self.assertIn("propietario_ilegible", entry["detalle"])
+        self.assertIn("etiqueta_owner", entry["detalle"])
+        patches["capture_failure"].assert_called_once()
+
+    def test_lookup_diag_reports_closed_dialog(self):
+        """Cuando el modal se cierra antes del volcado, el detalle lo
+        declara — no 'opciones vistas' de otro contenedor de la página
+        (caso 'notas y archivos adjuntos' del lote 17/11)."""
+        from run_distribucion_queue import _format_lookup_diag
+
+        detalle = _format_lookup_diag({"dialog_cerrado": True})
+        self.assertIn("cerr", detalle.lower())
 
     def test_nombre_no_encontrado_detail_shows_what_lookup_saw(self):
         """Si la opción no aparece, el detalle cuenta qué vio el desplegable:

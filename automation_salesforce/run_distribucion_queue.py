@@ -49,6 +49,7 @@ from lead_monitor import (
     verify_persona_option,
     wait_record_owner,
 )
+from comment_reader import FIELD_STRUCTURE_SCRIPT, field_result_in_any_frame
 from local_audit import capture_failure, create_logger, mask_lead_id
 from monitor_store import BANDEJA_CODES, STATE_FILE_NAME, default_unassigned_owner, load_state
 from productivity_metrics import round_elapsed_seconds
@@ -83,6 +84,54 @@ STATUS_PRUEBA_PICKUP_Y_REASIGNAR = "prueba_ok:pickup_y_reasignar"
 STATUS_PRUEBA_NOMBRE_NO_ENCONTRADO = "prueba_nombre_no_encontrado"
 STATUS_PRUEBA_INACCESIBLE = "prueba_inaccesible"
 STATUS_PRUEBA_ERROR = "prueba_error"
+
+# Etiquetas que puede tener el campo Propietario en otros layouts: la sonda
+# diagnóstica las busca para distinguir "sin permiso" de "otra etiqueta".
+OWNER_FIELD_PROBE_LABELS = (
+    "propietario del candidato",
+    "propietario del lead",
+    "propietario",
+    "lead owner",
+    "owner",
+    "responsable",
+)
+
+
+def owner_page_diagnostic(driver) -> str:
+    """Evidencia de la página cuando el campo Propietario no se leyó:
+    título, cola de la URL y si existe alguna etiqueta de propietario.
+    Distingue un registro sin acceso de un campo con otra etiqueta o un
+    render que llegó tarde — el dato que 'propietario_ilegible' solo no da."""
+    parts = []
+    try:
+        title = (driver.title or "").strip()
+        url = (driver.current_url or "").strip()
+    except (AttributeError, WebDriverException):
+        title = url = ""
+    if title:
+        parts.append(f"titulo:{title[:60]!r}")
+    if url:
+        parts.append(f"url:{url[-60:]}")
+    try:
+        structure = field_result_in_any_frame(driver, FIELD_STRUCTURE_SCRIPT, OWNER_FIELD_PROBE_LABELS)
+        parts.append(f"etiqueta_owner:{'si' if structure.get('label_found') else 'no'}")
+    except WebDriverException:
+        parts.append("etiqueta_owner:error")
+    return " | ".join(parts)
+
+
+def _read_record_owner(driver, timeout_seconds: float, screenshot_directory: Path, logger, lead_id: str) -> str:
+    """Lee el propietario con rescate: si la primera lectura llega vacía
+    (el campo a veces renderiza tarde) refresh + relectura antes de
+    rendirse —el mismo rescate que el post-pickup—. Sin lectura deja
+    screenshot y log: el diagnóstico textual lo arma el llamador."""
+    owner = wait_record_owner(driver)
+    if not owner:
+        owner = _reread_owner_after_refresh(driver, timeout_seconds)
+    if not owner:
+        capture_failure(driver, screenshot_directory, "distribucion")
+        logger.error("Lead sin propietario legible: lead=%s", mask_lead_id(lead_id))
+    return owner
 
 
 def _same_person(first: str, second: str) -> bool:
@@ -179,9 +228,9 @@ def distribute_one_lead(
         logger.error("Lead inaccesible: lead=%s motivo=%s", mask_lead_id(lead_id), type(error).__name__)
         return record(STATUS_INACCESIBLE, detail=type(error).__name__)
 
-    owner = wait_record_owner(driver)
+    owner = _read_record_owner(driver, timeout_seconds, screenshot_directory, logger, lead_id)
     if not owner:
-        return record(STATUS_INACCESIBLE, detail="propietario_ilegible")
+        return record(STATUS_INACCESIBLE, detail=f"propietario_ilegible | {owner_page_diagnostic(driver)}")
     if _same_person(owner, persona):
         return record(STATUS_YA_ASIGNADO, propietario=owner)
     if _owner_in(owner, SKIP_OWNERS):
@@ -204,6 +253,8 @@ def _format_lookup_diag(diagnostics: dict) -> str:
     """Resumen de lo que el lookup mostraba cuando el nombre no apareció."""
     if not diagnostics:
         return ""
+    if diagnostics.get("dialog_cerrado"):
+        return "el diálogo se cerró antes de leer el desplegable"
     opciones = " / ".join(str(o) for o in diagnostics.get("options") or []) or "ninguna"
     return f"input: {diagnostics.get('inputValue')!r} · opciones vistas: {opciones}"
 
@@ -247,9 +298,9 @@ def simulate_one_lead(
         logger.error("Lead inaccesible: lead=%s motivo=%s", mask_lead_id(lead_id), type(error).__name__)
         return record(STATUS_PRUEBA_INACCESIBLE, detail=type(error).__name__)
 
-    owner = wait_record_owner(driver)
+    owner = _read_record_owner(driver, timeout_seconds, screenshot_directory, logger, lead_id)
     if not owner:
-        return record(STATUS_PRUEBA_INACCESIBLE, detail="propietario_ilegible")
+        return record(STATUS_PRUEBA_INACCESIBLE, detail=f"propietario_ilegible | {owner_page_diagnostic(driver)}")
     if _same_person(owner, persona):
         return record(STATUS_PRUEBA_YA_ASIGNADO, propietario=owner)
     if _owner_in(owner, SKIP_OWNERS):

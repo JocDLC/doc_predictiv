@@ -947,7 +947,12 @@ def _pick_owner_option(driver, search_input, wanted: str, timeout_seconds: float
                 return True
             time.sleep(POLL_SECONDS)
     if diagnostics is not None:
-        diagnostics.update(_owner_lookup_snapshot(driver))
+        if execute_in_any_frame(driver, OWNER_DIALOG_OPEN_SCRIPT) == "closed":
+            # El modal se cerró antes del volcado: volcar el snapshot leería
+            # un contenedor ajeno de la página ("notas y archivos adjuntos").
+            diagnostics["dialog_cerrado"] = True
+        else:
+            diagnostics.update(_owner_lookup_snapshot(driver))
     return False
 
 

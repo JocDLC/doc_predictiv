@@ -90,9 +90,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/lead_monitor.py": {
-    "mtime": 1794353788.9662232,
-    "seen": 1794354116.9861999,
-    "ast_hash": "242f26d57356c69687fbb515f82a5c1a",
+    "mtime": 1794938266.2658353,
+    "seen": 1794938430.7043285,
+    "ast_hash": "28feddc8528da86eb21190ad2821c17d",
     "semantic_hash": ""
   },
   "automation_salesforce/leads_ui.py": {
@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/run_distribucion_queue.py": {
-    "mtime": 1794345681.3215857,
-    "seen": 1794346111.6359057,
-    "ast_hash": "633d97c2fb3c4b7aee92ef0edf476d9c",
+    "mtime": 1794938446.9913287,
+    "seen": 1794938497.8105865,
+    "ast_hash": "19e6d474a64b8dbf123eb9084f4edcae",
     "semantic_hash": ""
   },
   "automation_salesforce/run_document_queue.py": {
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_lead_monitor.py": {
-    "mtime": 1794353855.6465175,
-    "seen": 1794354116.9913445,
-    "ast_hash": "0fccbf6214c1880ee855bbabc4710de9",
+    "mtime": 1794938199.5595474,
+    "seen": 1794938430.709614,
+    "ast_hash": "04f44d3758e02b1a6fffdac0e056872d",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_leads_ui.py": {
@@ -366,9 +366,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_run_distribucion_queue.py": {
-    "mtime": 1794345681.3260992,
-    "seen": 1794346111.6359675,
-    "ast_hash": "fb10be421fe1ad8ffbe41c0009105f76",
+    "mtime": 1794938290.0766716,
+    "seen": 1794938430.711941,
+    "ast_hash": "642c399e43ffdd567b0f1578838e018d",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_run_document_queue.py": {
@@ -444,9 +444,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/ui_server.py": {
-    "mtime": 1794349191.0743563,
-    "seen": 1794354116.9955807,
-    "ast_hash": "9b2e5d8bc9cec97e31b8870a1057a467",
+    "mtime": 1794938474.048645,
+    "seen": 1794938497.8349922,
+    "ast_hash": "5b32944f558d69e174d5673f1b25aa42",
     "semantic_hash": ""
   },
   "automation_salesforce/verificar_pc.py": {
@@ -918,21 +918,21 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1793317282.0668051,
-    "seen": 1794346111.6361442,
-    "ast_hash": "a6f92d90eed97bd920c1cc60c50375ba",
+    "mtime": 1794938317.9439502,
+    "seen": 1794938430.726934,
+    "ast_hash": "7a6e2b52092354e4151acb9e8c486211",
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1794354027.016945,
-    "seen": 1794354117.0191557,
-    "ast_hash": "9365847b3b2d98ff5609dfa4902198cb",
+    "mtime": 1794938413.3773656,
+    "seen": 1794938430.7269368,
+    "ast_hash": "25715b3c12e80a5bb3929321ba573b78",
     "semantic_hash": ""
   },
   "MEMORY.md": {
-    "mtime": 1793827564.3791096,
-    "seen": 1794346111.636148,
-    "ast_hash": "9ab495c6774af74f1de11ea0e06efb02",
+    "mtime": 1794938318.0199008,
+    "seen": 1794938430.726939,
+    "ast_hash": "f76a6cc7f2c3136fd81cf3dd8b7d770b",
     "semantic_hash": ""
   },
   "RESULTADOS_DE_PRUEBA.md": {
@@ -1266,9 +1266,9 @@
     "semantic_hash": ""
   },
   "openspec/changes/corregir-lectura-reportes-virtualizados/tasks.md": {
-    "mtime": 1794353737.3358846,
-    "seen": 1794354117.035659,
-    "ast_hash": "918b1977ed532dba3afda5faf369cce3",
+    "mtime": 1794354147.649624,
+    "seen": 1794935478.8183212,
+    "ast_hash": "267a78728c66c5efe37936e029f3ad41",
     "semantic_hash": ""
   },
   "openspec/changes/crear-grafo-contratos-negocio/design.md": {
@@ -1815,6 +1815,12 @@
     "mtime": 1794353883.2464702,
     "seen": 1794354117.0472317,
     "ast_hash": "1dd04b98332273daafb739aa61b96e65",
+    "semantic_hash": ""
+  },
+  "%TEMP%old_graph.html": {
+    "mtime": 1794925028.615039,
+    "seen": 1794935478.7069712,
+    "ast_hash": "dbd5d65484bea7b012440e5fe86762c2",
     "semantic_hash": ""
   }
 }

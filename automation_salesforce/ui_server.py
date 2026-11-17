@@ -740,11 +740,7 @@ def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
             print(
                 f"[monitor] {event.get('bandeja')} bandeja: {event.get('rows')} filas, "
                 f"{event.get('unassigned')} sin asignar ({event.get('unassigned_owner')})"
-                + (
-                    f" | {without_id} QUALIF sin ID (columnas del reporte)"
-                    if without_id
-                    else ""
-                )
+                + (f" | {without_id} QUALIF sin ID (columnas del reporte)" if without_id else "")
                 + (f" | propietarios vistos: {owners}" if not event.get("unassigned") and owners else "")
                 + (f" | {skipped} omitidos por estado" if skipped else ""),
                 flush=True,

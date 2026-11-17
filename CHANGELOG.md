@@ -15,6 +15,34 @@ Los cambios hechos por la vía **TDD** (Fase 0.5 de `AGENTS.md`) se registran
 acá en `[Sin publicar]` — sin artefactos OpenSpec — nombrando el test que
 queda como regla permanente (no se borra ni se debilita sin autorización).
 
+## [Sin publicar]
+
+### Corregido
+
+- **"Distribuir leads" declaraba `propietario_ilegible` a leads cuyo
+  propietario sí era visible**: el campo "Propietario del candidato" a veces
+  renderiza después de la primera lectura (lote del 17/11: ~133 de ~380
+  resultados marcados inaccesibles, varios con el propietario a la vista).
+  Tanto la corrida real como la simulación ahora reintentan una vez con
+  refresh + relectura —el mismo rescate que el post-pickup— antes de
+  rendirse. Si el campo sigue sin aparecer, el `detalle` del resultado ya
+  no dice solo `propietario_ilegible`: lleva evidencia de la página
+  (`titulo`, cola de la `url` y si existe alguna etiqueta de propietario
+  —"propietario", "lead owner", "responsable"—) más screenshot en
+  `capturas/`, que distingue un registro sin permiso de un campo con otra
+  etiqueta o de un render lento. Tests-regla:
+  `tests.test_run_distribucion_queue.*.test_unreadable_owner_retries_with_refresh_reread`,
+  `...test_unreadable_owner_reports_page_diagnostic`.
+- **"Nombre no encontrado" volcaba opciones de otro contenedor de la
+  página**: cuando el modal "Cambiar propietario" se cerraba antes del
+  volcado de diagnóstico, el dump leía contenedores ajenos (casos con
+  `input: ''` y opciones como "notas y archivos adjuntos" o "actividades
+  abiertas" del lote del 17/11). Ahora el volcado solo corre si el modal
+  sigue abierto; si se cerró, el detalle dice
+  "el diálogo se cerró antes de leer el desplegable". Tests-regla:
+  `tests.test_lead_monitor.PickOwnerOptionTests.test_dump_skipped_when_dialog_closed`,
+  `tests.test_run_distribucion_queue.SimulateOneLeadTests.test_lookup_diag_reports_closed_dialog`.
+
 ## [1.5.1] — 2026-11-10
 
 ### Corregido

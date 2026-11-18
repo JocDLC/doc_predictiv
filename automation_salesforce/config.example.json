@@ -13,6 +13,10 @@
   "queue_directory": "queues",
   "ui_output_directory": "ui_output",
   "debugger_address": "127.0.0.1:9222",
+  "agent_browser": {
+    "command": "",
+    "session": "laboratorio"
+  },
   "lead_list_fields": {
     "nombre": ["Nombre", "First Name"],
     "apellido": ["Apellido", "Last Name"],

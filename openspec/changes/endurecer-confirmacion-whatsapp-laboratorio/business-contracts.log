@@ -1,0 +1,568 @@
+Change 'endurecer-confirmacion-whatsapp-laboratorio' is valid
+- Validating...
+âœ“ change/agregar-favicons-paginas-locales
+âœ“ change/auditar-calidad-integral
+âœ“ change/automatizar-lectura-salesforce
+âœ“ change/cerrar-leads-por-motivo
+âœ“ change/corregir-documentacion-por-intento
+âœ“ change/corregir-lectura-reportes-virtualizados
+âœ“ change/crear-grafo-contratos-negocio
+âœ“ change/distribuir-leads-desde-archivo
+âœ“ change/documentar-automatico-guardado
+âœ“ change/documentar-desde-html-supervisado
+âœ“ change/documentar-leads-desde-ui
+âœ“ change/endurecer-confirmacion-whatsapp-laboratorio
+âœ“ change/endurecer-servidor-navegador
+âœ“ change/envio-whatsapp-automatico
+âœ“ change/escritura-asistida-salesforce
+âœ“ change/integrar-expertos-ecc
+âœ“ change/medir-productividad-documentacion
+âœ“ change/multi-ide-harness
+âœ“ change/panel-contact-client-recarga
+âœ“ change/preparar-predictivo
+âœ“ change/reasignacion-por-turno
+âœ“ change/reparto-equitativo-leads
+âœ“ change/seleccionar-campos-por-pais
+âœ“ change/tomar-leads-automatico
+âœ“ change/tomar-leads-selectivo
+Totals: 25 passed, 0 failed (25 items)
+- Loading change status...
+Change: endurecer-confirmacion-whatsapp-laboratorio
+Schema: spec-driven
+Change root: C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\openspec\changes\endurecer-confirmacion-whatsapp-laboratorio
+Progress: 4/4 artifacts complete
+
+[x] proposal
+[x] design
+[x] specs
+[x] tasks
+
+All artifacts complete!
+I001 [*] Import block is un-sorted or un-formatted
+  --> openspec\changes\endurecer-confirmacion-whatsapp-laboratorio\diagnostico_adversarial.py:21:1
+   |
+19 |   sys.path.insert(0, str(ROOT / "automation_salesforce" / "tests"))
+20 |
+21 | / import agent_browser as ab  # noqa: E402
+22 | | import run_laboratory_queue as lab  # noqa: E402
+23 | | from test_run_laboratory_queue import CONFIG, LEAD, FakeBrowser, ar_fields, tmp_store  # noqa: E402
+   | |_____________________________________________________________________________________^
+help: Organize imports
+   |
+22 | import run_laboratory_queue as lab  # noqa: E402
+   - from test_run_laboratory_queue import CONFIG, LEAD, FakeBrowser, ar_fields, tmp_store  # noqa: E402
+23 + from test_run_laboratory_queue import (  # noqa: E402
+24 +     CONFIG,
+25 +     LEAD,
+26 +     FakeBrowser,
+27 +     ar_fields,
+28 +     tmp_store,
+29 + )
+30 |
+   |
+
+RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+  --> openspec\changes\endurecer-confirmacion-whatsapp-laboratorio\diagnostico_adversarial.py:21:29
+   |
+19 | sys.path.insert(0, str(ROOT / "automation_salesforce" / "tests"))
+20 |
+21 | import agent_browser as ab  # noqa: E402
+   |                             ^^^^^^^^^^^^
+22 | import run_laboratory_queue as lab  # noqa: E402
+23 | from test_run_laboratory_queue import CONFIG, LEAD, FakeBrowser, ar_fields, tmp_store  # noqa: E402
+   |
+help: Remove unused `noqa` directive
+   |
+20 |
+   - import agent_browser as ab  # noqa: E402
+21 + import agent_browser as ab
+22 | import run_laboratory_queue as lab  # noqa: E402
+   |
+
+RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+  --> openspec\changes\endurecer-confirmacion-whatsapp-laboratorio\diagnostico_adversarial.py:22:37
+   |
+21 | import agent_browser as ab  # noqa: E402
+22 | import run_laboratory_queue as lab  # noqa: E402
+   |                                     ^^^^^^^^^^^^
+23 | from test_run_laboratory_queue import CONFIG, LEAD, FakeBrowser, ar_fields, tmp_store  # noqa: E402
+   |
+help: Remove unused `noqa` directive
+   |
+21 | import agent_browser as ab  # noqa: E402
+   - import run_laboratory_queue as lab  # noqa: E402
+22 + import run_laboratory_queue as lab
+23 | from test_run_laboratory_queue import CONFIG, LEAD, FakeBrowser, ar_fields, tmp_store  # noqa: E402
+   |
+
+RUF100 [*] Unused `noqa` directive (non-enabled: `E402`)
+  --> openspec\changes\endurecer-confirmacion-whatsapp-laboratorio\diagnostico_adversarial.py:23:88
+   |
+21 | import agent_browser as ab  # noqa: E402
+22 | import run_laboratory_queue as lab  # noqa: E402
+23 | from test_run_laboratory_queue import CONFIG, LEAD, FakeBrowser, ar_fields, tmp_store  # noqa: E402
+   |                                                                                        ^^^^^^^^^^^^
+help: Remove unused `noqa` directive
+   |
+22 | import run_laboratory_queue as lab  # noqa: E402
+   - from test_run_laboratory_queue import CONFIG, LEAD, FakeBrowser, ar_fields, tmp_store  # noqa: E402
+23 + from test_run_laboratory_queue import CONFIG, LEAD, FakeBrowser, ar_fields, tmp_store
+24 |
+   |
+
+Found 4 errors.
+[*] 4 fixable with the `--fix` option.
+
+[harness] C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\python.exe -m ruff format --check business_contract_graph
+10 files already formatted
+
+[harness] C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\python.exe -m ruff check business_contract_graph
+All checks passed!
+
+[harness] C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\python.exe -m compileall -q business_contract_graph
+
+[harness] C:\Users\ax24611\AppData\Local\Python\pythoncore-3.14-64\python.exe -m unittest discover -s business_contract_graph/tests -v
+test_unknown_command_is_a_controlled_failure (test_cli.BusinessContractCliTests.test_unknown_command_is_a_controlled_failure) ... ok
+test_validate_and_candidate_commands_succeed (test_cli.BusinessContractCliTests.test_validate_and_candidate_commands_succeed) ... 
+  test_validate_and_candidate_commands_succeed (test_cli.BusinessContractCliTests.test_validate_and_candidate_commands_succeed) (command='validate') ... FAIL
+  test_validate_and_candidate_commands_succeed (test_cli.BusinessContractCliTests.test_validate_and_candidate_commands_succeed) (command='candidate') ... FAIL
+test_business_labels_hide_technical_identifiers (test_generator.BusinessContractGeneratorTests.test_business_labels_hide_technical_identifiers) ... ERROR
+test_candidate_contains_every_source_node_once (test_generator.BusinessContractGeneratorTests.test_candidate_contains_every_source_node_once) ... ERROR
+test_candidate_exposes_two_roots_and_manual_bot_paths (test_generator.BusinessContractGeneratorTests.test_candidate_exposes_two_roots_and_manual_bot_paths) ... ERROR
+test_candidate_is_native_showcase_workflow_v2 (test_generator.BusinessContractGeneratorTests.test_candidate_is_native_showcase_workflow_v2) ... ERROR
+test_candidate_uses_csv_and_does_not_advertise_xlsx (test_generator.BusinessContractGeneratorTests.test_candidate_uses_csv_and_does_not_advertise_xlsx) ... ERROR
+test_each_macrofunction_has_one_native_contract_card (test_generator.BusinessContractGeneratorTests.test_each_macrofunction_has_one_native_contract_card) ... ERROR
+test_salesforce_documentation_is_a_visible_external_destination (test_generator.BusinessContractGeneratorTests.test_salesforce_documentation_is_a_visible_external_destination) ... ERROR
+test_two_generations_have_the_same_hash (test_generator.BusinessContractGeneratorTests.test_two_generations_have_the_same_hash) ... ERROR
+test_activity_types_distinguish_ownership (test_validator.ContractValidatorTests.test_activity_types_distinguish_ownership) ... ok
+test_approved_source_is_valid (test_validator.ContractValidatorTests.test_approved_source_is_valid) ... ERROR
+test_archived_openspec_reference_is_rejected (test_validator.ContractValidatorTests.test_archived_openspec_reference_is_rejected) ... FAIL
+test_broken_relationship_is_rejected (test_validator.ContractValidatorTests.test_broken_relationship_is_rejected) ... FAIL
+test_contract_snapshot_has_the_nine_approved_macrofunctions (test_validator.ContractValidatorTests.test_contract_snapshot_has_the_nine_approved_macrofunctions) ... ok
+test_contract_without_evidence_must_not_be_verified (test_validator.ContractValidatorTests.test_contract_without_evidence_must_not_be_verified) ... FAIL
+test_duplicate_id_is_rejected (test_validator.ContractValidatorTests.test_duplicate_id_is_rejected) ... FAIL
+test_duplicate_openspec_reference_is_rejected (test_validator.ContractValidatorTests.test_duplicate_openspec_reference_is_rejected) ... FAIL
+test_every_contract_has_allowed_openspec_traceability (test_validator.ContractValidatorTests.test_every_contract_has_allowed_openspec_traceability) ... ok
+test_every_declared_file_is_csv (test_validator.ContractValidatorTests.test_every_declared_file_is_csv) ... ok
+test_exactly_two_business_journeys_are_declared (test_validator.ContractValidatorTests.test_exactly_two_business_journeys_are_declared) ... ok
+test_executive_layer_omits_technical_identifiers (test_validator.ContractValidatorTests.test_executive_layer_omits_technical_identifiers) ... ok
+test_manual_and_bot_routes_both_finish_in_salesforce_confirmation (test_validator.ContractValidatorTests.test_manual_and_bot_routes_both_finish_in_salesforce_confirmation) ... ok
+test_missing_contract_field_is_rejected (test_validator.ContractValidatorTests.test_missing_contract_field_is_rejected) ... FAIL
+test_missing_manual_route_is_rejected (test_validator.ContractValidatorTests.test_missing_manual_route_is_rejected) ... FAIL
+test_missing_openspec_reference_is_rejected (test_validator.ContractValidatorTests.test_missing_openspec_reference_is_rejected) ... FAIL
+test_non_csv_artifact_is_rejected (test_validator.ContractValidatorTests.test_non_csv_artifact_is_rejected) ... FAIL
+test_sensitive_content_is_rejected (test_validator.ContractValidatorTests.test_sensitive_content_is_rejected) ... 
+  test_sensitive_content_is_rejected (test_validator.ContractValidatorTests.test_sensitive_content_is_rejected) (value='SENSITIVE-CANARY') ... FAIL
+  test_sensitive_content_is_rejected (test_validator.ContractValidatorTests.test_sensitive_content_is_rejected) (value='persona@example.com') ... FAIL
+  test_sensitive_content_is_rejected (test_validator.ContractValidatorTests.test_sensitive_content_is_rejected) (value='00Q000000000001AAA') ... FAIL
+  test_sensitive_content_is_rejected (test_validator.ContractValidatorTests.test_sensitive_content_is_rejected) (value='password=synthetic-value') ... FAIL
+test_technical_graph_cannot_be_overwritten (test_validator.ContractValidatorTests.test_technical_graph_cannot_be_overwritten) ... FAIL
+test_technical_graph_still_matches_approved_baseline (test_validator.ContractValidatorTests.test_technical_graph_still_matches_approved_baseline) ... FAIL
+test_unknown_activity_type_is_rejected (test_validator.ContractValidatorTests.test_unknown_activity_type_is_rejected) ... FAIL
+test_xlsx_cannot_be_advertised_as_available (test_validator.ContractValidatorTests.test_xlsx_cannot_be_advertised_as_available) ... FAIL
+
+======================================================================
+ERROR: test_business_labels_hide_technical_identifiers (test_generator.BusinessContractGeneratorTests.test_business_labels_hide_technical_identifiers)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_generator.py", line 16, in setUp
+    self.candidate = build_candidate(self.data)
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\generator.py", line 201, in build_candidate
+    validate_contracts(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\validator.py", line 448, in validate_contracts
+    raise ContractValidationError(
+        "El gráfico técnico protegido cambió respecto de la línea base."
+    )
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+======================================================================
+ERROR: test_candidate_contains_every_source_node_once (test_generator.BusinessContractGeneratorTests.test_candidate_contains_every_source_node_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_generator.py", line 16, in setUp
+    self.candidate = build_candidate(self.data)
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\generator.py", line 201, in build_candidate
+    validate_contracts(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\validator.py", line 448, in validate_contracts
+    raise ContractValidationError(
+        "El gráfico técnico protegido cambió respecto de la línea base."
+    )
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+======================================================================
+ERROR: test_candidate_exposes_two_roots_and_manual_bot_paths (test_generator.BusinessContractGeneratorTests.test_candidate_exposes_two_roots_and_manual_bot_paths)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_generator.py", line 16, in setUp
+    self.candidate = build_candidate(self.data)
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\generator.py", line 201, in build_candidate
+    validate_contracts(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\validator.py", line 448, in validate_contracts
+    raise ContractValidationError(
+        "El gráfico técnico protegido cambió respecto de la línea base."
+    )
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+======================================================================
+ERROR: test_candidate_is_native_showcase_workflow_v2 (test_generator.BusinessContractGeneratorTests.test_candidate_is_native_showcase_workflow_v2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_generator.py", line 16, in setUp
+    self.candidate = build_candidate(self.data)
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\generator.py", line 201, in build_candidate
+    validate_contracts(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\validator.py", line 448, in validate_contracts
+    raise ContractValidationError(
+        "El gráfico técnico protegido cambió respecto de la línea base."
+    )
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+======================================================================
+ERROR: test_candidate_uses_csv_and_does_not_advertise_xlsx (test_generator.BusinessContractGeneratorTests.test_candidate_uses_csv_and_does_not_advertise_xlsx)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_generator.py", line 16, in setUp
+    self.candidate = build_candidate(self.data)
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\generator.py", line 201, in build_candidate
+    validate_contracts(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\validator.py", line 448, in validate_contracts
+    raise ContractValidationError(
+        "El gráfico técnico protegido cambió respecto de la línea base."
+    )
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+======================================================================
+ERROR: test_each_macrofunction_has_one_native_contract_card (test_generator.BusinessContractGeneratorTests.test_each_macrofunction_has_one_native_contract_card)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_generator.py", line 16, in setUp
+    self.candidate = build_candidate(self.data)
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\generator.py", line 201, in build_candidate
+    validate_contracts(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\validator.py", line 448, in validate_contracts
+    raise ContractValidationError(
+        "El gráfico técnico protegido cambió respecto de la línea base."
+    )
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+======================================================================
+ERROR: test_salesforce_documentation_is_a_visible_external_destination (test_generator.BusinessContractGeneratorTests.test_salesforce_documentation_is_a_visible_external_destination)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_generator.py", line 16, in setUp
+    self.candidate = build_candidate(self.data)
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\generator.py", line 201, in build_candidate
+    validate_contracts(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\validator.py", line 448, in validate_contracts
+    raise ContractValidationError(
+        "El gráfico técnico protegido cambió respecto de la línea base."
+    )
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+======================================================================
+ERROR: test_two_generations_have_the_same_hash (test_generator.BusinessContractGeneratorTests.test_two_generations_have_the_same_hash)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_generator.py", line 16, in setUp
+    self.candidate = build_candidate(self.data)
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\generator.py", line 201, in build_candidate
+    validate_contracts(data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\validator.py", line 448, in validate_contracts
+    raise ContractValidationError(
+        "El gráfico técnico protegido cambió respecto de la línea base."
+    )
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+======================================================================
+ERROR: test_approved_source_is_valid (test_validator.ContractValidatorTests.test_approved_source_is_valid)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 38, in test_approved_source_is_valid
+    validate_contracts(self.data)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\validator.py", line 448, in validate_contracts
+    raise ContractValidationError(
+        "El gráfico técnico protegido cambió respecto de la línea base."
+    )
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+======================================================================
+FAIL: test_validate_and_candidate_commands_succeed (test_cli.BusinessContractCliTests.test_validate_and_candidate_commands_succeed) (command='validate')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_cli.py", line 24, in test_validate_and_candidate_commands_succeed
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        completed.returncode, 0, completed.stdout + completed.stderr
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 1 != 0 : [business-contracts] ERROR: El gráfico técnico protegido cambió respecto de la línea base.
+
+
+======================================================================
+FAIL: test_validate_and_candidate_commands_succeed (test_cli.BusinessContractCliTests.test_validate_and_candidate_commands_succeed) (command='candidate')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_cli.py", line 24, in test_validate_and_candidate_commands_succeed
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        completed.returncode, 0, completed.stdout + completed.stderr
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 1 != 0 : [business-contracts] ERROR: El gráfico técnico protegido cambió respecto de la línea base.
+
+
+======================================================================
+FAIL: test_archived_openspec_reference_is_rejected (test_validator.ContractValidatorTests.test_archived_openspec_reference_is_rejected)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 180, in test_archived_openspec_reference_is_rejected
+    with self.assertRaisesRegex(ContractValidationError, "archivada"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "archivada" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_broken_relationship_is_rejected (test_validator.ContractValidatorTests.test_broken_relationship_is_rejected)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 143, in test_broken_relationship_is_rejected
+    with self.assertRaisesRegex(ContractValidationError, "nodo inexistente"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "nodo inexistente" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_contract_without_evidence_must_not_be_verified (test_validator.ContractValidatorTests.test_contract_without_evidence_must_not_be_verified)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 115, in test_contract_without_evidence_must_not_be_verified
+    with self.assertRaisesRegex(
+         ~~~~~~~~~~~~~~~~~~~~~~^
+        ContractValidationError, "sin evidencia no puede estar verificado"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+AssertionError: "sin evidencia no puede estar verificado" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_duplicate_id_is_rejected (test_validator.ContractValidatorTests.test_duplicate_id_is_rejected)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 131, in test_duplicate_id_is_rejected
+    with self.assertRaisesRegex(ContractValidationError, "ID duplicado"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "ID duplicado" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_duplicate_openspec_reference_is_rejected (test_validator.ContractValidatorTests.test_duplicate_openspec_reference_is_rejected)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 169, in test_duplicate_openspec_reference_is_rejected
+    with self.assertRaisesRegex(ContractValidationError, "referencia duplicada"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "referencia duplicada" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_missing_contract_field_is_rejected (test_validator.ContractValidatorTests.test_missing_contract_field_is_rejected)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 123, in test_missing_contract_field_is_rejected
+    with self.assertRaisesRegex(
+         ~~~~~~~~~~~~~~~~~~~~~~^
+        ContractValidationError, "faltan campos obligatorios: inputs"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+AssertionError: "faltan campos obligatorios: inputs" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_missing_manual_route_is_rejected (test_validator.ContractValidatorTests.test_missing_manual_route_is_rejected)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 153, in test_missing_manual_route_is_rejected
+    with self.assertRaisesRegex(ContractValidationError, "camino obligatorio"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "camino obligatorio" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_missing_openspec_reference_is_rejected (test_validator.ContractValidatorTests.test_missing_openspec_reference_is_rejected)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 159, in test_missing_openspec_reference_is_rejected
+    with self.assertRaisesRegex(
+         ~~~~~~~~~~~~~~~~~~~~~~^
+        ContractValidationError, "requisito inexistente o ambiguo"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+AssertionError: "requisito inexistente o ambiguo" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_non_csv_artifact_is_rejected (test_validator.ContractValidatorTests.test_non_csv_artifact_is_rejected)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 109, in test_non_csv_artifact_is_rejected
+    with self.assertRaisesRegex(ContractValidationError, "debe ser CSV"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "debe ser CSV" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_sensitive_content_is_rejected (test_validator.ContractValidatorTests.test_sensitive_content_is_rejected) (value='SENSITIVE-CANARY')
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 195, in test_sensitive_content_is_rejected
+    self.assertRaisesRegex(ContractValidationError, "Contenido sensible"),
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Contenido sensible" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_sensitive_content_is_rejected (test_validator.ContractValidatorTests.test_sensitive_content_is_rejected) (value='persona@example.com')
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 195, in test_sensitive_content_is_rejected
+    self.assertRaisesRegex(ContractValidationError, "Contenido sensible"),
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Contenido sensible" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_sensitive_content_is_rejected (test_validator.ContractValidatorTests.test_sensitive_content_is_rejected) (value='00Q000000000001AAA')
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 195, in test_sensitive_content_is_rejected
+    self.assertRaisesRegex(ContractValidationError, "Contenido sensible"),
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Contenido sensible" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_sensitive_content_is_rejected (test_validator.ContractValidatorTests.test_sensitive_content_is_rejected) (value='password=synthetic-value')
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 195, in test_sensitive_content_is_rejected
+    self.assertRaisesRegex(ContractValidationError, "Contenido sensible"),
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "Contenido sensible" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_technical_graph_cannot_be_overwritten (test_validator.ContractValidatorTests.test_technical_graph_cannot_be_overwritten)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 200, in test_technical_graph_cannot_be_overwritten
+    with self.assertRaisesRegex(ContractValidationError, "no puede sobrescribir"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "no puede sobrescribir" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_technical_graph_still_matches_approved_baseline (test_validator.ContractValidatorTests.test_technical_graph_still_matches_approved_baseline)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 41, in test_technical_graph_still_matches_approved_baseline
+    self.assertEqual(sha256(TECHNICAL_GRAPH_PATH), EXPECTED_TECHNICAL_GRAPH_SHA256)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '64e629b2faad856a36b7631ad3cb80c3f5879162a4c1c50b224882dda9fddb93' != '24a07fe661e6cfe19a8d6393af6b43bf4a6a4527135a60b21e986d58ee9293ad'
+- 64e629b2faad856a36b7631ad3cb80c3f5879162a4c1c50b224882dda9fddb93
++ 24a07fe661e6cfe19a8d6393af6b43bf4a6a4527135a60b21e986d58ee9293ad
+
+
+======================================================================
+FAIL: test_unknown_activity_type_is_rejected (test_validator.ContractValidatorTests.test_unknown_activity_type_is_rejected)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 137, in test_unknown_activity_type_is_rejected
+    with self.assertRaisesRegex(ContractValidationError, "actividad desconocido"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "actividad desconocido" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+======================================================================
+FAIL: test_xlsx_cannot_be_advertised_as_available (test_validator.ContractValidatorTests.test_xlsx_cannot_be_advertised_as_available)
+----------------------------------------------------------------------
+business_contract_graph.validator.ContractValidationError: El gráfico técnico protegido cambió respecto de la línea base.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ax24611\Downloads\_dev\Docuentar_predictivo\business_contract_graph\tests\test_validator.py", line 103, in test_xlsx_cannot_be_advertised_as_available
+    with self.assertRaisesRegex(ContractValidationError, "XLSX no puede"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "XLSX no puede" does not match "El gráfico técnico protegido cambió respecto de la línea base."
+
+----------------------------------------------------------------------
+Ran 32 tests in 2.307s
+
+FAILED (failures=19, errors=9)

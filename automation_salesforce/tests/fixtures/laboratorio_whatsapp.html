@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Fixture laboratorio WhatsApp</title>
+<style>
+  body { font-family: sans-serif; margin: 24px; }
+  .slds-assistive-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .toast { border: 1px solid #999; padding: 8px; margin: 8px 0; display: none; }
+  .toast.visible { display: block; }
+  #editor-area { display: none; margin-top: 12px; }
+  #editor-area.visible { display: block; }
+</style>
+</head>
+<body>
+<records-record-layout-item id="item-otra">
+  <span class="test-id__field-label">Otra información</span>
+  <div class="test-id__field-value" id="field-value"><lightning-formatted-text id="field-text"></lightning-formatted-text></div>
+  <button class="test-id__inline-edit-trigger" id="edit-trigger" title="Modificar Otra información">
+    <span class="slds-assistive-text">Modificar Otra información</span>✎
+  </button>
+</records-record-layout-item>
+<div id="editor-area">
+  <textarea id="editor" aria-label="Otra información"></textarea>
+  <button id="save">Guardar</button>
+</div>
+<lightning-button id="send-wa-host"></lightning-button>
+<lightning-toast-container id="toasts-host"></lightning-toast-container>
+<script>
+// Estructura como Salesforce: el botón y los toasts viven DENTRO de shadow
+// roots. document.elementFromPoint no los penetra y un MutationObserver
+// sobre document tampoco ve las mutaciones internas.
+const sendHost = document.getElementById('send-wa-host');
+sendHost.attachShadow({mode: 'open'}).innerHTML =
+  '<button id="send-wa" style="padding:8px">Send To Whatsapp</button>';
+const toastsHost = document.getElementById('toasts-host');
+const toastsShadow = toastsHost.attachShadow({mode: 'open'});
+toastsShadow.innerHTML = '<div id="toasts"></div>';
+const toasts = toastsShadow.getElementById('toasts');
+const field = document.getElementById('field-text');
+const editor = document.getElementById('editor');
+const editorArea = document.getElementById('editor-area');
+function emitToast(text, kind) {
+  const div = document.createElement('div');
+  div.className = 'toast slds-notify visible';
+  div.setAttribute('role', kind === 'negative' ? 'alert' : 'status');
+  div.textContent = text;
+  toasts.appendChild(div);
+}
+function scenario() {
+  return new URLSearchParams(location.hash.slice(1)).get('toast') || 'none';
+}
+function delay() {
+  return parseInt(new URLSearchParams(location.hash.slice(1)).get('delay') || '100', 10);
+}
+// Historial inicial configurable: ?hist=línea1||línea2
+const params = new URLSearchParams(location.hash.slice(1));
+field.textContent = (params.get('hist') || '').split('||').filter(Boolean).join('\n');
+document.getElementById('edit-trigger').addEventListener('click', () => {
+  editor.value = field.textContent;
+  editorArea.classList.add('visible');
+});
+document.getElementById('save').addEventListener('click', () => {
+  field.textContent = editor.value;
+  editorArea.classList.remove('visible');
+});
+sendHost.shadowRoot.getElementById('send-wa').addEventListener('click', () => {
+  const s = scenario();
+  setTimeout(() => {
+    if (s === 'positive') emitToast('Message sent to Whatsapp! Please follow the sending status of this message.', 'positive');
+    else if (s === 'negative') emitToast('Error: WhatsApp no enviado. Reintentá más tarde.', 'negative');
+    else if (s === 'unrelated') emitToast('WhatsApp status actualizado', 'unrelated');
+    // 'none' y 'stale' no emiten señal nueva post-clic.
+  }, delay());
+});
+// Señal previa al clic (stale): presente desde la carga, debe ser descartada.
+if (scenario() === 'stale') {
+  emitToast('Message sent to Whatsapp! Please follow the sending status of this message.', 'positive');
+}
+</script>
+</body>
+</html>

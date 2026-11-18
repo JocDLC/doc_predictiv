@@ -74,6 +74,20 @@ function isVisible(element) {
         && element.getClientRects().length > 0;
 }
 
+function insideEditTrigger(element) {
+    let current = element;
+    while (current) {
+        if (current.matches && current.matches(
+            '.test-id__inline-edit-trigger, .slds-assistive-text, button'
+        )) {
+            return true;
+        }
+        const root = current.getRootNode ? current.getRootNode() : null;
+        current = current.parentElement || (root && root.host) || null;
+    }
+    return false;
+}
+
 function valueFromField(container) {
     const descendants = [];
     collect(container, new Set(), descendants);
@@ -85,11 +99,30 @@ function valueFromField(container) {
             return value;
         }
     }
+    // Área de valor dedicada: no contiene el lápiz ni texto asistivo.
+    // "--" es el placeholder de campo vacío de Lightning.
+    const fieldValues = descendants.filter(element => element.matches
+        && element.matches('.test-id__field-value') && isVisible(element));
+    for (const element of fieldValues) {
+        if (insideEditTrigger(element)) {
+            continue;
+        }
+        const raw = String(element.innerText || element.textContent || '').trim();
+        if (raw === '--') {
+            return '';
+        }
+        if (raw) {
+            return textAfterLabel(raw) || raw;
+        }
+    }
     const preferred = descendants.filter(element => element.matches && element.matches(
         'textarea, input:not([type="hidden"]), lightning-formatted-text, '
         + 'lightning-base-formatted-text, .slds-form-element__static, [data-output-element-id]'
     ));
     for (const element of preferred) {
+        if (insideEditTrigger(element)) {
+            continue;
+        }
         const isFormControl = element.matches('textarea, input, select');
         const rawValue = isFormControl
             ? element.value
@@ -99,21 +132,27 @@ function valueFromField(container) {
             return value;
         }
     }
-    const ignoredLeafTexts = new Set([...labels, 'edit', 'editar']);
     const leafValues = [];
     for (const element of descendants) {
         if (element.children.length || element.shadowRoot || element.matches('button, script, style')) {
             continue;
         }
+        // El lápiz lleva texto asistivo "Modificar <label>": se excluye por
+        // POSICIÓN DOM, no por texto. Así no se borra historial legítimo.
+        if (insideEditTrigger(element)) {
+            continue;
+        }
         const value = textAfterLabel(element.value || element.innerText || element.textContent || '');
-        if (value && !ignoredLeafTexts.has(normalize(value))) {
+        if (value && !labels.includes(normalize(value))) {
             leafValues.push(value);
         }
     }
     if (leafValues.length) {
         return leafValues.join('\\n');
     }
-    return textAfterLabel(container.innerText || container.textContent || '');
+    // Sin fallback a innerText del contenedor: incluiría el texto asistivo
+    // del lápiz como valor. Si no hay valor dedicado ni hojas: campo vacío.
+    return '';
 }
 
 const elements = [];

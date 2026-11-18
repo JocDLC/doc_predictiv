@@ -712,3 +712,28 @@ del monitor, y la pestaña de trabajo se cierra por CDP
 (`Target.closeTarget` vía `_close_tab_without_focus`) sin activarla.
 NO minimizar la ventana (la grilla virtual da 0 filas) pero oculta
 detrás de otras sí rinde por las flags anti-occlusion.
+
+## Laboratorio WhatsApp / agent-browser (2026-11-17)
+
+- Nuevo motor `agent_browser` (CLI 0.43.0, CDP contra el mismo Edge del
+  bot, `debugger_address` compartido con Selenium). Requiere Node >=22:
+  el harness OpenSpec fija Node 20, así que el binario vive fuera del
+  toolchain del repo (npm global del usuario).
+- Contrato `LabBrowser` (laboratory_browser.py): open_record,
+  is_authenticated, current_record_id, wait_field_text,
+  write_and_save_field, whatsapp_button_present, click_whatsapp,
+  whatsapp_toast, close_whatsapp_toast, release. `AgentLabBrowser`
+  (agent_browser.py) lo cumple evaluando JS por `agent-browser eval
+  --stdin --json`; cada eval atraviesa shadow DOM same-origin.
+- Diario SQLite `ui_output/laboratorio.sqlite3` (laboratory_store.py):
+  operación por (campaign, lead) con next_int + attempt_line reservados
+  ANTES del clic. Clic reservado sin cierre terminal = `indeterminado`,
+  bloqueo permanente de reenvío (regla anti-duplicado de WhatsApp).
+- Doc antes de send: `N INT Se envía WhatsApp DD/MM/AAAA HH:mm` al final
+  de Otra información, verificación tras reload, recién ahí el clic.
+  Sin toast -> `documentado_wa_no_confirmado` (no reintento).
+- Windows: los shims npm son `.cmd`; CreateProcess no los ejecuta
+  directo -> `AgentBrowserTransport.run` envuelve en `cmd /c` cuando el
+  ejecutable termina en .cmd/.bat.
+- Comparación real: leads distintos por motor (el modo `comparacion`
+  con ambos motores sobre el mismo lead es solo para `prueba`).

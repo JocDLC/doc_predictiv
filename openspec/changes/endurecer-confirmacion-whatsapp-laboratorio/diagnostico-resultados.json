@@ -1,0 +1,159 @@
+{
+  "scope": "Node with minimal DOM and Python fakes; not a live Salesforce test",
+  "counts": {
+    "PASS": 8,
+    "FAIL": 6
+  },
+  "findings": [
+    {
+      "case": "positive_toast",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "negative_toast",
+      "actual": true,
+      "expected": false,
+      "status": "FAIL"
+    },
+    {
+      "case": "unrelated_status",
+      "actual": true,
+      "expected": false,
+      "status": "FAIL"
+    },
+    {
+      "case": "hidden_success",
+      "actual": false,
+      "expected": false,
+      "status": "PASS"
+    },
+    {
+      "case": "stale_toast",
+      "actual": true,
+      "expected": false,
+      "status": "FAIL"
+    },
+    {
+      "case": "accent_normalization",
+      "actual": "otra informacion",
+      "expected": "otra informacion",
+      "status": "PASS"
+    },
+    {
+      "case": "preserve_literal_history",
+      "actual": "1 INT previo\n2 INT previo",
+      "expected": "1 INT previo\nModificar Otra información\n2 INT previo",
+      "status": "FAIL"
+    },
+    {
+      "case": "no_toast_not_confirmed",
+      "actual": "documentado_wa_no_confirmado",
+      "expected": "documentado_wa_no_confirmado",
+      "status": "PASS"
+    },
+    {
+      "case": "same_campaign_blocks",
+      "actual": true,
+      "expected": true,
+      "status": "PASS"
+    },
+    {
+      "case": "new_campaign_blocks",
+      "actual": false,
+      "expected": true,
+      "status": "FAIL"
+    },
+    {
+      "case": "missing_identity_blocks",
+      "actual": "apto",
+      "expected": "bloqueado",
+      "status": "FAIL"
+    },
+    {
+      "case": "wrong_identity_blocks_send",
+      "actual": [
+        "bloqueado",
+        0,
+        0
+      ],
+      "expected": [
+        "bloqueado",
+        0,
+        0
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "expired_session_blocks_send",
+      "actual": [
+        "bloqueado",
+        0,
+        0
+      ],
+      "expected": [
+        "bloqueado",
+        0,
+        0
+      ],
+      "status": "PASS"
+    },
+    {
+      "case": "verification_has_no_mutations",
+      "actual": [
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0
+      ],
+      "status": "PASS"
+    }
+  ],
+  "journal_read_only": {
+    "available": true,
+    "operations": [
+      {
+        "engine": "agent_browser",
+        "doc_status": "confirmada",
+        "send_status": "confirmado",
+        "n": 5
+      },
+      {
+        "engine": "agent_browser",
+        "doc_status": "confirmada",
+        "send_status": "no_confirmado",
+        "n": 30
+      }
+    ],
+    "evidence_present": 0
+  },
+  "comparison_read_only": {
+    "run_ids": [
+      "run_20261117T234550Z_f0f1d5"
+    ],
+    "evaluations": 160,
+    "unique_run_leads": 80,
+    "paired_status_agreements": 79,
+    "pairs": 80,
+    "both_apto_pairs": 49,
+    "paired_apto_medians": {
+      "selenium": 10.44,
+      "agent_browser": 9.8
+    },
+    "disagreements": [
+      {
+        "selenium": {
+          "status": "bloqueado",
+          "detail": "sin_boton_whatsapp"
+        },
+        "agent_browser": {
+          "status": "apto",
+          "detail": ""
+        }
+      }
+    ]
+  }
+}

@@ -42,7 +42,15 @@
   .module-card:is(:hover, :focus-visible) :is(.module-icon, .module-num) { background: rgba(255,255,255,.16); }
   .module-card:is(:hover, :focus-visible) .module-icon { fill: #fff; }
   .prepare-app { max-width: 1000px; margin: 24px auto; }
-  .prepare-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 18px; }
+  .lab-header-btn { margin-left: auto; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.45); color: #fff; }
+.lab-header-btn:is(:hover, :focus-visible) { background: rgba(255,255,255,.28); color: #fff; }
+.lab-banner { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: #fffbeb; color: #92400e; font-size: 13px; margin-top: 10px; }
+.lab-banner.info { background: #eff6ff; color: #1e40af; }
+.lab-status-ok { color: #15803d; font-weight: 600; }
+.lab-status-warn { color: #b45309; font-weight: 600; }
+.lab-status-error { color: #b91c1c; font-weight: 600; }
+.lab-cell-detail { font-size: 12px; color: var(--muted); }
+.prepare-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 18px; }
   .prepare-header h2 { margin: 0; color: var(--heading); font-size: 24px; }
   .prepare-header p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 14px; }
   .prepare-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
@@ -302,6 +310,7 @@
   <span class="brand-sub">GBS REC</span>
   <h1>Automatizaci&oacute;n Gesti&oacute;n de Leads</h1>
   <span class="sub">Procesamiento local &mdash; ning&uacute;n dato se env&iacute;a a servidores externos</span>
+  <button class="btn lab-header-btn" id="openLaboratorio" title="Área de pruebas: envío de WhatsApp con agent-browser y Selenium">Laboratorio</button>
 </header>
 <div id="connLost" class="hidden">Conexión perdida con el servidor del bot — reintentando…</div>
 
@@ -666,6 +675,74 @@
     </div>
   </section>
 
+  <section id="viewLaboratorio" class="hidden">
+    <div class="prepare-app">
+      <div class="prepare-header">
+        <h2>Laboratorio WhatsApp</h2>
+        <button class="btn" id="backFromLaboratorio">Inicio</button>
+        <p>Área de pruebas del envío de WhatsApp con el botón de Salesforce. <strong>Verificar</strong> lee cada lead sin cambiar nada; <strong>Ejecutar</strong> documenta el intento (<em>N INT Se env&iacute;a WhatsApp</em>) en Otra informaci&oacute;n y pulsa <em>Send To Whatsapp</em> — solo Argentina + preferencia WhatsApp.</p>
+      </div>
+      <div class="lab-banner info" id="labEngineBanner">Motor de prueba: <strong id="labEngineStatus">consultando…</strong></div>
+      <div class="prepare-card" id="labUploadCard">
+        <h3>1. Cargar base de leads</h3>
+        <div class="actions" style="margin-bottom:10px">
+          <button class="btn" id="labFromDist" disabled title="Reutiliza la base ya cargada en la vista Distribuir leads">Usar BD de Distribuir Leads</button>
+        </div>
+        <div class="prepare-dropzone" id="labDropzone"><strong>Arrastrá aquí el archivo</strong><span>o hacé clic para seleccionarlo (.xlsx o .csv). El archivo se procesa solo en esta máquina.</span><input type="file" id="labFileInput" accept=".xlsx,.csv" class="hidden"></div>
+      </div>
+      <div id="labSetup" class="hidden">
+        <div class="prepare-card">
+          <h3>2. Elegir hoja y columnas</h3>
+          <div class="hint">Solo es obligatorio el Lead ID: país y preferencia se verifican en Salesforce antes de enviar.</div>
+          <div class="prepare-fields">
+            <div class="field" id="labSheetField"><label for="labSheet">Hoja del archivo</label><select id="labSheet"></select></div>
+            <div class="field"><label for="mapLabId">Lead ID *</label><select id="mapLabId"></select></div>
+            <div class="field"><label for="mapLabNombre">Nombre (opcional)</label><select id="mapLabNombre"></select></div>
+            <div class="field"><label for="mapLabApellido">Apellido (opcional)</label><select id="mapLabApellido"></select></div>
+            <div class="field"><label for="mapLabPais">País (opcional, vista previa)</label><select id="mapLabPais"></select></div>
+            <div class="field"><label for="mapLabContacto">Preferred mean of contact (opcional)</label><select id="mapLabContacto"></select></div>
+          </div>
+          <div class="actions"><button class="btn primary" id="labPreview">Ver vista previa</button><button class="btn" id="labOtherFile">Cargar otro archivo</button></div>
+        </div>
+        <div class="prepare-card hidden" id="labPreviewCard">
+          <h3>3. Selección y ejecución</h3>
+          <div class="hint">Tildá los leads a probar. La <strong>verificación</strong> abre cada ficha y lee país, preferencia, historial y botón — sin guardar ni enviar. La <strong>ejecución real</strong> documenta el intento y envía un solo WhatsApp por lead.</div>
+          <div class="prepare-fields" style="margin-top:10px">
+            <div class="field"><label for="labEngine">Motor del navegador</label>
+              <select id="labEngine">
+                <option value="selenium">Selenium (actual)</option>
+                <option value="agent_browser">agent-browser (nuevo)</option>
+                <option value="comparacion">Comparación (ambos, solo verificar)</option>
+              </select>
+            </div>
+            <div class="field"><label for="labBatch">Leads por lote</label><input type="number" id="labBatch" min="1" max="500" value="10" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px"></div>
+          </div>
+          <div id="labSummary" class="hint" style="margin:8px 0"></div>
+          <div class="actions" style="margin:8px 0">
+            <button class="btn small" id="labSelect3">Seleccionar primeros 3</button>
+            <button class="btn small" id="labSelectAll">Seleccionar todos</button>
+            <button class="btn small" id="labSelectNone">Quitar selección</button>
+            <span class="hint" id="labSelectedCount"></span>
+          </div>
+          <div class="monitor-table-wrap"><table class="dist-table" id="labTable"></table></div>
+          <div class="lab-banner hidden" id="labRealBanner">⚠️ <strong>EJECUCIÓN REAL</strong> — el bot escribe en Salesforce y envía WhatsApp a los leads tildados. Verificá primero en modo prueba.</div>
+          <div class="actions" style="margin-top:12px">
+            <button class="btn" id="labVerify">Verificar selección (sin cambios)</button>
+            <button class="btn primary" id="labRun">Ejecutar envíos reales</button>
+            <button class="btn" id="labStop" disabled>Detener</button>
+            <button class="btn" id="labResume" disabled>Reanudar</button>
+          </div>
+        </div>
+        <div class="prepare-card hidden" id="labResultsCard">
+          <h3>Resultados</h3>
+          <div id="labRunState" class="hint"></div>
+          <div class="monitor-table-wrap"><table class="dist-table" id="labResultsTable"></table></div>
+          <div class="actions" style="margin-top:12px"><button class="btn" id="labRefresh">Actualizar resultados</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <footer class="note">Automatizaci&oacute;n Gesti&oacute;n de Leads <span id="appVersion"></span>&mdash; procesamiento 100% local (los archivos nunca se suben a ning&uacute;n servidor)</footer>
 </div>
 
@@ -705,7 +782,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.5.1";
+const APP_VERSION = "1.6.0";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -3057,6 +3134,17 @@ async function connectBotEvents() {
       pollBotResults();
       distRunning = false;
       loadDistribucionResults();
+      if (event.operation === "laboratorio") {
+        labRunning = false;
+        $("labStop").disabled = true;
+        $("labResume").disabled = false;
+        loadLabResults();
+      }
+      return;
+    }
+    if (event.type === "laboratorio" && event.status === "deteniendo") {
+      const line = $("labRunState");
+      if (line) line.textContent = "Deteniendo al terminar el lead actual…";
       return;
     }
     if (event.type === "monitor_state") {
@@ -3201,7 +3289,7 @@ async function openQueueView() {
 
 // ---------- UI ----------
 const $ = s => document.getElementById(s);
-const VIEW_IDS = ["viewHome", "viewPrepare", "viewDocumentar", "viewQueue", "viewMonitor", "viewDistribuir"];
+const VIEW_IDS = ["viewHome", "viewPrepare", "viewDocumentar", "viewQueue", "viewMonitor", "viewDistribuir", "viewLaboratorio"];
 
 function showView(id) {
   VIEW_IDS.forEach(viewId => $(viewId).classList.toggle("hidden", viewId !== id));
@@ -4331,10 +4419,401 @@ const recovery = loadJSON(SESSION_KEY, null);
 if (recovery?.text && recovery?.name && typeof recovery.size === "number") {
   loadCSVContent(recovery.text, recovery.name, recovery.size, false);
 }
+// ---------- Laboratorio WhatsApp ----------
+// Área de pruebas: envío de WhatsApp por el botón de Salesforce con
+// documentación del intento. Verificación (prueba) lee sin escribir; la
+// ejecución real conserva historial, agrega "N INT Se envía WhatsApp …" en
+// Otra información y pulsa Send To Whatsapp una sola vez por lead.
+
+const LAB_FIELDS = [
+  ["id", "Lead ID", ["lead id", "id", "leadid"]],
+  ["nombre", "Nombre", ["nombre"]],
+  ["apellido", "Apellido", ["apellidos", "apellido"]],
+  ["pais", "País", ["pais", "país", "country", "lead country", "billing country"]],
+  ["contacto", "Preferred mean of contact", ["preferred mean of contact", "medio de contacto preferido", "preferencia de contacto", "medio de contacto", "preferred medium"]],
+];
+const LAB_STATUS_LABELS = {
+  apto: "apto (sin cambios)",
+  bloqueado: "bloqueado",
+  revision: "requiere revisión",
+  no_elegible: "no elegible",
+  documentado_enviado: "documentado + WhatsApp enviado",
+  documentado_wa_no_confirmado: "documentado; envío sin confirmar",
+  documentado_wa_error: "documentado; envío con error",
+  error_documentacion: "error al documentar",
+  omitido_duplicado: "omitido (ya enviado o ambiguo)",
+  error: "error",
+};
+const LAB_BLOCK_LABELS = {
+  pais_no_argentina: "país no es Argentina",
+  sin_preferencia_whatsapp: "no pidió WhatsApp",
+  sin_boton_whatsapp: "sin botón Send To Whatsapp",
+  campo_ilegible: "campo no legible",
+  id_invalido: "ID no coincide",
+  sesion_vencida: "sesión de Salesforce vencida",
+  ya_enviado_o_ambiguo: "ya enviado o resultado ambiguo",
+};
+
+const LAB_STATE_KEY = "lab_state";
+
+let labSheets = [];
+let labSheetIndex = 0;
+let labMapping = {};
+let labFileName = "";
+let labRows = [];
+let labRunning = false;
+let labPollTimer = null;
+let labLastRunId = "";
+
+function saveLabState() {
+  // Solo filas derivadas (chicas): el archivo crudo no se guarda, la BD
+  // sigue local y la selección sobrevive a F5 y a reinicios del navegador.
+  if (!labRows.length) {
+    localStorage.removeItem(LAB_STATE_KEY);
+    return;
+  }
+  localStorage.setItem(LAB_STATE_KEY, JSON.stringify({
+    fileName: labFileName,
+    mapping: labMapping,
+    rows: labRows,
+  }));
+}
+
+function restoreLabState() {
+  if (labRows.length) return;
+  const saved = loadJSON(LAB_STATE_KEY, null);
+  if (!saved || !Array.isArray(saved.rows) || !saved.rows.length) return;
+  labFileName = saved.fileName || "";
+  labMapping = saved.mapping || {};
+  labRows = saved.rows;
+  const valid = labRows.filter(r => r.valid).length;
+  $("labSummary").textContent =
+    `Sesión anterior: ${labRows.length} filas de ${labFileName || "la BD"} · ${valid} con Lead ID válido`;
+  renderLabTable();
+  $("labSetup").classList.remove("hidden");
+  $("labPreviewCard").classList.remove("hidden");
+}
+
+function labStatusLabel(entry) {
+  if (!entry) return "pendiente";
+  const status = String(entry.status || "");
+  const label = LAB_STATUS_LABELS[status] || status;
+  const detail = String(entry.detail || "");
+  if (!detail) return label;
+  const blockKey = detail.split(":")[0];
+  const block = LAB_BLOCK_LABELS[blockKey];
+  const rest = detail.slice(blockKey.length + 1).trim();
+  if (!block) return `${label}: ${detail}`;
+  return rest ? `${label}: ${block} (${rest})` : `${label}: ${block}`;
+}
+
+function labStatusClass(entry) {
+  if (!entry) return "";
+  const status = String(entry.status || "");
+  if (["documentado_enviado", "apto"].includes(status)) return "lab-status-ok";
+  if (["documentado_wa_no_confirmado", "no_elegible", "revision", "omitido_duplicado", "bloqueado"].includes(status)) return "lab-status-warn";
+  return "lab-status-error";
+}
+
+function openLaboratorioView() {
+  showView("viewLaboratorio");
+  connectBotEvents();
+  restoreLabState();
+  loadLabResults();
+  $("labFromDist").disabled = !(distSheets && distSheets.length);
+  monitorApi("/api/laboratorio/engines").then(engines => {
+    const agentOk = engines && engines.agent_browser;
+    $("labEngineStatus").textContent = agentOk
+      ? "Selenium y agent-browser disponibles"
+      : "Selenium disponible — agent-browser no está instalado (ver README)";
+    if (!agentOk) $("labEngine").value = "selenium";
+  }).catch(() => {
+    $("labEngineStatus").textContent = "Selenium disponible";
+  });
+}
+
+function currentLabSheet() { return labSheets[labSheetIndex] || null; }
+
+function labApplyParsed(parsed, filename) {
+  labFileName = filename;
+  labSheets = parsed.sheets || [];
+  labSheetIndex = 0;
+  $("labSetup").classList.remove("hidden");
+  $("labPreviewCard").classList.add("hidden");
+  $("labResultsCard").classList.add("hidden");
+  const field = $("labSheetField");
+  field.classList.toggle("hidden", labSheets.length <= 1);
+  $("labSheet").innerHTML = labSheets.map((sheet, i) =>
+    `<option value="${i}">${escapeHTML(sheet.name)} (${sheet.rows.length} filas)</option>`).join("");
+  $("labSheet").value = String(labSheetIndex);
+  renderLabMapping();
+}
+
+function renderLabMapping() {
+  const sheet = currentLabSheet();
+  if (!sheet) return;
+  labMapping = Object.fromEntries(LAB_FIELDS.map(([key, , aliases]) => [key, detectColumn(sheet.headers, aliases)]));
+  LAB_FIELDS.forEach(([key]) => {
+    const select = $("mapLab" + key[0].toUpperCase() + key.slice(1));
+    select.innerHTML = `<option value="">No usar</option>` + sheet.headers.map(h =>
+      `<option value="${escapeHTML(h)}" ${labMapping[key] === h ? "selected" : ""}>${escapeHTML(h)}</option>`).join("");
+    select.onchange = event => { labMapping[key] = event.target.value; };
+  });
+}
+
+async function loadLabFile(file) {
+  try {
+    const content_b64 = await distFileToBase64(file);
+    const parsed = await monitorApi("/api/distribucion/parse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filename: file.name, content_b64 }),
+    });
+    labApplyParsed(parsed, file.name);
+  } catch (error) {
+    alert(`No se pudo leer el archivo: ${error.message || error}`);
+  }
+}
+
+function buildLabPreview() {
+  const sheet = currentLabSheet();
+  if (!sheet) return;
+  if (!labMapping.id) { alert("Seleccioná la columna Lead ID."); return; }
+  labRows = sheet.rows.map(row => {
+    const leadId = (row[labMapping.id] || "").trim();
+    return {
+      leadId,
+      valid: SF_ID_RE.test(leadId),
+      nombre: [row[labMapping.nombre], row[labMapping.apellido]]
+        .map(v => (v || "").trim()).filter(Boolean).join(" "),
+      pais: (row[labMapping.pais] || "").trim(),
+      preferencia: (row[labMapping.contacto] || "").trim(),
+      include: SF_ID_RE.test(leadId),
+    };
+  });
+  const valid = labRows.filter(r => r.valid).length;
+  $("labSummary").textContent = `${labRows.length} filas leídas · ${valid} con Lead ID válido · ${labRows.length - valid} excluidas`;
+  renderLabTable();
+  saveLabState();
+  $("labPreviewCard").classList.remove("hidden");
+}
+
+function renderLabTable() {
+  if (!labRows.length) return;
+  $("labTable").innerHTML = `<thead><tr><th></th><th>Lead ID</th><th>Nombre</th><th>País</th><th>Preferencia</th></tr></thead><tbody>` +
+    labRows.map((row, i) =>
+      `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="lab-inc" data-i="${i}" ${row.include ? "checked" : ""} ${row.valid ? "" : "disabled"}></td>` +
+      `<td>${escapeHTML(row.leadId || "—")}</td><td>${escapeHTML(row.nombre)}</td><td>${escapeHTML(row.pais)}</td><td>${escapeHTML(row.preferencia)}</td></tr>`
+    ).join("") + `</tbody>`;
+  document.querySelectorAll(".lab-inc").forEach(box => box.addEventListener("change", () => {
+    labRows[Number(box.dataset.i)].include = box.checked;
+    updateLabCount();
+  }));
+  updateLabCount();
+}
+
+function updateLabCount() {
+  const selected = labRows.filter(r => r.include && r.valid).length;
+  $("labSelectedCount").textContent = `${selected} seleccionados`;
+  saveLabState();
+}
+
+function labQueuePayload(mode) {
+  const engine = $("labEngine").value;
+  const leads = labRows.filter(r => r.include && r.valid).map(r => ({
+    lead_id: r.leadId,
+    nombre: r.nombre,
+    pais: r.pais,
+    preferencia: r.preferencia,
+  }));
+  const stem = (labFileName || "manual").replace(/\.[^.]+$/, "").toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  const batch = Math.max(1, Math.min(500, Number($("labBatch").value) || 10));
+  return {
+    operation: "laboratorio_whatsapp",
+    schema_version: 1,
+    mode,
+    engine: mode === "prueba" ? engine : (engine === "comparacion" ? "selenium" : engine),
+    campaign_id: `lab_${stem || "base"}`,
+    dataset_id: labFileName,
+    source_file: labFileName,
+    batch_size: batch,
+    leads,
+  };
+}
+
+async function labStart(mode) {
+  const queue = labQueuePayload(mode);
+  if (!queue.leads.length) { alert("Tildá al menos un lead con Lead ID válido."); return; }
+  if (mode === "real") {
+    const confirmed = confirm(
+      `Vas a DOCUMENTAR y ENVIAR WhatsApp a ${queue.leads.length} lead${queue.leads.length === 1 ? "" : "s"} en Salesforce.\n\n` +
+      `En cada uno: agrega "N INT Se envía WhatsApp …" al final de Otra información (sin borrar el historial) y pulsa Send To Whatsapp una sola vez.\n\n¿Confirmás el envío?`
+    );
+    if (!confirmed) return;
+  }
+  try {
+    await monitorApi("/api/laboratorio-queue", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(queue),
+    });
+    const started = await monitorApi("/run-laboratorio", { method: "POST" });
+    labLastRunId = started.run_id || "";
+    labRunning = true;
+    $("labStop").disabled = false;
+    $("labResume").disabled = true;
+    $("labResultsCard").classList.remove("hidden");
+    $("labRunState").textContent = mode === "prueba" ? "Verificación en curso…" : "Ejecución en curso…";
+    loadLabResults();
+    clearInterval(labPollTimer);
+    labPollTimer = setInterval(() => { if (labRunning) loadLabResults(); else clearInterval(labPollTimer); }, 4000);
+  } catch (error) {
+    alert(`No se pudo iniciar el laboratorio: ${error.message || error}`);
+  }
+}
+
+function renderLabResults(entries) {
+  const byKey = {};
+  entries.forEach(e => { byKey[`${e.lead_id}|${e.engine}`] = e; });
+  const rows = labRows.filter(r => r.include && r.valid);
+  const engines = [...new Set(entries.map(e => e.engine))];
+  $("labResultsTable").innerHTML = `<thead><tr><th>Lead ID</th><th>Lead</th><th>Motor</th><th>Resultado</th><th>Tiempo</th><th>Detalle</th></tr></thead><tbody>` +
+    rows.map(row => {
+      const leadEngines = engines.length ? engines : [labQueuePayload("prueba").engine];
+      return leadEngines.map(engine => {
+        const entry = byKey[`${row.leadId}|${engine}`];
+        const nombre = row.nombre || entry?.nombre || "";
+        const nombreCell = nombre && row.leadId
+          ? `<a class="lead-link" target="_blank" rel="noopener" href="${escapeHTML(sfBase.replace(/\/+$/, "") + "/" + row.leadId)}">${escapeHTML(nombre)}</a>`
+          : escapeHTML(nombre);
+        return `<tr><td>${escapeHTML(row.leadId)}</td><td>${nombreCell}</td><td>${escapeHTML(engine)}</td>` +
+          `<td class="${labStatusClass(entry)}">${escapeHTML(labStatusLabel(entry))}</td>` +
+          `<td>${entry && entry.elapsed_seconds != null ? escapeHTML(String(entry.elapsed_seconds) + "s") : ""}</td>` +
+          `<td class="lab-cell-detail">${escapeHTML(entry?.attempt_line || "")}</td></tr>`;
+      }).join("");
+    }).join("") + `</tbody>`;
+}
+
+async function loadLabResults() {
+  let payload;
+  try { payload = await monitorApi("/api/laboratorio/results"); }
+  catch (error) {
+    $("labRunState").textContent = `No se pudieron cargar los resultados: ${error.message}`;
+    return;
+  }
+  const entries = Array.isArray(payload) ? payload : (payload.results || []);
+  if (!entries.length) return;
+  $("labResultsCard").classList.remove("hidden");
+  const enviados = entries.filter(e => e.status === "documentado_enviado").length;
+  const bloqueados = entries.filter(e => ["bloqueado", "error", "error_documentacion"].includes(e.status)).length;
+  $("labRunState").textContent = labRunning
+    ? `En curso… ${entries.length} procesados.`
+    : `Terminado — ${entries.length} procesados · ${enviados} enviados · ${bloqueados} con error/bloqueo.`;
+  renderLabResults(entries);
+}
+
+$("openLaboratorio").addEventListener("click", openLaboratorioView);
+$("backFromLaboratorio").addEventListener("click", () => showView("viewHome"));
+$("labDropzone").addEventListener("click", () => $("labFileInput").click());
+$("labFileInput").addEventListener("change", event => {
+  const [file] = event.target.files;
+  if (file) loadLabFile(file);
+  event.target.value = "";
+});
+$("labDropzone").addEventListener("dragover", event => event.preventDefault());
+$("labDropzone").addEventListener("drop", event => {
+  event.preventDefault();
+  const [file] = event.dataTransfer.files;
+  if (file) loadLabFile(file);
+});
+$("labFromDist").addEventListener("click", () => {
+  if (!distSheets.length) return;
+  labSheets = distSheets.map(sheet => ({ name: sheet.name, headers: [...sheet.headers], rows: sheet.rows.map(r => ({ ...r })) }));
+  labApplyParsed({ sheets: labSheets }, distFileName || "distribucion");
+  // Heredar el mapeo de Distribuir cuando coincide: id, nombre, apellido,
+  // contacto comparten aliases entre DIST_FIELDS y LAB_FIELDS.
+  if (distMapping.id) labMapping.id = distMapping.id;
+  if (distMapping.nombre) labMapping.nombre = distMapping.nombre;
+  if (distMapping.apellido) labMapping.apellido = distMapping.apellido;
+  if (distMapping.contacto) labMapping.contacto = distMapping.contacto;
+  renderLabMapping();
+});
+$("labSheet").addEventListener("change", event => {
+  labSheetIndex = Number(event.target.value) || 0;
+  renderLabMapping();
+});
+$("labPreview").addEventListener("click", buildLabPreview);
+$("labOtherFile").addEventListener("click", () => {
+  labRows = [];
+  labSheets = [];
+  localStorage.removeItem(LAB_STATE_KEY);
+  $("labSetup").classList.add("hidden");
+  $("labPreviewCard").classList.add("hidden");
+  $("labResultsCard").classList.add("hidden");
+  $("labFileInput").click();
+});
+$("labSelect3").addEventListener("click", () => {
+  let count = 0;
+  labRows.forEach((row, i) => {
+    row.include = row.valid && count < 3;
+    if (row.include) count += 1;
+  });
+  renderLabTable();
+});
+$("labSelectAll").addEventListener("click", () => {
+  labRows.forEach(row => { row.include = row.valid; });
+  renderLabTable();
+});
+$("labSelectNone").addEventListener("click", () => {
+  labRows.forEach(row => { row.include = false; });
+  renderLabTable();
+});
+$("labEngine").addEventListener("change", () => {
+  $("labRealBanner").classList.toggle("hidden", false);
+});
+$("labVerify").addEventListener("click", () => labStart("prueba"));
+$("labRun").addEventListener("click", () => {
+  $("labRealBanner").classList.remove("hidden");
+  labStart("real");
+});
+$("labStop").addEventListener("click", async () => {
+  try {
+    await monitorApi("/api/laboratorio/control", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "detener", run_id: labLastRunId }),
+    });
+    $("labRunState").textContent = "Deteniendo al terminar el lead actual…";
+  } catch (error) {
+    alert(`No se pudo detener: ${error.message || error}`);
+  }
+});
+$("labResume").addEventListener("click", async () => {
+  try {
+    const started = await monitorApi("/api/laboratorio/control", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reanudar" }),
+    });
+    labLastRunId = started.run_id || labLastRunId;
+    labRunning = true;
+    $("labStop").disabled = false;
+    $("labResume").disabled = true;
+    loadLabResults();
+    clearInterval(labPollTimer);
+    labPollTimer = setInterval(() => { if (labRunning) loadLabResults(); else clearInterval(labPollTimer); }, 4000);
+  } catch (error) {
+    alert(`No se pudo reanudar: ${error.message || error}`);
+  }
+});
+$("labRefresh").addEventListener("click", loadLabResults);
+
 // Volver a la vista donde estaba la persona al recargar (F5).
 if (lastView === "viewMonitor") openMonitorView();
 else if (lastView === "viewQueue") openQueueView();
 else if (lastView === "viewDistribuir") openDistribuirView();
+else if (lastView === "viewLaboratorio") openLaboratorioView();
 else if (VIEW_IDS.includes(lastView) && lastView !== "viewDocumentar") showView(lastView);
 </script>
 </body>

@@ -25,6 +25,7 @@ from urllib.parse import parse_qs, urlparse
 
 from selenium.common.exceptions import WebDriverException
 
+from agent_browser import command_available as agent_browser_available
 from browser_factory import (
     close_stuck_debugger_targets,
     create_driver,
@@ -41,7 +42,9 @@ from browser_factory import (
 from closure_store import validate_close_queue
 from country_fields import normalize_country
 from distribucion_loader import parse_archivo, validate_distribucion_queue
-from lead_monitor import _encargada_activa, run_cycle
+from laboratory_contracts import validate_laboratory_queue
+from laboratory_store import LaboratoryStore, store_path_for
+from lead_monitor import _encargada_activa, _encargada_termino_recien, run_cycle
 from local_audit import mask_lead_id
 from monitor_store import (
     MAX_RESULTS,
@@ -58,6 +61,7 @@ from monitor_store import (
     clear_results,
     load_state,
     save_state,
+    schedule_recently_ended,
     touch_cycle,
     validate_bandejas,
     validate_equipo,
@@ -95,6 +99,7 @@ SERVER_PORT = 8765
 ACTIVE_QUEUE = "cola_activa.json"
 ACTIVE_CLOSE_QUEUE = "cola_cierre_activa.json"
 ACTIVE_DISTRIBUCION_QUEUE = "cola_distribucion_activa.json"
+ACTIVE_LABORATORY_QUEUE = "cola_laboratorio_activa.json"
 PARSE_MAX_BYTES = 30 * 1024 * 1024  # body base64 de la BD de leads (~22 MB de archivo)
 SESSION_FILE = "bot_session.json"
 UI_PAGE = ROOT.parent / "documentador_predictivo.html"
@@ -111,8 +116,10 @@ API_FILES = {
     "/api/close-results": ROOT / "queues" / "cola_cierre_activa.resultado.json",
     "/api/distribucion-queue": ROOT / "queues" / "cola_distribucion_activa.json",
     "/api/distribucion-results": ROOT / "queues" / "cola_distribucion_activa.resultado.json",
+    "/api/laboratorio-queue": ROOT / "queues" / "cola_laboratorio_activa.json",
+    "/api/laboratorio-results": ROOT / "queues" / "cola_laboratorio_activa.resultado.json",
 }
-WRITABLE_API = {"/api/queue", "/api/close-queue", "/api/distribucion-queue"}
+WRITABLE_API = {"/api/queue", "/api/close-queue", "/api/distribucion-queue", "/api/laboratorio-queue"}
 
 current_process: subprocess.Popen | None = None
 # Identifica qué runner tiene la exclusión mutua: la UI muestra la operación
@@ -305,13 +312,25 @@ def _toast_contacto(details: dict) -> str:
     return ""
 
 
+BANDEJA_FLAGS = {"AR": "🇦🇷", "CO": "🇨🇴", "MX": "🇲🇽"}
+
+
+def _bandeja_tag(code) -> str:
+    """'🇦🇷 AR' — el indicador de país del toast (no admite color de texto)."""
+    if not code:
+        return ""
+    flag = BANDEJA_FLAGS.get(str(code).upper(), "")
+    return f"{flag} {code}".strip()
+
+
 def _lead_toast_lines(events: list, pre_results: dict) -> list:
     """Una línea por lead relevante del ciclo.
 
     ✅ tomado — a quién quedó asignado (el toast no admite color de texto;
-    el emoji es el indicador verde/rojo); ❌/⚠️ errores de la toma;
-    🔔 detectado nuevo con nombre y bandeja. Los resultados sin
-    cambio respecto del ciclo anterior no vuelven a sonar.
+    el emoji es el indicador verde/rojo y la bandera marca el país);
+    ❌/⚠️ errores de la toma; 🔔 detectado nuevo. Toda línea lleva la
+    bandeja con su bandera. Los resultados sin cambio respecto del ciclo
+    anterior no vuelven a sonar.
     """
     lines = []
     for event in events:
@@ -331,21 +350,23 @@ def _lead_toast_lines(events: list, pre_results: dict) -> list:
         ) or mask_lead_id(lead_id)
         contacto = _toast_contacto(details)
         extra = f" · {contacto}" if contacto else ""
+        tag = _bandeja_tag(event.get("bandeja"))
+        where = f"{tag} " if tag else ""
         changed = lead_id and (pre_results.get(lead_id) or {}).get("status") != status
         if status == STATUS_TOMADO:
             asignado = str(entry.get("asignado_a") or "").strip() or "tu usuario"
-            lines.append(f"✅ {nombre} → {asignado}{extra}")
+            lines.append(f"✅ {where}{nombre} → {asignado}{extra}")
         elif not lead_id or not changed:
             continue
         elif status == STATUS_ERROR:
-            lines.append(f"❌ {nombre} — error{extra}")
+            lines.append(f"❌ {where}{nombre} — error{extra}")
         elif status == STATUS_NO_VERIFICADO:
-            lines.append(f"⚠️ {nombre} — no verificado{extra}")
+            lines.append(f"⚠️ {where}{nombre} — no verificado{extra}")
         elif status == STATUS_TOMADO_POR_OTRO:
-            lines.append(f"👤 {nombre} — lo tomó otra persona{extra}")
+            lines.append(f"👤 {where}{nombre} — lo tomó otra persona{extra}")
         else:
             # Detectado nuevo: una línea por lead con nombre y bandeja.
-            lines.append(f"🔔 {nombre} — nuevo en {event.get('bandeja')}{extra}")
+            lines.append(f"🔔 {where}{nombre} — nuevo{extra}")
     return lines
 
 
@@ -615,10 +636,23 @@ def _franjas_con_bandeja_no_disponible(state: dict, franjas: list) -> set:
     return {code for slot in franjas for code in slot.get("bandejas") or []} - _bandeja_codes_disponibles(state)
 
 
+def _turno_recien_terminado(state: dict, bandejas: set | None = None) -> bool:
+    """Alguna franja que cubre las bandejas terminó hace menos de un
+    intervalo de monitor: la ventana de gracia post-cierre para
+    re-verificar rezagados ingresados en-franja."""
+    grace = MONITOR_INTERVAL_SECONDS
+    if state.get("schedule") and schedule_recently_ended(
+        state["schedule"], grace_seconds=grace, bandeja=bandejas
+    ):
+        return True
+    return _encargada_termino_recien(state.get("equipo"), grace_seconds=grace, bandeja=bandejas)
+
+
 def _any_turno_activo(state: dict) -> bool:
     """Alguna franja permite tomar leads: la del monitor (a nombre del
-    usuario logueado) o la de una persona del equipo cuya franja cubra
-    alguna bandeja habilitada. Una franja sin cobertura sobre las bandejas
+    usuario logueado), la de una persona del equipo cuya franja cubra
+    alguna bandeja habilitada, o una que recién cerró dentro de la
+    ventana de gracia. Una franja sin cobertura sobre las bandejas
     encendidas —propia o de equipo— no habilita la toma en ellas.
     """
     enabled_codes = _bandeja_codes_disponibles(state)
@@ -626,8 +660,13 @@ def _any_turno_activo(state: dict) -> bool:
         return True
     if not enabled_codes:
         # Sin bandejas encendidas el pause sin_bandejas decide después.
-        return _encargada_activa(state.get("equipo")) is not None
-    return _encargada_activa(state.get("equipo"), bandeja=enabled_codes) is not None
+        if _encargada_activa(state.get("equipo")) is not None:
+            return True
+    elif _encargada_activa(state.get("equipo"), bandeja=enabled_codes) is not None:
+        return True
+    # Gracia post-cierre: solo la toma por lead (REQ-817) decide qué se
+    # puede tomar — acá solo se mantiene vivo el ciclo una lectura más.
+    return _turno_recien_terminado(state, enabled_codes or None)
 
 
 def _monitor_cycle(config: dict, force: bool = False) -> list[dict]:
@@ -1133,6 +1172,87 @@ def make_handler(token: str, config: dict | None = None):
                     return
                 self._send(200, load_equipo_reparto(equipo_reparto_path(config or load_config())))
                 return
+            if route == "/api/laboratorio/engines":
+                if not self._authorized():
+                    self._send(403, {"error": "token inválido o ausente"})
+                    return
+                cfg = config or load_config()
+                lab_cfg = cfg.get("agent_browser") or {}
+                self._send(
+                    200,
+                    {
+                        "selenium": True,
+                        "agent_browser": agent_browser_available(str(lab_cfg.get("command") or "")),
+                    },
+                )
+                return
+            if route == "/api/laboratorio/status":
+                if not self._authorized():
+                    self._send(403, {"error": "token inválido o ausente"})
+                    return
+                cfg = config or load_config()
+                ui_output = ROOT / cfg.get("ui_output_directory", "ui_output")
+                store = LaboratoryStore(store_path_for(ui_output))
+                latest = store.latest_run() or {}
+                running = current_process is not None and current_process.poll() is None
+                payload = {
+                    "bot_running": running,
+                    "operation": current_operation if running else None,
+                    "latest_run": latest,
+                    "runs": store.recent_runs(20),
+                }
+                campaign_id = str((latest or {}).get("campaign_id") or "")
+                if campaign_id:
+                    payload["operations"] = store.counts_for_campaign(campaign_id)
+                self._send(200, payload)
+                return
+            if route == "/api/laboratorio/results":
+                if not self._authorized():
+                    self._send(403, {"error": "token inválido o ausente"})
+                    return
+                params = parse_qs(urlparse(self.path).query)
+                run_id = str((params.get("run_id") or [""])[0]).strip()
+                cfg = config or load_config()
+                queue_directory = ROOT / cfg["queue_directory"]
+                results_path = API_FILES["/api/laboratorio-results"]
+                if run_id:
+                    # Resultados históricos por run: nunca se pisan entre
+                    # corridas. run_id se valida para no salir del directorio.
+                    if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", run_id):
+                        self._send(400, {"error": "run_id inválido"})
+                        return
+                    results_path = queue_directory / f"laboratorio_{run_id}.resultado.jsonl"
+                entries = []
+                if results_path.exists():
+                    for line in results_path.read_text(encoding="utf-8").splitlines():
+                        line = line.strip()
+                        if line:
+                            try:
+                                entries.append(json.loads(line))
+                            except json.JSONDecodeError:
+                                continue
+                # Enriquecimiento con el journal: ejes doc/send/evidencia por
+                # lead para la campaña del run consultado.
+                ui_output = ROOT / cfg.get("ui_output_directory", "ui_output")
+                store = LaboratoryStore(store_path_for(ui_output))
+                if run_id:
+                    run_info = store.run_info(run_id) or {}
+                    run_campaign = str(run_info.get("campaign_id") or "")
+                    if run_campaign:
+                        for entry in entries:
+                            lead_id = str(entry.get("lead_id") or "")
+                            if not lead_id:
+                                continue
+                            op = store.get_operation(run_campaign, lead_id)
+                            if op:
+                                entry["journal"] = {
+                                    "doc_status": op.get("doc_status"),
+                                    "send_status": op.get("send_status"),
+                                    "review_reason": op.get("review_reason"),
+                                    "stage": op.get("stage"),
+                                }
+                self._send(200, {"results": entries})
+                return
             if route == "/status":
                 running = current_process is not None and current_process.poll() is None
                 self._send(
@@ -1308,6 +1428,12 @@ def make_handler(token: str, config: dict | None = None):
             elif urlparse(self.path).path == "/api/distribucion-queue":
                 try:
                     validate_distribucion_queue(payload)
+                except ValueError as error:
+                    self._send(400, {"error": str(error)})
+                    return
+            elif urlparse(self.path).path == "/api/laboratorio-queue":
+                try:
+                    validate_laboratory_queue(payload)
                 except ValueError as error:
                     self._send(400, {"error": str(error)})
                     return
@@ -1507,7 +1633,39 @@ def make_handler(token: str, config: dict | None = None):
                 self._send(202, {"status": "reiniciando el navegador del bot"})
                 threading.Thread(target=restart_browser, args=(config or load_config(),), daemon=True).start()
                 return
-            if route not in ("/run", "/run-close", "/run-distribucion"):
+            if route == "/api/laboratorio/control":
+                # detener|reanudar sobre la campaña del laboratorio. "detener"
+                # marca el diario SQLite: el runner lo consulta antes de cada
+                # lead y frena en el próximo punto seguro (nunca a mitad de un
+                # clic reservado).
+                payload = self._read_json_body()
+                if payload is None:
+                    return
+                action = str((payload or {}).get("action") or "").strip()
+                run_id = str((payload or {}).get("run_id") or "").strip()
+                cfg = config or load_config()
+                ui_output = ROOT / cfg.get("ui_output_directory", "ui_output")
+                store = LaboratoryStore(store_path_for(ui_output))
+                if action == "detener":
+                    target = run_id or str((store.active_run() or {}).get("run_id") or "")
+                    if not target:
+                        self._send(409, {"error": "no hay un run del laboratorio en curso"})
+                        return
+                    if store.request_stop(target):
+                        broadcast_event({"type": "laboratorio", "status": "deteniendo", "run_id": target})
+                        self._send(200, {"status": "deteniendo", "run_id": target})
+                    else:
+                        self._send(409, {"error": "el run indicado no está en curso"})
+                    return
+                if action == "reanudar":
+                    # Reanudar = relanzar la cola activa: el runner omite las
+                    # operaciones terminal/ambiguas del diario y continúa con
+                    # las pendientes de la misma campaña.
+                    route = "/run-laboratorio"
+                else:
+                    self._send(400, {"error": "action inválida (detener|reanudar)"})
+                    return
+            if route not in ("/run", "/run-close", "/run-distribucion", "/run-laboratorio"):
                 self._send(404, {"error": "ruta desconocida"})
                 return
             with run_lock:
@@ -1539,11 +1697,24 @@ def make_handler(token: str, config: dict | None = None):
                 # sesión de Selenium: la sonda es la prueba decisiva. Si falla
                 # se reinicia el navegador dedicado una sola vez, todavía sin
                 # tocar ningún Lead; si tampoco revive, se rechaza la tanda.
-                if not (debugger_http_ready(debugger_address) and debugger_session_attachable(cfg, debugger_address)):
+                # La rama agent-browser del laboratorio no usa WebDriver: con
+                # que el endpoint CDP responda alcanza (la CLI se adjunta sola).
+                selenium_probe = debugger_session_attachable
+                if route == "/run-laboratorio":
+                    try:
+                        lab_payload = json.loads(
+                            (ROOT / cfg.get("queue_directory", "queues") / ACTIVE_LABORATORY_QUEUE).read_text(
+                                encoding="utf-8"
+                            )
+                        )
+                        lab_engine = validate_laboratory_queue(lab_payload).get("engine", "")
+                        if lab_engine == "agent_browser":
+                            selenium_probe = lambda cfg_, addr_: True  # noqa: E731
+                    except (OSError, ValueError, json.JSONDecodeError):
+                        pass
+                if not (debugger_http_ready(debugger_address) and selenium_probe(cfg, debugger_address)):
                     restart_browser(cfg)
-                    if not (
-                        debugger_http_ready(debugger_address) and debugger_session_attachable(cfg, debugger_address)
-                    ):
+                    if not (debugger_http_ready(debugger_address) and selenium_probe(cfg, debugger_address)):
                         self._send(
                             503,
                             {
@@ -1560,6 +1731,8 @@ def make_handler(token: str, config: dict | None = None):
                     started = self._start_close_run(cfg, queue_directory, run_id)
                 elif route == "/run-distribucion":
                     started = self._start_distribucion_run(cfg, queue_directory, run_id)
+                elif route == "/run-laboratorio":
+                    started = self._start_laboratory_run(cfg, queue_directory, run_id)
                 else:
                     started = self._start_document_run(cfg, queue_directory, run_id)
                 if not started:
@@ -1568,6 +1741,7 @@ def make_handler(token: str, config: dict | None = None):
             queue_name = {
                 "/run-close": ACTIVE_CLOSE_QUEUE,
                 "/run-distribucion": ACTIVE_DISTRIBUCION_QUEUE,
+                "/run-laboratorio": ACTIVE_LABORATORY_QUEUE,
             }.get(route, ACTIVE_QUEUE)
             self._send(202, {"status": "iniciado", "queue": queue_name, "run_id": run_id})
 
@@ -1659,6 +1833,45 @@ def make_handler(token: str, config: dict | None = None):
                     run_id,
                     "--results",
                     str(queue_directory / "cola_distribucion_activa.resultado.json"),
+                    str(frozen_path),
+                ],
+                cwd=str(ROOT),
+            )
+            return True
+
+        def _start_laboratory_run(self, cfg: dict, queue_directory: Path, run_id: str) -> bool:
+            global current_process, current_operation
+            active_path = queue_directory / ACTIVE_LABORATORY_QUEUE
+            try:
+                validate_laboratory_queue(json.loads(active_path.read_text(encoding="utf-8")))
+            except (OSError, json.JSONDecodeError, ValueError) as error:
+                self._send(400, {"error": f"Cola del laboratorio inválida: {error}"})
+                return False
+            try:
+                frozen_path = freeze_queue(
+                    active_path,
+                    queue_directory / f"laboratorio_{run_id}.json",
+                    run_id,
+                )
+            except OSError:
+                self._send(500, {"error": "no se pudo congelar la cola del laboratorio"})
+                return False
+            # Resultados limpios por corrida: el runner appendea JSONL y la UI
+            # no debe mezclar ejecuciones (reanudar reusa la misma cola).
+            results_path = queue_directory / "cola_laboratorio_activa.resultado.json"
+            results_path.unlink(missing_ok=True)
+            current_operation = "laboratorio"
+            current_process = subprocess.Popen(
+                [
+                    sys.executable,
+                    str(ROOT / "run_laboratory_queue.py"),
+                    "--auto",
+                    "--run-id",
+                    run_id,
+                    "--results",
+                    str(results_path),
+                    "--metrics",
+                    str(queue_directory / "cola_laboratorio_activa.metricas.json"),
                     str(frozen_path),
                 ],
                 cwd=str(ROOT),

@@ -795,6 +795,36 @@ def _encargada_activa(
     return None
 
 
+def _encargada_termino_recien(
+    equipo: list[dict] | None,
+    moment: datetime | None = None,
+    grace_seconds: float = 120.0,
+    bandeja: str | set[str] | None = None,
+) -> bool:
+    """¿Alguna franja del equipo terminó hace menos de ``grace_seconds``
+    cubriendo la bandeja? Mismo recorrido y filtro que
+    ``_encargada_activa`` — una franja sin ``bandejas`` no cubre nada."""
+    if not equipo:
+        return False
+    wanted = None
+    if bandeja is not None:
+        wanted = {bandeja} if isinstance(bandeja, str) else set(bandeja)
+    now = moment or datetime.now().astimezone()
+    minutes = now.hour * 60 + now.minute
+    grace_minutes = grace_seconds / 60
+    for member in equipo:
+        for slot in member.get("franjas") or []:
+            if wanted is not None and not (set(slot.get("bandejas") or []) & wanted):
+                continue
+            try:
+                end = int(str(slot["end"])[:2]) * 60 + int(str(slot["end"])[3:5])
+            except (KeyError, ValueError, IndexError):
+                continue
+            if end < minutes <= end + grace_minutes:
+                return True
+    return False
+
+
 def _lead_entry_moment(details: dict | None) -> datetime | None:
     """Hora de ingreso del lead a la cola (Fecha de creación del reporte,
     formato ``dd/mm/aaaa hh:MM AM/PM``). None si falta o no parsea."""
@@ -812,6 +842,20 @@ def _usable_entry_moment(details: dict | None, now: datetime | None = None) -> d
     if entry is None or entry.date() != (now or datetime.now()).date():
         return None
     return entry
+
+
+def _lead_covered(state: dict, bandeja_code: str, details: dict | None, now: datetime | None = None) -> bool:
+    """¿La toma de ESTE lead está cubierta? Con fecha de creación usable
+    (de hoy) se mira quién cubría la bandeja a su hora de INGRESO — un lead
+    que entró en-franja se toma aunque el ciclo llegue tarde, y uno que
+    entró fuera de franja no se toma aunque el ciclo corra en otra franja.
+    Sin dato usable, la hora actual como siempre."""
+    entry = _usable_entry_moment(details, now)
+    moment = entry if entry is not None else (now or datetime.now().astimezone())
+    schedule = state.get("schedule")
+    if schedule and within_schedule(schedule, moment=moment, bandeja=bandeja_code):
+        return True
+    return _encargada_activa(state.get("equipo"), moment=moment, bandeja=bandeja_code) is not None
 
 
 def _equipo_para_lead(
@@ -1464,17 +1508,11 @@ def run_bandeja_cycle(
     skipped_status = 0
     solo_listar = bool(state.get("solo_listar"))
     enviar_whatsapp = bool(state.get("enviar_whatsapp"))
-    # La franja del monitor (del usuario logueado) tiene prioridad sobre el
-    # equipo, pero solo para las bandejas que cubre: una franja propia
-    # vigente de AR no impide que el equipo reciba los leads de MX.
-    # Franja propia sin bandejas tildadas = cubre todas, como siempre.
-    equipo = state.get("equipo")
-    propio_activo = bool(state.get("schedule")) and within_schedule(state["schedule"], bandeja=bandeja["code"])
-    # Cobertura por bandeja: sin franja propia que cubra ESTA bandeja, solo
-    # la persona del equipo cuya franja activa la cubre habilita la toma.
-    # Un lead MX con franja AR vigente queda detectado "sin cobertura" —
-    # nunca se le reasigna a alguien de otra bandeja.
-    covered = propio_activo or _encargada_activa(equipo, bandeja=bandeja["code"]) is not None
+    # La cobertura se decide por lead a su hora de INGRESO: una franja
+    # propia vigente de AR no cubre leads MX ni los que entraron antes de
+    # que abriera — y un lead que entró en-franja se toma aunque el ciclo
+    # llegue después del cierre. Franja propia sin bandejas tildadas =
+    # cubre todas, como siempre.
     for lead in leads:
         if not lead.lead_id or not should_process(state, lead.lead_id):
             continue
@@ -1492,7 +1530,7 @@ def run_bandeja_cycle(
             # Modo prueba: solo listar los QUALIF detectados; no abrir el
             # registro ni tocar Pick Up. El estado `detectado` es reprocesable.
             status = STATUS_DETECTADO
-        elif not covered:
+        elif not _lead_covered(state, bandeja["code"], lead.details):
             # La bandeja no tiene turno vigente que la cubra: el lead se
             # lista como detectado "sin cobertura" para reasignarlo a mano.
             status = STATUS_DETECTADO

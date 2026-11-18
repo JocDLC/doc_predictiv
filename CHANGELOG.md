@@ -17,8 +17,69 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ## [Sin publicar]
 
+### Agregado
+
+- **Toasts de Windows con bandera y bandeja**: cada línea del aviso del
+  monitor lleva prefijo `🇦🇷 AR` / `🇨🇴 CO` / `🇲🇽 MX` (el toast no
+  admite color de texto, la bandera es el indicador) — tomado, error, no
+  verificado, tomado por otra persona y detectado. Test-regla:
+  `tests.test_ui_server.MonitorTickTests.test_toast_lines_identifican_bandeja_en_cada_estado`.
+- **Ventana de gracia post-cierre de franja**: si una franja que cubre una
+  bandeja habilitada terminó hace menos de un intervalo de monitor, el
+  ciclo sigue corriendo para recuperar leads que entraron justo antes del
+  corte (ej. lead 09:59 con franja hasta 10:00, recuperado en el ciclo de
+  10:02). Vence la gracia → pausa normal. Tests-regla:
+  `tests.test_ui_server.UiServerMonitorTests.test_gracia_*`,
+  `tests.test_lead_monitor.*test_lead_ingresado_antes_del_cierre_*`.
+- **Laboratorio WhatsApp** (botón "Laboratorio" en la home): área de pruebas
+  para comparar Selenium con `agent-browser` sobre el mismo flujo de envío.
+  - Importa una BD (.xlsx/.csv) con el mismo parser de "Distribuir Leads" o
+    reutiliza la base ya cargada allí; mapeo por columnas con detección de
+    aliases, vista previa y selección por lead (atajo "3 primeros").
+  - Modo **Verificación (prueba)**: recorre los leads seleccionados, lee país,
+    preferencia y `Otra información`, y reporta apto/no elegible/bloqueado
+    **sin escribir ni pulsar nada** en Salesforce.
+  - Modo **Ejecución real** (confirmación explícita): agrega
+    `N INT Se envía WhatsApp DD/MM/AAAA HH:mm` al final de `Otra información`
+    (numeración consecutiva sobre el historial, igual que el Monitor),
+    verifica la persistencia tras recargar y solo entonces pulsa
+    Send To Whatsapp. Sin toast de confirmación el lead queda
+    `documentado_wa_no_confirmado` y **jamás se reenvía automáticamente**
+    (journal SQLite en `ui_output/laboratorio.sqlite3`: un clic reservado sin
+    cierre terminal queda `indeterminado` y bloquea el lead).
+  - Motores: `selenium` (referencia), `agent_browser` (CLI 0.43.0 por CDP
+    contra el mismo Edge del bot) y `comparacion` (ambos motores sobre los
+    mismos leads, solo en modo prueba). La comparación real debe hacerse con
+    grupos de leads distintos para no enviar dos WhatsApp.
+  - Cola congelada por run (`queues/laboratorio_<run>.json`), resultados
+    JSONL por motor, métricas agregadas en
+    `cola_laboratorio_activa.metricas.json` y reanudación que omite los leads
+    ya terminal/ambigüos. Endpoints: `/api/laboratorio-queue`,
+    `/run-laboratorio`, `/api/laboratorio/results|status|engines|control`.
+  - Setup: `agent-browser` requiere Node ≥22
+    (`npm i -g --allow-scripts=agent-browser agent-browser@0.43.0`);
+    sin la CLI el laboratorio corre solo con Selenium.
+  - Tests: `test_laboratory_contracts`, `test_laboratory_store`,
+    `test_run_laboratory_queue`, `test_agent_browser`,
+    `test_laboratory_metrics` (reglas permanentes del laboratorio).
+
 ### Corregido
 
+- **La cobertura de la toma se evaluaba a la hora del ciclo, no a la de
+  ingreso del lead**: un lead creado 10:58 en franja de 9:00–10:59 y
+  revisado 11:01 quedaba "sin cobertura"; y uno creado antes de la franja
+  se tomaba igual si el ciclo corría en franja (leads QUALIF de antes de
+  las 12:00 tomados al abrir el turno de las 12:00). Ahora `covered` se
+  evalúa lead por lead con su Fecha de creación (misma semántica de
+  franja propia/equipo/por-bandeja; si la fecha no es usable, cae a la
+  hora del ciclo como antes). Tests-regla:
+  `tests.test_lead_monitor.*test_lead_ingresado_*`.
+- **`column_offset` anclaba la grilla con el owner de AR en todas las
+  bandejas**: en reportes CO/MX la columna de propietario se desalineaba
+  porque el valor centinela (`CO_LEAD_QUALIF`, `MX_LEAD_QUALIF`) no
+  coincidía con `AR_LEAD_QUALIF`. Ahora recibe el `unassigned_owner` de
+  la bandeja en curso. Test-regla:
+  `tests.test_report_reader.*.test_column_offset_aligns_values_using_bandeja_owner`.
 - **"Distribuir leads" declaraba `propietario_ilegible` a leads cuyo
   propietario sí era visible**: el campo "Propietario del candidato" a veces
   renderiza después de la primera lectura (lote del 17/11: ~133 de ~380

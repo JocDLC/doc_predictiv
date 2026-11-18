@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/comment_reader.py": {
-    "mtime": 1794345681.3205893,
-    "seen": 1794346111.635856,
-    "ast_hash": "f21695b042620215f433f45c2d1167fd",
+    "mtime": 1795008495.8920796,
+    "seen": 1795024808.4054635,
+    "ast_hash": "4a22c3e3e5977167399527c3acf75bbe",
     "semantic_hash": ""
   },
   "automation_salesforce/comment_writer.py": {
@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/config.example.json": {
-    "mtime": 1793387746.979944,
-    "seen": 1794346111.6358604,
-    "ast_hash": "3823adabf62855fda48a2a1f27071b19",
+    "mtime": 1794943834.407315,
+    "seen": 1794944014.0935469,
+    "ast_hash": "6dbf83fda62da514627e310749113e99",
     "semantic_hash": ""
   },
   "automation_salesforce/correction_loader.py": {
@@ -90,9 +90,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/lead_monitor.py": {
-    "mtime": 1794938266.2658353,
-    "seen": 1794938430.7043285,
-    "ast_hash": "28feddc8528da86eb21190ad2821c17d",
+    "mtime": 1795024211.3015404,
+    "seen": 1795024808.413147,
+    "ast_hash": "c86458c837c14c41bf78da819724c3e0",
     "semantic_hash": ""
   },
   "automation_salesforce/leads_ui.py": {
@@ -114,9 +114,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/monitor_store.py": {
-    "mtime": 1794345681.3316758,
-    "seen": 1794346111.635885,
-    "ast_hash": "541ed83569f1759dbf776a390ef7a2f0",
+    "mtime": 1795024211.085105,
+    "seen": 1795024808.4155533,
+    "ast_hash": "59b3aea109bf332faa687945824171d6",
     "semantic_hash": ""
   },
   "automation_salesforce/open_persistent_browser.py": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/report_reader.py": {
-    "mtime": 1794348864.41449,
-    "seen": 1794354116.9877415,
-    "ast_hash": "e497ad1cc6a3d479d7aea04e41c2655c",
+    "mtime": 1795024414.9423475,
+    "seen": 1795024808.4192407,
+    "ast_hash": "0bed614f10029bf8df0f719781c8efd4",
     "semantic_hash": ""
   },
   "automation_salesforce/run_close_queue.py": {
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_lead_monitor.py": {
-    "mtime": 1794938199.5595474,
-    "seen": 1794938430.709614,
-    "ast_hash": "04f44d3758e02b1a6fffdac0e056872d",
+    "mtime": 1795024171.817801,
+    "seen": 1795024808.439321,
+    "ast_hash": "3833e91bbbefadc809a340f8a76e861f",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_leads_ui.py": {
@@ -336,9 +336,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_report_reader.py": {
-    "mtime": 1794348851.1590412,
-    "seen": 1794354116.99243,
-    "ast_hash": "ee74341010aeda7aedd3ff5d78bda46f",
+    "mtime": 1795024402.9869833,
+    "seen": 1795024808.44594,
+    "ast_hash": "c84a54ec94d56364ea1e3f7cc74c3625",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_run_close_queue.py": {
@@ -432,9 +432,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_ui_server.py": {
-    "mtime": 1794349185.65412,
-    "seen": 1794354116.9953964,
-    "ast_hash": "27d64ab6b77bd6dee019935996dfd858",
+    "mtime": 1795024292.8461754,
+    "seen": 1795024808.459118,
+    "ast_hash": "2953332399b9487b6bc5c5f0b773a54d",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_verificar_pc.py": {
@@ -444,9 +444,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/ui_server.py": {
-    "mtime": 1794938474.048645,
-    "seen": 1794938497.8349922,
-    "ast_hash": "5b32944f558d69e174d5673f1b25aa42",
+    "mtime": 1795024329.7869468,
+    "seen": 1795024808.459852,
+    "ast_hash": "37db9c782c9320afb511b378f927dbf9",
     "semantic_hash": ""
   },
   "automation_salesforce/verificar_pc.py": {
@@ -924,15 +924,15 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1794938413.3773656,
-    "seen": 1794938430.7269368,
-    "ast_hash": "25715b3c12e80a5bb3929321ba573b78",
+    "mtime": 1795024768.077799,
+    "seen": 1795024808.5270407,
+    "ast_hash": "3329ea0e2fbe64fb13a72fef2766486c",
     "semantic_hash": ""
   },
   "MEMORY.md": {
-    "mtime": 1794938318.0199008,
-    "seen": 1794938430.726939,
-    "ast_hash": "f76a6cc7f2c3136fd81cf3dd8b7d770b",
+    "mtime": 1794943977.466318,
+    "seen": 1794944014.1831708,
+    "ast_hash": "6c9aca02d5dbab3636c16319e86d7f4d",
     "semantic_hash": ""
   },
   "RESULTADOS_DE_PRUEBA.md": {
@@ -948,9 +948,9 @@
     "semantic_hash": ""
   },
   "VERSIONS.md": {
-    "mtime": 1794345641.6566944,
-    "seen": 1794346111.6361535,
-    "ast_hash": "0501a5345ef7230b58940e4963618ffe",
+    "mtime": 1794943872.2319849,
+    "seen": 1794944014.1842787,
+    "ast_hash": "8a3044086fa59a6c2961f16a6cfaf386",
     "semantic_hash": ""
   },
   "automation_salesforce/HANDOFF.md": {
@@ -984,9 +984,9 @@
     "semantic_hash": ""
   },
   "documentador_predictivo.html": {
-    "mtime": 1794346367.0070586,
-    "seen": 1794354117.0206604,
-    "ast_hash": "0bbbd6505bab4e5c59452e71fab7d837",
+    "mtime": 1794949708.2850728,
+    "seen": 1794953330.3716614,
+    "ast_hash": "395e2655622842e68824bae3fae98dea",
     "semantic_hash": ""
   },
   "openspec/changes/agregar-favicons-paginas-locales/design.md": {
@@ -1817,10 +1817,172 @@
     "ast_hash": "1dd04b98332273daafb739aa61b96e65",
     "semantic_hash": ""
   },
-  "%TEMP%old_graph.html": {
-    "mtime": 1794925028.615039,
-    "seen": 1794935478.7069712,
-    "ast_hash": "dbd5d65484bea7b012440e5fe86762c2",
+  "automation_salesforce/agent_browser.py": {
+    "mtime": 1795019831.612953,
+    "seen": 1795024808.4025326,
+    "ast_hash": "9db19d71122ebe4293c1e47e16611c23",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/laboratory_browser.py": {
+    "mtime": 1795019814.4935167,
+    "seen": 1795024808.4123795,
+    "ast_hash": "8c2400c6e3f51de9ed3d952bdcf00ed4",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/laboratory_contracts.py": {
+    "mtime": 1795002705.8966918,
+    "seen": 1795024808.412388,
+    "ast_hash": "05a184ebfa7022443fbad816bfa8bd6d",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/laboratory_metrics.py": {
+    "mtime": 1795003780.2404985,
+    "seen": 1795024808.4123929,
+    "ast_hash": "6c1327077d29433daf9b295e0e767096",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/laboratory_store.py": {
+    "mtime": 1795003780.2432714,
+    "seen": 1795024808.4123971,
+    "ast_hash": "7bee9b48d9f3a0ea5f71d87a0c0b6304",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/run_laboratory_queue.py": {
+    "mtime": 1795023210.848371,
+    "seen": 1795024808.4247081,
+    "ast_hash": "5d742df227132eecccb62b8d5a6788ac",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_agent_browser.py": {
+    "mtime": 1795018811.0847635,
+    "seen": 1795024808.4300265,
+    "ast_hash": "274aaff90b5843d01c57d64311bb9bed",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_laboratory_contracts.py": {
+    "mtime": 1795003780.2389257,
+    "seen": 1795024808.4383395,
+    "ast_hash": "d19b41b754842da888238f0986f03347",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_laboratory_metrics.py": {
+    "mtime": 1795003780.2432714,
+    "seen": 1795024808.4383464,
+    "ast_hash": "9d0721f4567691b695bf9dcf8f527253",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_laboratory_store.py": {
+    "mtime": 1795003772.406876,
+    "seen": 1795024808.4383543,
+    "ast_hash": "99c8bde28ba0f5ae5f55ee99e2c2d2af",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_run_laboratory_queue.py": {
+    "mtime": 1795019882.3507993,
+    "seen": 1795024808.4511974,
+    "ast_hash": "8f4ec80046f556da3012caa1e02926e0",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/.openspec.yaml": {
+    "mtime": 1794967027.5644078,
+    "seen": 1794967571.8228803,
+    "ast_hash": "e381aee74037cbb6e7cff9bd8b737b62",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/diagnostico-resultados.json": {
+    "mtime": 1794967271.3467777,
+    "seen": 1794967571.8228836,
+    "ast_hash": "73d8ffdf750a04bc99e2517171a552e0",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/diagnostico_adversarial.py": {
+    "mtime": 1794967564.3057766,
+    "seen": 1794967571.8228855,
+    "ast_hash": "64e46a1d6acf1fe5b56845e03bbcad2f",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/PLAN.md": {
+    "mtime": 1794967626.5767107,
+    "seen": 1795024808.5934334,
+    "ast_hash": "2c4cbc0512ff42bb428aea9f0f939d44",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/design.md": {
+    "mtime": 1794967626.7422614,
+    "seen": 1795024808.5934405,
+    "ast_hash": "6c3379191b4da0a4f164c58c556ca9a4",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/proposal.md": {
+    "mtime": 1794967079.8044035,
+    "seen": 1794967571.8530638,
+    "ast_hash": "9ad377329f4500a8347403bb0262543b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/specs/laboratorio-confirmacion-segura/spec.md": {
+    "mtime": 1794967406.8523033,
+    "seen": 1794967571.8530676,
+    "ast_hash": "8d84832be9e8777696bee5d12ffc02f4",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/specs/laboratorio-validacion-adversarial/spec.md": {
+    "mtime": 1794967406.9088736,
+    "seen": 1794967571.85307,
+    "ast_hash": "99270d089db1d773d24873ed68e16d4a",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/tasks.md": {
+    "mtime": 1795004013.841156,
+    "seen": 1795024808.5961344,
+    "ast_hash": "796dbf6060610e82cbbaf64a67fd1471",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_lab_fixture_live.py": {
+    "mtime": 1795008628.3072317,
+    "seen": 1795024808.4383302,
+    "ast_hash": "30b5331f580e435dbc46bf4bbae6cea6",
+    "semantic_hash": ""
+  },
+  "openspec/changes/cobertura-por-ingreso-de-lead/.openspec.yaml": {
+    "mtime": 1795023832.9449418,
+    "seen": 1795024808.4706595,
+    "ast_hash": "e381aee74037cbb6e7cff9bd8b737b62",
+    "semantic_hash": ""
+  },
+  "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/lab_debug_eval.py": {
+    "mtime": 1794965293.9105046,
+    "seen": 1795024808.4769044,
+    "ast_hash": "18fe62bc33a8867053ca4aee48f18424",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/fixtures/laboratorio_whatsapp.html": {
+    "mtime": 1795005051.8362007,
+    "seen": 1795024808.5323496,
+    "ast_hash": "acce308d28c1ceb9c8f6986fcd602b75",
+    "semantic_hash": ""
+  },
+  "openspec/changes/cobertura-por-ingreso-de-lead/design.md": {
+    "mtime": 1795023958.18963,
+    "seen": 1795024808.567529,
+    "ast_hash": "cec6982160d0e1fd5218d2597bf92a1b",
+    "semantic_hash": ""
+  },
+  "openspec/changes/cobertura-por-ingreso-de-lead/proposal.md": {
+    "mtime": 1795023889.6098666,
+    "seen": 1795024808.5675347,
+    "ast_hash": "a5201fce1c501b247d2e2019749a7326",
+    "semantic_hash": ""
+  },
+  "openspec/changes/cobertura-por-ingreso-de-lead/specs/monitor-bandeja-leads/spec.md": {
+    "mtime": 1795023923.5156472,
+    "seen": 1795024808.5675392,
+    "ast_hash": "ef9e8dd2249ef9eed465872d95cdfb83",
+    "semantic_hash": ""
+  },
+  "openspec/changes/cobertura-por-ingreso-de-lead/tasks.md": {
+    "mtime": 1795024429.4262688,
+    "seen": 1795024808.567543,
+    "ast_hash": "c34a12d3bceabd0230918c07f0e5c0e7",
     "semantic_hash": ""
   }
 }

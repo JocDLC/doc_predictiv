@@ -1153,6 +1153,162 @@ class RunBandejaCycleTests(unittest.TestCase):
         take.assert_called_once()
         self.assertEqual(take.call_args.kwargs["equipo"], equipo)
 
+    def test_lead_ingresado_en_franja_se_toma_post_cierre(self):
+        """Bug del 17/11: la franja de Ana cerró 10:59 y el lead entró
+        10:58 — a las 11:01 se toma igual y va a la encargada de las 10:58,
+        no queda 'sin_cobertura' por mirar el reloj actual."""
+        from datetime import datetime
+        state = self._state()
+        state["schedule"] = []
+        equipo = [{"nombre": "Ana", "franjas": [{"start": "09:00", "end": "10:59", "bandejas": ["AR"]}]}]
+        state["equipo"] = equipo
+        fixed = datetime(2026, 10, 31, 11, 1)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        leads = [lead(LEAD_ID, fecha_creacion="31/10/2026 10:58 AM")]
+        with (
+            patch("lead_monitor.datetime", FixedDatetime),
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, leads)),
+            patch(
+                "lead_monitor.take_lead",
+                return_value=(STATUS_TOMADO, "Ana", "x/reasignado", ""),
+            ) as take,
+        ):
+            run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        take.assert_called_once()
+        self.assertEqual(take.call_args.kwargs["equipo"], equipo)
+
+    def test_lead_ingresado_antes_de_franja_no_se_toma(self):
+        """Caso del 18/11: lead creado 10:30 sin ninguna franja que cubra
+        esa hora — a las 12:01, con la franja 12:00–13:59 recién abierta,
+        NO se toma: su cobertura era de otra franja o de nadie."""
+        from datetime import datetime
+        state = self._state()
+        state["schedule"] = []
+        state["equipo"] = [
+            {"nombre": "Roger", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}]}
+        ]
+        fixed = datetime(2026, 10, 31, 12, 1)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        leads = [lead(LEAD_ID, fecha_creacion="31/10/2026 10:30 AM")]
+        with (
+            patch("lead_monitor.datetime", FixedDatetime),
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, leads)),
+            patch("lead_monitor.take_lead") as take,
+        ):
+            events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        take.assert_not_called()
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(lead_events[0]["status"], "detectado")
+        self.assertEqual(lead_events[0]["entry"]["motivo"], "sin_cobertura")
+
+    def test_rezagado_del_ultimo_minuto_en_ciclo_de_gracia(self):
+        """El caso real: lead 09:59 en franja que cerró 10:00 — el ciclo de
+        gracia de las 10:02 lo re-verifica y toma (00QbD00000x5n2vUAA)."""
+        from datetime import datetime
+
+        state = self._state()
+        state["schedule"] = []
+        equipo = [{"nombre": "Ana", "franjas": [{"start": "09:00", "end": "10:00", "bandejas": ["AR"]}]}]
+        state["equipo"] = equipo
+        fixed = datetime(2026, 10, 31, 10, 2)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        leads = [lead(LEAD_ID, fecha_creacion="31/10/2026 09:59 AM")]
+        with (
+            patch("lead_monitor.datetime", FixedDatetime),
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, leads)),
+            patch(
+                "lead_monitor.take_lead",
+                return_value=(STATUS_TOMADO, "Ana", "x/reasignado", ""),
+            ) as take,
+        ):
+            run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        take.assert_called_once()
+
+    def test_lead_post_cierre_no_se_toma_en_gracia(self):
+        """Espejo del rezagado: lead ingresado 10:03 (franja cerrada 10:00)
+        no se toma en el ciclo de gracia de las 10:02."""
+        from datetime import datetime
+
+        state = self._state()
+        state["schedule"] = []
+        state["equipo"] = [
+            {"nombre": "Ana", "franjas": [{"start": "09:00", "end": "10:00", "bandejas": ["AR"]}]}
+        ]
+        fixed = datetime(2026, 10, 31, 10, 2)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        leads = [lead(LEAD_ID, fecha_creacion="31/10/2026 10:03 AM")]
+        with (
+            patch("lead_monitor.datetime", FixedDatetime),
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, leads)),
+            patch("lead_monitor.take_lead") as take,
+        ):
+            events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        take.assert_not_called()
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(lead_events[0]["entry"]["motivo"], "sin_cobertura")
+
+    def test_lead_sin_fecha_usable_se_evalua_ahora(self):
+        """Sin fecha de creación usable la cobertura mira la hora del ciclo,
+        igual que siempre — el fallback no puede dejar leads sin toma."""
+        from datetime import datetime
+        state = self._state()
+        state["schedule"] = []
+        equipo = [{"nombre": "Roger", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}]}]
+        state["equipo"] = equipo
+        fixed = datetime(2026, 10, 31, 12, 1)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        leads = [lead(LEAD_ID)]
+        with (
+            patch("lead_monitor.datetime", FixedDatetime),
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, leads)),
+            patch(
+                "lead_monitor.take_lead",
+                return_value=(STATUS_TOMADO, "Roger", "x/reasignado", ""),
+            ) as take,
+        ):
+            run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        take.assert_called_once()
+
     def test_session_lost_event(self):
         state = self._state()
         with (

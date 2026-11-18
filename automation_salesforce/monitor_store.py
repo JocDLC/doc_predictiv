@@ -330,6 +330,35 @@ def within_schedule(
     return False
 
 
+def schedule_recently_ended(
+    slots: list[dict[str, str]],
+    moment: datetime | None = None,
+    grace_seconds: float = 120.0,
+    bandeja: str | object | None = None,
+) -> bool:
+    """¿Alguna franja que cubre la bandeja terminó hace menos de
+    ``grace_seconds``? La ventana de gracia post-cierre: el monitor
+    re-verifica la bandeja por leads ingresados en-franja que quedaron
+    pendientes, sin reabrir el día. Mismo filtro de ``bandeja`` que
+    ``within_schedule`` — una franja sin bandejas tildadas vale para
+    todas."""
+    if not slots:
+        return False
+    wanted = None
+    if bandeja is not None:
+        wanted = {bandeja} if isinstance(bandeja, str) else set(bandeja)
+    current = moment or datetime.now().astimezone()
+    now_minutes = current.hour * 60 + current.minute
+    grace_minutes = grace_seconds / 60
+    for slot in slots:
+        if wanted is not None and slot.get("bandejas") and not wanted & set(slot["bandejas"]):
+            continue
+        end = _parse_hhmm(slot["end"], "end")
+        if end < now_minutes <= end + grace_minutes:
+            return True
+    return False
+
+
 def default_state() -> dict:
     return {
         "enabled": False,

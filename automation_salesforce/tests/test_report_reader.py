@@ -449,6 +449,18 @@ class ReportReaderTests(unittest.TestCase):
             ["15/09/2026", "Campaña X", "AR_LEAD_QUALIF", "Ana"],
         )
 
+    def test_column_offset_aligns_values_using_bandeja_owner(self):
+        """En una grilla CO el valor centinela es CO_LEAD_QUALIF: el offset
+        debe anclarse a él y no al owner por defecto de AR."""
+        headers = ["Fecha de creación", "Campaña", "Propietario del candidato", "Nombre"]
+        values = ["1", "15/09/2026", "Campaña X", "CO_LEAD_QUALIF", "Ana"]
+
+        self.assertEqual(column_offset(headers, values, "CO_LEAD_QUALIF"), 1)
+        self.assertEqual(
+            aligned_values(values, column_offset(headers, values, "CO_LEAD_QUALIF"), len(headers)),
+            ["15/09/2026", "Campaña X", "CO_LEAD_QUALIF", "Ana"],
+        )
+
     def test_reader_extracts_details_when_headers_live_outside_the_grid(self):
         row = FakeRow(
             cells=[

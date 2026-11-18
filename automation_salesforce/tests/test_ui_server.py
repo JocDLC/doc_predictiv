@@ -927,6 +927,104 @@ class UiServerMonitorTests(unittest.TestCase):
         )
         self.assertTrue(ui_server._any_turno_activo(state))
 
+    def _grace_state(self, franja_end="10:00"):
+        from monitor_store import default_state, validate_bandejas
+
+        state = default_state()
+        state["schedule"] = []
+        state["equipo"] = [
+            {"nombre": "Ana", "franjas": [{"start": "09:00", "end": franja_end, "bandejas": ["AR"]}]}
+        ]
+        state["bandejas"] = validate_bandejas(
+            [{"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]
+        )
+        return state
+
+    def test_any_turno_activo_gracia_tras_cierre(self):
+        """La franja cerró 10:00 y son las 10:01: el gate sigue abierto por
+        la ventana de gracia — el próximo ciclo re-verifica rezagados que
+        ingresaron en-franja (caso del lead 9:59)."""
+        import ui_server
+        from datetime import datetime
+
+        fixed = datetime(2026, 10, 31, 10, 1)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        with (
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.datetime", FixedDatetime),
+        ):
+            self.assertTrue(ui_server._any_turno_activo(self._grace_state()))
+
+    def test_any_turno_activo_gracia_expira(self):
+        """Pasada la ventana de gracia sin franja activa el monitor pausa
+        igual que hoy — la gracia no reabre el día."""
+        import ui_server
+        from datetime import datetime
+
+        fixed = datetime(2026, 10, 31, 10, 5)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        with (
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.datetime", FixedDatetime),
+        ):
+            self.assertFalse(ui_server._any_turno_activo(self._grace_state()))
+
+    def test_gracia_exige_bandeja_habilitada(self):
+        """La gracia solo la abre una franja que cubre bandeja habilitada:
+        franja de AR recién cerrada con solo MX encendida no corre nada."""
+        import ui_server
+        from monitor_store import validate_bandejas
+        from datetime import datetime
+
+        state = self._grace_state()
+        state["bandejas"] = validate_bandejas(
+            [{"code": "MX", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]
+        )
+        fixed = datetime(2026, 10, 31, 10, 1)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        with (
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.datetime", FixedDatetime),
+        ):
+            self.assertFalse(ui_server._any_turno_activo(state))
+
+    def test_gracia_tambien_por_franja_propia(self):
+        """La gracia aplica igual al turno propio: franja 09:00–10:00 del
+        usuario cerrada hace un minuto sigue corriendo el ciclo."""
+        import ui_server
+        from datetime import datetime
+
+        state = self._grace_state()
+        state["equipo"] = []
+        state["schedule"] = [{"start": "09:00", "end": "10:00", "bandejas": ["AR"]}]
+        fixed = datetime(2026, 10, 31, 10, 1)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        with (
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.datetime", FixedDatetime),
+        ):
+            self.assertTrue(ui_server._any_turno_activo(state))
+
     def test_any_turno_activo_franja_propia_por_bandeja(self):
         """La franja propia también se filtra por bandeja: turno propio de
         AR con solo MX encendida no habilita el ciclo."""
@@ -1653,6 +1751,51 @@ class MonitorTickTests(unittest.TestCase):
 
             ui_server.monitor_tick(self._config(tmp))
             self.assertEqual(toast.call_count, 1)
+
+    def test_toast_lines_identifican_bandeja_en_cada_estado(self):
+        """Cada línea del toast nombra su bandeja con bandera — el 'color'
+        de país pedido, ya que el toast de Windows no admite colores."""
+        import ui_server
+
+        events = [
+            {
+                "type": "lead_result",
+                "bandeja": "CO",
+                "status": "tomado",
+                "entry": {"lead_id": "L1", "asignado_a": "Ana", "details": {"nombre": "Raul"}},
+            },
+            {
+                "type": "lead_result",
+                "bandeja": "MX",
+                "status": "error",
+                "entry": {"lead_id": "L2", "details": {"nombre": "Luis"}},
+            },
+            {
+                "type": "lead_result",
+                "bandeja": "AR",
+                "status": "no_verificado",
+                "entry": {"lead_id": "L3", "details": {"nombre": "Marta"}},
+            },
+            {
+                "type": "lead_result",
+                "bandeja": "CO",
+                "status": "tomado_por_otro",
+                "entry": {"lead_id": "L4", "details": {"nombre": "Juan"}},
+            },
+            {
+                "type": "lead_result",
+                "bandeja": "CO",
+                "status": "detectado",
+                "entry": {"lead_id": "L5", "details": {"nombre": "Ana"}},
+            },
+        ]
+        lines = ui_server._lead_toast_lines(events, {})
+        self.assertEqual(len(lines), 5)
+        self.assertIn("🇨🇴 CO", lines[0])
+        self.assertIn("🇲🇽 MX", lines[1])
+        self.assertIn("🇦🇷 AR", lines[2])
+        self.assertIn("🇨🇴 CO", lines[3])
+        self.assertIn("🇨🇴 CO", lines[4])
 
     def test_tick_no_toast_when_notificar_off(self):
         """Con Notificar apagado el ciclo detecta pero no llama al toast."""

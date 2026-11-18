@@ -605,10 +605,13 @@ def report_header_labels(table_element, driver) -> list[str]:
     return header_labels(driver, driver)
 
 
-def column_offset(headers: list[str], values: list[str]) -> int:
+def column_offset(headers: list[str], values: list[str], unassigned_owner: str = UNASSIGNED_OWNER) -> int:
     """Alinea celdas con encabezados usando la columna de propietario como referencia."""
     owner_header = find_owner_header_index(headers)
-    owner_cell = next((index for index, value in enumerate(values) if is_unassigned_owner(value)), None)
+    owner_cell = next(
+        (index for index, value in enumerate(values) if is_unassigned_owner(value, unassigned_owner)),
+        None,
+    )
     if owner_header is None or owner_cell is None:
         return max(len(values) - len(headers), 0) if headers else 0
     return owner_cell - owner_header
@@ -829,7 +832,11 @@ def capture_visible_row_fragments(
     for grid_position, row in enumerate(data_rows, start=1):
         raw_values = row_values(row, driver)
         owner_found = row_has_unassigned_owner(raw_values, row.text, unassigned_owner)
-        values = aligned_values(raw_values, column_offset(headers, raw_values), len(headers)) if headers else raw_values
+        values = (
+            aligned_values(raw_values, column_offset(headers, raw_values, unassigned_owner), len(headers))
+            if headers
+            else raw_values
+        )
         if owner_index is not None and owner_index < len(values):
             owner_text = values[owner_index].strip()
             if owner_text:

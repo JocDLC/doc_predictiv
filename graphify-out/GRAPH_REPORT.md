@@ -1,24 +1,24 @@
-# Graph Report - Docuentar_predictivo  (2026-11-18)
+# Graph Report - Docuentar_predictivo  (2026-11-23)
 
 ## Corpus Check
-- 322 files · ~291,801 words
+- 335 files · ~303,196 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: .bat 3, (none) 2, .log 2)
 
 ## Summary
-- 4378 nodes · 8117 edges · 308 communities (225 shown, 83 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 378 edges (avg confidence: 0.93)
+- 4617 nodes · 8635 edges · 341 communities (232 shown, 109 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 388 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1803e1b6`
+- Built from commit: `bac709be`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - closure_store.py
-- finalize_pick_up
-- run_distribucion_queue.py
+- FinalizePickUpTests
+- run_document_queue.py
 - run_close_queue.py
 - LaboratoryStore
 - laboratory_contracts.py
@@ -45,13 +45,13 @@
 - _equipo_para_lead
 - WhatsappSendTests
 - FakeRow
-- load_or_create_token
+- test_ui_server.py
 - ADDED Requirements
 - ADDED Requirements
-- ui_server.py
-- launch_persistent_browser
+- make_handler
+- restart_browser
 - VisibleLead
-- within_schedule
+- Context
 - test_monitor_store.py
 - verificar_pc.py
 - ADDED Requirements
@@ -62,9 +62,9 @@
 - validate_contracts
 - ADDED Requirements
 - ADDED Requirements
-- PRIORIDAD — Traspaso del incidente de falsos documentados (2026-10-01)
+- ui_server.py
 - steps
-- comment_writer.py
+- json
 - Tareas: documentar-desde-html-supervisado
 - DistributeOneLeadTests
 - generar_docs.py
@@ -77,9 +77,9 @@
 - ADDED Requirements
 - ADDED Requirements
 - Requirement: Reparto equitativo con mínimo de reasignaciones
-- test_monitor_store.py
+- MonitorTickTests
 - server_guardian.py
-- json
+- unittest
 - ADDED Requirements
 - ADDED Requirements
 - ADDED Requirements
@@ -87,30 +87,30 @@
 - SeleniumLabBrowser
 - validator.py
 - ADDED Requirements
-- run_distribucion_queue.py
+- classify_lead
 - validate_distribucion_queue
 - ._run
 - PicklistDomTests
-- run_document_queue.py
+- main
 - __main__.py
 - Requirement: Simulación sin escritura en Salesforce
 - ADDED Requirements
 - ADDED Requirements
 - Requirement: Visual moderna clara
 - Requirement: REQ-002: Verificación mecánica de RED (`tdd-red`)
-- load_corrections
+- normalize_country
 - Requirement: Tarjeta de estado con semáforo
 - ADDED Requirements
 - ADDED Requirements
-- repartir
+- load_equipo_reparto
 - partition_attempts
 - validate_bandeja
 - Piloto de lectura Salesforce
 - ADDED Requirements
 - Decisions
 - ADDED Requirements
-- ADDED Requirements
-- record_snapshot
+- AperturaApiTests
+- bandeja
 - UiDistribucionRepartoTests
 - Decisiones
 - TDD — vía rápida para cambios chicos
@@ -123,8 +123,8 @@
 - ADDED Requirements
 - Requirements
 - TDD — vía rápida para cambios chicos
-- validate_equipo
-- run_laboratory_queue.py
+- monitor_store.py
+- ADDED Requirements
 - Propuesta: UI local de Leads sin gestión
 - ADDED Requirements
 - distribucion_loader.py
@@ -139,20 +139,20 @@
 - Decisiones
 - ADDED Requirements
 - Propuesta: Marco de trabajo replicable para desarrollo con agentes de IA
-- Requirements
-- read_visible_unassigned_leads
+- Requirement: Simulación sin escritura en Salesforce
+- Propuesta: tomar-leads-automatico
 - .windsurf/skills/openspec-explore/SKILL.md
 - .agent/workflows/opsx-explore.md
 - ADDED Requirements
 - auditar-calidad-integral/tasks.md
 - Diseño técnico: piloto de lectura Salesforce
-- press_pick_up
-- _ensure_take_mark
+- Decisions
+- .test_reassign_owner_waits_for_lookup_input
 - ADDED Requirements
 - Design: Multi-IDE Agent Harness Template
 - Spec: Multi-IDE Agent Harness Template
 - .windsurf/workflows/opsx-explore.md
-- validate_bandejas
+- ._grace_state
 - Tareas: automatizar-lectura-salesforce
 - ADDED Requirements
 - Propuesta: agregar-via-tdd
@@ -181,7 +181,7 @@
 - Diseño técnico
 - laboratory_metrics.py
 - Plan de ejecución: confirmación segura y pruebas adversariales del laboratorio
-- save_contact_panel_if_present
+- finalize_pick_up
 - agregar-favicons-paginas-locales/design.md
 - agregar-favicons-paginas-locales/proposal.md
 - 2026-10-27-mejorar-ui-estado-monitor/proposal.md
@@ -197,7 +197,7 @@
 - Verificación del workflow Archify — Fase 5
 - Harness del gráfico de contratos de negocio
 - crear-grafo-contratos-negocio/proposal.md
-- Handoff — automation_salesforce
+- _encargada_para_lead
 - Diseño: documentar-automatico-guardado
 - Propuesta: documentar intentos en Salesforce desde el HTML, con supervisión
 - documentar-leads-desde-ui/proposal.md
@@ -211,7 +211,7 @@
 - Diseño: seleccionar-campos-por-pais
 - Propuesta: seleccionar-campos-por-pais
 - UiDistribucionExportarTests
-- column_offset
+- report_reader.py
 - generator.py
 - Resultados de prueba
 - Solución de problemas
@@ -235,11 +235,11 @@
 - documentar-leads-desde-ui/tasks.md
 - Reparto equitativo de leads en Distribuir leads
 - read_report
-- read_full_report
+- ReportReaderTests
 - CommentWriterTests
-- [1.2.0] — 2026-10-06
+- Requirements
 - agregar-favicons-paginas-locales/tasks.md
-- compose_other_information
+- load_draft_body
 - RunCorrectionsTests
 - bootstrap.sh script
 - verify-setup.sh script
@@ -257,48 +257,73 @@
 - build_zip.py
 - Requirement: Reintento del panel tras recarga
 - BrowserFactoryTests
-- PicklistPollingTests
-- test_report_reader.py
-- verify_lead
+- select_picklist_option
+- find_report_table
+- StaleMarshalDriver
 - NodeConfirmationProbes
 - endurecer-confirmacion-whatsapp-laboratorio/proposal.md
-- ._eval_labels
-- restart_browser
+- ADDED Requirements
+- Tasks: endurecer-servidor-navegador
 - FakeEditor
-- execute_in_any_frame
+- lead_monitor.py
 - [1.1.0] — 2026-10-03
-- documented_call_ids
-- audit_lead
+- validate_equipo
+- FakeProc
 - load_contracts
-- content_hash
-- test_lead_monitor.py
-- Decisiones
-- Requirement: Simulación sin escritura en Salesforce
-- Diseño: corregir-documentacion-por-intento
-- Requirement: Simulación sin escritura en Salesforce
-- debugger_tab_targets
-- UiDistribucionRunTests
-- [1.0.0] — 2026-10-01
-- [1.4.2] — 2026-10-27
-- Requirement: Modo prueba de la cola de distribución
-- [1.0.4] — 2026-10-02
-- [1.4.0] — 2026-10-21
+- fake_exec
 - FakeAttributeElement
+- Decisiones
+- launch_persistent_browser
+- open_missing_tabs
+- mezclar_apertura
+- FieldTextDomTests
+- _encargada_activa
+- [1.0.0] — 2026-10-01
+- Requirement: REQ-817: Cobertura de la toma evaluada a la hora de ingreso del lead
+- diagnostico_adversarial.py
+- Tasks: tomar-leads-automatico — "Monitor de Bandeja"
+- run_cycle
+- recoger-qualif-no-habiles-por-bandeja/proposal.md
+- Requirement: Candidatos de apertura en la vista de distribución
+- Propuesta: tomar-leads-selectivo
+- Tasks: tomar-leads-selectivo
+- StaleDefaultContentDriver
+- run_queue
+- test_run_comment_read_only.py
+- _sticky
+- _wants_whatsapp_send
+- .test_tick_no_toast_when_notificar_off
+- Impact
+- FakeDriver
+- Propuesta: distribuir-leads-desde-archivo
+- Decisiones
+- FakeStop
+- Reintentar el panel "Contact Client" con recarga de la ficha
+- Implementación
+- FakeClock
+- [1.2.0] — 2026-10-06
+- [1.4.0] — 2026-10-21
+- [1.4.2] — 2026-10-27
+- 1. Implementación
 - [1.0.10] — 2026-10-03
+- [1.0.1] — 2026-10-02
+- [1.0.2] — 2026-10-02
 - [1.0.3] — 2026-10-02
-- [1.0.8] — 2026-10-02
+- [1.0.5] — 2026-10-02
+- [1.0.6] — 2026-10-02
 - [1.2.1] — 2026-10-07
+- [1.3.0] — 2026-10-09
 
 ## God Nodes (most connected - your core abstractions)
-1. `make_handler()` - 50 edges
-2. `run_bandeja_cycle()` - 47 edges
+1. `make_handler()` - 52 edges
+2. `run_bandeja_cycle()` - 49 edges
 3. `main()` - 47 edges
 4. `MonitorTickTests` - 46 edges
 5. `finalize_pick_up()` - 45 edges
-6. `UiServerMonitorTests` - 45 edges
-7. `ReportReaderTests` - 44 edges
-8. `close_one_lead()` - 43 edges
-9. `create_driver()` - 41 edges
+6. `ReportReaderTests` - 45 edges
+7. `UiServerMonitorTests` - 45 edges
+8. `create_driver()` - 43 edges
+9. `close_one_lead()` - 43 edges
 10. `LaboratoryStore` - 40 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -306,41 +331,41 @@
   openspec/changes/documentar-desde-html-supervisado/proposal.md → automation_salesforce/comment_reader.py
 - `2. Toma selectiva (take)` --references--> `build_record_url()`  [INFERRED]
   openspec/changes/tomar-leads-selectivo/tasks.md → automation_salesforce/comment_reader.py
-- `3. Barrido horizontal del Monitor` --references--> `read_bandeja_leads()`  [INFERRED]
-  openspec/changes/corregir-lectura-reportes-virtualizados/tasks.md → automation_salesforce/lead_monitor.py
+- `Fase 3 — Composición del texto` --references--> `compose_other_information()`  [INFERRED]
+  openspec/changes/documentar-desde-html-supervisado/tasks.md → automation_salesforce/comment_writer.py
+- `Fase 4 — Escritura por JavaScript y verificación` --references--> `prepare_other_information()`  [INFERRED]
+  openspec/changes/documentar-desde-html-supervisado/tasks.md → automation_salesforce/comment_writer.py
 - `Decisión de texto: intento en vez de `Asignado`` --references--> `_ensure_take_mark()`  [INFERRED]
   openspec/changes/envio-whatsapp-automatico/design.md → automation_salesforce/lead_monitor.py
-- `Tests` --references--> `_encargada_activa()`  [INFERRED]
-  openspec/changes/reasignacion-por-turno/tasks.md → automation_salesforce/lead_monitor.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (308 total, 83 thin omitted)
+## Communities (341 total, 109 thin omitted)
 
 ### Community 0 - "closure_store.py"
-Cohesion: 0.17
+Cohesion: 0.18
 Nodes (6): load_close_queue_file(), _validate_close_lead(), validate_close_queue(), LoadCloseQueueFileTests, queue_payload(), ValidateCloseQueueTests
 
-### Community 1 - "finalize_pick_up"
-Cohesion: 0.04
-Nodes (15): finalize_pick_up(), _save_contact_panel_after_reload(), _field_reads(), FinalizePickUpTests, _sticky(), Cierre, Implementación, Tasks: distribuir-leads-desde-archivo (+7 more)
+### Community 1 - "FinalizePickUpTests"
+Cohesion: 0.08
+Nodes (3): _save_contact_panel_after_reload(), _field_reads(), FinalizePickUpTests
 
-### Community 2 - "run_distribucion_queue.py"
-Cohesion: 0.12
-Nodes (32): create_driver(), detect_browser(), release_driver(), build_record_url(), main(), capture_failure(), create_logger(), report_accessibility_summary() (+24 more)
+### Community 2 - "run_document_queue.py"
+Cohesion: 0.08
+Nodes (40): make_agent_browser(), create_driver(), detect_browser(), release_driver(), 3. Contratos clave, report_session_lost(), capture_failure(), create_logger() (+32 more)
 
 ### Community 3 - "run_close_queue.py"
-Cohesion: 0.08
-Nodes (28): final_owners(), already_closed(), confirm_conversion(), contract_text(), convert_lead(), edit_form_matches(), _execute_picklist_script(), find_field_text() (+20 more)
+Cohesion: 0.06
+Nodes (34): closure_result_entry(), record_result(), results_path_for(), final_owners(), already_closed(), confirm_conversion(), contract_text(), convert_lead() (+26 more)
 
 ### Community 4 - "LaboratoryStore"
-Cohesion: 0.10
+Cohesion: 0.09
 Nodes (4): history_fingerprint(), LaboratoryStore, _now(), operation_id()
 
 ### Community 5 - "laboratory_contracts.py"
-Cohesion: 0.12
-Nodes (12): argentina_now(), build_queue(), canonical_lead_id(), is_argentina(), normalize_key(), normalize_whitespace(), validate_laboratory_queue(), wants_whatsapp() (+4 more)
+Cohesion: 0.11
+Nodes (11): argentina_now(), build_queue(), canonical_lead_id(), is_argentina(), normalize_key(), normalize_whitespace(), wants_whatsapp(), whatsapp_attempt_line() (+3 more)
 
 ### Community 6 - "page_identity.py"
 Cohesion: 0.21
@@ -351,68 +376,60 @@ Cohesion: 0.07
 Nodes (22): coverage_python_files(), main(), parse_args(), production_python_files(), python_module(), resolve_executable(), run(), run_business_contract_graph() (+14 more)
 
 ### Community 8 - "repartir"
-Cohesion: 0.24
-Nodes (6): _asignacion(), _indices_espaciados(), repartir(), fila(), ids(), RepartirTests
+Cohesion: 0.11
+Nodes (13): _asignacion(), build_export_xlsx(), _export_headers_rows(), _indices_espaciados(), is_whatsapp(), _normalize(), _personas_unicas(), repartir() (+5 more)
 
 ### Community 9 - "CloseOneLeadTests"
 Cohesion: 0.05
 Nodes (6): CloseOneLeadTests, field_text(), field_value(), FakeDriver, PersistAndVerifyTests, WebDriverTimeout()
 
-### Community 11 - "MonitorTickTests"
-Cohesion: 0.09
-Nodes (3): MonitorTickTests, _cycle(), monitor_tick()
-
 ### Community 12 - "send_for_lead"
-Cohesion: 0.27
-Nodes (4): send_for_lead(), ar_fields(), SendForLeadTests, tmp_store()
+Cohesion: 0.17
+Nodes (9): send_for_lead(), stage_timer(), mark(), verify_lead(), ar_fields(), RunQueueTests, SendForLeadTests, tmp_store() (+1 more)
 
 ### Community 14 - "_monitor_cycle"
-Cohesion: 0.13
-Nodes (9): _bandeja_tag(), _lead_toast_lines(), _merge_cycle_state(), _monitor_cycle(), _note_browser_failure(), _toast_contacto(), Agregado, Race: el ciclo pisaba cambios del usuario (2026-10-10) (+1 more)
+Cohesion: 0.12
+Nodes (13): _bandeja_tag(), _lead_toast_lines(), _toast_contacto(), Toast de Windows con asignado + contacto (2026-10-24), D1: Cobertura por lead, no por bandeja, D2: Gracia = un intervalo de monitor tras el fin de franja, D3: Mismo chequeo de franja para cobertura y gracia, D4: Bandeja+bandera en todas las líneas del toast (+5 more)
 
 ### Community 15 - "comment_reader.py"
-Cohesion: 0.08
-Nodes (14): field_result_if_found(), field_result_in_any_frame(), field_result_with_text(), find_comment(), find_field_text(), find_field_value(), find_other_information(), is_duplicate_lead() (+6 more)
-
-### Community 16 - "reassign_owner"
 Cohesion: 0.05
-Nodes (5): _owner_matches(), reassign_owner(), fake_exec(), ReassignOwnerTests, _typed_text()
+Nodes (41): build_record_url(), field_result_if_found(), field_result_in_any_frame(), field_result_with_text(), find_comment(), find_field_text(), find_field_value(), find_other_information() (+33 more)
 
 ### Community 17 - "ADDED Requirements"
 Cohesion: 0.05
 Nodes (43): ADDED Requirements, Requirement: REQ-801: Monitoreo opt-in y cadencia fija, Requirement: REQ-802: Bandejas configurables por país, Requirement: REQ-803: Franjas horarias configurables, Requirement: REQ-804: Detección por propietario y estado en la bandeja, Requirement: REQ-805: Toma automática con verificación doble, Requirement: REQ-806: Tabla del Monitor con columnas de la bandeja, Requirement: REQ-807: Resultados y estado sin exposición indebida (+35 more)
 
 ### Community 19 - "run_bandeja_cycle"
-Cohesion: 0.07
-Nodes (10): open_report(), report_session_lost(), run_bandeja_cycle(), lead(), RunBandejaCycleTests, Capabilities, Modified Capabilities, New Capabilities (+2 more)
-
-### Community 20 - "UiServerApiTests"
-Cohesion: 0.07
-Nodes (3): UiServerApiTests, debugger_session_attachable(), find_listening_pid()
+Cohesion: 0.09
+Nodes (3): run_bandeja_cycle(), lead(), RunBandejaCycleTests
 
 ### Community 22 - "take_lead"
-Cohesion: 0.09
-Nodes (16): read_record_owner(), run_cycle(), status_is_expected(), take_lead(), wait_owner_changed(), _wants_whatsapp_send(), bandeja(), PredicatesTests (+8 more)
+Cohesion: 0.16
+Nodes (8): take_lead(), bandeja(), TakeLeadTests, Context, Goals / Non-Goals, Migration Plan, Open Questions, Risks / Trade-offs
 
 ### Community 23 - "load_queue_file"
-Cohesion: 0.08
-Nodes (13): summarize_results(), load_queue(), load_queue_file(), ProductivityMetricsTests, QueueLoaderTests, Fase 0 — Preflight, Fase 1 — Identidad por llamada (Python), Fase 2 — Cola inmutable y `/run` (servidor) (+5 more)
+Cohesion: 0.07
+Nodes (18): load_corrections(), _valid_correction(), load_queue(), load_queue_file(), _validate_attempt(), _validate_lead(), CorrectionLoaderTests, _valid_correction() (+10 more)
 
 ### Community 24 - "Historial de versiones"
-Cohesion: 0.11
-Nodes (18): [1.0.1] — 2026-10-02, [1.0.2] — 2026-10-02, [1.0.5] — 2026-10-02, [1.0.6] — 2026-10-02, [1.0.7] — 2026-10-02, [1.0.9] — 2026-10-03, [1.3.0] — 2026-10-09, [1.4.1] — 2026-10-22 (+10 more)
+Cohesion: 0.14
+Nodes (13): [1.0.4] — 2026-10-02, [1.0.7] — 2026-10-02, [1.0.8] — 2026-10-02, [1.0.9] — 2026-10-03, [1.4.1] — 2026-10-22, [1.5.1] — 2026-11-10, Agregado, Corregido (+5 more)
 
 ### Community 25 - "ensure_monitor_window"
-Cohesion: 0.10
-Nodes (4): _close_tab_without_focus(), ensure_monitor_window(), _monitor_window_width(), Foco de Windows / notebook de una pantalla (2026-10-26)
+Cohesion: 0.09
+Nodes (5): _adopt_restored_monitor_window(), _close_tab_without_focus(), ensure_monitor_window(), _monitor_window_width(), Foco de Windows / notebook de una pantalla (2026-10-26)
 
 ### Community 27 - "WhatsappSendTests"
 Cohesion: 0.12
 Nodes (3): send_whatsapp(), _whatsapp_attempt_line(), WhatsappSendTests
 
 ### Community 28 - "FakeRow"
-Cohesion: 0.09
-Nodes (11): read_bandeja_leads(), ReadBandejaLeadsTests, FakeCell, FakeDriver, FakeFrameDriver, FakeHorizontalDriver, FakeLink, FakeRow (+3 more)
+Cohesion: 0.08
+Nodes (19): read_bandeja_leads(), FragmentMergeResult, _materialize_fragment_group(), merge_row_fragments(), read_full_report(), read_report_horizontal(), RowFragment, scroll_table_down() (+11 more)
+
+### Community 29 - "test_ui_server.py"
+Cohesion: 0.08
+Nodes (9): make_xlsx(), UiDistribucionRunTests, UiServerTests, acquire_instance_lock(), load_or_create_token(), main(), monitor_loop(), run_status_watcher() (+1 more)
 
 ### Community 30 - "ADDED Requirements"
 Cohesion: 0.07
@@ -422,29 +439,29 @@ Nodes (28): ADDED Requirements, Requirement: Accesibilidad y uso en presentació
 Cohesion: 0.07
 Nodes (28): ADDED Requirements, Requirement: CI deterministica y multiplataforma, Requirement: Comando canonico de verificacion completa, Requirement: Evidencia de ejecucion auditable, Requirement: Fuente unica y verificable de versiones, Requirement: Sincronizacion mecanica de configuraciones multi-IDE, Requirement: Terminacion real de cambios OpenSpec, Requirement: Umbrales de calidad mecanicos (+20 more)
 
-### Community 32 - "ui_server.py"
-Cohesion: 0.06
-Nodes (45): debugger_http_ready(), normalize_country(), store_path_for(), clear_results(), acquire_instance_lock(), app_version(), _bandeja_codes_disponibles(), broadcast_event() (+37 more)
+### Community 32 - "make_handler"
+Cohesion: 0.13
+Nodes (30): debugger_is_listening(), validate_laboratory_queue(), store_path_for(), clear_results(), validate_bandejas(), apertura_confirm(), _apertura_store_dir(), broadcast_event() (+22 more)
 
-### Community 33 - "launch_persistent_browser"
+### Community 33 - "restart_browser"
 Cohesion: 0.08
-Nodes (17): launch_persistent_browser(), probe(), windows_toast(), Auto-recuperación del navegador + notificaciones (2026-10-20), Estabilidad del navegador dedicado (2026-10-16), Arquitectura, Decisiones, Diseño: endurecer-servidor-navegador (+9 more)
+Nodes (18): current_url(), dedicated_profile_pids(), _drop_monitor_driver(), find_listening_pid(), freeze_active_close_queue(), freeze_active_distribucion_queue(), freeze_active_queue(), freeze_queue() (+10 more)
 
 ### Community 34 - "VisibleLead"
-Cohesion: 0.14
-Nodes (14): available_columns(), lead_payload(), render_leads_ui(), source_value(), write_leads_ui(), available_report_path(), report_payload(), write_unassigned_leads_report() (+6 more)
+Cohesion: 0.13
+Nodes (15): available_columns(), lead_payload(), render_leads_ui(), source_value(), write_leads_ui(), available_report_path(), report_payload(), write_unassigned_leads_report() (+7 more)
 
-### Community 35 - "within_schedule"
-Cohesion: 0.07
-Nodes (25): _encargada_activa(), _encargada_para_lead(), _encargada_termino_recien(), _lead_covered(), _lead_entry_moment(), _usable_entry_moment(), within_schedule(), WithinScheduleTests (+17 more)
+### Community 35 - "Context"
+Cohesion: 0.50
+Nodes (3): Context, Goals / Non-Goals, Risks / Trade-offs
 
 ### Community 36 - "test_monitor_store.py"
-Cohesion: 0.17
-Nodes (9): default_state(), record_result(), _result_index(), should_process(), touch_cycle(), PrivacyTests, ResultTrackingTests, _cycle() (+1 more)
+Cohesion: 0.13
+Nodes (10): default_state(), load_state(), record_result(), _result_index(), save_state(), should_process(), MonitorStateTests, ResultTrackingTests (+2 more)
 
 ### Community 37 - "verificar_pc.py"
-Cohesion: 0.10
-Nodes (22): PicklistRetryTests, node_executable(), UiClosureSelectionTests, node_executable(), PipSeleniumTests, check_edge(), check_edge_policies(), check_edge_remote_debugging() (+14 more)
+Cohesion: 0.21
+Nodes (17): check_edge(), check_edge_policies(), check_edge_remote_debugging(), check_local_dirs(), check_pip_and_selenium(), check_port(), check_powershell_policy(), check_python() (+9 more)
 
 ### Community 38 - "ADDED Requirements"
 Cohesion: 0.08
@@ -470,25 +487,25 @@ Nodes (22): ADDED Requirements, Requirement: Contratos declarativos para experto
 Cohesion: 0.10
 Nodes (19): ADDED Requirements, Requirement: Confirmación atribuible a una operación, Requirement: Evidencia y resultados históricos consultables, Requirement: Historial íntegro y documentación anterior al envío, Requirement: Identidad y clic único, Requirement: Reserva duradera entre campañas del laboratorio, Scenario: Aviso previo, negativo o ajeno, Scenario: Consulta no autorizada (+11 more)
 
-### Community 46 - "PRIORIDAD — Traspaso del incidente de falsos documentados (2026-10-01)"
-Cohesion: 0.15
-Nodes (13): Cadena causal y archivos que hay que leer, Criterio de terminado, Diagnóstico comprobado y alcance, Paso 0 — Preservar el estado y fijar una línea base, Paso 1 — Formalizar contrato y escenarios antes de implementar, Paso 2 — Escribir primero pruebas que reproduzcan el incidente, Paso 3 — Corregir el modelo y la migración de la UI, Paso 4 — Hacer idempotente el runner contra Salesforce (+5 more)
+### Community 46 - "ui_server.py"
+Cohesion: 0.05
+Nodes (27): debugger_http_ready(), wait_for_debugger(), open_report(), touch_cycle(), _apertura_bandeja(), apertura_preview(), AperturaLecturaFallida, AperturaOcupada (+19 more)
 
 ### Community 47 - "steps"
 Cohesion: 0.11
 Nodes (21): defaults, runs-on, steps, run, runs-on, steps, jobs, automation-salesforce (+13 more)
 
-### Community 48 - "comment_writer.py"
-Cohesion: 0.09
-Nodes (15): describe_editor_candidates(), find_edit_control(), find_editor_control(), find_element_in_any_frame(), prepare_other_information(), replace_editor_value(), save_edit_form(), verify_editor_value() (+7 more)
+### Community 48 - "json"
+Cohesion: 0.07
+Nodes (15): close_stuck_debugger_targets(), debugger_tab_targets(), debugger_tab_urls(), open_url_in_browser(), load_config(), main(), probe_editor_cycle(), correction_entry() (+7 more)
 
 ### Community 49 - "Tareas: documentar-desde-html-supervisado"
-Cohesion: 0.15
-Nodes (10): load_draft_body(), Fase 0 — Preflight, Fase 1 — Exportación de la cola desde el HTML, Fase 2 — Carga y validación de la cola (Python), Fase 4 — Escritura por JavaScript y verificación, Fase 6 — Documentación, Fase 7 — Verificación supervisada (con el operador), Fase 8 — Cierre (+2 more)
+Cohesion: 0.20
+Nodes (9): Fase 0 — Preflight, Fase 1 — Exportación de la cola desde el HTML, Fase 3 — Composición del texto, Fase 4 — Escritura por JavaScript y verificación, Fase 6 — Documentación, Fase 7 — Verificación supervisada (con el operador), Fase 8 — Cierre, Fuera de alcance (no ejecutar aquí) (+1 more)
 
 ### Community 50 - "DistributeOneLeadTests"
-Cohesion: 0.06
-Nodes (4): DistributeOneLeadTests, FakeDriver, SimulateOneLeadTests, Cambiado
+Cohesion: 0.05
+Nodes (5): PickOwnerOptionTests, DistributeOneLeadTests, FakeDriver, SimulateOneLeadTests, Cambiado
 
 ### Community 51 - "generar_docs.py"
 Cohesion: 0.18
@@ -510,6 +527,10 @@ Nodes (20): Purpose, Requirement: Indicador propio de modo prueba, Requirement: 
 Cohesion: 0.10
 Nodes (18): Context Engineering, Control de tokens, Estilo de respuesta, Fase 0.5 — Clasificación (TDD vs SDD), Fase 0 — Contexto (Graphify), Fase 1 — Análisis de la propuesta, Fase 2 — Plan (Spec), Fase 3 — Harness bien configurado (+10 more)
 
+### Community 56 - "FakeBrowser"
+Cohesion: 0.11
+Nodes (3): audit_lead(), AuditLeadTests, FakeBrowser
+
 ### Community 58 - "ADDED Requirements"
 Cohesion: 0.10
 Nodes (19): ADDED Requirements, Requirement: REQ-701: Estado documentado por llamada, Requirement: REQ-702: Resultados y snapshots legados no confirman, Requirement: REQ-703: Runner idempotente por `call_id`, Requirement: REQ-704: Tanda inmutable identificada por `run_id`, Requirement: REQ-705: Polling no reescribe la cola en curso, Requirement: REQ-706: Marca manual asociada a los intentos visibles, Requirement: REQ-707: Métricas distinguen escrituras nuevas de verificaciones (+11 more)
@@ -522,17 +543,13 @@ Nodes (19): ADDED Requirements, Requirement: Aprendizaje en modo observacion por
 Cohesion: 0.10
 Nodes (19): ADDED Requirements, Delta spec — reparto equitativo de leads, Requirement: Equipo del día persistente, Requirement: Exportación Excel del reparto, Requirement: Lista de reasignación WhatsApp, Requirement: Reparto equitativo con mínimo de reasignaciones, Requirement: Vista previa con acción por lead, Scenario: Descarga de distribución (+11 more)
 
-### Community 61 - "test_monitor_store.py"
-Cohesion: 0.25
-Nodes (3): load_state(), save_state(), MonitorStateTests
-
 ### Community 62 - "server_guardian.py"
-Cohesion: 0.16
+Cohesion: 0.17
 Nodes (8): log(), main(), probe_status(), spawn_server(), supervise(), terminate_child(), wait_child(), write_crash_log()
 
-### Community 63 - "json"
-Cohesion: 0.10
-Nodes (8): _validate_attempt(), _validate_lead(), make_xlsx(), FakeSwitchTo, CommentSummaryTests, RunQueueTests, make_xlsx(), js_probe()
+### Community 63 - "unittest"
+Cohesion: 0.11
+Nodes (7): _edge_binary(), _FixtureHandler, _free_port(), node_executable(), UiClosureSelectionTests, node_executable(), node_executable()
 
 ### Community 64 - "ADDED Requirements"
 Cohesion: 0.11
@@ -558,29 +575,25 @@ Nodes (13): ContractValidationError, _evidence_path(), _has_path(), _require_fie
 Cohesion: 0.11
 Nodes (17): ADDED Requirements, Capability: documentar cola de intentos con supervisión, Requirement: REQ-501: Exportación de cola desde el HTML, Requirement: REQ-502: Validación de la cola antes de abrir el navegador, Requirement: REQ-503: Numeración desde Salesforce, Requirement: REQ-504: Formato del texto y separación, Requirement: REQ-505: Escritura sin guardar y verificación, Requirement: REQ-506: Control por Lead (+9 more)
 
-### Community 71 - "run_distribucion_queue.py"
-Cohesion: 0.06
-Nodes (27): wait_for_debugger(), closure_result_entry(), record_result(), results_path_for(), normalized_key(), open_record(), _reread_owner_after_refresh(), wait_record_owner() (+19 more)
+### Community 71 - "classify_lead"
+Cohesion: 0.21
+Nodes (5): classify_lead(), creation_moment_local(), _franja_cubre(), parse_apertura_range(), ParseRangeTests
 
 ### Community 72 - "validate_distribucion_queue"
 Cohesion: 0.19
 Nodes (4): load_distribucion_queue(), validate_distribucion_queue(), DistribucionQueueTests, Distribución de leads no hábiles (distribuir-leads-desde-archivo, 2026-10-24)
 
-### Community 73 - "._run"
-Cohesion: 0.08
-Nodes (4): FakeClock, FakeProc, FakeStop, GuardianTests
-
-### Community 75 - "run_document_queue.py"
-Cohesion: 0.05
-Nodes (22): field_display(), field_key(), field_labels(), metrics_path_for(), write_metrics(), ask_lead_action(), fail_lead(), lead_context() (+14 more)
+### Community 75 - "main"
+Cohesion: 0.06
+Nodes (11): save_edit_form(), Cadena causal y archivos que hay que leer, ask_lead_action(), normalize_persisted_text(), result_entry(), verify_saved_value(), wait_for_manual_decision(), RunDocumentQueueTests (+3 more)
 
 ### Community 76 - "__main__.py"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (7): publish_archify_artifact(), verify_archify_artifacts(), main(), parse_args(), QuietHandler, smoke_html(), scan_sensitive_text()
 
 ### Community 77 - "Requirement: Simulación sin escritura en Salesforce"
-Cohesion: 0.20
-Nodes (9): ADDED Requirements, Delta spec — distribución de leads desde archivo (modo prueba), Requirement: Modo prueba de la cola de distribución, Requirement: Visibilidad del modo prueba en la UI, Scenario: Banner en vista previa, Scenario: Cola en modo prueba, Scenario: Cola sin modo, Scenario: Modo desconocido (+1 more)
+Cohesion: 0.12
+Nodes (16): ADDED Requirements, Delta spec — distribución de leads desde archivo (modo prueba), Requirement: Modo prueba de la cola de distribución, Requirement: Simulación sin escritura en Salesforce, Requirement: Visibilidad del modo prueba en la UI, Scenario: Banner en vista previa, Scenario: Cola en modo prueba, Scenario: Cola excluida (+8 more)
 
 ### Community 78 - "ADDED Requirements"
 Cohesion: 0.12
@@ -598,9 +611,9 @@ Nodes (16): identidad-visual-ui Specification, Purpose, Requirement: Estilo sin 
 Cohesion: 0.12
 Nodes (16): Purpose, Requirement: REQ-001: Clasificación del cambio (TDD vs SDD), Requirement: REQ-002: Verificación mecánica de RED (`tdd-red`), Requirement: REQ-003: Verificación mecánica de GREEN (`tdd-green`), Requirement: REQ-004: Trazabilidad de cambios TDD, Requirements, Scenario: bugfix puntual clasificado TDD, Scenario: cierre de un cambio TDD (+8 more)
 
-### Community 82 - "load_corrections"
-Cohesion: 0.24
-Nodes (5): load_corrections(), _valid_correction(), CorrectionLoaderTests, _valid_correction(), _write_corrections()
+### Community 82 - "normalize_country"
+Cohesion: 0.18
+Nodes (5): field_display(), field_key(), field_labels(), normalize_country(), CountryFieldContractTests
 
 ### Community 83 - "Requirement: Tarjeta de estado con semáforo"
 Cohesion: 0.12
@@ -614,17 +627,17 @@ Nodes (15): ADDED Requirements, Requirement: REQ-001: Clasificación del cambio 
 Cohesion: 0.12
 Nodes (15): ADDED Requirements, Requirement: Clasificación y gestión de hallazgos, Requirement: Criterio explícito de liberación, Requirement: Evidencia reproducible y honesta, Requirement: Matriz requisito-riesgo-prueba, Requirement: Privacidad de la evidencia, Scenario: Aplicación no lista, Scenario: Fallo funcional descubierto (+7 more)
 
-### Community 86 - "repartir"
-Cohesion: 0.11
-Nodes (11): build_export_xlsx(), _export_headers_rows(), is_whatsapp(), load_equipo_reparto(), _normalize(), _personas_unicas(), _same_person(), save_equipo_reparto() (+3 more)
+### Community 86 - "load_equipo_reparto"
+Cohesion: 0.25
+Nodes (4): load_equipo_reparto(), save_equipo_reparto(), validate_equipo_reparto(), EquipoRepartoTests
 
 ### Community 87 - "partition_attempts"
-Cohesion: 0.24
-Nodes (3): partition_attempts(), attempt(), PartitionAttemptsTests
+Cohesion: 0.05
+Nodes (34): documented_call_ids(), partition_attempts(), 1. Cambios OpenSpec, 2. Flujo del cambio en curso, 4. Archivos del módulo, 5. Configuración vigente (`config.json`, local e ignorado), 6. Restricciones que se mantienen, 7. Qué falta (+26 more)
 
 ### Community 88 - "validate_bandeja"
-Cohesion: 0.30
-Nodes (3): validate_bandeja(), bandeja(), BandejaValidationTests
+Cohesion: 0.23
+Nodes (5): default_unassigned_owner(), validate_bandeja(), bandeja(), BandejaValidationTests, PrivacyTests
 
 ### Community 89 - "Piloto de lectura Salesforce"
 Cohesion: 0.13
@@ -642,13 +655,17 @@ Nodes (14): 1. Pirámide de pruebas con gates separados, 2. Cobertura de líneas
 Cohesion: 0.13
 Nodes (14): ADDED Requirements, Requirement: REQ-1001: Instancia única del servidor, Requirement: REQ-1002: Token de sesión persistente, Requirement: REQ-1003: Reinicio intencional del servidor, Requirement: REQ-1004: El navegador no cuelga el attach por el NTP online, Requirement: REQ-1005: Sesión de driver persistente del monitor, Scenario: attach sin NTP trabado, Scenario: deploy sin "caída" (+6 more)
 
-### Community 93 - "ADDED Requirements"
-Cohesion: 0.12
-Nodes (15): ADDED Requirements, Delta: cobertura de la toma por hora de ingreso del lead, Requirement: REQ-817: Cobertura de la toma evaluada a la hora de ingreso del lead, Requirement: REQ-818: Ventana de gracia post-cierre para rezagados, Requirement: REQ-819: Notificaciones Windows con bandeja identificada, Requirement: REQ-820: Propietario de cola correcto en reportes sin columna mapeada, Scenario: Detalle de lead CO muestra CO_LEAD_QUALIF, Scenario: Error en México nombra la bandeja (+7 more)
+### Community 93 - "AperturaApiTests"
+Cohesion: 0.07
+Nodes (14): create_lote(), disponibles(), load_lote(), _lote_path(), lotes(), marcar_consumidos(), reconciliar_en_curso(), update_lead() (+6 more)
+
+### Community 94 - "bandeja"
+Cohesion: 0.24
+Nodes (4): bandeja(), ClassifyLeadTests, details(), slot()
 
 ### Community 96 - "Decisiones"
-Cohesion: 0.14
-Nodes (11): start_manual_check(), run(), Arquitectura, Decisiones, Diseño: tomar-leads-selectivo, Limpieza del historial local, Riesgos, scan ≠ take (+3 more)
+Cohesion: 0.20
+Nodes (9): Arquitectura, Decisiones, Diseño: tomar-leads-selectivo, Limpieza del historial local, Riesgos, scan ≠ take, UI, Un solo candado para todo lo que toca el navegador (+1 more)
 
 ### Community 97 - "TDD — vía rápida para cambios chicos"
 Cohesion: 0.14
@@ -690,13 +707,13 @@ Nodes (13): Capability: UI local de Leads sin gestión, Purpose, Requirement: RE
 Cohesion: 0.14
 Nodes (13): Checklist final, Ciclo T1–T5, Clasificación (Fase 0.5 de AGENTS.md), Cuándo escalar a SDD, Iron Law, Racionalizaciones frecuentes, T1 — Clasificar, T2 — RED (+5 more)
 
-### Community 107 - "validate_equipo"
-Cohesion: 0.12
-Nodes (9): _check_bandeja_overlaps(), _is_lightning_report_url(), _parse_hhmm(), schedule_recently_ended(), validate_equipo(), _validate_equipo_franjas(), _validate_franjas(), ValidateEquipoTests (+1 more)
+### Community 107 - "monitor_store.py"
+Cohesion: 0.14
+Nodes (7): _is_lightning_report_url(), _parse_hhmm(), schedule_recently_ended(), _validate_equipo_franjas(), _validate_franjas(), within_schedule(), WithinScheduleTests
 
-### Community 108 - "run_laboratory_queue.py"
-Cohesion: 0.16
-Nodes (9): make_agent_browser(), normalize_persisted_text(), make_browser(), read_results(), record_result(), result_entry(), run_queue(), browser_for() (+1 more)
+### Community 108 - "ADDED Requirements"
+Cohesion: 0.10
+Nodes (19): ADDED Requirements, Delta: recoger QUALIF no laborales por bandeja, Requirement: REQ-830: Clasificación del lead para apertura, Requirement: REQ-831: Rango manual por bandeja, Requirement: REQ-832: Vista previa de solo lectura, Requirement: REQ-833: Confirmación exclusiva y toma verificada, Requirement: REQ-834: Persistencia del lote y disponibilidad, Scenario: Dueño cambiado entre lectura y clic (+11 more)
 
 ### Community 109 - "Propuesta: UI local de Leads sin gestión"
 Cohesion: 0.15
@@ -708,11 +725,11 @@ Nodes (12): ADDED Requirements, Capability: UI local de Leads sin gestión, Requ
 
 ### Community 111 - "distribucion_loader.py"
 Cohesion: 0.19
-Nodes (8): _cell_text(), _dedupe_headers(), _detect_delimiter(), parse_archivo(), _parse_csv(), _parse_xlsx(), _sheet_from_rows(), ParseArchivoTests
+Nodes (9): _cell_text(), _dedupe_headers(), _detect_delimiter(), parse_archivo(), _parse_csv(), _parse_xlsx(), _sheet_from_rows(), make_xlsx() (+1 more)
 
 ### Community 112 - "agent_browser.py"
-Cohesion: 0.12
-Nodes (7): AgentBrowserUnavailable, command_available(), resolve_command(), CommandResolutionTests, _edge_binary(), _FixtureHandler, _free_port()
+Cohesion: 0.15
+Nodes (7): AgentBrowserUnavailable, command_available(), _labels_literal(), _normalize_label(), resolve_command(), CommandResolutionTests, ScriptContractTests
 
 ### Community 113 - "documentar-leads-desde-ui/design.md"
 Cohesion: 0.17
@@ -727,7 +744,7 @@ Cohesion: 0.18
 Nodes (10): Check for context, Ending Discovery, Guardrails, Handling Different Entry Points, OpenSpec Awareness, The Stance, What You Don't Have To Do, What You Might Do (+2 more)
 
 ### Community 117 - "make_store"
-Cohesion: 0.21
+Cohesion: 0.22
 Nodes (3): make_store(), ReservationTests, StoreTests
 
 ### Community 118 - ".codex/skills/openspec-explore/SKILL.md"
@@ -735,8 +752,8 @@ Cohesion: 0.18
 Nodes (10): Check for context, Ending Discovery, Guardrails, Handling Different Entry Points, OpenSpec Awareness, The Stance, What You Don't Have To Do, What You Might Do (+2 more)
 
 ### Community 119 - "Tareas: documentar-automatico-guardado"
-Cohesion: 0.20
-Nodes (9): Fase 0 — Preflight, Fase 2 — UI: selección, estados e importación, Fase 4.6 — Mejoras de la vista de cola (2026-09-23), Fase 4.7 — Excepción Lead Duplicado (pendiente), Fase 4 — Documentación, Fase 5 — Verificación supervisada, Fase 6 — Cierre, Fuera de alcance (+1 more)
+Cohesion: 0.18
+Nodes (10): Fase 0 — Preflight, Fase 2 — UI: selección, estados e importación, Fase 3 — Correcciones verificadas desde la UI, Fase 4.6 — Mejoras de la vista de cola (2026-09-23), Fase 4.7 — Excepción Lead Duplicado (pendiente), Fase 4 — Documentación, Fase 5 — Verificación supervisada, Fase 6 — Cierre (+2 more)
 
 ### Community 120 - "Decisiones"
 Cohesion: 0.18
@@ -750,13 +767,13 @@ Nodes (10): ADDED Requirements, Capability: Escritura asistida y supervisada en 
 Cohesion: 0.18
 Nodes (10): Alcance, Cambios afectados, Definición de terminado, Dentro del alcance, Fuera del alcance, Objetivo, Problema, Propuesta: Marco de trabajo replicable para desarrollo con agentes de IA (+2 more)
 
-### Community 123 - "Requirements"
-Cohesion: 0.29
-Nodes (6): distribucion-leads-archivo Specification, Purpose, Requirement: Visibilidad del modo prueba en la UI, Requirements, Scenario: Banner en vista previa, Scenario: Resultados de simulación
+### Community 123 - "Requirement: Simulación sin escritura en Salesforce"
+Cohesion: 0.11
+Nodes (17): distribucion-leads-archivo Specification, Purpose, Requirement: Modo prueba de la cola de distribución, Requirement: Simulación sin escritura en Salesforce, Requirement: Visibilidad del modo prueba en la UI, Requirements, Scenario: Banner en vista previa, Scenario: Cola en modo prueba (+9 more)
 
-### Community 124 - "read_visible_unassigned_leads"
-Cohesion: 0.06
-Nodes (27): read_visible_unassigned_leads(), Alcance, Contexto, Decisiones aprobadas (del análisis con el usuario), Fuera de alcance, Objetivo, Propuesta: tomar-leads-automatico, Riesgos (+19 more)
+### Community 124 - "Propuesta: tomar-leads-automatico"
+Cohesion: 0.25
+Nodes (7): Alcance, Contexto, Decisiones aprobadas (del análisis con el usuario), Fuera de alcance, Objetivo, Propuesta: tomar-leads-automatico, Riesgos
 
 ### Community 125 - ".windsurf/skills/openspec-explore/SKILL.md"
 Cohesion: 0.18
@@ -778,13 +795,9 @@ Nodes (9): 1. Línea base y harness, 2. Cobertura y caracterización independien
 Cohesion: 0.20
 Nodes (9): Detección de navegador, Diseño técnico: piloto de lectura Salesforce, Estructura propuesta, Evolución posterior, no implementada, Guardrails de seguridad, Lectura de “Otra información” y próximo INT, Lectura del reporte de Leads, Perfil de navegador y 2FA (+1 more)
 
-### Community 130 - "press_pick_up"
-Cohesion: 0.10
-Nodes (17): press_pick_up(), Context, Contrato de endpoints, Decisions, Design: distribuir-leads-desde-archivo, Goals / Non-Goals, Open Questions, Parseo server-side con openpyxl (+9 more)
-
-### Community 131 - "_ensure_take_mark"
-Cohesion: 0.14
-Nodes (16): normalize_label(), text_without_field_label(), scroll_toward_other_information(), _clean_owner_text(), _compact(), _drop_injected_take_mark(), _ensure_take_mark(), _lead_documented() (+8 more)
+### Community 130 - "Decisions"
+Cohesion: 0.20
+Nodes (9): Contrato de endpoints, Decisions, Design: distribuir-leads-desde-archivo, Goals / Non-Goals, Open Questions, Parseo server-side con openpyxl, Resultados incrementales, Risks / Trade-offs (+1 more)
 
 ### Community 132 - "ADDED Requirements"
 Cohesion: 0.20
@@ -802,9 +815,13 @@ Nodes (9): Decisiones de diseño, Escenario 1: nuevo proyecto desde el template,
 Cohesion: 0.20
 Nodes (9): Check for context, Ending Discovery, Guardrails, OpenSpec Awareness, The Stance, What You Don't Have To Do, What You Might Do, When a change exists (+1 more)
 
+### Community 136 - "._grace_state"
+Cohesion: 0.10
+Nodes (4): _any_turno_activo(), _turno_propio_activo(), _turno_recien_terminado(), Estado actual
+
 ### Community 137 - "Tareas: automatizar-lectura-salesforce"
-Cohesion: 0.22
-Nodes (7): Fase 0 — Seguridad y preflight, Fase 1 — Fábrica de navegador y login manual, Fase 3 — Lectura de bandeja de Leads, Fase 4 — Lectura de Otra información y próximo INT, Fase 5 — Verificación y cierre del piloto, Fase 6 — Propuesta posterior, no ejecutar en este cambio, Tareas: automatizar-lectura-salesforce
+Cohesion: 0.29
+Nodes (6): Fase 0 — Seguridad y preflight, Fase 1 — Fábrica de navegador y login manual, Fase 4 — Lectura de Otra información y próximo INT, Fase 5 — Verificación y cierre del piloto, Fase 6 — Propuesta posterior, no ejecutar en este cambio, Tareas: automatizar-lectura-salesforce
 
 ### Community 138 - "ADDED Requirements"
 Cohesion: 0.22
@@ -823,8 +840,8 @@ Cohesion: 0.22
 Nodes (8): Arquitectura, Contrato de cola de cierre (`queues/cola_cierre_activa.json` → congelada `cierre_<run_id>.json`), Contrato de resultados (`queues/cola_cierre_activa.resultado.json`), Datos, Diseño: cerrar-leads-por-motivo, Recuperación ante fallos, Servidor, UI
 
 ### Community 142 - "Diseño técnico: documentar desde el HTML con supervisión"
-Cohesion: 0.20
-Nodes (9): Cambios en el HTML, Componentes, Contrato de la cola (JSON UTF-8), Diseño técnico: documentar desde el HTML con supervisión, Errores y recuperación, Escritura en el editor, Flujo, Resultado por Lead (+1 more)
+Cohesion: 0.25
+Nodes (7): Cambios en el HTML, Contrato de la cola (JSON UTF-8), Diseño técnico: documentar desde el HTML con supervisión, Errores y recuperación, Flujo, Resultado por Lead, Seguridad y control humano
 
 ### Community 143 - "integrar-expertos-ecc/tasks.md"
 Cohesion: 0.22
@@ -855,16 +872,16 @@ Cohesion: 0.19
 Nodes (4): reason_contract(), ClosureReasonContractTests, SubqualificationContractTests, read_field()
 
 ### Community 151 - "Memoria del proyecto"
-Cohesion: 0.12
-Nodes (15): Bloqueo de alta + pop-up de advertencia (2026-10-24), Decisiones arquitectónicas, Diagnóstico, Diagramas archify (2026-10-20), Envío WhatsApp automático (envio-whatsapp-automatico, 2026-10-15), Estabilidad del servidor: diagnóstico y decisión (2026-10-10), Failure patterns, Memoria del proyecto (+7 more)
+Cohesion: 0.10
+Nodes (18): _lead_documented(), Bloqueo de alta + pop-up de advertencia (2026-10-24), Decisiones arquitectónicas, Diagnóstico, Diagramas archify (2026-10-20), Envío WhatsApp automático (envio-whatsapp-automatico, 2026-10-15), Estabilidad del servidor: diagnóstico y decisión (2026-10-10), Failure patterns (+10 more)
 
 ### Community 152 - "[1.5.0] — 2026-11-04"
 Cohesion: 0.33
 Nodes (4): [1.5.0] — 2026-11-04, Agregado, Corregido, Corregido
 
 ### Community 153 - "FakeSwitchTo"
-Cohesion: 0.17
-Nodes (3): FakeFrame, FakeHorizontalTable, FakeSwitchTo
+Cohesion: 0.12
+Nodes (4): FakeFrame, FakeHorizontalTable, FakeSwitchTo, FakeVerticalJitterDriver
 
 ### Community 156 - "Diseño técnico: UI local de Leads sin gestión"
 Cohesion: 0.25
@@ -895,16 +912,16 @@ Cohesion: 0.25
 Nodes (7): Arquitectura general, Branding, Decisiones, Diseño técnico, Módulo PREPARAR: pipeline de datos, Template Wolkvox (fuente de verdad), Testing
 
 ### Community 163 - "laboratory_metrics.py"
-Cohesion: 0.14
-Nodes (7): _duration_stats(), percentile_nearest_rank(), summarize_laboratory_results(), write_metrics(), round_elapsed_seconds(), MetricsTests, PairedMetricsTests
+Cohesion: 0.09
+Nodes (11): _duration_stats(), percentile_nearest_rank(), summarize_laboratory_results(), write_metrics(), metrics_path_for(), round_elapsed_seconds(), summarize_results(), write_metrics() (+3 more)
 
 ### Community 164 - "Plan de ejecución: confirmación segura y pruebas adversariales del laboratorio"
 Cohesion: 0.20
 Nodes (9): Comandos y puertas de aceptación, Correcciones a conclusiones anteriores, Entrega esperada del otro agente, Instrucción para el agente ejecutor, Matriz adversarial obligatoria para la implementación, Orden de ejecución, Plan de ejecución: confirmación segura y pruebas adversariales del laboratorio, Qué se verificó antes de entregar este plan (+1 more)
 
-### Community 165 - "save_contact_panel_if_present"
-Cohesion: 0.12
-Nodes (10): save_contact_panel_if_present(), _save_contact_panel_initial(), _save_contact_panel_late(), _save_panel_in_other_handles(), Panel "Contact Client" no detectado (2026-10-14, reforzado 2026-10-15), Flujo del runner por lead, Cierre, Implementación (+2 more)
+### Community 165 - "finalize_pick_up"
+Cohesion: 0.13
+Nodes (6): finalize_pick_up(), scripts(), Cierre, Implementación, Tasks: distribuir-leads-desde-archivo, Tests
 
 ### Community 166 - "agregar-favicons-paginas-locales/design.md"
 Cohesion: 0.29
@@ -966,9 +983,9 @@ Nodes (6): Casos negativos obligatorios, Configuración resuelta en Fase 3, Crit
 Cohesion: 0.29
 Nodes (6): Capabilities, Impact, Modified Capabilities, New Capabilities, What Changes, Why
 
-### Community 181 - "Handoff — automation_salesforce"
-Cohesion: 0.20
-Nodes (9): 1. Cambios OpenSpec, 2. Flujo del cambio en curso, 4. Archivos del módulo, 5. Configuración vigente (`config.json`, local e ignorado), 6. Restricciones que se mantienen, 7. Qué falta, 8. Comandos, Handoff — automation_salesforce (+1 more)
+### Community 181 - "_encargada_para_lead"
+Cohesion: 0.13
+Nodes (9): _bandeja_code(), _encargada_para_lead(), 1. Clasificador de apertura (REQ-830), 2. Cobertura del monitor sin fallback (REQ-817 modificado), 3. Almacén de apertura (REQ-834), 4. Endpoints de apertura (REQ-831/832/833), 5. UI de apertura en la vista Monitor (REQ-831/832/833), 6. Fuente apertura en Distribuir leads (+1 more)
 
 ### Community 182 - "Diseño: documentar-automatico-guardado"
 Cohesion: 0.29
@@ -1018,13 +1035,13 @@ Nodes (6): Cola y límites de garantía, Contratos de país y campos, Diseño: s
 Cohesion: 0.29
 Nodes (6): Alcance, Contexto, Fuera de alcance, Objetivo, Propuesta: seleccionar-campos-por-pais, Riesgos
 
-### Community 195 - "column_offset"
-Cohesion: 0.24
-Nodes (4): column_offset(), is_unassigned_owner(), D5: `column_offset` recibe el owner de la bandeja, 4. Owner de cola por bandeja (REQ-820)
+### Community 195 - "report_reader.py"
+Cohesion: 0.09
+Nodes (31): aligned_values(), capture_visible_row_fragments(), clean_header_text(), column_offset(), element_routes_to_other_object(), extract_created_at(), extract_lead_id(), extract_row_details() (+23 more)
 
 ### Community 196 - "generator.py"
-Cohesion: 0.27
-Nodes (8): _artifact_node(), build_candidate(), _contract_card(), _contract_sources(), generate_candidate(), _heading_line(), _macrofunction_node(), _source_reference()
+Cohesion: 0.22
+Nodes (9): _artifact_node(), build_candidate(), _contract_card(), _contract_sources(), generate_candidate(), _heading_line(), _macrofunction_node(), _source_reference() (+1 more)
 
 ### Community 197 - "Resultados de prueba"
 Cohesion: 0.29
@@ -1102,139 +1119,175 @@ Nodes (4): Non-goals, Problema, Propuesta, Reparto equitativo de leads en Distri
 Cohesion: 0.39
 Nodes (3): read_report(), scan_mode(), LeadsUiRunnerTests
 
-### Community 219 - "read_full_report"
-Cohesion: 0.08
-Nodes (15): find_report_table(), table_with_owner_header(), FragmentMergeResult, _materialize_fragment_group(), merge_row_fragments(), _raise_if_report_empty(), read_full_report(), read_report_horizontal() (+7 more)
+### Community 219 - "ReportReaderTests"
+Cohesion: 0.09
+Nodes (9): read_visible_unassigned_leads(), FakeCell, FakeDriver, FakeFrameDriver, FakeLink, FakeRow, FakeTable, ReportReaderTests (+1 more)
 
 ### Community 220 - "CommentWriterTests"
-Cohesion: 0.22
-Nodes (3): compose_attempts(), format_attempt(), CommentWriterTests
+Cohesion: 0.15
+Nodes (5): compose_attempts(), format_attempt(), CommentWriterTests, Componentes, Composición del texto
 
-### Community 221 - "[1.2.0] — 2026-10-06"
-Cohesion: 0.50
-Nodes (4): [1.2.0] — 2026-10-06, Agregado, Compatibilidad, Seguridad
+### Community 221 - "Requirements"
+Cohesion: 0.12
+Nodes (16): monitor-bandeja-leads Specification, Purpose, Requirement: REQ-817: Cobertura de la toma evaluada a la hora de ingreso del lead, Requirement: REQ-818: Ventana de gracia post-cierre para rezagados, Requirement: REQ-819: Notificaciones Windows con bandeja identificada, Requirement: REQ-820: Propietario de cola correcto en reportes sin columna mapeada, Requirements, Scenario: Detalle de lead CO muestra CO_LEAD_QUALIF (+8 more)
 
 ### Community 222 - "agregar-favicons-paginas-locales/tasks.md"
 Cohesion: 0.50
 Nodes (3): 1. Fuente y pruebas, 2. Generación y publicación, 3. Harness y cierre
 
-### Community 223 - "compose_other_information"
-Cohesion: 0.25
-Nodes (4): compose_other_information(), validate_draft_body(), Composición del texto, Fase 3 — Composición del texto
+### Community 223 - "load_draft_body"
+Cohesion: 0.29
+Nodes (3): load_draft_body(), validate_draft_body(), Fase 2 — Carga y validación de la cola (Python)
 
 ### Community 270 - "UiMonitorViewTests"
-Cohesion: 0.18
-Nodes (5): UiMonitorViewTests, [1.4.3] — 2026-10-30, Agregado, Cambiado, Corregido
+Cohesion: 0.13
+Nodes (6): UiMonitorViewTests, PipSeleniumTests, [1.4.3] — 2026-10-30, Agregado, Cambiado, Corregido
 
 ### Community 271 - "build_zip.py"
-Cohesion: 0.19
-Nodes (10): debugger_is_listening(), load_config(), local_path(), main(), app_version(), build_zip(), main(), production_py_files() (+2 more)
+Cohesion: 0.36
+Nodes (6): app_version(), build_zip(), main(), production_py_files(), python_portable_files(), sync_dist()
 
 ### Community 272 - "Requirement: Reintento del panel tras recarga"
 Cohesion: 0.25
 Nodes (7): ADDED Requirements, Requirement: Marca re-verificada tras recarga, Requirement: Reintento del panel tras recarga, Scenario: edición inline abierta se perdió, Scenario: panel ausente tras recarga, Scenario: panel renderiza tras recarga, Scenario: recarga no disponible
 
-### Community 273 - "BrowserFactoryTests"
-Cohesion: 0.07
-Nodes (8): debugger_tab_urls(), open_missing_tabs(), open_tab_via_debugger(), open_url_in_browser(), _same_site(), wait_for_restored_tabs(), BrowserFactoryTests, FakeDriver
+### Community 274 - "select_picklist_option"
+Cohesion: 0.18
+Nodes (8): _execute_picklist_script(), _open_options_count(), _picklist_current_value(), _picklist_trigger(), select_picklist_option(), PicklistFrameTests, PicklistPollingTests, PicklistRetryTests
 
-### Community 275 - "test_report_reader.py"
-Cohesion: 0.09
-Nodes (28): aligned_values(), capture_visible_row_fragments(), clean_header_text(), _context_reports_empty(), element_routes_to_other_object(), extract_created_at(), extract_lead_id(), extract_row_details() (+20 more)
-
-### Community 276 - "verify_lead"
-Cohesion: 0.31
-Nodes (4): stage_timer(), mark(), verify_lead(), VerifyLeadTests
+### Community 275 - "find_report_table"
+Cohesion: 0.10
+Nodes (7): _context_reports_empty(), find_report_table(), table_with_owner_header(), _raise_if_report_empty(), ReportEmptyError, FakeEmptyReportDriver, Edge fantasma con --remote-debugging-port=0 (2026-10-21)
 
 ### Community 278 - "endurecer-confirmacion-whatsapp-laboratorio/proposal.md"
 Cohesion: 0.29
 Nodes (6): Capabilities, Impact, Modified Capabilities, New Capabilities, What Changes, Why
 
-### Community 279 - "._eval_labels"
-Cohesion: 0.29
-Nodes (3): _labels_literal(), _normalize_label(), ScriptContractTests
+### Community 279 - "ADDED Requirements"
+Cohesion: 0.12
+Nodes (15): ADDED Requirements, Delta: cobertura de la toma por hora de ingreso del lead, Requirement: REQ-817: Cobertura de la toma evaluada a la hora de ingreso del lead, Requirement: REQ-818: Ventana de gracia post-cierre para rezagados, Requirement: REQ-819: Notificaciones Windows con bandeja identificada, Requirement: REQ-820: Propietario de cola correcto en reportes sin columna mapeada, Scenario: Detalle de lead CO muestra CO_LEAD_QUALIF, Scenario: Error en México nombra la bandeja (+7 more)
 
-### Community 280 - "restart_browser"
-Cohesion: 0.08
-Nodes (12): current_url(), _drop_monitor_driver(), local_path(), _maybe_restart_browser(), _monitor_driver(), restart_browser(), Driver persistente del monitor, Contexto (+4 more)
+### Community 280 - "Tasks: endurecer-servidor-navegador"
+Cohesion: 0.25
+Nodes (7): probe(), 1. Token persistente e instancia única (ui_server.py), 2. Reload limpio, 3. Adopción de server ajeno (server_guardian.py), 4. Navegador anti-cuelgue (browser_factory.py), 6. Cierre, Tasks: endurecer-servidor-navegador
 
-### Community 282 - "execute_in_any_frame"
-Cohesion: 0.08
-Nodes (16): execute_in_any_frame(), _confirm_owner_dialog(), _dismiss_owner_dialog(), open_change_owner_dialog(), _owner_lookup_snapshot(), _pick_owner_option(), pick_queue_in_owner_dialog(), _reassign_attempt() (+8 more)
+### Community 281 - "FakeEditor"
+Cohesion: 0.20
+Nodes (4): replace_editor_value(), FakeDriver, FakeEditor, Escritura en el editor
+
+### Community 282 - "lead_monitor.py"
+Cohesion: 0.06
+Nodes (44): execute_in_any_frame(), main(), normalized_key(), _compact(), _confirm_owner_dialog(), _dismiss_owner_dialog(), open_change_owner_dialog(), open_record() (+36 more)
 
 ### Community 283 - "[1.1.0] — 2026-10-03"
 Cohesion: 0.50
 Nodes (4): [1.1.0] — 2026-10-03, Agregado, Corregido, Seguridad
 
-### Community 287 - "load_contracts"
-Cohesion: 0.12
-Nodes (3): BusinessContractGeneratorTests, load_contracts(), sha256()
-
-### Community 288 - "content_hash"
-Cohesion: 0.38
-Nodes (3): content_hash(), CorrectionDecisionTests, Fase 3 — Correcciones verificadas desde la UI
-
-### Community 289 - "test_lead_monitor.py"
-Cohesion: 0.29
-Nodes (6): 1. Línea base y pruebas RED, 2. Captura e identidad de fragmentos, 3. Barrido horizontal del Monitor, 4. Observabilidad y ventana dedicada, 5. Harness y validación determinística, 6. Piloto y liberación 1.5.1
+### Community 284 - "validate_equipo"
+Cohesion: 0.24
+Nodes (3): _check_bandeja_overlaps(), validate_equipo(), ValidateEquipoTests
 
 ### Community 290 - "Decisiones"
 Cohesion: 0.22
 Nodes (8): Decisiones, Design: reasignacion-por-turno, Encargada activa por franja, ¿Es el propio usuario?, Mecánica del modal (verificada en vivo), Outcomes, Riesgos, Toma y reasignación sin comentarios
 
-### Community 291 - "Requirement: Simulación sin escritura en Salesforce"
-Cohesion: 0.29
-Nodes (7): Requirement: Simulación sin escritura en Salesforce, Scenario: Cola excluida, Scenario: Destino ya es propietario, Scenario: Lead en cola de ingreso, Scenario: Lead ilegible o error, Scenario: Nombre destino inexistente, Scenario: Propietario de otra persona
+### Community 291 - "launch_persistent_browser"
+Cohesion: 0.24
+Nodes (5): launch_persistent_browser(), load_config(), local_path(), main(), Estabilidad del navegador dedicado (2026-10-16)
 
-### Community 292 - "Diseño: corregir-documentacion-por-intento"
-Cohesion: 0.22
-Nodes (8): Concurrencia, Diseño: corregir-documentacion-por-intento, Esquema de resultados (v2), Esquema de snapshots (v2), Flujo de la UI, Flujo del runner, Migración local sin borrar, Modelo de identidad
-
-### Community 293 - "Requirement: Simulación sin escritura en Salesforce"
-Cohesion: 0.29
-Nodes (7): Requirement: Simulación sin escritura en Salesforce, Scenario: Cola excluida, Scenario: Destino ya es propietario, Scenario: Lead en cola de ingreso, Scenario: Lead ilegible o error, Scenario: Nombre destino inexistente, Scenario: Propietario de otra persona
-
-### Community 294 - "debugger_tab_targets"
-Cohesion: 0.33
-Nodes (3): close_stuck_debugger_targets(), debugger_tab_targets(), _adopt_restored_monitor_window()
+### Community 292 - "open_missing_tabs"
+Cohesion: 0.18
+Nodes (3): open_missing_tabs(), open_tab_via_debugger(), _same_site()
 
 ### Community 296 - "[1.0.0] — 2026-10-01"
 Cohesion: 0.50
 Nodes (4): [1.0.0] — 2026-10-01, Agregado, Compatibilidad, Corregido
 
-### Community 297 - "[1.4.2] — 2026-10-27"
-Cohesion: 0.67
-Nodes (3): [1.4.2] — 2026-10-27, Cambiado, Corregido
+### Community 297 - "Requirement: REQ-817: Cobertura de la toma evaluada a la hora de ingreso del lead"
+Cohesion: 0.22
+Nodes (8): Delta: cobertura del monitor vs apertura no laboral, MODIFIED Requirements, Requirement: REQ-817: Cobertura de la toma evaluada a la hora de ingreso del lead, Scenario: Lead de ayer en-franja se toma con su franja, Scenario: Lead ingresado antes de la franja no se toma, Scenario: Lead ingresado en franja se toma aunque el ciclo llegue tarde, Scenario: Lead nocturno no se toma aunque el ciclo corra en franja, Scenario: Lead sin fecha de creación usable va a revisión
 
-### Community 298 - "Requirement: Modo prueba de la cola de distribución"
+### Community 299 - "Tasks: tomar-leads-automatico — "Monitor de Bandeja""
+Cohesion: 0.25
+Nodes (7): 1. Contratos y estado (puro, sin Salesforce), 2. Ciclo de monitoreo (driver falso en tests), 3. Servidor, 4. UI: vista "Monitor de Bandeja", 5. Guardián del servidor, 6. Verificación y cierre, Tasks: tomar-leads-automatico — "Monitor de Bandeja"
+
+### Community 300 - "run_cycle"
+Cohesion: 0.27
+Nodes (4): run_cycle(), RunCycleTests, fake_cycle(), Panel "Contact Client" no detectado (2026-10-14, reforzado 2026-10-15)
+
+### Community 301 - "recoger-qualif-no-habiles-por-bandeja/proposal.md"
+Cohesion: 0.29
+Nodes (6): Capabilities, Impact, Modified Capabilities, New Capabilities, What Changes, Why
+
+### Community 302 - "Requirement: Candidatos de apertura en la vista de distribución"
+Cohesion: 0.29
+Nodes (6): ADDED Requirements, Delta: fuente de apertura mezclada por Lead ID, Requirement: Candidatos de apertura en la vista de distribución, Scenario: Agregar no ejecuta, Scenario: Duplicado archivo + apertura, Scenario: Mismo nombre, IDs distintos
+
+### Community 303 - "Propuesta: tomar-leads-selectivo"
+Cohesion: 0.29
+Nodes (6): Contexto, Decisiones aprobadas (del análisis con el usuario), Fuera de alcance (documentado como features futuras), Impacto, Objetivo, Propuesta: tomar-leads-selectivo
+
+### Community 304 - "Tasks: tomar-leads-selectivo"
+Cohesion: 0.29
+Nodes (6): 1. Lectura bajo demanda de la bandeja (scan), 2. Toma selectiva (take), 3. UI: lista completa + selección, 4. Limpieza de la lista del monitor, 5. Verificación, Tasks: tomar-leads-selectivo
+
+### Community 308 - "run_queue"
+Cohesion: 0.31
+Nodes (6): read_results(), record_result(), result_entry(), run_queue(), browser_for(), emit()
+
+### Community 312 - "_wants_whatsapp_send"
+Cohesion: 0.29
+Nodes (5): _wants_whatsapp_send(), Cierre, Implementación, Tasks: envio-whatsapp-automatico, Tests
+
+### Community 314 - "Impact"
+Cohesion: 0.29
+Nodes (6): Capabilities, Impact, Modified Capabilities, New Capabilities, What Changes, Why
+
+### Community 316 - "Propuesta: distribuir-leads-desde-archivo"
+Cohesion: 0.33
+Nodes (5): Capabilities, Modified Capabilities, New Capabilities, Propuesta: distribuir-leads-desde-archivo, Why
+
+### Community 317 - "Decisiones"
+Cohesion: 0.33
+Nodes (5): Arquitectura, Decisiones, Diseño: endurecer-servidor-navegador, exit:0 = reinicio intencional, Lockfile en vez de SO_EXCLUSIVEADDRUSE
+
+### Community 320 - "Reintentar el panel "Contact Client" con recarga de la ficha"
+Cohesion: 0.40
+Nodes (4): Impact, Reintentar el panel "Contact Client" con recarga de la ficha, What Changes, Why
+
+### Community 321 - "Implementación"
+Cohesion: 0.40
+Nodes (4): Cierre, Implementación, Tasks: reasignacion-por-turno, Tests
+
+### Community 324 - "[1.2.0] — 2026-10-06"
 Cohesion: 0.50
-Nodes (4): Requirement: Modo prueba de la cola de distribución, Scenario: Cola en modo prueba, Scenario: Cola sin modo, Scenario: Modo desconocido
+Nodes (4): [1.2.0] — 2026-10-06, Agregado, Compatibilidad, Seguridad
 
-### Community 299 - "[1.0.4] — 2026-10-02"
-Cohesion: 0.67
-Nodes (3): [1.0.4] — 2026-10-02, Corregido, Detalle técnico
-
-### Community 300 - "[1.4.0] — 2026-10-21"
+### Community 329 - "[1.4.0] — 2026-10-21"
 Cohesion: 0.67
 Nodes (3): [1.4.0] — 2026-10-21, Agregado, Corregido
 
+### Community 330 - "[1.4.2] — 2026-10-27"
+Cohesion: 0.67
+Nodes (3): [1.4.2] — 2026-10-27, Cambiado, Corregido
+
 ## Knowledge Gaps
-- **83 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **109 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `VisibleLead` connect `VisibleLead` to `test_lead_monitor.py`, `Decisions`, `FakeRow`, `Diseño: tomar-leads-automatico — "Monitor de Bandeja"`, `run_bandeja_cycle`, `test_report_reader.py`, `take_lead`, `read_full_report`, `read_visible_unassigned_leads`, `json`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+- **Why does `AperturaApiTests` connect `AperturaApiTests` to `make_handler`, `VisibleLead`, `test_ui_server.py`?**
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **Are the 10 inferred relationships involving `run_bandeja_cycle()` (e.g. with `Franja propia también por bandeja (2026-10-23, segunda parte)` and `Franjas de equipo por bandeja (2026-10-23)`) actually correct?**
   _`run_bandeja_cycle()` has 10 INFERRED edges - model-reasoned connections that need verification._
-- **Should `finalize_pick_up` be split into smaller, more focused modules?**
-  _Cohesion score 0.03776379118844872 - nodes in this community are weakly interconnected._
-- **Why does `close_one_lead()` connect `run_close_queue.py` to `ui_server.py`, `content_hash`, `run_distribucion_queue.py`, `run_distribucion_queue.py`, `CloseOneLeadTests`, `run_document_queue.py`, `comment_reader.py`, `reason_contract`, `json`?**
+- **Should `FinalizePickUpTests` be split into smaller, more focused modules?**
+  _Cohesion score 0.07563025210084033 - nodes in this community are weakly interconnected._
+- **Why does `VisibleLead` connect `VisibleLead` to `report_reader.py`, `Decisions`, `Diseño: tomar-leads-automatico — "Monitor de Bandeja"`, `run_bandeja_cycle`, `AperturaApiTests`, `ReportReaderTests`, `FakeRow`, `test_ui_server.py`?**
   _High betweenness centrality (0.021) - this node is a cross-community bridge._
-- **Should `run_distribucion_queue.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.11515151515151516 - nodes in this community are weakly interconnected._
-- **Why does `finalize_pick_up()` connect `finalize_pick_up` to `_ensure_take_mark`, `within_schedule`, `save_contact_panel_if_present`, `run_distribucion_queue.py`, `reassign_owner`, `take_lead`, `Memoria del proyecto`, `Decisiones`, `execute_in_any_frame`, `WhatsappSendTests`, `Propuesta: reasignacion-por-turno`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+- **Should `run_document_queue.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.07732497387669801 - nodes in this community are weakly interconnected._
+- **Why does `run_bandeja_cycle()` connect `run_bandeja_cycle` to `run_document_queue.py`, `_monitor_cycle`, `take_lead`, `Memoria del proyecto`, `_equipo_para_lead`, `lead_monitor.py`, `FakeRow`, `Context`, `test_monitor_store.py`, `run_cycle`, `ui_server.py`, `_wants_whatsapp_send`, `Impact`, `Propuesta: reasignacion-por-turno`, `Implementación`, `validate_schedule`, `.test_lead_post_cierre_no_se_toma_en_gracia`, `classify_lead`, `.test_bandeja_scan_includes_horizontal_scan_metadata`, `.test_nocturno_de_ayer_no_lo_toma_el_ciclo`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **Should `run_close_queue.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.08345428156748912 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.055905220288781934 - nodes in this community are weakly interconnected._

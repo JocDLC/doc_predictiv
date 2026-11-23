@@ -36,15 +36,15 @@
     "semantic_hash": ""
   },
   "automation_salesforce/comment_reader.py": {
-    "mtime": 1795008495.8920796,
-    "seen": 1795024808.4054635,
-    "ast_hash": "4a22c3e3e5977167399527c3acf75bbe",
+    "mtime": 1795457282.0038133,
+    "seen": 1795457884.6082177,
+    "ast_hash": "b301d8fd16f4aa2becd0747b2bc356f7",
     "semantic_hash": ""
   },
   "automation_salesforce/comment_writer.py": {
-    "mtime": 1794345681.3215857,
-    "seen": 1794346111.635858,
-    "ast_hash": "dc5ca04f6917b76c46fd9d46d0624247",
+    "mtime": 1795456976.6906977,
+    "seen": 1795457884.6082263,
+    "ast_hash": "e2ee79bcf2a22eb9a18bb8770bc1fdfa",
     "semantic_hash": ""
   },
   "automation_salesforce/config.example.json": {
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/distribucion_loader.py": {
-    "mtime": 1793808237.258892,
-    "seen": 1794346111.6358705,
-    "ast_hash": "7b3512cccdf4dcfd3e41aa06b5262a92",
+    "mtime": 1795415121.758127,
+    "seen": 1795415474.694296,
+    "ast_hash": "9a7fa32aa1502e8e08aa465963239d19",
     "semantic_hash": ""
   },
   "automation_salesforce/harness.py": {
@@ -84,15 +84,15 @@
     "semantic_hash": ""
   },
   "automation_salesforce/lead_closure.py": {
-    "mtime": 1794345681.3296633,
-    "seen": 1794346111.6358747,
-    "ast_hash": "5ae059ebc8a364bf6636c8c7e0ddb817",
+    "mtime": 1795456976.6906977,
+    "seen": 1795457884.6184807,
+    "ast_hash": "6e4ec0b06c0b7dfd0a72c04d85b6d9df",
     "semantic_hash": ""
   },
   "automation_salesforce/lead_monitor.py": {
-    "mtime": 1795024211.3015404,
-    "seen": 1795024808.413147,
-    "ast_hash": "c86458c837c14c41bf78da819724c3e0",
+    "mtime": 1795457297.235762,
+    "seen": 1795457884.6184895,
+    "ast_hash": "1b91551349af035e7fbfeb0db78f945c",
     "semantic_hash": ""
   },
   "automation_salesforce/leads_ui.py": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/report_reader.py": {
-    "mtime": 1795024414.9423475,
-    "seen": 1795024808.4192407,
-    "ast_hash": "0bed614f10029bf8df0f719781c8efd4",
+    "mtime": 1795433782.64923,
+    "seen": 1795457884.627901,
+    "ast_hash": "dc3ff4a0df92cc65feb146c9082bc301",
     "semantic_hash": ""
   },
   "automation_salesforce/run_close_queue.py": {
@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/run_distribucion_queue.py": {
-    "mtime": 1794938446.9913287,
-    "seen": 1794938497.8105865,
-    "ast_hash": "19e6d474a64b8dbf123eb9084f4edcae",
+    "mtime": 1795415142.5221524,
+    "seen": 1795415474.6979342,
+    "ast_hash": "6d93e2a7c5bb3413a8c177c90a8a9f07",
     "semantic_hash": ""
   },
   "automation_salesforce/run_document_queue.py": {
@@ -240,15 +240,15 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_comment_reader.py": {
-    "mtime": 1790811789.7865841,
-    "seen": 1794346111.6359267,
-    "ast_hash": "b527f7d9e0cc691c21032da3956ae11f",
+    "mtime": 1795457377.7563267,
+    "seen": 1795457884.6519578,
+    "ast_hash": "48f1d92a20f529acb1d2afd4d5c3701a",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_comment_writer.py": {
-    "mtime": 1789746293.9792063,
-    "seen": 1794346111.6359286,
-    "ast_hash": "312b77479e791525ac068d8ec0c95e64",
+    "mtime": 1795456976.6896787,
+    "seen": 1795457884.651966,
+    "ast_hash": "946376357a7498f8b7d38abc79faf93d",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_corrections.py": {
@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_distribucion_loader.py": {
-    "mtime": 1793808211.7334752,
-    "seen": 1794346111.635936,
-    "ast_hash": "d493a73e8f723dbe15fd99b75b198c91",
+    "mtime": 1795415438.8991418,
+    "seen": 1795415474.7004447,
+    "ast_hash": "3ca41c899ead62d3fb1d4c80f30f5dbc",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_harness_smoke.py": {
@@ -282,15 +282,15 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_lead_closure.py": {
-    "mtime": 1794345681.3215857,
-    "seen": 1794346111.6359413,
-    "ast_hash": "40523dc5e647323ba8aefd089a738a90",
+    "mtime": 1795456932.5959442,
+    "seen": 1795457884.664729,
+    "ast_hash": "a5f3ef3cb8928b51109f0de51dcf57ea",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_lead_monitor.py": {
-    "mtime": 1795024171.817801,
-    "seen": 1795024808.439321,
-    "ast_hash": "3833e91bbbefadc809a340f8a76e861f",
+    "mtime": 1795415438.8991418,
+    "seen": 1795415474.7018638,
+    "ast_hash": "4fc12aa9642871713759737a2921ab4f",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_leads_ui.py": {
@@ -336,9 +336,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_report_reader.py": {
-    "mtime": 1795024402.9869833,
-    "seen": 1795024808.44594,
-    "ast_hash": "c84a54ec94d56364ea1e3f7cc74c3625",
+    "mtime": 1795431654.8550866,
+    "seen": 1795457884.6774359,
+    "ast_hash": "e651b653a15f70fd363cc15710c4e522",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_run_close_queue.py": {
@@ -366,9 +366,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_run_distribucion_queue.py": {
-    "mtime": 1794938290.0766716,
-    "seen": 1794938430.711941,
-    "ast_hash": "642c399e43ffdd567b0f1578838e018d",
+    "mtime": 1795415185.7189343,
+    "seen": 1795415474.7037888,
+    "ast_hash": "9d4cccf624422811f3e52639330f9854",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_run_document_queue.py": {
@@ -432,9 +432,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_ui_server.py": {
-    "mtime": 1795024292.8461754,
-    "seen": 1795024808.459118,
-    "ast_hash": "2953332399b9487b6bc5c5f0b773a54d",
+    "mtime": 1795417366.964648,
+    "seen": 1795457884.6991959,
+    "ast_hash": "777ea6a931c3f288d12d354c249291f0",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_verificar_pc.py": {
@@ -444,9 +444,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/ui_server.py": {
-    "mtime": 1795024329.7869468,
-    "seen": 1795024808.459852,
-    "ast_hash": "37db9c782c9320afb511b378f927dbf9",
+    "mtime": 1795417332.0436263,
+    "seen": 1795457884.7003891,
+    "ast_hash": "7fc5276b8234bc0e0953fdda269e8733",
     "semantic_hash": ""
   },
   "automation_salesforce/verificar_pc.py": {
@@ -924,15 +924,15 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1795024768.077799,
-    "seen": 1795024808.5270407,
-    "ast_hash": "3329ea0e2fbe64fb13a72fef2766486c",
+    "mtime": 1795457647.2437565,
+    "seen": 1795457884.7915597,
+    "ast_hash": "195ea557b784c7fcace38d2df5ec63fa",
     "semantic_hash": ""
   },
   "MEMORY.md": {
-    "mtime": 1794943977.466318,
-    "seen": 1794944014.1831708,
-    "ast_hash": "6c9aca02d5dbab3636c16319e86d7f4d",
+    "mtime": 1795456412.294711,
+    "seen": 1795457884.7915683,
+    "ast_hash": "5c6afa794c9aad68010207de7f09c971",
     "semantic_hash": ""
   },
   "RESULTADOS_DE_PRUEBA.md": {
@@ -984,9 +984,9 @@
     "semantic_hash": ""
   },
   "documentador_predictivo.html": {
-    "mtime": 1794949708.2850728,
-    "seen": 1794953330.3716614,
-    "ast_hash": "395e2655622842e68824bae3fae98dea",
+    "mtime": 1795415167.8363874,
+    "seen": 1795415474.7280452,
+    "ast_hash": "9454f83b63bc4967f99d2ddcf089060f",
     "semantic_hash": ""
   },
   "openspec/changes/agregar-favicons-paginas-locales/design.md": {
@@ -1818,15 +1818,15 @@
     "semantic_hash": ""
   },
   "automation_salesforce/agent_browser.py": {
-    "mtime": 1795019831.612953,
-    "seen": 1795024808.4025326,
-    "ast_hash": "9db19d71122ebe4293c1e47e16611c23",
+    "mtime": 1795027104.0564716,
+    "seen": 1795415474.6915724,
+    "ast_hash": "b3c241a21c96196f3018dd49aecbe009",
     "semantic_hash": ""
   },
   "automation_salesforce/laboratory_browser.py": {
-    "mtime": 1795019814.4935167,
-    "seen": 1795024808.4123795,
-    "ast_hash": "8c2400c6e3f51de9ed3d952bdcf00ed4",
+    "mtime": 1795027088.7908342,
+    "seen": 1795415474.6944907,
+    "ast_hash": "94876cc58f849cf715d2b66110e38052",
     "semantic_hash": ""
   },
   "automation_salesforce/laboratory_contracts.py": {
@@ -1848,9 +1848,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/run_laboratory_queue.py": {
-    "mtime": 1795023210.848371,
-    "seen": 1795024808.4247081,
-    "ast_hash": "5d742df227132eecccb62b8d5a6788ac",
+    "mtime": 1795027070.477953,
+    "seen": 1795415474.6981063,
+    "ast_hash": "af914332e66b94f3afb198bdfdd64f0a",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_agent_browser.py": {
@@ -1878,9 +1878,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_run_laboratory_queue.py": {
-    "mtime": 1795019882.3507993,
-    "seen": 1795024808.4511974,
-    "ast_hash": "8f4ec80046f556da3012caa1e02926e0",
+    "mtime": 1795027104.6693442,
+    "seen": 1795415474.7039616,
+    "ast_hash": "24960c71e4c3afab12a433b07d544886",
     "semantic_hash": ""
   },
   "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/.openspec.yaml": {
@@ -1943,12 +1943,6 @@
     "ast_hash": "30b5331f580e435dbc46bf4bbae6cea6",
     "semantic_hash": ""
   },
-  "openspec/changes/cobertura-por-ingreso-de-lead/.openspec.yaml": {
-    "mtime": 1795023832.9449418,
-    "seen": 1795024808.4706595,
-    "ast_hash": "e381aee74037cbb6e7cff9bd8b737b62",
-    "semantic_hash": ""
-  },
   "openspec/changes/endurecer-confirmacion-whatsapp-laboratorio/lab_debug_eval.py": {
     "mtime": 1794965293.9105046,
     "seen": 1795024808.4769044,
@@ -1961,28 +1955,112 @@
     "ast_hash": "acce308d28c1ceb9c8f6986fcd602b75",
     "semantic_hash": ""
   },
-  "openspec/changes/cobertura-por-ingreso-de-lead/design.md": {
+  "automation_salesforce/apertura.py": {
+    "mtime": 1795439266.925878,
+    "seen": 1795457884.6040275,
+    "ast_hash": "ac3a407d6f7ef352f7365c44726f4766",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/apertura_store.py": {
+    "mtime": 1795415438.8991418,
+    "seen": 1795415474.6915846,
+    "ast_hash": "02025d7f9fcfd9c231433531de204968",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_apertura.py": {
+    "mtime": 1795439204.5394537,
+    "seen": 1795457884.6449168,
+    "ast_hash": "bac747d710ceefdbb8c5187e6c2adbf1",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/tests/test_apertura_store.py": {
+    "mtime": 1795414622.271992,
+    "seen": 1795415474.699317,
+    "ast_hash": "552da23f605d709a1be32c9d6148bbb9",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-11-18-cobertura-por-ingreso-de-lead/.openspec.yaml": {
+    "mtime": 1795023832.9449418,
+    "seen": 1795415474.7085977,
+    "ast_hash": "e381aee74037cbb6e7cff9bd8b737b62",
+    "semantic_hash": ""
+  },
+  "openspec/changes/recoger-qualif-no-habiles-por-bandeja/.openspec.yaml": {
+    "mtime": 1795413907.1808183,
+    "seen": 1795415474.7113738,
+    "ast_hash": "2ddefb3a8594c73008058b815027fb23",
+    "semantic_hash": ""
+  },
+  "openspec/changes/archive/2026-11-18-cobertura-por-ingreso-de-lead/design.md": {
     "mtime": 1795023958.18963,
-    "seen": 1795024808.567529,
+    "seen": 1795415474.7327516,
     "ast_hash": "cec6982160d0e1fd5218d2597bf92a1b",
     "semantic_hash": ""
   },
-  "openspec/changes/cobertura-por-ingreso-de-lead/proposal.md": {
+  "openspec/changes/archive/2026-11-18-cobertura-por-ingreso-de-lead/proposal.md": {
     "mtime": 1795023889.6098666,
-    "seen": 1795024808.5675347,
+    "seen": 1795415474.7327547,
     "ast_hash": "a5201fce1c501b247d2e2019749a7326",
     "semantic_hash": ""
   },
-  "openspec/changes/cobertura-por-ingreso-de-lead/specs/monitor-bandeja-leads/spec.md": {
+  "openspec/changes/archive/2026-11-18-cobertura-por-ingreso-de-lead/specs/monitor-bandeja-leads/spec.md": {
     "mtime": 1795023923.5156472,
-    "seen": 1795024808.5675392,
+    "seen": 1795415474.7327564,
     "ast_hash": "ef9e8dd2249ef9eed465872d95cdfb83",
     "semantic_hash": ""
   },
-  "openspec/changes/cobertura-por-ingreso-de-lead/tasks.md": {
-    "mtime": 1795024429.4262688,
-    "seen": 1795024808.567543,
-    "ast_hash": "c34a12d3bceabd0230918c07f0e5c0e7",
+  "openspec/changes/archive/2026-11-18-cobertura-por-ingreso-de-lead/tasks.md": {
+    "mtime": 1795024812.9031024,
+    "seen": 1795415474.7327588,
+    "ast_hash": "7b64fdcb27c68c7c572b5bb6a1746fd2",
+    "semantic_hash": ""
+  },
+  "openspec/changes/recoger-qualif-no-habiles-por-bandeja/design.md": {
+    "mtime": 1795414014.3602195,
+    "seen": 1795415474.7531853,
+    "ast_hash": "8b73cbf2d8211bc27d75d75bf2adfe73",
+    "semantic_hash": ""
+  },
+  "openspec/changes/recoger-qualif-no-habiles-por-bandeja/proposal.md": {
+    "mtime": 1795413930.7599618,
+    "seen": 1795415474.7531884,
+    "ast_hash": "433aca4c8be59eb06873fd7facd15d60",
+    "semantic_hash": ""
+  },
+  "openspec/changes/recoger-qualif-no-habiles-por-bandeja/specs/apertura-qualif-no-habiles/spec.md": {
+    "mtime": 1795413989.4108372,
+    "seen": 1795415474.7531908,
+    "ast_hash": "9d35fab4dd668e69c1e4d41d25ad6d40",
+    "semantic_hash": ""
+  },
+  "openspec/changes/recoger-qualif-no-habiles-por-bandeja/specs/distribucion-leads-archivo/spec.md": {
+    "mtime": 1795413989.697037,
+    "seen": 1795415474.7531927,
+    "ast_hash": "0019cf4637dce507f7b3f1fb93dc0d19",
+    "semantic_hash": ""
+  },
+  "openspec/changes/recoger-qualif-no-habiles-por-bandeja/specs/monitor-bandeja-leads/spec.md": {
+    "mtime": 1795413989.568329,
+    "seen": 1795415474.7531948,
+    "ast_hash": "772fff94f1f0d8a561aee8118fa44068",
+    "semantic_hash": ""
+  },
+  "openspec/changes/recoger-qualif-no-habiles-por-bandeja/tasks.md": {
+    "mtime": 1795415592.2862654,
+    "seen": 1795457884.9928005,
+    "ast_hash": "4166f4af1a1bfb7448d24031b107569f",
+    "semantic_hash": ""
+  },
+  "openspec/specs/monitor-bandeja-leads/spec.md": {
+    "mtime": 1795027028.3406634,
+    "seen": 1795415474.7566407,
+    "ast_hash": "0441cdd9161a4aa62ff6cbd649a13dda",
+    "semantic_hash": ""
+  },
+  "automation_salesforce/debug_insitu_mark.py": {
+    "mtime": 1795457055.8811865,
+    "seen": 1795457884.6115093,
+    "ast_hash": "4063932850f1c6c9f8ffbbfa13c6a178",
     "semantic_hash": ""
   }
 }

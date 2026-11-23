@@ -4,12 +4,16 @@ import unittest
 from pathlib import Path
 
 import comment_writer
+from selenium.common.exceptions import StaleElementReferenceException
+
 from comment_writer import (
     compose_attempts,
     compose_other_information,
     format_attempt,
     load_draft_body,
+    prepare_other_information,
     replace_editor_value,
+    save_edit_form,
     scroll_toward_other_information,
     validate_draft_body,
     verify_editor_value,
@@ -168,11 +172,108 @@ class CommentWriterTests(unittest.TestCase):
     def test_writer_clicks_only_the_field_edit_control(self):
         source = inspect.getsource(comment_writer)
 
-        self.assertEqual(source.count(".click()"), 1)
-        self.assertIn("arguments[0].click()", source)
+        self.assertIn(".click()", source)
         self.assertIn("scrollIntoView", source)
         self.assertIn("inline-edit", source)
         self.assertIn("getBoundingClientRect", source)
+        self.assertNotIn("SaveEdit", source)
+        self.assertNotIn("save_record", source)
+        self.assertNotIn("updateRecord", source)
+
+
+class StaleMarshalDriver:
+    """Edge 158: todo WebElement devuelto por JS muere entre llamadas.
+
+    Las evaluaciones atómicas (labels/texto, sin elementos) funcionan y el
+    driver solo expone iframes para probar la tolerancia del documento
+    principal frente a un marshal que sale stale.
+    """
+
+    def __init__(self):
+        self.switch_to = self
+        self.editor_value = ""
+        self.saved = False
+        self.scripts = []
+        self._in_frame = False
+
+    def default_content(self):
+        self._in_frame = False
+
+    def frame(self, _frame):
+        self._in_frame = True
+
+    def find_elements(self, *_args, **_kwargs):
+        return []
+
+    def execute_script(self, script, *args):
+        self.scripts.append((script, args))
+        for arg in args:
+            if isinstance(arg, FakeEditor):
+                raise StaleElementReferenceException("stale al usar el handle")
+        if script is comment_writer.CLICK_EDIT_CONTROL_ATOMIC_SCRIPT:
+            return "clicked"
+        if script is comment_writer.CLICK_SAVE_BUTTON_ATOMIC_SCRIPT:
+            self.saved = True
+            return "clicked"
+        if script is comment_writer.EDITOR_PRESENT_ATOMIC_SCRIPT:
+            return "not_found" if self.saved else "found"
+        if script is comment_writer.SET_EDITOR_VALUE_ATOMIC_SCRIPT:
+            self.editor_value = args[1]
+            return self.editor_value
+        if script is comment_writer.READ_EDITOR_VALUE_ATOMIC_SCRIPT:
+            return self.editor_value
+        return None
+
+
+class AtomicEditorTests(unittest.TestCase):
+    """La escritura de campos no puede exportar handles: en Edge 158 mueren
+    entre find y click/set. Todo el recorrido usa scripts atómicos."""
+
+    def test_prepare_writes_without_exporting_element_handles(self):
+        driver = StaleMarshalDriver()
+
+        prepare_other_information(driver, "1 INT prueba", 10)
+
+        self.assertEqual(driver.editor_value, "1 INT prueba")
+
+    def test_prepare_rejects_editor_that_keeps_wrong_value(self):
+        driver = StaleMarshalDriver()
+        driver.editor_value = "valor fijo"
+        original = driver.execute_script
+
+        def fixed_value(script, *args):
+            result = original(script, *args)
+            if script is comment_writer.SET_EDITOR_VALUE_ATOMIC_SCRIPT:
+                driver.editor_value = "valor fijo"
+                return "valor fijo"
+            return result
+
+        driver.execute_script = fixed_value
+        with self.assertRaises(ValueError):
+            prepare_other_information(driver, "1 INT prueba", 10)
+
+        attempts = [s for s, _a in driver.scripts if s is comment_writer.SET_EDITOR_VALUE_ATOMIC_SCRIPT]
+        self.assertEqual(len(attempts), 2)
+
+    def test_save_clicks_and_waits_atomically_without_handles(self):
+        driver = StaleMarshalDriver()
+
+        save_edit_form(driver, 10, settle_seconds=0)
+
+        self.assertTrue(driver.saved)
+        self.assertTrue(all(not isinstance(arg, FakeEditor) for _script, args in driver.scripts for arg in args))
+
+    def test_writer_keeps_atomic_contract_in_source(self):
+        source = inspect.getsource(comment_writer)
+
+        for name in (
+            "CLICK_EDIT_CONTROL_ATOMIC_SCRIPT",
+            "SET_EDITOR_VALUE_ATOMIC_SCRIPT",
+            "READ_EDITOR_VALUE_ATOMIC_SCRIPT",
+            "EDITOR_PRESENT_ATOMIC_SCRIPT",
+            "CLICK_SAVE_BUTTON_ATOMIC_SCRIPT",
+        ):
+            self.assertIn(name, source)
         self.assertNotIn("SaveEdit", source)
         self.assertNotIn("save_record", source)
         self.assertNotIn("updateRecord", source)

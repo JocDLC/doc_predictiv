@@ -52,6 +52,17 @@
   (b) `navegador_trabado` residual: una pestaña del usuario cargando sin
   commit también cuelga NEW_SESSION — si vuelve a pasar, evaluar reload
   del target por CDP o aislar la ventana del monitor en un Edge aparte.
+- **PENDIENTE — tiempo total en informes de fin de bot (2026-11-23)**: que
+  TODOS los informes muestren el tiempo total del proceso. Auditoría:
+  (a) Documentar: `productivityMessage()` no muestra `cycle_elapsed_seconds`
+      aunque `cola_activa.metricas.json` lo tiene — falta línea en el alert.
+  (b) Cierre: alert solo con conteos; `cola_cierre_activa.metricas.json`
+      sí tiene `cycle_elapsed_seconds` — falta leerla y mostrarla.
+  (c) Distribución: `run_distribucion_queue` no escribe métricas ni elapsed
+      total — falta resumen + escritura de métrica de ciclo.
+  (d) Laboratorio: `cola_laboratorio_activa.metricas.json` tiene
+      `cycle_elapsed_seconds` — falta mostrarlo en la card de resultados.
+  (e) Consola: los 4 "Resumen" imprimen solo conteos — agregar total.
 - **PENDIENTE — ahorro de tokens en herramientas (2026-11-17)**: limitar
   cuánto leen las herramientas (`head`/`tail` en logs, rangos de líneas en
   vez de archivos completos). Es la mayor parte del gasto de una sesión. Ya

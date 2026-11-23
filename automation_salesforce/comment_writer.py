@@ -8,11 +8,13 @@ from selenium.common.exceptions import TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
-from comment_reader import OTHER_INFORMATION_LABELS
+from comment_reader import OTHER_INFORMATION_LABELS, execute_in_any_frame
 
 INT_PREFIX_PATTERN = re.compile(r"^\s*\d+\s+INT\b", re.IGNORECASE)
-EDIT_CONTROL_SCRIPT = """
+EDIT_CONTROL_FINDER_SCRIPT = """
 const labels = arguments[0];
+
+function findEditControl() {
 
 function normalize(value) {
     return String(value || '')
@@ -83,7 +85,29 @@ for (const element of elements) {
     }
 }
 return null;
+}
 """
+# Búsqueda y acción dentro de la misma evaluación: en Edge 158 un WebElement
+# devuelto por JS muere antes de la llamada siguiente (stale al serializar),
+# así que el lápiz, el editor y Guardar se ubican y se usan de una vez.
+EDIT_CONTROL_SCRIPT = (
+    EDIT_CONTROL_FINDER_SCRIPT
+    + """
+return findEditControl();
+"""
+)
+CLICK_EDIT_CONTROL_ATOMIC_SCRIPT = (
+    EDIT_CONTROL_FINDER_SCRIPT
+    + """
+const control = findEditControl();
+if (!control) {
+    return 'not_found';
+}
+control.scrollIntoView({block: 'center', inline: 'nearest'});
+control.click();
+return 'clicked';
+"""
+)
 FIELD_SCROLL_SCRIPT = """
 const labels = arguments[0];
 
@@ -261,21 +285,63 @@ const elements = [];
 collect(document, new Set(), elements);
 const editors = elements.filter(isEditable);
 """
-EDITOR_CONTROL_SCRIPT = (
+EDITOR_CONTROL_FINDER_SCRIPT = (
     EDITOR_HELPERS_SCRIPT
     + """
-for (const editor of editors) {
-    if (labels.includes(normalize(labelForCandidate(editor, elements)))) {
-        return editor;
+function findEditor() {
+    for (const editor of editors) {
+        if (labels.includes(normalize(labelForCandidate(editor, elements)))) {
+            return editor;
+        }
     }
-}
-for (const label of labelElements(elements)) {
-    const editor = editorAlignedWithLabel(label, editors);
-    if (editor) {
-        return editor;
+    for (const label of labelElements(elements)) {
+        const editor = editorAlignedWithLabel(label, editors);
+        if (editor) {
+            return editor;
+        }
     }
+    return null;
 }
-return null;
+"""
+)
+EDITOR_CONTROL_SCRIPT = (
+    EDITOR_CONTROL_FINDER_SCRIPT
+    + """
+return findEditor();
+"""
+)
+EDITOR_PRESENT_ATOMIC_SCRIPT = (
+    EDITOR_CONTROL_FINDER_SCRIPT
+    + """
+return findEditor() ? 'found' : 'not_found';
+"""
+)
+SET_EDITOR_VALUE_ATOMIC_SCRIPT = (
+    EDITOR_CONTROL_FINDER_SCRIPT
+    + """
+const editor = findEditor();
+if (!editor) {
+    return 'not_found';
+}
+editor.scrollIntoView({block: 'center', inline: 'nearest'});
+editor.focus();
+editor.value = arguments[1];
+editor.dispatchEvent(new Event('input', {bubbles: true}));
+editor.dispatchEvent(new Event('change', {bubbles: true}));
+// Lightning confirma el valor del campo al perder el foco (blur/focusout);
+// el clic JS sobre Guardar no lo genera y sin esto el formulario persiste
+// el valor anterior en silencio (bug verificado en leads reales).
+editor.blur();
+editor.dispatchEvent(new FocusEvent('blur', {bubbles: true}));
+editor.dispatchEvent(new FocusEvent('focusout', {bubbles: true}));
+return editor.value;
+"""
+)
+READ_EDITOR_VALUE_ATOMIC_SCRIPT = (
+    EDITOR_CONTROL_FINDER_SCRIPT
+    + """
+const editor = findEditor();
+return editor ? editor.value : 'not_found';
 """
 )
 EDITOR_DIAGNOSTIC_SCRIPT = (
@@ -349,7 +415,10 @@ def find_element_in_any_frame(driver, script: str, labels: tuple = OTHER_INFORMA
         return driver.execute_script(script, labels)
 
     switch_to.default_content()
-    element = driver.execute_script(script, labels)
+    try:
+        element = driver.execute_script(script, labels)
+    except WebDriverException:
+        element = None
     if element:
         return element
     frames = driver.find_elements(By.CSS_SELECTOR, "iframe, frame")
@@ -411,28 +480,48 @@ arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});
 arguments[0].click();
 """
 
-SAVE_BUTTON_SCRIPT = (
+SAVE_BUTTON_FINDER_SCRIPT = (
     EDITOR_HELPERS_SCRIPT
     + """
-const saveLabels = ['guardar', 'save'];
-const candidates = elements.filter(element => isVisible(element)
-    && element.matches('button')
-    && saveLabels.includes(normalize(element.textContent)));
-const insideForm = element => {
-    let current = element;
-    for (let depth = 0; depth < 10 && current; depth++) {
-        const root = current.getRootNode ? current.getRootNode() : null;
-        current = current.parentElement || (root && root.host) || null;
-        if (current && current.matches && current.matches(
-            'footer, [class*="footer"], lightning-record-edit-form, records-record-edit-form'
-        )) {
-            return true;
+function findSaveButton() {
+    const saveLabels = ['guardar', 'save'];
+    const candidates = elements.filter(element => isVisible(element)
+        && element.matches('button')
+        && saveLabels.includes(normalize(element.textContent)));
+    const insideForm = element => {
+        let current = element;
+        for (let depth = 0; depth < 10 && current; depth++) {
+            const root = current.getRootNode ? current.getRootNode() : null;
+            current = current.parentElement || (root && root.host) || null;
+            if (current && current.matches && current.matches(
+                'footer, [class*="footer"], lightning-record-edit-form, records-record-edit-form'
+            )) {
+                return true;
+            }
         }
-    }
-    return false;
-};
-const preferred = candidates.filter(insideForm);
-return (preferred.length ? preferred : candidates)[0] || null;
+        return false;
+    };
+    const preferred = candidates.filter(insideForm);
+    return (preferred.length ? preferred : candidates)[0] || null;
+}
+"""
+)
+SAVE_BUTTON_SCRIPT = (
+    SAVE_BUTTON_FINDER_SCRIPT
+    + """
+return findSaveButton();
+"""
+)
+CLICK_SAVE_BUTTON_ATOMIC_SCRIPT = (
+    SAVE_BUTTON_FINDER_SCRIPT
+    + """
+const saveButton = findSaveButton();
+if (!saveButton) {
+    return 'not_found';
+}
+saveButton.scrollIntoView({block: 'center', inline: 'nearest'});
+saveButton.click();
+return 'clicked';
 """
 )
 
@@ -446,12 +535,16 @@ def save_edit_form(driver, timeout_seconds: int, settle_seconds: float = SAVE_SE
     Salesforce cierra el editor antes de terminar de persistir; la pausa final
     evita que una navegación posterior aborte el guardado en curso.
     """
-    save_button = WebDriverWait(driver, timeout_seconds).until(
-        lambda current_driver: find_element_in_any_frame(current_driver, SAVE_BUTTON_SCRIPT)
+    WebDriverWait(driver, timeout_seconds).until(
+        lambda current_driver: execute_in_any_frame(current_driver, CLICK_SAVE_BUTTON_ATOMIC_SCRIPT) == "clicked"
     )
-    driver.execute_script(CLICK_EDIT_CONTROL_SCRIPT, save_button)
     driver.switch_to.default_content()
-    WebDriverWait(driver, timeout_seconds).until(lambda current_driver: not find_editor_control(current_driver))
+    WebDriverWait(driver, timeout_seconds).until(
+        lambda current_driver: (
+            execute_in_any_frame(current_driver, EDITOR_PRESENT_ATOMIC_SCRIPT, list(OTHER_INFORMATION_LABELS))
+            != "found"
+        )
+    )
     time.sleep(settle_seconds)
 
 
@@ -484,6 +577,14 @@ EDITOR_READY_SECONDS = 2.0
 EDITOR_STABILITY_SECONDS = 0.8
 
 
+def _click_edit_control_atomic(driver, labels: tuple) -> bool:
+    """Localiza y pulsa el lápiz del campo en una sola evaluación JS."""
+    if execute_in_any_frame(driver, CLICK_EDIT_CONTROL_ATOMIC_SCRIPT, list(labels)) == "clicked":
+        return True
+    scroll_toward_other_information(driver, labels)
+    return False
+
+
 def prepare_other_information(
     driver,
     prepared_comment: str,
@@ -491,11 +592,12 @@ def prepare_other_information(
     labels: tuple = OTHER_INFORMATION_LABELS,
     display_name: str = "Otra información",
 ) -> None:
-    edit_control = WebDriverWait(driver, timeout_seconds).until(lambda current: find_edit_control(current, labels))
-    driver.execute_script(CLICK_EDIT_CONTROL_SCRIPT, edit_control)
+    WebDriverWait(driver, timeout_seconds).until(lambda current: _click_edit_control_atomic(current, labels))
     driver.switch_to.default_content()
     try:
-        editor = WebDriverWait(driver, timeout_seconds).until(lambda current: find_editor_control(current, labels))
+        WebDriverWait(driver, timeout_seconds).until(
+            lambda current: execute_in_any_frame(current, EDITOR_PRESENT_ATOMIC_SCRIPT, list(labels)) == "found"
+        )
     except TimeoutException:
         diagnostic = describe_editor_candidates(driver)
         raise ValueError(f"No apareció el editor de '{display_name}'. Diagnóstico: {diagnostic}") from None
@@ -503,31 +605,23 @@ def prepare_other_information(
         # Lightning termina de inicializar el componente ~2s después de abrir el
         # editor; escribir antes de eso deja que el framework pise el valor.
         time.sleep(EDITOR_READY_SECONDS)
-        refreshed = find_editor_control(driver, labels)
-        if refreshed:
-            editor = refreshed
         for attempt in range(2):
-            replace_editor_value(driver, editor, prepared_comment)
-            if verify_editor_value(editor, prepared_comment):
+            actual = execute_in_any_frame(driver, SET_EDITOR_VALUE_ATOMIC_SCRIPT, list(labels), prepared_comment)
+            if actual == prepared_comment:
                 # Una segunda lectura confirma que el valor quedó estable y el
                 # framework no lo restauró con el dato anterior del registro.
                 time.sleep(EDITOR_STABILITY_SECONDS)
-                refreshed = find_editor_control(driver, labels)
-                if refreshed:
-                    editor = refreshed
-                if verify_editor_value(editor, prepared_comment):
+                actual = execute_in_any_frame(driver, READ_EDITOR_VALUE_ATOMIC_SCRIPT, list(labels))
+                if actual == prepared_comment:
                     return
             if attempt == 0:
                 time.sleep(0.5)
-                refreshed = find_editor_control(driver, labels)
-                if refreshed:
-                    editor = refreshed
                 continue
-            actual = str(editor.get_attribute("value") or "")
+            observed = "" if actual == "not_found" else str(actual or "")
             raise ValueError(
                 "El editor no quedó con el texto esperado "
                 f"(esperado {len(prepared_comment)} caracteres, "
-                f"real {len(actual)})."
+                f"real {len(observed)})."
             )
     finally:
         driver.switch_to.default_content()

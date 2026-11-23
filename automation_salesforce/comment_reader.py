@@ -253,6 +253,39 @@ def text_without_field_label(field_text: str, labels: tuple[str, ...] = OTHER_IN
     return str(field_text or "").strip()
 
 
+_EDIT_BUTTON_LABEL_VERBS = ("modificar", "editar", "edit")
+
+
+def strip_edit_button_label(text: str, labels: tuple[str, ...]) -> str:
+    """Quita la etiqueta del lápiz ("Modificar <label>") allá donde la lectura
+    la arrastre: línea propia, pegada a un glifo de ícono o con sufijo
+    accesible, y partida en dos líneas ("Modificar" + label).
+
+    Antes solo se quitaba como primera línea exacta; en leads reales llegó
+    con el ícono pegado y terminó persistida dentro del valor guardado.
+    """
+    label_set = {normalize_label(label) for label in labels}
+    edit_labels = {f"{verb} {label}" for verb in _EDIT_BUTTON_LABEL_VERBS for label in label_set}
+    kept = []
+    lines = str(text or "").splitlines()
+    index = 0
+    while index < len(lines):
+        normalized = normalize_label(lines[index]).rstrip(" .:")
+        if any(label in normalized for label in edit_labels):
+            index += 1
+            continue
+        if (
+            normalized in _EDIT_BUTTON_LABEL_VERBS
+            and index + 1 < len(lines)
+            and normalize_label(lines[index + 1]) in label_set
+        ):
+            index += 2
+            continue
+        kept.append(lines[index])
+        index += 1
+    return "\n".join(kept).strip()
+
+
 def field_result_if_found(driver, labels: tuple[str, ...] = OTHER_INFORMATION_LABELS):
     result = field_result_in_any_frame(driver, FIELD_TEXT_SCRIPT, labels)
     return result if result.get("found") else False
@@ -267,7 +300,10 @@ def field_result_in_any_frame(driver, script: str, labels: tuple[str, ...] = OTH
     results = []
     switch_to.default_content()
     try:
-        results.append(driver.execute_script(script, labels))
+        try:
+            results.append(driver.execute_script(script, labels))
+        except WebDriverException:
+            pass
         frames = driver.find_elements(By.CSS_SELECTOR, "iframe, frame")
         for frame in frames:
             try:
@@ -287,6 +323,38 @@ def field_result_in_any_frame(driver, script: str, labels: tuple[str, ...] = OTH
     )
 
 
+def execute_in_any_frame(driver, script: str, *args):
+    """Ejecuta el script en el documento principal y en iframes accesibles.
+
+    Devuelve el primer resultado no vacío/no ``not_found`` de los frames.
+    Un frame (o el documento) que muere al serializar elementos — Edge 158
+    invalida los WebElement devueltos por JS — no frena a los demás.
+    """
+    switch_to = getattr(driver, "switch_to", None)
+    if switch_to is None:
+        return driver.execute_script(script, *args)
+
+    results = []
+    switch_to.default_content()
+    try:
+        try:
+            results.append(driver.execute_script(script, *args))
+        except WebDriverException:
+            pass
+        frames = driver.find_elements(By.CSS_SELECTOR, "iframe, frame")
+        for frame in frames:
+            try:
+                switch_to.frame(frame)
+                results.append(driver.execute_script(script, *args))
+            except WebDriverException:
+                continue
+            finally:
+                switch_to.default_content()
+    finally:
+        switch_to.default_content()
+    return next((r for r in results if r and r != "not_found"), results[0] if results else None)
+
+
 def field_result_with_text(driver, labels: tuple[str, ...] = OTHER_INFORMATION_LABELS):
     result = field_result_if_found(driver, labels)
     return result if result and result.get("text") else False
@@ -300,7 +368,7 @@ def find_field_value(driver, timeout_seconds: int, labels: tuple[str, ...] = OTH
         result = field_result_if_found(driver, labels)
         if not result:
             raise
-    return text_without_field_label(result["text"], labels)
+    return strip_edit_button_label(text_without_field_label(result["text"], labels), labels)
 
 
 def find_other_information(driver, timeout_seconds: int) -> str:
@@ -310,7 +378,7 @@ def find_other_information(driver, timeout_seconds: int) -> str:
 def find_field_text(driver, labels: tuple[str, ...]) -> str:
     """Lectura sin espera del campo indicado; "" si no está visible."""
     result = field_result_if_found(driver, labels)
-    return text_without_field_label(result["text"], labels) if result else ""
+    return strip_edit_button_label(text_without_field_label(result["text"], labels), labels) if result else ""
 
 
 def find_comment(driver, timeout_seconds: int) -> str:

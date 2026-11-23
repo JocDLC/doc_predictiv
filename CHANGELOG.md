@@ -65,6 +65,28 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ### Corregido
 
+- **La documentación de envíos moría por `StaleElementReferenceException`
+  tras el auto-update a Edge 158**: la edición en línea de Salesforce
+  ubicaba el lápiz/editor/Guardar como WebElement y los usaba en la
+  llamada siguiente; con Edge/EdgeDriver 158 esos handles mueren entre
+  evaluaciones (persistente, incluso 150 s post-refresh — verificado in
+  situ). Ahora lápiz, escritura del editor, lectura de verificación y
+  Guardar se resuelven y actúan dentro de la misma evaluación JS
+  (`*_ATOMIC_SCRIPT`), igual que el botón Send To Whatsapp. La edición de
+  Comentario del cierre usa el mismo camino atómico. Además los helpers
+  `execute_in_any_frame` / `field_result_in_any_frame` toleran un frame o
+  documento que muera al serializar, en vez de abortar la toma o el scan
+  de bandeja. Tests-regla:
+  `tests.test_comment_writer.AtomicEditorTests.*`,
+  `tests.test_comment_reader.FrameToleranceTests.*`.
+- **La etiqueta del lápiz ("Modificar <label>") podía persistirse dentro
+  del campo al documentar o cerrar**: el strip que el Monitor aplicaba a
+  la marca de toma vivía solo en `lead_monitor`. Se mudó a
+  `comment_reader.strip_edit_button_label` y ahora lo aplican
+  `find_field_value` y `find_field_text` — toda lectura de campo sale
+  limpia, así el texto compuesto para Documentar/Cerrar no re-escribe la
+  etiqueta. Test-regla:
+  `tests.test_comment_reader.EditButtonLabelStripTests.*`.
 - **La cobertura de la toma se evaluaba a la hora del ciclo, no a la de
   ingreso del lead**: un lead creado 10:58 en franja de 9:00–10:59 y
   revisado 11:01 quedaba "sin cobertura"; y uno creado antes de la franja

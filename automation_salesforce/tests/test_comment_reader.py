@@ -1,9 +1,13 @@
 import unittest
 
+from selenium.common.exceptions import StaleElementReferenceException
+
 from comment_reader import (
+    execute_in_any_frame,
     build_record_url,
     field_result_if_found,
     field_result_in_any_frame,
+    find_field_value,
     find_comment,
     find_other_information,
     is_duplicate_lead,
@@ -135,6 +139,80 @@ class CommentReaderTests(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             build_record_url("https://example.invalid", "invalid id", "Lead")
+
+
+class StaleDefaultContentDriver:
+    """El documento principal muere al serializar elementos (Edge 158);
+
+    el iframe sigue respondiendo y el helper tiene que continuar ahí.
+    """
+
+    def __init__(self, frame_result):
+        self.switch_to = self
+        self.frame_result = frame_result
+        self._in_frame = False
+
+    def default_content(self):
+        self._in_frame = False
+
+    def frame(self, _frame):
+        self._in_frame = True
+
+    def find_elements(self, *_args, **_kwargs):
+        return [object()]
+
+    def execute_script(self, _script, *_args):
+        if not self._in_frame:
+            raise StaleElementReferenceException("stale al serializar")
+        return self.frame_result
+
+
+class FrameToleranceTests(unittest.TestCase):
+    def test_field_result_uses_frames_when_default_content_goes_stale(self):
+        driver = StaleDefaultContentDriver({"found": True, "text": "valor"})
+
+        self.assertEqual(
+            field_result_in_any_frame(driver, "script", ("label",)),
+            {"found": True, "text": "valor"},
+        )
+
+    def test_execute_in_any_frame_uses_frames_when_default_goes_stale(self):
+        driver = StaleDefaultContentDriver("clicked")
+
+        self.assertEqual(execute_in_any_frame(driver, "script"), "clicked")
+
+
+class EditButtonLabelStripTests(unittest.TestCase):
+    """La etiqueta accesible del lapiz ("Modificar <label>") no puede llegar
+    al texto leido: los consumidores que recomponen el campo la persistirian
+    de vuelta (bug visto en documentacion de Mexico y en la marca de toma)."""
+
+    def test_find_field_value_strips_pencil_label_lines(self):
+        text = "Modificar Otra información\nNota previa"
+        driver = FakeCommentDriver({"found": True, "text": text})
+
+        self.assertEqual(find_field_value(driver, 1), "Nota previa")
+
+    def test_find_field_value_strips_icon_glued_pencil_label(self):
+        text = "✏ Modificar Otra información\nNota previa"
+        driver = FakeCommentDriver({"found": True, "text": text})
+
+        self.assertEqual(find_field_value(driver, 1), "Nota previa")
+
+    def test_find_field_value_strips_pencil_label_of_other_fields(self):
+        text = "Modificar Comentario\nIlocalizable"
+        driver = FakeCommentDriver({"found": True, "text": text})
+
+        self.assertEqual(
+            find_field_value(driver, 1, ("comentario",)),
+            "Ilocalizable",
+        )
+
+    def test_find_field_value_strips_pencil_label_split_in_two_lines(self):
+        text = "Modificar\nOtra información\nNota"
+        driver = FakeCommentDriver({"found": True, "text": text})
+
+        self.assertEqual(find_field_value(driver, 1), "Nota")
 
 
 if __name__ == "__main__":

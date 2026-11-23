@@ -371,11 +371,9 @@ class SubqualificationContractTests(unittest.TestCase):
 
     def test_edit_form_accepts_approved_fallback(self):
         contract = closure.reason_contract("ilocalizable")
-        editor = Mock()
-        editor.get_attribute.return_value = "Ilocalizable"
         values = Mock(side_effect=["permanece ilocalizable", "rechazo no argumentado"])
         with (
-            patch.object(closure, "find_element_in_any_frame", return_value=editor),
+            patch.object(closure, "execute_in_any_frame", return_value="Ilocalizable"),
             patch.object(closure, "_picklist_current_value", values),
         ):
             self.assertTrue(closure.edit_form_matches(Mock(), contract))

@@ -21,6 +21,7 @@ from comment_reader import (
     normalize_label,
     text_without_field_label,
 )
+from comment_reader import strip_edit_button_label as _strip_edit_button_label
 from comment_writer import (
     OTHER_INFORMATION_LABELS,
     SAVE_SETTLE_SECONDS,
@@ -550,39 +551,6 @@ def _reread_owner_after_refresh(driver, timeout_seconds: int) -> str:
     except WebDriverException:
         pass
     return wait_record_owner(driver)
-
-
-_EDIT_BUTTON_LABEL_VERBS = ("modificar", "editar", "edit")
-
-
-def _strip_edit_button_label(text: str, labels: tuple[str, ...]) -> str:
-    """Quita la etiqueta del lápiz ("Modificar Otra información") allá donde
-    la lectura la arrastre: línea propia, pegada a un glifo de ícono o con
-    sufijo accesible, y partida en dos líneas ("Modificar" + label).
-
-    Antes solo se quitaba como primera línea exacta; en leads reales llegó
-    con el ícono pegado y terminó persistida dentro del valor guardado.
-    """
-    label_set = {normalize_label(label) for label in labels}
-    edit_labels = {f"{verb} {label}" for verb in _EDIT_BUTTON_LABEL_VERBS for label in label_set}
-    kept = []
-    lines = str(text or "").splitlines()
-    index = 0
-    while index < len(lines):
-        normalized = normalize_label(lines[index]).rstrip(" .:")
-        if any(label in normalized for label in edit_labels):
-            index += 1
-            continue
-        if (
-            normalized in _EDIT_BUTTON_LABEL_VERBS
-            and index + 1 < len(lines)
-            and normalize_label(lines[index + 1]) in label_set
-        ):
-            index += 2
-            continue
-        kept.append(lines[index])
-        index += 1
-    return "\n".join(kept).strip()
 
 
 def _read_other_information(driver) -> str | None:

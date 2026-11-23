@@ -453,34 +453,12 @@ from selenium.webdriver.common.by import By  # noqa: E402
 from selenium.webdriver.support.ui import WebDriverWait  # noqa: E402
 
 import comment_reader  # noqa: E402
-from comment_writer import EDITOR_CONTROL_SCRIPT, SET_EDITOR_VALUE_SCRIPT, find_element_in_any_frame  # noqa: E402
-
-
-def execute_in_any_frame(driver, script: str, *args):
-    """Ejecuta el script en el documento principal y en iframes accesibles.
-
-    Devuelve el primer resultado no vacío/no ``not_found`` de los frames.
-    """
-    switch_to = getattr(driver, "switch_to", None)
-    if switch_to is None:
-        return driver.execute_script(script, *args)
-
-    results = []
-    switch_to.default_content()
-    try:
-        results.append(driver.execute_script(script, *args))
-        frames = driver.find_elements(By.CSS_SELECTOR, "iframe, frame")
-        for frame in frames:
-            try:
-                switch_to.frame(frame)
-                results.append(driver.execute_script(script, *args))
-            except WebDriverException:
-                continue
-            finally:
-                switch_to.default_content()
-    finally:
-        switch_to.default_content()
-    return next((r for r in results if r and r != "not_found"), results[0] if results else None)
+from comment_reader import execute_in_any_frame  # noqa: E402,F401 — re-exportado
+from comment_writer import (  # noqa: E402
+    EDITOR_PRESENT_ATOMIC_SCRIPT,
+    READ_EDITOR_VALUE_ATOMIC_SCRIPT,
+    SET_EDITOR_VALUE_ATOMIC_SCRIPT,
+)
 
 
 def find_field_text(driver, labels: tuple[str, ...]) -> str:
@@ -521,25 +499,25 @@ def open_qualification_edit(driver, timeout_seconds: int) -> None:
     driver.switch_to.default_content()
     # La edición en línea tarda en renderizar los inputs del formulario.
     WebDriverWait(driver, timeout_seconds).until(
-        lambda current: find_element_in_any_frame(current, EDITOR_CONTROL_SCRIPT, list(COMMENT_FIELD_LABELS))
+        lambda current: (
+            execute_in_any_frame(current, EDITOR_PRESENT_ATOMIC_SCRIPT, list(COMMENT_FIELD_LABELS)) == "found"
+        )
     )
 
 
 def set_comentario(driver, comentario: str, timeout_seconds: int) -> None:
     """Escribe el literal exacto del motivo en el input Comentario."""
-    editor = find_element_in_any_frame(driver, EDITOR_CONTROL_SCRIPT, list(COMMENT_FIELD_LABELS))
-    if not editor:
-        raise ValueError("No se encontró el editor del campo Comentario.")
-    driver.execute_script(SET_EDITOR_VALUE_SCRIPT, editor, comentario)
+    editor_seen = False
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
-        if str(editor.get_attribute("value") or "").strip() == comentario:
-            return
-        refreshed = find_element_in_any_frame(driver, EDITOR_CONTROL_SCRIPT, list(COMMENT_FIELD_LABELS))
-        if refreshed:
-            editor = refreshed
-            driver.execute_script(SET_EDITOR_VALUE_SCRIPT, editor, comentario)
+        actual = execute_in_any_frame(driver, SET_EDITOR_VALUE_ATOMIC_SCRIPT, list(COMMENT_FIELD_LABELS), comentario)
+        if actual != "not_found":
+            editor_seen = True
+            if str(actual or "").strip() == comentario:
+                return
         time.sleep(0.3)
+    if not editor_seen:
+        raise ValueError("No se encontró el editor del campo Comentario.")
     raise ValueError("El campo Comentario no quedó con el literal del motivo.")
 
 
@@ -706,10 +684,10 @@ def edit_form_matches(
     en segundo plano y puede limpiar lo escrito: esto detecta la pérdida antes
     de pulsar Guardar."""
     expected = contract_text(contract, "comentario") if expected_value is None else expected_value
-    editor = find_element_in_any_frame(driver, EDITOR_CONTROL_SCRIPT, list(field_labels))
-    if editor is None:
+    actual = execute_in_any_frame(driver, READ_EDITOR_VALUE_ATOMIC_SCRIPT, list(field_labels))
+    if actual in (None, "not_found"):
         return False
-    comentario = str(editor.get_attribute("value") or "").strip()
+    comentario = str(actual).strip()
     if normalized_key(comentario) != normalized_key(expected):
         return False
     subqualification = normalized_key(_picklist_current_value(driver, SUBQUALIFICATION_FIELD_LABELS))

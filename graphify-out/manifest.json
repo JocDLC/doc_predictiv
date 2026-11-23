@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/lead_closure.py": {
-    "mtime": 1795456976.6906977,
-    "seen": 1795457884.6184807,
-    "ast_hash": "6e4ec0b06c0b7dfd0a72c04d85b6d9df",
+    "mtime": 1795471434.9363692,
+    "seen": 1795477030.992645,
+    "ast_hash": "cde7a1345790cb4afdec004726ff8b08",
     "semantic_hash": ""
   },
   "automation_salesforce/lead_monitor.py": {
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/run_close_queue.py": {
-    "mtime": 1794345681.3235834,
-    "seen": 1794346111.635898,
-    "ast_hash": "8bb3570f8306bd30692354437f1566db",
+    "mtime": 1795471301.1127706,
+    "seen": 1795477030.995792,
+    "ast_hash": "38892fb8fca99c52892335816800b93f",
     "semantic_hash": ""
   },
   "automation_salesforce/run_comment_assisted.py": {
@@ -282,9 +282,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_lead_closure.py": {
-    "mtime": 1795456932.5959442,
-    "seen": 1795457884.664729,
-    "ast_hash": "a5f3ef3cb8928b51109f0de51dcf57ea",
+    "mtime": 1795471367.9814343,
+    "seen": 1795477031.001801,
+    "ast_hash": "572fd6d85d2db71fb6ddbad258f42001",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_lead_monitor.py": {
@@ -342,9 +342,9 @@
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_run_close_queue.py": {
-    "mtime": 1794345681.3215857,
-    "seen": 1794346111.6359606,
-    "ast_hash": "edebfbf232897a645a7333ac36c1e3d2",
+    "mtime": 1795471378.4373214,
+    "seen": 1795477031.0033193,
+    "ast_hash": "8963fe52a6dbe1b7359332b36184f4a9",
     "semantic_hash": ""
   },
   "automation_salesforce/tests/test_run_comment_assisted.py": {
@@ -924,9 +924,9 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1795457647.2437565,
-    "seen": 1795457884.7915597,
-    "ast_hash": "195ea557b784c7fcace38d2df5ec63fa",
+    "mtime": 1795476805.5045774,
+    "seen": 1795477031.0214515,
+    "ast_hash": "dc2bdf72bd830e98b1104dd202d722a7",
     "semantic_hash": ""
   },
   "MEMORY.md": {
@@ -984,9 +984,9 @@
     "semantic_hash": ""
   },
   "documentador_predictivo.html": {
-    "mtime": 1795415167.8363874,
-    "seen": 1795415474.7280452,
-    "ast_hash": "9454f83b63bc4967f99d2ddcf089060f",
+    "mtime": 1795476805.5132897,
+    "seen": 1795477031.0232491,
+    "ast_hash": "885f4a41abf97a404ce178797dbb871f",
     "semantic_hash": ""
   },
   "openspec/changes/agregar-favicons-paginas-locales/design.md": {
@@ -2061,6 +2061,108 @@
     "mtime": 1795457055.8811865,
     "seen": 1795457884.6115093,
     "ast_hash": "4063932850f1c6c9f8ffbbfa13c6a178",
+    "semantic_hash": ""
+  },
+  "openspec/changes/laboratorio-agent-browser-hang/.openspec.yaml": {
+    "mtime": 1795469310.4835427,
+    "seen": 1795477031.011443,
+    "ast_hash": "2ddefb3a8594c73008058b815027fb23",
+    "semantic_hash": ""
+  },
+  "openspec/changes/report-reader-tolerante-stale/.openspec.yaml": {
+    "mtime": 1795469313.3694031,
+    "seen": 1795477031.0116677,
+    "ast_hash": "2ddefb3a8594c73008058b815027fb23",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tiempo-total-informes/.openspec.yaml": {
+    "mtime": 1795469307.356727,
+    "seen": 1795477031.0116718,
+    "ast_hash": "2ddefb3a8594c73008058b815027fb23",
+    "semantic_hash": ""
+  },
+  "openspec/changes/laboratorio-agent-browser-hang/design.md": {
+    "mtime": 1795469454.6691754,
+    "seen": 1795477031.0431547,
+    "ast_hash": "57b6f79e5ecc9e4b85b48bc1e1c81a19",
+    "semantic_hash": ""
+  },
+  "openspec/changes/laboratorio-agent-browser-hang/proposal.md": {
+    "mtime": 1795469369.702264,
+    "seen": 1795477031.0431576,
+    "ast_hash": "2568482e38a5b5183f6a070193d66700",
+    "semantic_hash": ""
+  },
+  "openspec/changes/laboratorio-agent-browser-hang/specs/laboratorio-timeout-watchdog/spec.md": {
+    "mtime": 1795469454.5947907,
+    "seen": 1795477031.0431592,
+    "ast_hash": "878ea5972b09785f5ab53f5889eccc60",
+    "semantic_hash": ""
+  },
+  "openspec/changes/laboratorio-agent-browser-hang/tasks.md": {
+    "mtime": 1795469454.737384,
+    "seen": 1795477031.043161,
+    "ast_hash": "39cb94518adbac4c8266c78e153e594d",
+    "semantic_hash": ""
+  },
+  "openspec/changes/report-reader-tolerante-stale/design.md": {
+    "mtime": 1795469482.0164926,
+    "seen": 1795477031.0505533,
+    "ast_hash": "022702ecedd152e452019993ea16263a",
+    "semantic_hash": ""
+  },
+  "openspec/changes/report-reader-tolerante-stale/proposal.md": {
+    "mtime": 1795469369.7825856,
+    "seen": 1795477031.050557,
+    "ast_hash": "89a4fa189e53f1ada321792d1b4d90ba",
+    "semantic_hash": ""
+  },
+  "openspec/changes/report-reader-tolerante-stale/specs/lectura-reporte-tolerante-stale/spec.md": {
+    "mtime": 1795469463.2557726,
+    "seen": 1795477031.0505593,
+    "ast_hash": "09b8b3a0a836cc219132e5369758f7b8",
+    "semantic_hash": ""
+  },
+  "openspec/changes/report-reader-tolerante-stale/specs/monitor-bandeja-leads/spec.md": {
+    "mtime": 1795469463.381999,
+    "seen": 1795477031.050561,
+    "ast_hash": "68b8458a53f5b9c969855e5334c5beb4",
+    "semantic_hash": ""
+  },
+  "openspec/changes/report-reader-tolerante-stale/tasks.md": {
+    "mtime": 1795469482.0872753,
+    "seen": 1795477031.0505629,
+    "ast_hash": "2906716376e64d0e249b2fc176e861b8",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tiempo-total-informes/design.md": {
+    "mtime": 1795469419.6374931,
+    "seen": 1795477031.051233,
+    "ast_hash": "89c2f0853a703c97c6f7a1118f0029e7",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tiempo-total-informes/proposal.md": {
+    "mtime": 1795469361.1837616,
+    "seen": 1795477031.0512354,
+    "ast_hash": "ab3638c850ee8f3a34f975dc5e2bfc91",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tiempo-total-informes/specs/distribucion-leads-archivo/spec.md": {
+    "mtime": 1795469412.6597626,
+    "seen": 1795477031.0512373,
+    "ast_hash": "a7f52f9cf1e3d733d2b454399efe0a7a",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tiempo-total-informes/specs/informes-tiempo-total/spec.md": {
+    "mtime": 1795469412.5646236,
+    "seen": 1795477031.0512397,
+    "ast_hash": "c10567eb54767256c80ff3a2fad6b41a",
+    "semantic_hash": ""
+  },
+  "openspec/changes/tiempo-total-informes/tasks.md": {
+    "mtime": 1795469425.3875,
+    "seen": 1795477031.051241,
+    "ast_hash": "a234dbb97d2372af56b757977d661407",
     "semantic_hash": ""
   }
 }

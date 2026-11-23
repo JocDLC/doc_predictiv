@@ -41,10 +41,26 @@ from browser_factory import (
 )
 from closure_store import validate_close_queue
 from country_fields import normalize_country
-from distribucion_loader import parse_archivo, validate_distribucion_queue
+import apertura_store
+from apertura import CLASIF_NO_HABIL, classify_lead, parse_apertura_range
+from apertura_store import (
+    ESTADO_ERROR,
+    ESTADO_REVISION,
+    ESTADO_TOMADO_CONFIRMADO,
+    ESTADO_TOMADO_POR_OTRO,
+)
+from distribucion_loader import mezclar_apertura, parse_archivo, validate_distribucion_queue
 from laboratory_contracts import validate_laboratory_queue
 from laboratory_store import LaboratoryStore, store_path_for
-from lead_monitor import _encargada_activa, _encargada_termino_recien, run_cycle
+from lead_monitor import (
+    _encargada_activa,
+    _encargada_termino_recien,
+    open_report,
+    read_bandeja_leads,
+    report_session_lost,
+    run_cycle,
+    take_lead,
+)
 from local_audit import mask_lead_id
 from monitor_store import (
     MAX_RESULTS,
@@ -434,6 +450,192 @@ def start_manual_check(config: dict) -> bool:
     return True
 
 
+# --- Recogida de apertura (QUALIF fuera de horario) ---------------------------
+# La vista previa se registra en memoria: una confirmación solo acepta IDs
+# elegibles de un preview vigente del mismo arranque — tras un reinicio hay
+# que previsualizar de nuevo (estado consistente, nunca ciego).
+class AperturaOcupada(RuntimeError):
+    """El navegador del bot está ocupado por un ciclo u otra recogida."""
+
+
+class AperturaLecturaFallida(RuntimeError):
+    """El reporte no se pudo leer completo — nunca se muestra como vacío."""
+
+
+apertura_previews: dict[str, dict] = {}
+apertura_previews_lock = threading.Lock()
+APERTURA_PREVIEW_TTL_SECONDS = 600
+
+_APERTURA_ESTADO = {
+    STATUS_TOMADO: ESTADO_TOMADO_CONFIRMADO,
+    STATUS_TOMADO_POR_OTRO: ESTADO_TOMADO_POR_OTRO,
+    STATUS_NO_VERIFICADO: ESTADO_REVISION,
+}
+
+
+def _apertura_store_dir(config: dict) -> Path:
+    return ROOT / config.get("ui_output_directory", "ui_output") / "apertura"
+
+
+def _apertura_bandeja(state: dict, code: str) -> dict:
+    """Bandeja pedida, habilitada y con reporte — si no, la recogida no corre."""
+    for bandeja in state.get("bandejas") or []:
+        if bandeja.get("code") == code:
+            if not bandeja.get("enabled") or not bandeja.get("url"):
+                raise ValueError(f"La bandeja {code} no está habilitada o no tiene reporte.")
+            return bandeja
+    raise ValueError(f"Bandeja desconocida: {code or '(sin código)'}.")
+
+
+def _attach_monitor_driver(config: dict, state: dict):
+    """Sesión WebDriver sobre la ventana dedicada del monitor — el mismo
+    attach que usa el ciclo, compartido por preview y confirmación."""
+    browser, executable = detect_browser(config["browser"])
+    debugger_address = config.get("debugger_address", "127.0.0.1:9222")
+    driver = _monitor_driver(config, browser, executable, debugger_address)
+    adopt_urls = [state["monitor_url"]] if state.get("monitor_url") else []
+    adopt_urls += [b["url"] for b in state.get("bandejas") or [] if b.get("enabled") and b.get("url")]
+    ensure_monitor_window(driver, adopt_urls=adopt_urls, debugger_address=debugger_address)
+    return driver
+
+
+def apertura_preview(config: dict, bandeja_code: object, desde_raw: object, hasta_raw: object) -> dict:
+    """Lectura clasificada de una bandeja para la apertura — solo lectura:
+    abre el reporte, clasifica cada QUALIF y devuelve elegibles y excluidos
+    con motivo. Nada de Pick Up, propietario ni cambios de estado."""
+    cfg = config or load_config()
+    state = monitor_read_state(cfg)
+    bandeja = _apertura_bandeja(state, str(bandeja_code or "").strip())
+    desde, hasta = parse_apertura_range(desde_raw, hasta_raw)
+    if not cycle_lock.acquire(blocking=False):
+        raise AperturaOcupada("hay un ciclo u operación del monitor en curso; reintenta al finalizar")
+    try:
+        timeout_seconds = int(cfg.get("timeouts", {}).get("page_load_seconds", 30))
+        try:
+            driver = _attach_monitor_driver(cfg, state)
+            open_report(driver, bandeja, timeout_seconds)
+            if report_session_lost(driver):
+                raise AperturaLecturaFallida("la sesión de Salesforce se perdió durante la lectura")
+            diagnostics: list[dict] = []
+            visible_rows, leads = read_bandeja_leads(
+                driver,
+                bandeja,
+                timeout_seconds,
+                cfg.get("record_object_api_name", "Lead"),
+                cfg.get("lead_list_fields", {}),
+                diagnostics,
+                full=True,
+            )
+        except AperturaLecturaFallida:
+            raise
+        except Exception as error:  # noqa: BLE001 — una lectura rota nunca es "0 pendientes"
+            raise AperturaLecturaFallida(f"no se pudo leer el reporte: {error}") from error
+    finally:
+        cycle_lock.release()
+    candidatos, excluidos = [], []
+    for lead in leads:
+        clasif = classify_lead(lead.details, bandeja, state.get("schedule"), state.get("equipo"), desde, hasta)
+        row = {
+            "lead_id": lead.lead_id,
+            "nombre": (lead.details or {}).get("nombre") or "",
+            "fecha_creacion": (lead.details or {}).get("fecha_creacion") or "",
+            "clasificacion": clasif,
+        }
+        if clasif == CLASIF_NO_HABIL:
+            candidatos.append(row)
+        else:
+            excluidos.append(row)
+    preview_id = secrets.token_hex(6)
+    with apertura_previews_lock:
+        apertura_previews[preview_id] = {
+            "bandeja": bandeja["code"],
+            "desde": str(desde_raw),
+            "hasta": str(hasta_raw),
+            "elegibles": {row["lead_id"] for row in candidatos},
+            "creado": time.monotonic(),
+            "consumido": False,
+        }
+    return {
+        "preview_id": preview_id,
+        "bandeja": bandeja["code"],
+        "tz_offset": bandeja.get("tz_offset") or 0,
+        "desde": desde.isoformat(timespec="minutes"),
+        "hasta": hasta.isoformat(timespec="minutes"),
+        "rows": visible_rows,
+        "candidatos": candidatos,
+        "excluidos": excluidos,
+    }
+
+
+def apertura_confirm(config: dict, preview_id: object, lead_ids: object) -> dict:
+    """Toma los IDs elegibles confirmados de un preview, bajo el lock de
+    ciclo — cada toma re-verifica el propietario (``take_lead``) y queda a
+    nombre del usuario de la sesión, sin reasignación ni WhatsApp. El
+    resultado por lead se persiste de inmediato en el lote."""
+    cfg = config or load_config()
+    with apertura_previews_lock:
+        preview = apertura_previews.get(str(preview_id or ""))
+    if not preview or preview["consumido"]:
+        raise ValueError("La vista previa no existe, venció o ya fue confirmada.")
+    if time.monotonic() - preview["creado"] > APERTURA_PREVIEW_TTL_SECONDS:
+        raise ValueError("La vista previa venció; generá una nueva.")
+    pedidos = [str(x).strip() for x in (lead_ids or []) if str(x).strip()]
+    validos = [x for x in pedidos if x in preview["elegibles"]]
+    rechazados = [x for x in pedidos if x not in preview["elegibles"]]
+    if not validos:
+        raise ValueError("Ninguno de los Lead ID pedidos es elegible en esa vista previa.")
+    state = monitor_read_state(cfg)
+    bandeja = _apertura_bandeja(state, preview["bandeja"])
+    if not cycle_lock.acquire(blocking=False):
+        raise AperturaOcupada("hay un ciclo u operación del monitor en curso; reintenta al finalizar")
+    global monitor_cycle_active
+    try:
+        monitor_cycle_active = True  # PAUSE_RUN_ACTIVO bloquea los runners
+        store_dir = _apertura_store_dir(cfg)
+        lote = apertura_store.create_lote(
+            store_dir,
+            bandeja=preview["bandeja"],
+            desde=preview["desde"],
+            hasta=preview["hasta"],
+            lead_ids=validos,
+            preview_id=str(preview_id),
+        )
+        timeout_seconds = int(cfg.get("timeouts", {}).get("page_load_seconds", 30))
+        resultados = []
+        try:
+            driver = _attach_monitor_driver(cfg, state)
+            for lead_id in validos:
+                try:
+                    status, owner, _finalize, _diag = take_lead(
+                        driver,
+                        cfg,
+                        bandeja,
+                        lead_id,
+                        timeout_seconds,
+                        enviar_whatsapp=False,
+                        equipo=None,
+                        bot_owner=state.get("bot_owner"),
+                    )
+                except Exception as error:  # noqa: BLE001 — el lote sigue con el próximo lead
+                    status, owner = STATUS_ERROR, ""
+                    _diag = f"{type(error).__name__}: {error}"
+                estado = _APERTURA_ESTADO.get(status, ESTADO_ERROR)
+                apertura_store.update_lead(store_dir, lote["lote_id"], lead_id, estado, propietario=owner)
+                resultados.append({"lead_id": lead_id, "estado": estado, "propietario": owner})
+        finally:
+            monitor_cycle_active = False
+    finally:
+        cycle_lock.release()
+    with apertura_previews_lock:
+        preview["consumido"] = True
+    return {
+        "lote_id": lote["lote_id"],
+        "bandeja": bandeja["code"],
+        "resultados": resultados,
+        "rechazados": rechazados,
+    }
+
+
 def _adopt_restored_monitor_window(driver, debugger_address: str | None, adopt_urls: list[str]) -> str | None:
     """Ubica la ventana del monitor que la restauración de sesión recuperó.
 
@@ -641,9 +843,7 @@ def _turno_recien_terminado(state: dict, bandejas: set | None = None) -> bool:
     intervalo de monitor: la ventana de gracia post-cierre para
     re-verificar rezagados ingresados en-franja."""
     grace = MONITOR_INTERVAL_SECONDS
-    if state.get("schedule") and schedule_recently_ended(
-        state["schedule"], grace_seconds=grace, bandeja=bandejas
-    ):
+    if state.get("schedule") and schedule_recently_ended(state["schedule"], grace_seconds=grace, bandeja=bandejas):
         return True
     return _encargada_termino_recien(state.get("equipo"), grace_seconds=grace, bandeja=bandejas)
 
@@ -1172,6 +1372,32 @@ def make_handler(token: str, config: dict | None = None):
                     return
                 self._send(200, load_equipo_reparto(equipo_reparto_path(config or load_config())))
                 return
+            if route == "/api/apertura/disponibles":
+                # Leads tomados en apertura no consumidos, para Distribuir.
+                if not self._authorized():
+                    self._send(403, {"error": "token inválido o ausente"})
+                    return
+                cfg = config or load_config()
+                params = parse_qs(urlparse(self.path).query)
+                self._send(
+                    200,
+                    {
+                        "disponibles": apertura_store.disponibles(
+                            _apertura_store_dir(cfg), bandeja=(params.get("bandeja") or [None])[0]
+                        ),
+                        "lotes": [
+                            {
+                                "lote_id": lote["lote_id"],
+                                "bandeja": lote.get("bandeja"),
+                                "desde": lote.get("desde"),
+                                "hasta": lote.get("hasta"),
+                                "creado": lote.get("creado"),
+                            }
+                            for lote in apertura_store.lotes(_apertura_store_dir(cfg))
+                        ],
+                    },
+                )
+                return
             if route == "/api/laboratorio/engines":
                 if not self._authorized():
                     self._send(403, {"error": "token inválido o ausente"})
@@ -1526,6 +1752,62 @@ def make_handler(token: str, config: dict | None = None):
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     filename,
                 )
+                return
+            if route == "/api/apertura/preview":
+                # Vista previa de solo lectura: clasifica los QUALIF del
+                # rango pedido sin tocar ni un lead (REQ-831/832).
+                payload = self._read_json_body()
+                if not isinstance(payload, dict):
+                    return
+                try:
+                    result = apertura_preview(
+                        config, payload.get("bandeja"), payload.get("desde"), payload.get("hasta")
+                    )
+                except AperturaOcupada as error:
+                    self._send(409, {"error": str(error)})
+                    return
+                except AperturaLecturaFallida as error:
+                    self._send(502, {"error": str(error)})
+                    return
+                except ValueError as error:
+                    self._send(400, {"error": str(error)})
+                    return
+                self._send(200, result)
+                return
+            if route == "/api/apertura/mezclar":
+                # Mezcla de Distribuir: las filas actuales + los disponibles
+                # seleccionados, unificados por Lead ID (REQ-835).
+                payload = self._read_json_body()
+                if not isinstance(payload, dict):
+                    return
+                filas = payload.get("filas")
+                lead_ids = payload.get("lead_ids")
+                if not isinstance(filas, list) or not isinstance(lead_ids, list):
+                    self._send(400, {"error": "se esperaba 'filas' y 'lead_ids' (listas)"})
+                    return
+                cfg = config or load_config()
+                merged, resumen = mezclar_apertura(
+                    filas,
+                    apertura_store.disponibles(_apertura_store_dir(cfg)),
+                    [str(x or "") for x in lead_ids],
+                )
+                self._send(200, {"filas": merged, **resumen})
+                return
+            if route == "/api/apertura/confirm":
+                # Confirmación: solo IDs elegibles del preview, toma a nombre
+                # del usuario de sesión y comprobante por lead (REQ-833/834).
+                payload = self._read_json_body()
+                if not isinstance(payload, dict):
+                    return
+                try:
+                    result = apertura_confirm(config, payload.get("preview_id"), payload.get("lead_ids"))
+                except AperturaOcupada as error:
+                    self._send(409, {"error": str(error)})
+                    return
+                except ValueError as error:
+                    self._send(400, {"error": str(error)})
+                    return
+                self._send(200, result)
                 return
             if route == "/api/monitor/clear-results":
                 if not cycle_lock.acquire(blocking=False):
@@ -1894,6 +2176,9 @@ def main() -> int:
         print("Ya hay un servidor del bot corriendo; esta instancia cierra.")
         return 0
     token = load_or_create_token(ui_output_directory)
+    pendientes = apertura_store.reconciliar_en_curso(ui_output_directory / "apertura")
+    if pendientes:
+        print(f"[apertura] {pendientes} lead(s) en_curso pasaron a revisar tras el reinicio.")
     try:
         server = ThreadingHTTPServer(("127.0.0.1", SERVER_PORT), make_handler(token, config))
     except OSError:

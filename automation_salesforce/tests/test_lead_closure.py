@@ -4,6 +4,8 @@ import subprocess
 import unittest
 from unittest.mock import Mock, patch
 
+from selenium.common.exceptions import WebDriverException
+
 import comment_reader
 import lead_closure as closure
 from tests.test_ui_closure import node_executable
@@ -160,6 +162,8 @@ class PicklistDomTests(unittest.TestCase):
     def run_dom(self, scenario):
         scripts = {
             "trigger": closure.PICKLIST_TRIGGER_SCRIPT,
+            "atomic": closure.CLICK_PICKLIST_TRIGGER_ATOMIC_SCRIPT,
+            "cancel": closure.CLICK_CANCEL_EDIT_ATOMIC_SCRIPT,
             "value": closure.PICKLIST_VALUE_SCRIPT,
             "pick": closure.PICK_OPTION_SCRIPT,
             "count": closure.OPEN_OPTIONS_COUNT_SCRIPT,
@@ -194,6 +198,42 @@ class PicklistDomTests(unittest.TestCase):
             assert.equal(wrong.clicks, 0);
             assert.equal(right.clicks, 1);
             assert.equal(call('value', labels), 'rechazo argumentado');
+        """)
+
+    def test_atomic_trigger_clicks_closed_control_and_reports_expanded(self):
+        self.run_dom("""
+            const closed = field('Cualificación', '--Ninguno--', {expanded: false});
+            assert.equal(call('atomic', labels), 'clicked');
+            assert.equal(closed.control.clicks, 1);
+            // Ya abierto: no vuelve a clicar (un segundo clic lo cerraría).
+            assert.equal(call('atomic', labels), 'expanded');
+            assert.equal(closed.control.clicks, 1);
+        """)
+
+    def test_atomic_trigger_reports_not_found_without_control(self):
+        self.run_dom("""
+            field('Otro campo', '--Ninguno--', {expanded: false});
+            assert.equal(call('atomic', ['cualificacion inexistente']), 'not_found');
+        """)
+
+    def test_cancel_atomic_prefers_the_button_inside_the_form_footer(self):
+        self.run_dom("""
+            const footer = document.append(new Element('footer'));
+            footer.append(new Element('button', {}, 'Guardar'));
+            const cancel = footer.append(new Element('button', {}, 'Cancelar'));
+            const stray = document.append(new Element('button', {}, 'Cancelar'));
+            assert.equal(call('cancel', []), 'clicked');
+            assert.equal(cancel.clicks, 1);
+            assert.equal(stray.clicks, 0);
+            assert.equal(call('cancel', []), 'clicked');
+            assert.equal(cancel.clicks, 2);
+        """)
+
+    def test_cancel_atomic_reports_not_found_without_button(self):
+        self.run_dom("""
+            const footer = document.append(new Element('footer'));
+            footer.append(new Element('button', {}, 'Guardar'));
+            assert.equal(call('cancel', []), 'not_found');
         """)
 
     def test_selected_button_is_not_treated_as_an_option(self):
@@ -380,13 +420,11 @@ class SubqualificationContractTests(unittest.TestCase):
 
 
 class PicklistPollingTests(unittest.TestCase):
-    def run_selection(self, values):
+    def run_selection(self, values, atomic="clicked"):
         driver = Mock()
-        trigger = Mock()
-        trigger.get_attribute.return_value = "false"
         clock = itertools.count(step=0.25)
         patches = {
-            "_picklist_trigger": Mock(return_value=trigger),
+            "execute_in_any_frame": Mock(return_value=atomic),
             "_picklist_current_value": values,
             "_open_options_count": Mock(return_value=0),
             "_execute_picklist_script": Mock(return_value="clicked"),
@@ -396,17 +434,23 @@ class PicklistPollingTests(unittest.TestCase):
             patch.object(closure.time, "monotonic", side_effect=lambda: next(clock)),
             patch.object(closure.time, "sleep"),
         ):
-            closure.select_picklist_option(driver, closure.QUALIFICATION_FIELD_LABELS, "Rechazo argumentado", 8)
-        return driver, patches
+            selected = closure.select_picklist_option(
+                driver, closure.QUALIFICATION_FIELD_LABELS, "Rechazo argumentado", 8
+            )
+        return driver, patches, selected
 
     def test_already_selected_does_not_reopen_or_click(self):
-        driver, patches = self.run_selection(Mock(return_value="rechazo argumentado"))
+        driver, patches, _ = self.run_selection(Mock(return_value="rechazo argumentado"))
         driver.execute_script.assert_not_called()
+        patches["execute_in_any_frame"].assert_not_called()
         patches["_execute_picklist_script"].assert_not_called()
 
     def test_selection_returns_after_exact_value_is_observed(self):
-        driver, patches = self.run_selection(Mock(side_effect=["--ninguno--", "rechazo argumentado"]))
-        self.assertEqual(driver.execute_script.call_count, 1)
+        driver, patches, _ = self.run_selection(Mock(side_effect=["--ninguno--", "rechazo argumentado"]))
+        driver.execute_script.assert_not_called()
+        patches["execute_in_any_frame"].assert_called_once_with(
+            driver, closure.CLICK_PICKLIST_TRIGGER_ATOMIC_SCRIPT, list(closure.QUALIFICATION_FIELD_LABELS)
+        )
         patches["_execute_picklist_script"].assert_called_once_with(
             driver, closure.PICK_OPTION_SCRIPT, closure.QUALIFICATION_FIELD_LABELS, "Rechazo argumentado"
         )
@@ -416,11 +460,10 @@ class PicklistPollingTests(unittest.TestCase):
             self.run_selection(Mock(return_value="rechazo argumentado extra"))
 
     def test_selected_fallback_returns_without_option_click(self):
-        driver, trigger = Mock(), Mock()
-        trigger.get_attribute.return_value = "true"
+        driver = Mock()
         clock = itertools.count(step=0.25)
         with (
-            patch.object(closure, "_picklist_trigger", return_value=trigger),
+            patch.object(closure, "execute_in_any_frame", Mock(return_value="expanded")),
             patch.object(
                 closure,
                 "_picklist_current_value",
@@ -443,12 +486,12 @@ class PicklistPollingTests(unittest.TestCase):
 
 class PicklistRetryTests(unittest.TestCase):
     def test_reopening_is_bounded_even_after_unverified_option_clicks(self):
-        driver, trigger = Mock(), Mock()
-        trigger.get_attribute.return_value = "false"
+        driver = Mock()
         clock = itertools.count(step=0.25)
         outcomes = itertools.cycle(["clicked", *(["not_found"] * 10)])
+        atomic = Mock(return_value="clicked")
         with (
-            patch.object(closure, "_picklist_trigger", return_value=trigger),
+            patch.object(closure, "execute_in_any_frame", atomic),
             patch.object(closure, "_picklist_current_value", return_value="--ninguno--"),
             patch.object(closure, "_open_options_count", return_value=0),
             patch.object(closure, "_execute_picklist_script", side_effect=lambda *args: next(outcomes)),
@@ -457,43 +500,69 @@ class PicklistRetryTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(ValueError, "confirmar la opción exacta"):
                 closure.select_picklist_option(driver, closure.QUALIFICATION_FIELD_LABELS, "Rechazo argumentado", 30)
-        self.assertEqual(driver.execute_script.call_count, 4)
+        # Un clic del trigger al abrir + a lo sumo 3 reaperturas acotadas.
+        self.assertEqual(atomic.call_count, 4)
 
 
 class PicklistFrameTests(unittest.TestCase):
-    def test_hidden_frame_is_skipped_and_selection_executes_once(self):
+    """Los scripts del picklist delegan en el executor tolerante a frames:
+    cada evaluación reubica el control dentro de su contexto, así ningún
+    WebElement cruza evaluaciones ni frames (Edge 158 los invalida)."""
+
+    def test_delegates_to_frame_tolerant_executor(self):
         driver = Mock()
-        hidden, active, unrelated = Mock(), Mock(), Mock()
-        hidden.is_displayed.return_value = False
-        active.is_displayed.return_value = True
-        driver.find_elements.return_value = [hidden, active, unrelated]
-        driver.execute_script.side_effect = [None, Mock(), "clicked"]
-
-        outcome = closure._execute_picklist_script(
-            driver, closure.PICK_OPTION_SCRIPT, closure.QUALIFICATION_FIELD_LABELS, "Rechazo argumentado"
-        )
-
-        self.assertEqual(outcome, "clicked")
-        driver.switch_to.frame.assert_called_once_with(active)
-        self.assertEqual(driver.execute_script.call_count, 3)
-        driver.execute_script.assert_called_with(
-            closure.PICK_OPTION_SCRIPT, "Rechazo argumentado", list(closure.QUALIFICATION_FIELD_LABELS)
-        )
-        unrelated.is_displayed.assert_not_called()
-        self.assertEqual(driver.switch_to.default_content.call_count, 2)
-
-    def test_no_visible_control_never_runs_option_script(self):
-        driver = Mock()
-        driver.find_elements.return_value = []
-        driver.execute_script.return_value = None
-        self.assertIsNone(
-            closure._execute_picklist_script(
+        with patch.object(closure, "execute_in_any_frame", return_value="clicked") as run:
+            outcome = closure._execute_picklist_script(
                 driver, closure.PICK_OPTION_SCRIPT, closure.QUALIFICATION_FIELD_LABELS, "Rechazo argumentado"
             )
+
+        self.assertEqual(outcome, "clicked")
+        run.assert_called_once_with(
+            driver, closure.PICK_OPTION_SCRIPT, "Rechazo argumentado", list(closure.QUALIFICATION_FIELD_LABELS)
         )
-        driver.execute_script.assert_called_once_with(
-            closure.PICKLIST_TRIGGER_SCRIPT, list(closure.QUALIFICATION_FIELD_LABELS)
+
+    def test_missing_control_returns_executor_result(self):
+        driver = Mock()
+        with patch.object(closure, "execute_in_any_frame", return_value="not_found") as run:
+            outcome = closure._execute_picklist_script(
+                driver, closure.PICK_OPTION_SCRIPT, closure.QUALIFICATION_FIELD_LABELS, "Rechazo argumentado"
+            )
+
+        self.assertEqual(outcome, "not_found")
+        run.assert_called_once_with(
+            driver, closure.PICK_OPTION_SCRIPT, "Rechazo argumentado", list(closure.QUALIFICATION_FIELD_LABELS)
         )
+
+
+class DiscardEditFormTests(unittest.TestCase):
+    def test_clicks_cancel_and_restores_default_content(self):
+        driver = Mock()
+        with (
+            patch.object(closure, "execute_in_any_frame", return_value="clicked") as run,
+            patch.object(closure.time, "sleep") as sleep,
+        ):
+            closure.discard_open_edit_form(driver)
+
+        run.assert_called_once_with(driver, closure.CLICK_CANCEL_EDIT_ATOMIC_SCRIPT)
+        sleep.assert_called_once()
+        driver.switch_to.default_content.assert_called()
+
+    def test_missing_cancel_button_is_a_noop(self):
+        driver = Mock()
+        with (
+            patch.object(closure, "execute_in_any_frame", return_value="not_found"),
+            patch.object(closure.time, "sleep") as sleep,
+        ):
+            closure.discard_open_edit_form(driver)
+
+        sleep.assert_not_called()
+        driver.switch_to.default_content.assert_called()
+
+    def test_driver_errors_are_swallowed(self):
+        driver = Mock()
+        driver.switch_to.default_content.side_effect = WebDriverException("frame dead")
+        with patch.object(closure, "execute_in_any_frame", side_effect=WebDriverException("dead")):
+            closure.discard_open_edit_form(driver)
 
 
 if __name__ == "__main__":

@@ -932,9 +932,7 @@ class UiServerMonitorTests(unittest.TestCase):
 
         state = default_state()
         state["schedule"] = []
-        state["equipo"] = [
-            {"nombre": "Ana", "franjas": [{"start": "09:00", "end": franja_end, "bandejas": ["AR"]}]}
-        ]
+        state["equipo"] = [{"nombre": "Ana", "franjas": [{"start": "09:00", "end": franja_end, "bandejas": ["AR"]}]}]
         state["bandejas"] = validate_bandejas(
             [{"code": "AR", "enabled": True, "url": "https://sf.example/lightning/r/Report/00O1/view"}]
         )
@@ -2207,6 +2205,284 @@ class MonitorTickTests(unittest.TestCase):
         ):
             pids = ui_server.dedicated_profile_pids(Path("C:/Perfil/edge-profile"))
         self.assertEqual(pids, ["111"])
+
+
+class AperturaApiTests(unittest.TestCase):
+    """Endpoints de la recogida de apertura: preview solo-lectura (831/832),
+    confirmación exclusiva con comprobante por lead (833/834) y la lista de
+    disponibles para Distribuir leads."""
+
+    def setUp(self):
+        from monitor_store import default_state, validate_bandejas
+
+        self._tmp = TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.config = {
+            "ui_output_directory": str(Path(self._tmp.name)),
+            "timeouts": {"page_load_seconds": 1},
+            "lead_list_fields": {},
+            "browser": {},
+        }
+        self.state = default_state()
+        self.state["bandejas"] = validate_bandejas(
+            [
+                {
+                    "code": "AR",
+                    "enabled": True,
+                    "url": "https://example.lightning.force.com/lightning/r/Report/00O123/view",
+                    "unassigned_owner": "AR_LEAD_QUALIF",
+                    "expected_status": "Nuevo",
+                    "tz_offset": 0,
+                }
+            ]
+        )
+        self.state["schedule"] = [{"start": "08:00", "end": "17:59"}]
+        self.state["equipo"] = []
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler("token-x", self.config))
+        self.port = self.server.server_address[1]
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.addCleanup(self.server.shutdown)
+        self.addCleanup(self.server.server_close)
+        import ui_server
+
+        ui_server.apertura_previews.clear()
+        self.addCleanup(ui_server.apertura_previews.clear)
+        self._state_patch = patch("ui_server.monitor_read_state", return_value=self.state)
+        self._state_patch.start()
+        self.addCleanup(self._state_patch.stop)
+
+    def _post(self, path, payload, token="token-x"):
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{self.port}{path}",
+            data=json.dumps(payload).encode(),
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        if token:
+            request.add_header("X-Bot-Token", token)
+        try:
+            with urllib.request.urlopen(request) as response:
+                return response.status, json.loads(response.read())
+        except urllib.error.HTTPError as error:
+            return error.code, json.loads(error.read())
+
+    def _get(self, path, token="token-x"):
+        request = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}")
+        if token:
+            request.add_header("X-Bot-Token", token)
+        try:
+            with urllib.request.urlopen(request) as response:
+                return response.status, json.loads(response.read())
+        except urllib.error.HTTPError as error:
+            return error.code, json.loads(error.read())
+
+    def _lead(self, lead_id, fecha):
+        from report_reader import VisibleLead
+
+        return VisibleLead(
+            lead_id=lead_id,
+            created_at="",
+            details={"estado_candidato": "Nuevo", "fecha_creacion": fecha},
+        )
+
+    def _rango(self):
+        from datetime import datetime, timedelta
+
+        base = datetime.now() - timedelta(days=3)
+        return (
+            base.replace(hour=18, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M"),
+            (base + timedelta(days=1)).replace(hour=6, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M"),
+            base,
+        )
+
+    def _lectura_ok(self, leads):
+        return (
+            patch("ui_server._attach_monitor_driver", return_value=object()),
+            patch("ui_server.open_report"),
+            patch("ui_server.report_session_lost", return_value=False),
+            patch("ui_server.read_bandeja_leads", return_value=(len(leads), leads)),
+        )
+
+    def test_preview_pide_barrido_completo_del_reporte(self):
+        """La grilla de Lightning solo renderiza el viewport (~35 filas):
+        la preview pide el barrido vertical completo — 139 pendientes no
+        pueden quedar reducidos a la primera página."""
+        desde, hasta, _ = self._rango()
+        with (
+            patch("ui_server._attach_monitor_driver", return_value=object()),
+            patch("ui_server.open_report"),
+            patch("ui_server.report_session_lost", return_value=False),
+            patch("ui_server.read_bandeja_leads", return_value=(0, [])) as lector,
+        ):
+            status, _ = self._post("/api/apertura/preview", {"bandeja": "AR", "desde": desde, "hasta": hasta})
+        self.assertEqual(status, 200)
+        self.assertTrue(lector.call_args.kwargs.get("full"))
+
+    def test_preview_sin_token_403(self):
+        desde, hasta, _ = self._rango()
+        status, _ = self._post("/api/apertura/preview", {"bandeja": "AR", "desde": desde, "hasta": hasta}, token=None)
+        self.assertEqual(status, 403)
+
+    def test_preview_rango_invalido_400(self):
+        desde, hasta, _ = self._rango()
+        status, body = self._post("/api/apertura/preview", {"bandeja": "AR", "desde": hasta, "hasta": desde})
+        self.assertEqual(status, 400)
+        self.assertIn("Desde", body["error"])
+
+    def test_preview_bandeja_desconocida_400(self):
+        desde, hasta, _ = self._rango()
+        status, _ = self._post("/api/apertura/preview", {"bandeja": "XX", "desde": desde, "hasta": hasta})
+        self.assertEqual(status, 400)
+
+    def test_preview_lista_clasificados_sin_tocar_leads(self):
+        """La preview clasifica cada QUALIF por su hora de creación sin
+        abrir registros ni llamar a take_lead (REQ-832)."""
+        from datetime import timedelta
+
+        desde, hasta, base = self._rango()
+        # Franja nocturna del equipo dentro del rango: el lead de las 22:00
+        # es de otro turno — excluido `turno_personal`, no elegible.
+        self.state["equipo"] = [{"nombre": "Ana", "franjas": [{"start": "21:00", "end": "23:59", "bandejas": ["AR"]}]}]
+        nocturno = (base + timedelta(days=1)).replace(hour=3, minute=30).strftime("%d/%m/%Y %I:%M %p")
+        en_franja_equipo = base.replace(hour=22, minute=0).strftime("%d/%m/%Y %I:%M %p")
+        fuera = base.replace(hour=10, minute=0).strftime("%d/%m/%Y %I:%M %p")
+        leads = [
+            self._lead("00Q000000000001AAA", nocturno),
+            self._lead("00Q000000000002AAA", en_franja_equipo),
+            self._lead("00Q000000000003AAA", fuera),
+        ]
+        driver_patch, open_patch, lost_patch, read_patch = self._lectura_ok(leads)
+        with (
+            driver_patch,
+            open_patch,
+            lost_patch,
+            read_patch,
+            patch("ui_server.take_lead") as take,
+        ):
+            status, body = self._post("/api/apertura/preview", {"bandeja": "AR", "desde": desde, "hasta": hasta})
+        self.assertEqual(status, 200)
+        take.assert_not_called()
+        self.assertTrue(body["preview_id"])
+        self.assertEqual([c["lead_id"] for c in body["candidatos"]], ["00Q000000000001AAA"])
+        excluidos = {e["lead_id"]: e["clasificacion"] for e in body["excluidos"]}
+        self.assertEqual(
+            excluidos,
+            {"00Q000000000002AAA": "turno_personal", "00Q000000000003AAA": "fuera_de_rango"},
+        )
+
+    def test_preview_lectura_fallida_es_fallo_no_cero(self):
+        """Una lectura rota nunca se presenta como "cero pendientes" (832)."""
+        desde, hasta, _ = self._rango()
+        with (
+            patch("ui_server._attach_monitor_driver", side_effect=RuntimeError("sin navegador")),
+        ):
+            status, body = self._post("/api/apertura/preview", {"bandeja": "AR", "desde": desde, "hasta": hasta})
+        self.assertEqual(status, 502)
+        self.assertIn("no se pudo leer", body["error"])
+
+    def test_preview_ocupado_409(self):
+        """Con el navegador ocupado por un ciclo, la recogida espera (833)."""
+        import ui_server
+
+        desde, hasta, _ = self._rango()
+        with ui_server.cycle_lock:
+            status, _ = self._post("/api/apertura/preview", {"bandeja": "AR", "desde": desde, "hasta": hasta})
+        self.assertEqual(status, 409)
+
+    def _preview(self, leads):
+        desde, hasta, _ = self._rango()
+        driver_patch, open_patch, lost_patch, read_patch = self._lectura_ok(leads)
+        with driver_patch, open_patch, lost_patch, read_patch:
+            status, body = self._post("/api/apertura/preview", {"bandeja": "AR", "desde": desde, "hasta": hasta})
+        self.assertEqual(status, 200)
+        return body["preview_id"]
+
+    def test_confirm_preview_desconocido_400(self):
+        status, _ = self._post("/api/apertura/confirm", {"preview_id": "no-existe", "lead_ids": ["00Q1"]})
+        self.assertEqual(status, 400)
+
+    def test_confirm_sin_ids_elegibles_400(self):
+        desde, hasta, base = self._rango()
+        nocturno = base.replace(hour=23, minute=30).strftime("%d/%m/%Y %I:%M %p")
+        preview_id = self._preview([self._lead("00Q000000000001AAA", nocturno)])
+        status, _ = self._post(
+            "/api/apertura/confirm",
+            {"preview_id": preview_id, "lead_ids": ["00Q999999999999AAA"]},
+        )
+        self.assertEqual(status, 400)
+
+    def test_confirm_toma_elegibles_y_persiste(self):
+        """Confirma un elegible: take_lead corre sin equipo ni WhatsApp, el
+        lote persiste el comprobante y el lead queda disponible (833/834)."""
+        from monitor_store import STATUS_TOMADO
+
+        desde, hasta, base = self._rango()
+        nocturno = base.replace(hour=23, minute=30).strftime("%d/%m/%Y %I:%M %p")
+        en_franja = base.replace(hour=10, minute=0).strftime("%d/%m/%Y %I:%M %p")
+        leads = [self._lead("00Q000000000001AAA", nocturno), self._lead("00Q000000000002AAA", en_franja)]
+        preview_id = self._preview(leads)
+        with (
+            patch("ui_server._attach_monitor_driver", return_value=object()),
+            patch(
+                "ui_server.take_lead",
+                return_value=(STATUS_TOMADO, "Jose Manuel", "", ""),
+            ) as take,
+        ):
+            status, body = self._post(
+                "/api/apertura/confirm",
+                {
+                    "preview_id": preview_id,
+                    "lead_ids": ["00Q000000000001AAA", "00Q999999999999AAA"],
+                },
+            )
+        self.assertEqual(status, 200)
+        take.assert_called_once()
+        self.assertEqual(take.call_args.kwargs["equipo"], None)
+        self.assertFalse(take.call_args.kwargs["enviar_whatsapp"])
+        self.assertEqual(
+            body["resultados"],
+            [{"lead_id": "00Q000000000001AAA", "estado": "tomado_confirmado", "propietario": "Jose Manuel"}],
+        )
+        self.assertEqual(body["rechazados"], ["00Q999999999999AAA"])
+        # El comprobante persiste y queda disponible para Distribuir.
+        status, disp = self._get("/api/apertura/disponibles?bandeja=AR")
+        self.assertEqual(status, 200)
+        self.assertEqual([d["lead_id"] for d in disp["disponibles"]], ["00Q000000000001AAA"])
+
+    def test_disponibles_sin_token_403(self):
+        status, _ = self._get("/api/apertura/disponibles", token=None)
+        self.assertEqual(status, 403)
+
+    def test_mezclar_unifica_por_lead_id(self):
+        """Duplicado archivo+apertura → una fila con el destino del archivo;
+        disponible nuevo → fila marcada 'apertura' (REQ-835)."""
+        from apertura_store import ESTADO_TOMADO_CONFIRMADO, create_lote, update_lead
+
+        store_dir = Path(self._tmp.name) / "apertura"
+        lote = create_lote(store_dir, bandeja="AR", desde="d", hasta="h", lead_ids=["00Q1", "00Q2"])
+        update_lead(store_dir, lote["lote_id"], "00Q1", ESTADO_TOMADO_CONFIRMADO)
+        update_lead(store_dir, lote["lote_id"], "00Q2", ESTADO_TOMADO_CONFIRMADO)
+        status, body = self._post(
+            "/api/apertura/mezclar",
+            {
+                "filas": [{"lead_id": "00Q1", "persona": "Ana", "nombre": "Maria"}],
+                "lead_ids": ["00Q1", "00Q2", "00Q9"],
+            },
+        )
+        self.assertEqual(status, 200)
+        # La fila del archivo queda intacta y la nueva lleva origen.
+        self.assertEqual(body["filas"][0]["persona"], "Ana")
+        nueva = body["filas"][1]
+        self.assertEqual(nueva["lead_id"], "00Q2")
+        self.assertEqual(nueva["origen"], "apertura")
+        self.assertEqual(body["agregados"], 1)
+        self.assertEqual(body["duplicados"], ["00Q1"])
+        self.assertEqual(body["omitidos"], ["00Q9"])
+
+    def test_mezclar_sin_token_403(self):
+        status, _ = self._post("/api/apertura/mezclar", {"filas": [], "lead_ids": []}, token=None)
+        self.assertEqual(status, 403)
 
 
 if __name__ == "__main__":

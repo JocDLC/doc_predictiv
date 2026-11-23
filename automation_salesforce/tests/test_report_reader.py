@@ -162,6 +162,22 @@ class FakeHorizontalDriver:
         return {"moved": False}
 
 
+class FakeVerticalJitterDriver(FakeHorizontalDriver):
+    """El scroll vertical reporta moved=True en cada pasada aunque no aparezcan
+    filas nuevas — reproduce los contenedores anidados de Lightning que
+    re-renderizan y 'recuperan' rango de scroll en el fondo del reporte."""
+
+    def __init__(self, passes):
+        super().__init__(passes)
+        self.vertical_scrolls = 0
+
+    def execute_script(self, script, *args):
+        if len(args) == 1:
+            self.vertical_scrolls += 1
+            return {"moved": True}
+        return super().execute_script(script, *args)
+
+
 class FakeLink:
     def __init__(self, href: str):
         self.href = href
@@ -533,6 +549,35 @@ class ReportReaderTests(unittest.TestCase):
 
         self.assertEqual(visible_rows, 1)
         self.assertEqual([lead.lead_id for lead in leads], ["00Q000000000005AAA"])
+
+    def test_full_report_stops_when_scrolling_yields_no_new_rows(self):
+        """El scroll del report-viewer puede 'mover' para siempre (wrappers
+        anidados que se re-renderizan): si dos pasadas seguidas no traen
+        leads nuevos, la lectura corta igual — no consume las 80 pasadas."""
+        row_key = {"aria-rowindex": "2"}
+        driver = FakeVerticalJitterDriver(
+            [
+                {
+                    "headers": ["Propietario del candidato", "Lead ID"],
+                    "rows": [
+                        FakeRow(cells=[FakeCell("AR_LEAD_QUALIF"), FakeCell("00Q000000000005AAA")], attributes=row_key)
+                    ],
+                },
+            ]
+        )
+
+        _, leads = read_full_report(
+            driver,
+            timeout_seconds=1,
+            record_object_api_name="Lead",
+            field_aliases={"lead_id": ["Lead ID"]},
+            diagnostics=[],
+            max_vertical_passes=80,
+            max_horizontal_passes=1,
+        )
+
+        self.assertEqual([lead.lead_id for lead in leads], ["00Q000000000005AAA"])
+        self.assertLess(driver.vertical_scrolls, 10)
 
     def test_horizontal_reader_merges_fragments_and_restores_scroll(self):
         """El barrido del Monitor une propietario e ID de pasadas distintas

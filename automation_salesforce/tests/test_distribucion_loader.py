@@ -144,5 +144,44 @@ class DistribucionQueueTests(unittest.TestCase):
                 load_distribucion_queue(str(outside), queues)
 
 
+class MezclarAperturaTests(unittest.TestCase):
+    """La mezcla identifica al lead SOLO por Lead ID: un duplicado
+    archivo+apertura queda una sola fila con el destino del archivo, y dos
+    nombres iguales con IDs distintos son dos filas independientes."""
+
+    def test_duplicado_conserva_fila_y_destino_del_archivo(self):
+        from distribucion_loader import mezclar_apertura
+
+        filas = [{"lead_id": "00Q1", "persona": "Ana", "nombre": "Maria"}]
+        merged, resumen = mezclar_apertura(filas, [{"lead_id": "00Q1", "bandeja": "AR"}], ["00Q1"])
+        self.assertEqual(merged, filas)
+        self.assertEqual(resumen["duplicados"], ["00Q1"])
+        self.assertEqual(resumen["agregados"], 0)
+
+    def test_nombres_iguales_ids_distintos_dos_filas(self):
+        from distribucion_loader import mezclar_apertura
+
+        filas = [{"lead_id": "00Q1", "persona": "", "nombre": "Maria Perez"}]
+        merged, _ = mezclar_apertura(filas, [{"lead_id": "00Q2", "bandeja": "MX"}], ["00Q2"])
+        self.assertEqual(len(merged), 2)
+        self.assertEqual(merged[1]["origen"], "apertura")
+
+    def test_id_no_disponible_se_omite(self):
+        """Solo se agregan IDs que el store ofrece — nada se inventa."""
+        from distribucion_loader import mezclar_apertura
+
+        merged, resumen = mezclar_apertura([], [], ["00Q9"])
+        self.assertEqual(merged, [])
+        self.assertEqual(resumen["omitidos"], ["00Q9"])
+
+    def test_sin_archivo_funciona(self):
+        from distribucion_loader import mezclar_apertura
+
+        merged, resumen = mezclar_apertura([], [{"lead_id": "00Q1", "bandeja": "CO", "lote_id": "lote1"}], ["00Q1"])
+        self.assertEqual(resumen["agregados"], 1)
+        self.assertEqual(merged[0]["bandeja"], "CO")
+        self.assertEqual(merged[0]["lote_id"], "lote1")
+
+
 if __name__ == "__main__":
     unittest.main()

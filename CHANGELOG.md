@@ -17,8 +17,34 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
 
 ## [Sin publicar]
 
+## [1.6.1] — 2026-11-23
+
+> Primer paquete con la corrección de Edge/EdgeDriver 158. El zip `v1.6.0` que
+> circuló el 21/11 se armó antes del fix y queda sustituido por éste.
+
 ### Agregado
 
+- **Recogida de QUALIF fuera de horario (apertura)**: sección nueva en la
+  vista Monitor. La persona elige bandeja y rango manual `Desde`/`Hasta`,
+  ve la vista previa de candidatos (Lead ID, nombre, fecha de creación,
+  clasificación y motivo de exclusión) y confirma la toma a nombre del
+  usuario logueado — sin reasignación de equipo ni WhatsApp. Solo entran
+  leads `no_habil_elegible` (creados cuando ninguna franja cubría la
+  bandeja); los de turno personal y los de fecha ilegible quedan fuera o
+  en revisión. La vista previa es de solo lectura. Lotes persistidos en
+  `ui_output/apertura/` con estados por lead y reconciliación al arranque.
+  Endpoints: `POST /api/apertura/preview`, `POST /api/apertura/confirm`,
+  `GET /api/apertura/disponibles`, `POST /api/apertura/mezclar`.
+  Tests-regla: `tests.test_apertura.*`, `tests.test_apertura_store.*`,
+  `tests.test_ui_server.AperturaApiTests.*`.
+- **QUALIF de apertura en "Distribuir leads"**: botón "Agregar QUALIF de
+  apertura" lista los tomados confirmados no consumidos, se tildan y se
+  suman a la vista previa por Lead ID (chip "apertura" + bandeja).
+  Duplicado con el archivo → una sola fila con el destino del archivo.
+  La corrida real marca `consumido` por `run_id` solo en `reasignado` /
+  `ya_asignado`; la simulación y los errores no consumen.
+  Tests-regla: `tests.test_distribucion_loader.MezclarAperturaTests.*`,
+  `tests.test_run_distribucion_queue.ConsumirAperturaTests.*`.
 - **Toasts de Windows con bandera y bandeja**: cada línea del aviso del
   monitor lleva prefijo `🇦🇷 AR` / `🇨🇴 CO` / `🇲🇽 MX` (el toast no
   admite color de texto, la bandera es el indicador) — tomado, error, no
@@ -79,6 +105,26 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
   de bandeja. Tests-regla:
   `tests.test_comment_writer.AtomicEditorTests.*`,
   `tests.test_comment_reader.FrameToleranceTests.*`.
+- **El cierre de Leads moría por `StaleElementReferenceException` en Edge
+  158 y encadenaba revisiones falsas**: tres causas, tres correcciones.
+  (a) El picklist de Cualificación/Sub-Cualificación devolvía el
+  disparador como WebElement y lo usaba en la evaluación siguiente —
+  ahora se ubica, revisa `aria-expanded` y clickea dentro de la misma
+  evaluación (`CLICK_PICKLIST_TRIGGER_ATOMIC_SCRIPT`), y todos los
+  scripts del picklist corren por `execute_in_any_frame` (ningún handle
+  cruza evaluaciones ni frames). (b) `read_closure_state` leía una sola
+  vez apenas listo el shell de Lightning: la ficha llega después como
+  pestaña "Cargando…" y los Leads siguientes a un fallo salían
+  `revision` con Estado/Propietario vacíos — ahora
+  `wait_closure_state` sondea hasta que ambos campos rendericen
+  (acotado por el timeout). (c) Una edición que quedó abierta tras un
+  fallo activaba el guard de cambios sin guardar —
+  `discard_open_edit_form` la cancela (best-effort) antes de registrar
+  el error. Tests-regla:
+  `tests.test_lead_closure.PicklistFrameTests/PicklistRetryTests/
+  DiscardEditFormTests`, `tests.test_run_close_queue.WaitClosureStateTests`,
+  `test_state_arriving_after_first_read_still_closes`,
+  `test_edit_failure_discards_the_open_form`.
 - **La etiqueta del lápiz ("Modificar <label>") podía persistirse dentro
   del campo al documentar o cerrar**: el strip que el Monitor aplicaba a
   la marca de toma vivía solo en `lead_monitor`. Se mudó a
@@ -87,6 +133,37 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
   limpia, así el texto compuesto para Documentar/Cerrar no re-escribe la
   etiqueta. Test-regla:
   `tests.test_comment_reader.EditButtonLabelStripTests.*`.
+- **La clasificación corría la fecha de creación con el `tz_offset` de
+  documentación**: ese campo nació (v1.4.0) solo para escribir la línea
+  de intentos WhatsApp en la hora del país del lead; el reporte ya muestra
+  la hora del visor (= la PC). Con AR=+2, leads creados 07:08–07:55 dentro
+  de la franja 06:00–08:59 quedaban en 05:08–05:55 → `sin_cobertura` sin
+  tomarse. Ahora la clasificación usa la fecha del reporte tal cual;
+  `tz_offset` sigue aplicando solo a la línea de intentos. Test-regla:
+  `tests.test_apertura.ClassifyLeadTests.test_tz_offset_de_documentacion_no_corre_el_reporte`.
+- **La vista previa de apertura solo leía el viewport del reporte**: la
+  grilla de Lightning renderiza ~35 filas — una bandeja con 139 pendientes
+  listaba solo la primera página. Dos causas: la preview usaba la lectura
+  horizontal acotada (ahora `read_bandeja_leads(full=True)` →
+  `read_full_report`, el ciclo del monitor conserva la lectura rápida) y
+  el script de scroll vertical se rendía en el primer wrapper con
+  `scrollHeight > clientHeight` aunque su rango estuviera agotado
+  (`data-grid-table-ctr`, 17px) sin llegar al viewport real (`widgets`) —
+  ahora sigue subiendo si el contenedor no se movió. Test-regla:
+  `tests.test_ui_server.AperturaApiTests.test_preview_pide_barrido_completo_del_reporte`.
+- **Un lead sin franja que lo cubra se tomaba igual por el fallback a la
+  hora del ciclo**: si la Fecha de creación caía fuera de toda franja
+  configurada (u era de otro día o ilegible), el monitor la evaluaba a la
+  hora actual — y si el ciclo corría dentro de una franja, tomaba el
+  lead. Ahora la clasificación es por lead: `turno_personal` se toma,
+  `no_habil`/`fuera_de_rango` queda `detectado` con motivo
+  `sin_cobertura` (lo recoge la apertura manual), y fecha ilegible queda
+  `detectado` con motivo `revision` — nunca se toma. Las franjas son
+  día-agnósticas (`HH:MM` vale cualquier fecha) y `tz_offset` convierte
+  la hora del reporte a la de la PC. Tests-regla:
+  `tests.test_lead_monitor.*test_lead_sin_cobertura*`,
+  `...test_fecha_ilegible*` y los reescritos de fecha vieja en
+  `tests.test_lead_monitor`.
 - **La cobertura de la toma se evaluaba a la hora del ciclo, no a la de
   ingreso del lead**: un lead creado 10:58 en franja de 9:00–10:59 y
   revisado 11:01 quedaba "sin cobertura"; y uno creado antes de la franja

@@ -49,7 +49,13 @@ from monitor_store import (
     should_process,
     within_schedule,
 )
-from report_reader import read_report_horizontal
+from apertura import (
+    CLASIF_REVISION,
+    CLASIF_TURNO_PERSONAL,
+    classify_lead,
+    creation_moment_local,
+)
+from report_reader import read_full_report, read_report_horizontal
 from salesforce_session import is_authenticated, wait_for_lightning_ready
 
 # El botón de la barra de acciones del registro; normalize() en el script
@@ -476,7 +482,17 @@ def read_bandeja_leads(
     record_object_api_name: str,
     field_aliases: dict[str, list[str]],
     diagnostics: list | None = None,
+    full: bool = False,
 ):
+    if full:
+        return read_full_report(
+            driver,
+            timeout_seconds,
+            record_object_api_name,
+            field_aliases,
+            diagnostics,
+            unassigned_owner=bandeja["unassigned_owner"],
+        )
     return read_report_horizontal(
         driver,
         timeout_seconds,
@@ -793,60 +809,33 @@ def _encargada_termino_recien(
     return False
 
 
-def _lead_entry_moment(details: dict | None) -> datetime | None:
-    """Hora de ingreso del lead a la cola (Fecha de creación del reporte,
-    formato ``dd/mm/aaaa hh:MM AM/PM``). None si falta o no parsea."""
-    raw = ((details or {}).get("fecha_creacion") or "").strip()
-    try:
-        return datetime.strptime(raw, "%d/%m/%Y %I:%M %p")
-    except ValueError:
-        return None
-
-
-def _usable_entry_moment(details: dict | None, now: datetime | None = None) -> datetime | None:
-    """Hora de ingreso del lead a la cola, solo si es de HOY: una fecha de
-    creación de un día anterior no dice quién cubre la bandeja ahora."""
-    entry = _lead_entry_moment(details)
-    if entry is None or entry.date() != (now or datetime.now()).date():
-        return None
-    return entry
-
-
-def _lead_covered(state: dict, bandeja_code: str, details: dict | None, now: datetime | None = None) -> bool:
-    """¿La toma de ESTE lead está cubierta? Con fecha de creación usable
-    (de hoy) se mira quién cubría la bandeja a su hora de INGRESO — un lead
-    que entró en-franja se toma aunque el ciclo llegue tarde, y uno que
-    entró fuera de franja no se toma aunque el ciclo corra en otra franja.
-    Sin dato usable, la hora actual como siempre."""
-    entry = _usable_entry_moment(details, now)
-    moment = entry if entry is not None else (now or datetime.now().astimezone())
-    schedule = state.get("schedule")
-    if schedule and within_schedule(schedule, moment=moment, bandeja=bandeja_code):
-        return True
-    return _encargada_activa(state.get("equipo"), moment=moment, bandeja=bandeja_code) is not None
+def _bandeja_code(bandeja) -> str | None:
+    """``bandeja`` puede ser el dict completo o solo el código (tests)."""
+    return bandeja.get("code") if isinstance(bandeja, dict) else bandeja
 
 
 def _equipo_para_lead(
     state: dict,
-    bandeja_code: str,
+    bandeja,
     details: dict | None,
     now: datetime | None = None,
 ) -> list[dict] | None:
     """Equipo a pasar a ``take_lead`` para el lead, o None si queda con el
     usuario logueado.
 
-    A la hora de INGRESO del lead (solo si es de hoy): si la franja
-    propia cubría esa hora, el lead es propio; si la cubría alguien del
-    equipo, va el equipo. Sin dato usable —o si nadie cubría el
-    ingreso—, la regla de siempre: franja propia vigente ahora.
+    A la hora de INGRESO del lead: si la franja propia cubría esa hora,
+    el lead es propio; si la cubría alguien del equipo, va el equipo.
+    Sin fecha usable —o si nadie cubría el ingreso—, la regla de
+    siempre: franja propia vigente ahora.
     """
-    entry = _usable_entry_moment(details, now)
+    code = _bandeja_code(bandeja)
+    entry = creation_moment_local(details)
     if entry is not None:
-        if state.get("schedule") and within_schedule(state["schedule"], moment=entry, bandeja=bandeja_code):
+        if state.get("schedule") and within_schedule(state["schedule"], moment=entry, bandeja=code):
             return None
-        if _encargada_activa(state.get("equipo"), moment=entry, bandeja=bandeja_code):
+        if _encargada_activa(state.get("equipo"), moment=entry, bandeja=code):
             return state.get("equipo")
-    if state.get("schedule") and within_schedule(state["schedule"], moment=now, bandeja=bandeja_code):
+    if state.get("schedule") and within_schedule(state["schedule"], moment=now, bandeja=code):
         return None
     return state.get("equipo")
 
@@ -865,16 +854,17 @@ def _encargada_para_lead(
     propio usuario y el flujo sigue normal. La ``bandeja`` restringe a la
     persona que cubre ESA bandeja en su franja activa. La franja se
     evalúa a la hora de INGRESO del lead a la cola (Fecha de creación,
-    solo si es de hoy): el bot puede tardar minutos en tomarlo y caer en
-    el turno siguiente; si el ingreso no da miembro —o no es usable—,
-    cae a la hora actual como antes.
+    día-agnóstica como las franjas): el bot puede tardar minutos en
+    tomarlo y caer en el turno siguiente; si el ingreso no da miembro
+    —o no es usable—, cae a la hora actual como antes.
     """
-    entry = _usable_entry_moment(details, now)
+    code = _bandeja_code(bandeja)
+    entry = creation_moment_local(details)
     # Con ingreso no usable (None) no se evalúa: ``moment=None`` miraría el
     # reloj real en vez del ``now`` inyectado — el fallback correcto es la
     # hora actual de abajo.
-    member = _encargada_activa(equipo, moment=entry, bandeja=bandeja) if entry else None
-    member = member or _encargada_activa(equipo, moment=now, bandeja=bandeja)
+    member = _encargada_activa(equipo, moment=entry, bandeja=code) if entry else None
+    member = member or _encargada_activa(equipo, moment=now, bandeja=code)
     if not member:
         return None
     nombre = normalized_key(member.get("nombre") or "")
@@ -1344,7 +1334,7 @@ def take_lead(
             if got and wanted and not (wanted in got or got in wanted):
                 return STATUS_TOMADO_POR_OTRO, owner, "", ""
     new_owner = read_record_owner(driver) or owner
-    encargada = _encargada_para_lead(equipo, new_owner, bandeja=bandeja.get("code"), details=details)
+    encargada = _encargada_para_lead(equipo, new_owner, bandeja=bandeja, details=details)
     diagnostic = f"encargada: {encargada['nombre']}" if encargada else ""
     finalize, diag = finalize_pick_up(
         driver,
@@ -1498,11 +1488,14 @@ def run_bandeja_cycle(
             # Modo prueba: solo listar los QUALIF detectados; no abrir el
             # registro ni tocar Pick Up. El estado `detectado` es reprocesable.
             status = STATUS_DETECTADO
-        elif not _lead_covered(state, bandeja["code"], lead.details):
-            # La bandeja no tiene turno vigente que la cubra: el lead se
-            # lista como detectado "sin cobertura" para reasignarlo a mano.
+        elif (
+            clasif := classify_lead(lead.details, bandeja, state.get("schedule"), state.get("equipo"))
+        ) != CLASIF_TURNO_PERSONAL:
+            # Nadie cubría la hora de ingreso del lead en esta bandeja: no
+            # es del ciclo — va a la apertura si es no hábil o a revisión
+            # si la fecha no se pudo leer. No hay fallback a la hora actual.
             status = STATUS_DETECTADO
-            motivo = "sin_cobertura"
+            motivo = "revision" if clasif == CLASIF_REVISION else "sin_cobertura"
         else:
             try:
                 status, assigned_to, finalize, diagnostic = take_lead(
@@ -1514,7 +1507,7 @@ def run_bandeja_cycle(
                     diag_dir=diag_dir,
                     details=lead.details,
                     enviar_whatsapp=enviar_whatsapp,
-                    equipo=_equipo_para_lead(state, bandeja["code"], lead.details),
+                    equipo=_equipo_para_lead(state, bandeja, lead.details),
                     bot_owner=state.get("bot_owner"),
                 )
             except (TimeoutException, WebDriverException, ValueError):

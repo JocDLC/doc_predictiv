@@ -259,6 +259,24 @@ def _format_lookup_diag(diagnostics: dict) -> str:
     return f"input: {diagnostics.get('inputValue')!r} · opciones vistas: {opciones}"
 
 
+def _consumir_apertura(config: dict, lead_id: str, status: str, modo: str, run_id: str) -> None:
+    """Marca el lead de apertura como consumido cuando la corrida REAL lo
+    confirma ``reasignado``/``ya_asignado``: no se vuelve a ofrecer en
+    Distribuir. Bookkeeping best-effort — nunca corta la corrida."""
+    if modo == "prueba" or status not in (STATUS_REASIGNADO, STATUS_YA_ASIGNADO):
+        return
+    try:
+        import apertura_store
+
+        apertura_store.marcar_consumidos(
+            ROOT / config.get("ui_output_directory", "ui_output") / "apertura",
+            [lead_id],
+            run_id,
+        )
+    except Exception:  # noqa: BLE001 — la marca es contable, no de negocio
+        pass
+
+
 def simulate_one_lead(
     driver,
     lead: dict[str, str],
@@ -399,6 +417,7 @@ def main(argv: list[str] | None = None) -> int:
                     nombre=str(lead.get("nombre") or ""),
                 )
                 record_result(results_path, entry)
+            _consumir_apertura(config, lead["lead_id"], entry["status"], modo, run_id)
             stats[entry["status"]] = stats.get(entry["status"], 0) + 1
             print(f"Resultado: {entry['status']}")
     finally:

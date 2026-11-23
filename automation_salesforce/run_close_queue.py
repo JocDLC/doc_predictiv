@@ -44,6 +44,7 @@ from lead_closure import (
     confirm_conversion,
     contract_text,
     convert_lead,
+    discard_open_edit_form,
     edit_form_matches,
     is_final_closed,
     motive_line_present,
@@ -105,6 +106,33 @@ def fail_lead(
     )
     record_result(results_path, entry)
     return entry
+
+
+def wait_closure_state(
+    driver,
+    motive_labels: tuple[str, ...],
+    timeout_seconds: int,
+    poll_seconds: float = 0.6,
+) -> dict[str, str]:
+    """Espera a que la ficha renderice Estado y Propietario tras la navegación.
+
+    ``wait_for_lightning_ready`` solo garantiza el shell de Lightning; en la
+    consola el registro llega después como pestaña ("Cargando…") y una lectura
+    inmediata devolvía campos vacíos → revisión falsa del Lead.
+    """
+    deadline = time.monotonic() + timeout_seconds
+    max_polls = max(2, int(timeout_seconds))
+    state = read_closure_state(driver, motive_labels)
+    polls = 0
+    while (
+        polls < max_polls
+        and time.monotonic() < deadline
+        and (not normalized_value(state.get("estado")) or not normalized_value(state.get("propietario")))
+    ):
+        polls += 1
+        time.sleep(poll_seconds)
+        state = read_closure_state(driver, motive_labels)
+    return state
 
 
 def persist_and_verify(
@@ -278,7 +306,7 @@ def close_one_lead(
     stage_seconds["navigation"] = time.monotonic() - stage_started_at
 
     stage_started_at = time.monotonic()
-    state = read_closure_state(driver, motive_labels)
+    state = wait_closure_state(driver, motive_labels, timeout_seconds)
     stage_seconds["state_read"] = time.monotonic() - stage_started_at
     if not normalized_value(state.get("estado")) or not normalized_value(state.get("propietario")):
         return fail(ValueError("No se pudo confirmar el estado y propietario antes del cierre."), STATUS_REVIEW)
@@ -371,6 +399,9 @@ def close_one_lead(
                 raise ValueError("Los valores del motivo no quedaron en el formulario de edición.")
             stage_seconds["fields_edit"] = time.monotonic() - stage_started_at
         except (ValueError, TimeoutException, WebDriverException) as error:
+            # Una edición que quedó abierta activa el guard de cambios sin
+            # guardar y bloquea la navegación del siguiente Lead: descartarla.
+            discard_open_edit_form(driver)
             return fail(error)
 
         try:
@@ -387,6 +418,7 @@ def close_one_lead(
             )
             stage_seconds["save_verify"] = time.monotonic() - stage_started_at
         except (ValueError, TimeoutException, WebDriverException) as error:
+            discard_open_edit_form(driver)
             return fail(error)
         if not saved:
             return fail(ValueError("Los campos no quedaron persistidos o el estado no pasó a Cerrado."))

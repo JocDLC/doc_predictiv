@@ -75,15 +75,29 @@ return rows.filter(candidate => !rows.some(
 HORIZONTAL_SCROLL_SCRIPT = """
 let current = arguments[0];
 const reset = arguments[1];
+if (reset) {
+    // El contenedor de columnas puede estar anidado entre wrappers: se
+    // resetean TODOS los scrolleables de la cadena, no solo el primero.
+    let any = false;
+    while (current) {
+        if (current.scrollWidth > current.clientWidth) {
+            if (current.scrollLeft > 0) { any = true; }
+            current.scrollLeft = 0;
+        }
+        const root = current.getRootNode ? current.getRootNode() : null;
+        current = current.parentElement || (root && root.host) || null;
+    }
+    return {moved: any, at_end: false};
+}
 while (current) {
     if (current.scrollWidth > current.clientWidth) {
         const before = current.scrollLeft;
-        if (reset) {
-            current.scrollLeft = 0;
-            return {moved: before > 0, at_end: false};
-        }
         current.scrollLeft = Math.min(current.scrollLeft + current.clientWidth, current.scrollWidth - current.clientWidth);
-        return {moved: current.scrollLeft > before, at_end: current.scrollLeft >= current.scrollWidth - current.clientWidth};
+        const atEnd = current.scrollLeft >= current.scrollWidth - current.clientWidth;
+        if (current.scrollLeft > before || atEnd) {
+            return {moved: current.scrollLeft > before, at_end: atEnd};
+        }
+        // Contenedor agotado sin llegar al fin: seguir subiendo.
     }
     const root = current.getRootNode ? current.getRootNode() : null;
     current = current.parentElement || (root && root.host) || null;
@@ -92,14 +106,28 @@ return {moved: false, at_end: true};
 """
 VERTICAL_SCROLL_SCRIPT = """
 let current = arguments[0];
+// La grilla de Lightning anida wrappers con rangos de scroll mínimos
+// (data-grid-table-ctr ~17px, data-grid ~1px) antes del viewport real:
+// scrollear el primer ancestro que "mueve" frena en un wrapper sin efecto.
+// Se elige el ancestro con MAYOR rango — es el contenedor que recorta filas.
+let best = null, bestRange = 0;
 while (current) {
-    if (current.scrollHeight > current.clientHeight + 1) {
-        const before = current.scrollTop;
-        current.scrollTop = Math.min(current.scrollTop + Math.max(current.clientHeight - 80, 100), current.scrollHeight - current.clientHeight);
-        return {moved: current.scrollTop > before};
+    const oy = getComputedStyle(current).overflowY;
+    // 'visible'/'clip' tienen scrollHeight > clientHeight pero no son
+    // contenedores de scroll: asignarles scrollTop no hace nada.
+    if (oy !== 'visible' && oy !== 'clip') {
+        const range = current.scrollHeight - current.clientHeight;
+        if (range > bestRange) { bestRange = range; best = current; }
     }
     const root = current.getRootNode ? current.getRootNode() : null;
     current = current.parentElement || (root && root.host) || null;
+}
+if (best) {
+    const before = best.scrollTop;
+    best.scrollTop = Math.min(before + Math.max(best.clientHeight - 80, 100), bestRange);
+    // Si el viewport real ya está en el fondo, es fin de lista — scrollear
+    // la ventana movería la página pero no las filas del reporte.
+    return {moved: best.scrollTop > before};
 }
 const before = window.scrollY;
 window.scrollBy(0, Math.max(window.innerHeight - 80, 100));
@@ -276,6 +304,7 @@ def read_full_report(
     """
     collected: list[VisibleLead] = []
     total_rows_seen = 0
+    stale_passes = 0
     try:
         for _ in range(max_vertical_passes):
             table = find_report_table(driver, timeout_seconds)
@@ -307,8 +336,18 @@ def read_full_report(
             )
             new_ids = {lead.lead_id for lead in collected} - known_ids
             table = find_report_table(driver, timeout_seconds)
-            if not scroll_table_down(driver, table) and not new_ids:
+            moved = scroll_table_down(driver, table)
+            # El scroll del visor puede "mover" indefinidamente en el fondo
+            # (wrappers anidados que se re-renderizan y recuperan rango):
+            # dos pasadas sin leads nuevos bastan para dar por leído todo.
+            stale_passes = 0 if new_ids else stale_passes + 1
+            if (not moved and not new_ids) or stale_passes >= 2:
                 break
+            if moved:
+                # Lightning re-renderiza las filas de forma asíncrona tras el
+                # scroll: sin la espera la próxima captura lee el DOM viejo y
+                # el corte por "sin novedad" dispara en falso a mitad de lista.
+                time.sleep(VERTICAL_SETTLE_SECONDS)
     except ReportEmptyError:
         pass
     return total_rows_seen, merge_visible_leads(collected)
@@ -317,6 +356,9 @@ def read_full_report(
 # Espera breve tras cada pasada horizontal: Lightning re-renderiza las
 # columnas de forma asíncrona y sin ella la siguiente captura lee el DOM viejo.
 HORIZONTAL_SETTLE_SECONDS = 0.4
+# Ídem tras cada scroll vertical del barrido completo: la virtualización de
+# filas tarda más que la de columnas (verificado en vivo: ~1 s por pasada).
+VERTICAL_SETTLE_SECONDS = 1.0
 
 
 def _viewport_width(driver) -> int | None:

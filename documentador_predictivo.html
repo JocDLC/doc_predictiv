@@ -579,6 +579,20 @@
           </div>
         </div>
       </details>
+      <details class="monitor-config" id="aperturaPanel">
+        <summary>Recoger QUALIF fuera de horario &mdash; apertura <span class="hint" style="display:inline;font-weight:400">(nocturnos, fin de semana, feriado)</span></summary>
+        <div class="prepare-card">
+          <div class="hint">Trae los QUALIF que entraron cuando <strong>nadie cubr&iacute;a la bandeja</strong>. Primero se lista cada lead con su clasificaci&oacute;n y despu&eacute;s confirm&aacute;s cu&aacute;les tomar: quedan <strong>a nombre de tu usuario</strong> y disponibles en <strong>Distribuir leads</strong> (nada se reparte solo). Las fechas van en la hora que muestra el reporte de la bandeja <span id="aperturaZona"></span>.</div>
+          <div class="actions" style="gap:10px;align-items:center;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px">Bandeja <select id="aperturaBandeja"></select></label>
+            <label style="display:flex;align-items:center;gap:6px">Desde <input type="datetime-local" id="aperturaDesde"></label>
+            <label style="display:flex;align-items:center;gap:6px">Hasta <input type="datetime-local" id="aperturaHasta"></label>
+            <button class="btn" id="aperturaPreview" title="Lee la bandeja y clasifica cada QUALIF por su fecha de creaci&oacute;n — no toma ning&uacute;n lead">Ver pendientes</button>
+            <span class="hint" id="aperturaMsg"></span>
+          </div>
+          <div id="aperturaResult" class="hidden" style="margin-top:8px"></div>
+        </div>
+      </details>
       <div class="prepare-card">
         <div class="actions" style="justify-content:space-between;align-items:center">
           <h3 style="margin:0">Leads detectados</h3>
@@ -647,6 +661,11 @@
             </div>
             <div id="distResumen" class="hint"></div>
           </div>
+          <div class="actions" style="margin:8px 0;gap:10px">
+            <button class="btn" id="distAperturaBtn" title="Suma a la lista los QUALIF tomados en apertura que todav&iacute;a no se distribuyeron">Agregar QUALIF de apertura</button>
+            <span class="hint" id="distAperturaMsg"></span>
+          </div>
+          <div id="distAperturaPanel" class="hidden" style="margin:8px 0"></div>
           <div id="distSummary" class="hint" style="margin:8px 0"></div>
           <div class="monitor-table-wrap"><table class="dist-table" id="distTable"></table></div>
           <details id="distWhatsappCard" class="hidden" style="margin-top:10px">
@@ -660,7 +679,8 @@
             <button class="btn primary" id="distRun">Ejecutar distribución</button>
           </div>
         </div>
-        <div class="prepare-card hidden" id="distResultsCard">
+      </div>
+      <div class="prepare-card hidden" id="distResultsCard">
           <h3>Resultados</h3>
           <div class="monitor-dryrun-banner hidden" id="distSimBanner">Simulación — nada se guardó en Salesforce</div>
           <div id="distRunState" class="hint"></div>
@@ -671,7 +691,6 @@
           </details>
           <div class="actions" style="margin-top:12px"><button class="btn" id="distRefresh">Actualizar resultados</button></div>
         </div>
-      </div>
     </div>
   </section>
 
@@ -782,7 +801,7 @@
 <script>
 "use strict";
 
-const APP_VERSION = "1.6.0";
+const APP_VERSION = "1.6.1";
 const DEFAULT_MAP = {
   "ANSWER-MACHINE": "Buz\u00f3n directo",
   "NO-ANSWER": "No contesta",
@@ -2219,6 +2238,7 @@ function renderMonitor() {
   $("monitorWhatsapp").checked = !!monitorState.enviar_whatsapp;
   $("monitorNotify").checked = monitorState.notificar !== false;
   if (!bandejasDirty) renderBandejas();
+  aperturaPopulateBandejas();
   if (!scheduleDirty) renderSchedule();
   if (!equipoDirty) renderEquipo();
   renderMonitorTable();
@@ -2287,6 +2307,120 @@ function renderBandejas() {
     row.append(check, flag, name, url, owner, offset);
     container.appendChild(row);
   });
+}
+
+// --- Recogida de apertura (QUALIF fuera de horario) ---------------------------
+// Flujo: bandeja + rango manual → preview solo-lectura → selección → confirm.
+let aperturaPreviewData = null;
+
+function aperturaPopulateBandejas() {
+  const sel = $("aperturaBandeja");
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = "";
+  (monitorState?.bandejas || []).filter(b => b.enabled && b.url).forEach(b => {
+    const opt = document.createElement("option");
+    opt.value = b.code;
+    opt.textContent = b.code;
+    sel.appendChild(opt);
+  });
+  if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+  aperturaZonaUpdate();
+}
+
+function aperturaZonaUpdate() {
+  const code = $("aperturaBandeja")?.value;
+  const bandeja = (monitorState?.bandejas || []).find(b => b.code === code);
+  const zona = $("aperturaZona");
+  if (zona && bandeja) {
+    const off = bandeja.tz_offset ?? 0;
+    zona.textContent = `— ${code}, offset ${off >= 0 ? "+" : ""}${off} h respecto a esta PC`;
+  }
+}
+
+async function aperturaVerPendientes() {
+  const msg = $("aperturaMsg");
+  msg.textContent = "Leyendo la bandeja (puede tardar unos segundos)…";
+  $("aperturaResult").classList.add("hidden");
+  aperturaPreviewData = null;
+  try {
+    const body = await monitorApi("/api/apertura/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bandeja: $("aperturaBandeja").value,
+        desde: $("aperturaDesde").value,
+        hasta: $("aperturaHasta").value,
+      }),
+    });
+    aperturaPreviewData = body;
+    msg.textContent = "";
+    renderAperturaPreview(body);
+  } catch (error) {
+    msg.textContent = error.message;
+  }
+}
+
+function renderAperturaPreview(body) {
+  const box = $("aperturaResult");
+  box.classList.remove("hidden");
+  const candidatos = body.candidatos || [];
+  const excluidos = body.excluidos || [];
+  let html = `<div class="hint" style="margin:6px 0">${body.rows ?? 0} filas del reporte &middot; <strong>${candidatos.length} elegibles</strong> (fuera de toda franja) &middot; ${excluidos.length} excluidos</div>`;
+  if (candidatos.length) {
+    html += '<table class="monitor-table"><thead><tr><th></th><th>Lead ID</th><th>Nombre</th><th>Creado</th></tr></thead><tbody>';
+    candidatos.forEach(c => {
+      html += `<tr><td><input type="checkbox" class="apertura-check" value="${escapeHTML(c.lead_id)}" checked></td>` +
+        `<td>${escapeHTML(c.lead_id)}</td><td>${escapeHTML(c.nombre || "")}</td><td>${escapeHTML(c.fecha_creacion || "")}</td></tr>`;
+    });
+    html += "</tbody></table>";
+    html += '<div class="actions" style="margin-top:8px"><button class="btn primary" id="aperturaConfirmBtn">Tomar seleccionados</button></div>';
+  }
+  if (excluidos.length) {
+    html += `<details style="margin-top:8px"><summary class="hint">Ver ${excluidos.length} excluidos (no elegibles)</summary>` +
+      '<table class="monitor-table"><thead><tr><th>Lead ID</th><th>Creado</th><th>Motivo</th></tr></thead><tbody>';
+    excluidos.forEach(e => {
+      html += `<tr><td>${escapeHTML(e.lead_id)}</td><td>${escapeHTML(e.fecha_creacion || "")}</td><td>${escapeHTML(e.clasificacion || "")}</td></tr>`;
+    });
+    html += "</tbody></table></details>";
+  }
+  box.innerHTML = html;
+  const btn = $("aperturaConfirmBtn");
+  if (btn) btn.addEventListener("click", aperturaConfirmar);
+}
+
+async function aperturaConfirmar() {
+  const ids = [...document.querySelectorAll(".apertura-check:checked")].map(x => x.value);
+  if (!ids.length || !aperturaPreviewData) return;
+  if (!confirm(`¿Tomar ${ids.length} lead(s) de ${aperturaPreviewData.bandeja} a nombre de tu usuario?`)) return;
+  const msg = $("aperturaMsg");
+  msg.textContent = `Tomando ${ids.length} lead(s)…`;
+  try {
+    const body = await monitorApi("/api/apertura/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ preview_id: aperturaPreviewData.preview_id, lead_ids: ids }),
+    });
+    aperturaPreviewData = null;
+    msg.textContent = "";
+    renderAperturaResultados(body);
+  } catch (error) {
+    msg.textContent = error.message;
+  }
+}
+
+function renderAperturaResultados(body) {
+  const box = $("aperturaResult");
+  box.classList.remove("hidden");
+  const resultados = body.resultados || [];
+  const ok = resultados.filter(r => r.estado === "tomado_confirmado").length;
+  let html = `<div class="hint" style="margin:6px 0"><strong>${ok}/${resultados.length} tomados</strong> — disponibles en Distribuir leads${body.lote_id ? ` (lote ${escapeHTML(body.lote_id)})` : ""}</div>`;
+  html += '<table class="monitor-table"><thead><tr><th>Lead ID</th><th>Resultado</th><th>Propietario</th></tr></thead><tbody>';
+  resultados.forEach(r => {
+    html += `<tr><td>${escapeHTML(r.lead_id)}</td><td>${escapeHTML(r.estado)}</td><td>${escapeHTML(r.propietario || "")}</td></tr>`;
+  });
+  html += "</tbody></table>";
+  box.innerHTML = html;
 }
 
 // Mensajes del panel de configuración: error en rojo, ok en verde —
@@ -3331,6 +3465,8 @@ $("openDistribuir").addEventListener("click", openDistribuirView);
 $("backFromDistribuir").addEventListener("click", () => showView("viewHome"));
 $("monitorToggle").addEventListener("click", toggleMonitor);
 $("monitorCheck").addEventListener("click", checkMonitorNow);
+$("aperturaPreview").addEventListener("click", aperturaVerPendientes);
+$("aperturaBandeja").addEventListener("change", aperturaZonaUpdate);
 $("monitorLoginAlert").addEventListener("click", () => $("monitorLoginAlert").classList.add("hidden"));
 $("monitorDryRun").addEventListener("change", toggleDryRun);
 $("monitorWhatsapp").addEventListener("change", toggleWhatsapp);
@@ -3983,13 +4119,37 @@ function isWhatsappText(value) {
   return normalizeHeader(value).includes("whatsapp");
 }
 
+async function restoreDistribucionRun() {
+  // F5/reinicio del navegador: la cola congelada y los resultados viven en
+  // el servidor; acá se reanudan la vista de la lista y el poll en vivo.
+  if (!SERVER_MODE) { loadDistribucionResults(); return; }
+  try {
+    const queue = await monitorApi("/api/distribucion-queue");
+    // El borrador en curso manda: una recarga no pisa filas ya cargadas.
+    if (!distPreviewRows.length && Array.isArray(queue?.leads) && queue.leads.length) {
+      distPreviewRows = queue.leads.map(lead => ({
+        leadId: lead.lead_id, nombre: lead.nombre || "", persona: lead.persona || "",
+      }));
+    }
+  } catch { /* sin cola activa */ }
+  try {
+    const status = await botApi("/status");
+    if (status.running && status.operation === "distribucion") {
+      distRunning = true;
+      clearInterval(distPollTimer);
+      distPollTimer = setInterval(() => { if (distRunning) loadDistribucionResults(); else clearInterval(distPollTimer); }, 4000);
+      $("distResultsCard").classList.remove("hidden");
+    }
+  } catch { /* servidor no disponible */ }
+  loadDistribucionResults();
+}
+
 function openDistribuirView() {
   showView("viewDistribuir");
   // Los resultados persisten en el servidor: al re-entrar se recupera la
   // última corrida sola, sin tocar "Actualizar resultados".
-  loadDistribucionResults();
+  restoreDistribucionRun();
   connectBotEvents();
-  loadDistribucionResults();
   loadDistEquipo();
 }
 
@@ -4097,7 +4257,8 @@ function renderDistTable() {
       const input = `<input class="dist-persona ${inList ? "hidden" : ""}" data-i="${i}" value="${escapeHTML(row.persona)}" placeholder="Nombre exacto en Salesforce" ${dis}>`;
       const accion = row.accion === "se_queda" ? "se queda" : row.accion === "se_mueve" ? "se mueve" : "";
       const accionTd = showAccion ? `<td>${accion}</td>` : "";
-      return `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="dist-inc" data-i="${i}" ${row.include ? "checked" : ""} ${dis}></td><td>${escapeHTML(row.leadId || "—")}</td><td>${escapeHTML(row.nombre)}</td><td>${select}${input}</td>${accionTd}</tr>`;
+      const origenChip = row.origen === "apertura" ? ` <span class="bandeja-chip bandeja-${escapeHTML(row.bandeja || "XX")}" title="Lead recogido en apertura — fuera de horario">apertura</span>` : "";
+      return `<tr class="${row.valid ? "" : "dist-excluded"}"><td><input type="checkbox" class="dist-inc" data-i="${i}" ${row.include ? "checked" : ""} ${dis}></td><td>${escapeHTML(row.leadId || "—")}${origenChip}</td><td>${escapeHTML(row.nombre)}</td><td>${select}${input}</td>${accionTd}</tr>`;
     }).join("") + `</tbody>`;
   document.querySelectorAll(".dist-persona-sel").forEach(sel => sel.addEventListener("change", () => {
     const input = document.querySelector(`.dist-persona[data-i="${sel.dataset.i}"]`);
@@ -4114,6 +4275,81 @@ function renderDistTable() {
 // algoritmo corre en el servidor (POST /api/distribucion/reparto) para
 // poder testearlo con unittest; la UI solo vuelca las asignaciones en la
 // vista previa editable — la cola y el runner no cambian.
+
+// ---------- QUALIF de apertura en Distribuir ----------
+// Los leads tomados en apertura se suman a la vista previa por Lead ID:
+// un duplicado con el archivo conserva el destino del archivo; "sumar" no
+// consume — la marca `consumido` la pone la corrida real confirmada.
+
+async function distAperturaCargar() {
+  const msg = $("distAperturaMsg");
+  msg.textContent = "Consultando disponibles…";
+  try {
+    const body = await monitorApi("/api/apertura/disponibles");
+    msg.textContent = "";
+    renderDistAperturaPanel(body);
+  } catch (error) {
+    msg.textContent = error.message;
+  }
+}
+
+function renderDistAperturaPanel(body) {
+  const panel = $("distAperturaPanel");
+  panel.classList.remove("hidden");
+  const disp = body.disponibles || [];
+  const lotes = body.lotes || [];
+  if (!disp.length) {
+    panel.innerHTML = '<div class="hint">No hay QUALIF de apertura disponibles: ninguna recogida confirmada o ya distribuidos todos.</div>';
+    return;
+  }
+  const loteLabel = id => {
+    const lote = lotes.find(x => x.lote_id === id);
+    return lote ? `${lote.bandeja || ""} ${lote.desde || ""}→${lote.hasta || ""}` : (id || "");
+  };
+  let html = '<div class="hint" style="margin:4px 0">Tild&aacute; los QUALIF tomados en apertura para sumarlos a la lista — el destino se elige en la tabla como cualquier fila.</div>';
+  html += '<table class="monitor-table"><thead><tr><th></th><th>Lead ID</th><th>Bandeja</th><th>Tomado</th><th>Lote</th></tr></thead><tbody>';
+  disp.forEach(d => {
+    html += `<tr><td><input type="checkbox" class="dist-apertura-check" value="${escapeHTML(d.lead_id)}" checked></td>` +
+      `<td>${escapeHTML(d.lead_id)}</td><td>${escapeHTML(d.bandeja || "")}</td><td>${escapeHTML(d.tomado || "")}</td><td class="hint">${escapeHTML(loteLabel(d.lote_id))}</td></tr>`;
+  });
+  html += '</tbody></table><div class="actions" style="margin-top:8px"><button class="btn small" id="distAperturaAgregar">Sumar seleccionados</button></div>';
+  panel.innerHTML = html;
+  $("distAperturaAgregar").addEventListener("click", distAperturaAgregar);
+}
+
+async function distAperturaAgregar() {
+  const ids = [...document.querySelectorAll(".dist-apertura-check:checked")].map(x => x.value);
+  if (!ids.length) return;
+  const msg = $("distAperturaMsg");
+  try {
+    const filas = distPreviewRows.map(row => ({
+      lead_id: row.leadId, nombre: row.nombre || "", persona: row.persona || "", origen: row.origen || "",
+    }));
+    const body = await monitorApi("/api/apertura/mezclar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filas, lead_ids: ids }),
+    });
+    const previas = new Map(distPreviewRows.map(row => [row.leadId, row]));
+    (body.filas || []).forEach(f => {
+      if (!previas.has(f.lead_id)) {
+        previas.set(f.lead_id, {
+          leadId: f.lead_id, nombre: f.nombre || "", persona: f.persona || "",
+          valid: true, include: true, auxiliar: "", whatsapp: false,
+          origen: f.origen || "", bandeja: f.bandeja || "", loteId: f.lote_id || "",
+        });
+      }
+    });
+    distPreviewRows = [...previas.values()];
+    $("distAperturaPanel").classList.add("hidden");
+    msg.textContent = `${body.agregados} agregados` +
+      (body.duplicados?.length ? ` · ${body.duplicados.length} ya estaban en la lista` : "") +
+      (body.omitidos?.length ? ` · ${body.omitidos.length} omitidos` : "");
+    renderDistTable();
+  } catch (error) {
+    msg.textContent = error.message;
+  }
+}
 
 async function loadDistEquipo() {
   try {
@@ -4202,8 +4438,12 @@ async function calcularReparto() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ filas, trabajan }),
     });
-    (resp.asignaciones || []).forEach((asignacion, k) => {
-      const row = distPreviewRows[indices[k]];
+    // El reparto se aplica por Lead ID, no por posición: las filas de
+    // apertura conviven con las del archivo sin depender del orden.
+    const byId = new Map(distPreviewRows.map(row => [row.leadId, row]));
+    (resp.asignaciones || []).forEach(asignacion => {
+      const row = byId.get(asignacion.lead_id);
+      if (!row) return;
       row.persona = asignacion.destino;
       row.accion = asignacion.accion;
     });
@@ -4401,6 +4641,7 @@ $("distModo").addEventListener("change", () => {
 $("distEquipoAdd").addEventListener("click", addDistEquipoPersona);
 $("distEquipoNombre").addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); addDistEquipoPersona(); } });
 $("distCalcular").addEventListener("click", calcularReparto);
+$("distAperturaBtn").addEventListener("click", distAperturaCargar);
 $("distExportar").addEventListener("click", () => descargarDistExcel("distribucion"));
 $("distExportarWa").addEventListener("click", () => descargarDistExcel("whatsapp"));
 $("distRun").addEventListener("click", runDistribucion);

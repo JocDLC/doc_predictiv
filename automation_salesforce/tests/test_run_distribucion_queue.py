@@ -356,5 +356,53 @@ class SimulateOneLeadTests(unittest.TestCase):
         self.assertEqual(persisted[0]["modo"], "prueba")
 
 
+class ConsumirAperturaTests(unittest.TestCase):
+    """La corrida REAL marca consumido el lead de apertura confirmado —
+    la simulación y los estados no confirmados no consumen (REQ-835)."""
+
+    def setUp(self):
+        from tempfile import TemporaryDirectory
+
+        self._tmp = TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.config = {"ui_output_directory": self._tmp.name}
+        self.store_dir = Path(self._tmp.name) / "apertura"
+
+        from apertura_store import ESTADO_TOMADO_CONFIRMADO, create_lote, update_lead
+
+        lote = create_lote(self.store_dir, bandeja="AR", desde="d", hasta="h", lead_ids=["00Q1", "00Q2"])
+        update_lead(self.store_dir, lote["lote_id"], "00Q1", ESTADO_TOMADO_CONFIRMADO)
+        update_lead(self.store_dir, lote["lote_id"], "00Q2", ESTADO_TOMADO_CONFIRMADO)
+
+    def _disponibles(self):
+        from apertura_store import disponibles
+
+        return [d["lead_id"] for d in disponibles(self.store_dir)]
+
+    def test_reasignado_real_consume(self):
+        from run_distribucion_queue import _consumir_apertura
+
+        _consumir_apertura(self.config, "00Q1", "reasignado", "real", "run_1")
+        self.assertEqual(self._disponibles(), ["00Q2"])
+
+    def test_ya_asignado_real_consume(self):
+        from run_distribucion_queue import _consumir_apertura
+
+        _consumir_apertura(self.config, "00Q1", "ya_asignado", "real", "run_1")
+        self.assertEqual(self._disponibles(), ["00Q2"])
+
+    def test_prueba_no_consume(self):
+        from run_distribucion_queue import _consumir_apertura
+
+        _consumir_apertura(self.config, "00Q1", "prueba_ok:reasignar", "prueba", "run_1")
+        self.assertEqual(sorted(self._disponibles()), ["00Q1", "00Q2"])
+
+    def test_error_no_consume(self):
+        from run_distribucion_queue import _consumir_apertura
+
+        _consumir_apertura(self.config, "00Q1", "error", "real", "run_1")
+        self.assertEqual(sorted(self._disponibles()), ["00Q1", "00Q2"])
+
+
 if __name__ == "__main__":
     unittest.main()

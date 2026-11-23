@@ -1,4 +1,5 @@
 import inspect
+import itertools
 import json
 import unittest
 from pathlib import Path
@@ -57,7 +58,11 @@ class CloseOneLeadTests(unittest.TestCase):
         """Ejecuta close_one_lead con el DOM mockeado y lecturas sucesivas."""
         logger = overrides.get("logger") or unittest.mock.Mock()
         patches = {
-            "read_closure_state": unittest.mock.Mock(side_effect=states),
+            # El último estado se repite: wait_closure_state sondea mientras
+            # Estado/Propietario sigan vacíos sin agotar el side_effect.
+            "read_closure_state": unittest.mock.Mock(
+                side_effect=itertools.chain(states, itertools.repeat(states[-1] if states else {}))
+            ),
             "wait_for_lightning_ready": unittest.mock.Mock(),
             "open_qualification_edit": overrides.get("open_qualification_edit", unittest.mock.Mock()),
             "set_comentario": overrides.get("set_comentario", unittest.mock.Mock()),
@@ -71,6 +76,7 @@ class CloseOneLeadTests(unittest.TestCase):
             "find_field_text": overrides.get("find_field_text", unittest.mock.Mock(return_value="")),
             "prepare_other_information": overrides.get("prepare_other_information", unittest.mock.Mock()),
             "capture_failure": unittest.mock.Mock(return_value=Path("cap.png")),
+            "discard_open_edit_form": overrides.get("discard", unittest.mock.Mock()),
         }
         with unittest.mock.patch.multiple(run_close_queue, **patches), patch("run_close_queue.time.sleep"):
             entry = close_one_lead(
@@ -95,6 +101,31 @@ class CloseOneLeadTests(unittest.TestCase):
                     patches["prepare_other_information"].assert_not_called()
                     patches["save_edit_form"].assert_not_called()
                     patches["convert_lead"].assert_not_called()
+
+    def test_state_arriving_after_first_read_still_closes(self):
+        # La ficha renderiza asíncrono tras el shell: una primera lectura vacía
+        # no es "revisión" si Estado/Propietario llegan en el sondeo siguiente.
+        entry, patches = self.run_lead(
+            [EMPTY_STATE, OPEN_STATE, SAVED_STATE, FINAL_STATE],
+        )
+        self.assertEqual(entry["status"], "cerrado_verificado")
+        patches["open_qualification_edit"].assert_called()
+
+    def test_edit_failure_discards_the_open_form(self):
+        entry, patches = self.run_lead(
+            [OPEN_STATE],
+            discard=unittest.mock.Mock(),
+            select=unittest.mock.Mock(side_effect=ValueError("stale element")),
+        )
+        self.assertEqual(entry["status"], "error")
+        patches["discard_open_edit_form"].assert_called_once_with(self.driver)
+
+    def test_state_read_failure_does_not_discard(self):
+        # Sin formulario abierto (fallo antes de la edición) no hay nada que
+        # cancelar: el descarte corre solo tras un fallo de escritura.
+        entry, patches = self.run_lead([EMPTY_STATE])
+        self.assertEqual(entry["status"], "revision")
+        patches["discard_open_edit_form"].assert_not_called()
 
     def test_mexico_already_closed_never_opens_editor_or_converts(self):
         state = {
@@ -479,6 +510,40 @@ class PersistAndVerifyTests(unittest.TestCase):
         ):
             saved, _reloads = persist_and_verify(driver, "https://sf/lead/1", CONTRACT_ILOCALIZABLE, "hash-original", 5)
         self.assertFalse(saved)
+
+
+class WaitClosureStateTests(unittest.TestCase):
+    def test_returns_first_state_with_estado_and_propietario(self):
+        driver = FakeDriver()
+        states = [EMPTY_STATE, EMPTY_STATE, OPEN_STATE]
+        with (
+            patch("run_close_queue.read_closure_state", side_effect=states) as read,
+            patch("run_close_queue.time.sleep"),
+        ):
+            state = run_close_queue.wait_closure_state(driver, run_close_queue.COMMENT_FIELD_LABELS, 5)
+        self.assertEqual(state, OPEN_STATE)
+        self.assertEqual(read.call_count, 3)
+
+    def test_gives_up_after_bounded_polls(self):
+        driver = FakeDriver()
+        with (
+            patch("run_close_queue.read_closure_state", return_value=EMPTY_STATE) as read,
+            patch("run_close_queue.time.sleep"),
+        ):
+            state = run_close_queue.wait_closure_state(driver, run_close_queue.COMMENT_FIELD_LABELS, 5)
+        self.assertEqual(state, EMPTY_STATE)
+        self.assertEqual(read.call_count, 6)  # lectura inicial + max_polls
+
+    def test_populated_first_read_never_sleeps(self):
+        driver = FakeDriver()
+        with (
+            patch("run_close_queue.read_closure_state", return_value=OPEN_STATE) as read,
+            patch("run_close_queue.time.sleep") as sleep,
+        ):
+            state = run_close_queue.wait_closure_state(driver, run_close_queue.COMMENT_FIELD_LABELS, 5)
+        self.assertEqual(state, OPEN_STATE)
+        self.assertEqual(read.call_count, 1)
+        sleep.assert_not_called()
 
 
 if __name__ == "__main__":

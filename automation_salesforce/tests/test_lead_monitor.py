@@ -32,12 +32,19 @@ def bandeja(code="AR", **overrides):
         "url": VALID_URL,
         "unassigned_owner": "AR_LEAD_QUALIF",
         "expected_status": "Nuevo",
+        # Sin offset en tests: la fecha de creación se compara literal
+        # contra las franjas (validate_bandejas pondría +2 para AR).
+        "tz_offset": 0,
     }
     payload.update(overrides)
     return payload
 
 
 def lead(lead_id=LEAD_ID, estado="Nuevo", **details):
+    # La cobertura se evalúa a la Fecha de creación: el default queda
+    # dentro de las franjas 00:00–23:59 de los helpers. Pasar
+    # fecha_creacion="" fuerza el caso "fecha ilegible" (revisión).
+    details.setdefault("fecha_creacion", "08/10/2026 10:00 AM")
     return VisibleLead(
         lead_id=lead_id,
         created_at="8/10/2026 10:00",
@@ -1158,6 +1165,7 @@ class RunBandejaCycleTests(unittest.TestCase):
         10:58 — a las 11:01 se toma igual y va a la encargada de las 10:58,
         no queda 'sin_cobertura' por mirar el reloj actual."""
         from datetime import datetime
+
         state = self._state()
         state["schedule"] = []
         equipo = [{"nombre": "Ana", "franjas": [{"start": "09:00", "end": "10:59", "bandejas": ["AR"]}]}]
@@ -1190,11 +1198,10 @@ class RunBandejaCycleTests(unittest.TestCase):
         esa hora — a las 12:01, con la franja 12:00–13:59 recién abierta,
         NO se toma: su cobertura era de otra franja o de nadie."""
         from datetime import datetime
+
         state = self._state()
         state["schedule"] = []
-        state["equipo"] = [
-            {"nombre": "Roger", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}]}
-        ]
+        state["equipo"] = [{"nombre": "Roger", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}]}]
         fixed = datetime(2026, 10, 31, 12, 1)
 
         class FixedDatetime(datetime):
@@ -1255,9 +1262,7 @@ class RunBandejaCycleTests(unittest.TestCase):
 
         state = self._state()
         state["schedule"] = []
-        state["equipo"] = [
-            {"nombre": "Ana", "franjas": [{"start": "09:00", "end": "10:00", "bandejas": ["AR"]}]}
-        ]
+        state["equipo"] = [{"nombre": "Ana", "franjas": [{"start": "09:00", "end": "10:00", "bandejas": ["AR"]}]}]
         fixed = datetime(2026, 10, 31, 10, 2)
 
         class FixedDatetime(datetime):
@@ -1279,10 +1284,12 @@ class RunBandejaCycleTests(unittest.TestCase):
         lead_events = [e for e in events if e["type"] == "lead_result"]
         self.assertEqual(lead_events[0]["entry"]["motivo"], "sin_cobertura")
 
-    def test_lead_sin_fecha_usable_se_evalua_ahora(self):
-        """Sin fecha de creación usable la cobertura mira la hora del ciclo,
-        igual que siempre — el fallback no puede dejar leads sin toma."""
+    def test_lead_sin_fecha_usable_va_a_revision(self):
+        """Sin Fecha de creación usable el ciclo NO toma el lead ni cae a
+        la hora actual: queda detectado `revision` — antes un lead
+        ilegible podía tomarse dentro de la franja equivocada."""
         from datetime import datetime
+
         state = self._state()
         state["schedule"] = []
         equipo = [{"nombre": "Roger", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}]}]
@@ -1294,7 +1301,69 @@ class RunBandejaCycleTests(unittest.TestCase):
             def now(cls, tz=None):
                 return fixed
 
-        leads = [lead(LEAD_ID)]
+        leads = [lead(LEAD_ID, fecha_creacion="")]
+        with (
+            patch("lead_monitor.datetime", FixedDatetime),
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, leads)),
+            patch("lead_monitor.take_lead") as take,
+        ):
+            events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        take.assert_not_called()
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(lead_events[0]["status"], "detectado")
+        self.assertEqual(lead_events[0]["entry"]["motivo"], "revision")
+
+    def test_nocturno_de_ayer_no_lo_toma_el_ciclo(self):
+        """Lead creado ayer 23:30 (fuera de toda franja) no se toma aunque
+        el ciclo corra dentro de la franja de hoy — es material de la
+        apertura, no del turno vigente."""
+        from datetime import datetime
+
+        state = self._state()
+        state["schedule"] = []
+        state["equipo"] = [{"nombre": "Ana", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}]}]
+        fixed = datetime(2026, 10, 31, 12, 30)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        leads = [lead(LEAD_ID, fecha_creacion="30/10/2026 11:30 PM")]
+        with (
+            patch("lead_monitor.datetime", FixedDatetime),
+            patch("monitor_store.datetime", FixedDatetime),
+            patch("lead_monitor.open_report"),
+            patch("lead_monitor.report_session_lost", return_value=False),
+            patch("lead_monitor.read_bandeja_leads", return_value=(1, leads)),
+            patch("lead_monitor.take_lead") as take,
+        ):
+            events = run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
+        take.assert_not_called()
+        lead_events = [e for e in events if e["type"] == "lead_result"]
+        self.assertEqual(lead_events[0]["entry"]["motivo"], "sin_cobertura")
+
+    def test_de_ayer_en_franja_se_toma_con_su_equipo(self):
+        """Lead creado AYER 13:30 dentro de la franja de Andres se toma y
+        va al equipo — las franjas son día-agnósticas, la fecha completa
+        solo fija la hora de ingreso."""
+        from datetime import datetime
+
+        state = self._state()
+        state["schedule"] = []
+        equipo = [{"nombre": "Andres", "franjas": [{"start": "12:00", "end": "13:59", "bandejas": ["AR"]}]}]
+        state["equipo"] = equipo
+        fixed = datetime(2026, 10, 31, 9, 0)
+
+        class FixedDatetime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed
+
+        leads = [lead(LEAD_ID, fecha_creacion="30/10/2026 01:30 PM")]
         with (
             patch("lead_monitor.datetime", FixedDatetime),
             patch("monitor_store.datetime", FixedDatetime),
@@ -1303,11 +1372,12 @@ class RunBandejaCycleTests(unittest.TestCase):
             patch("lead_monitor.read_bandeja_leads", return_value=(1, leads)),
             patch(
                 "lead_monitor.take_lead",
-                return_value=(STATUS_TOMADO, "Roger", "x/reasignado", ""),
+                return_value=(STATUS_TOMADO, "Andres", "x/reasignado", ""),
             ) as take,
         ):
             run_bandeja_cycle(object(), CONFIG, state["bandejas"][0], state, 5)
         take.assert_called_once()
+        self.assertEqual(take.call_args.kwargs["equipo"], equipo)
 
     def test_session_lost_event(self):
         state = self._state()
@@ -1526,9 +1596,10 @@ class ReassignOwnerTests(unittest.TestCase):
         self.assertEqual(_encargada_activa(equipo, datetime(2026, 10, 15, 13, 59))["nombre"], "Ana")
         self.assertIsNone(_encargada_activa(equipo, datetime(2026, 10, 15, 14, 0)))
 
-    def test_encargada_para_lead_fecha_de_ayer_cae_a_hora_actual(self):
-        """Una fecha de creación de OTRO día no decide la reasignación:
-        cae al miembro cuya franja cubre la hora actual."""
+    def test_encargada_para_lead_fecha_de_ayer_usa_su_franja(self):
+        """La fecha de creación de OTRO día también decide: las franjas son
+        día-agnósticas — ayer a las 07:00 lo cubría Ana, aunque ahora
+        cubra Beto."""
         from datetime import datetime
 
         from lead_monitor import _encargada_para_lead
@@ -1541,7 +1612,7 @@ class ReassignOwnerTests(unittest.TestCase):
         details = {"fecha_creacion": "30/10/2026 07:00 AM"}
         self.assertEqual(
             _encargada_para_lead(equipo, "Jose Manuel", bandeja="AR", details=details, now=now)["nombre"],
-            "Beto",
+            "Ana",
         )
 
     def test_encargada_activa_filtra_por_bandeja(self):
@@ -2125,9 +2196,9 @@ class EquipoParaLeadTests(unittest.TestCase):
         details = {"fecha_creacion": now.strftime("%d/%m/%Y") + " 02:30 PM"}
         self.assertIsNone(_equipo_para_lead(state, "AR", details, now))
 
-    def test_entrada_de_ayer_cae_al_comportamiento_actual(self):
-        """Fecha de creación de otro día no decide: ahora (14:01) la
-        franja propia cubre → lead propio."""
+    def test_entrada_de_ayer_en_franja_del_equipo_devuelve_equipo(self):
+        """Fecha de otro día también decide (día-agnóstica): ayer 13:59 lo
+        cubría Andres → va el equipo igual que si fuera de hoy."""
         from datetime import datetime, timedelta
 
         from lead_monitor import _equipo_para_lead
@@ -2135,7 +2206,7 @@ class EquipoParaLeadTests(unittest.TestCase):
         state = self._state()
         now = datetime.now().replace(hour=14, minute=1, second=0, microsecond=0)
         yesterday = (now - timedelta(days=1)).strftime("%d/%m/%Y") + " 01:59 PM"
-        self.assertIsNone(_equipo_para_lead(state, "AR", {"fecha_creacion": yesterday}, now))
+        self.assertEqual(_equipo_para_lead(state, "AR", {"fecha_creacion": yesterday}, now), state["equipo"])
 
     def test_entrada_inparseable_cae_al_comportamiento_actual(self):
         """Sin fecha usable vale la regla de siempre: franja propia

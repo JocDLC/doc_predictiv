@@ -304,6 +304,62 @@ function picklistOptions(listbox) {
 
 PICKLIST_TRIGGER_SCRIPT = PICKLIST_HELPERS_SCRIPT + "return picklistControl(arguments[0]);"
 
+# Clic del disparador del desplegable, ubicado y pulsado dentro de la misma
+# evaluación: en Edge 158 un WebElement devuelto por JS muere antes de la
+# llamada siguiente, así que nada de handles cruzando evaluaciones o frames.
+CLICK_PICKLIST_TRIGGER_ATOMIC_SCRIPT = (
+    PICKLIST_HELPERS_SCRIPT
+    + r"""
+const control = picklistControl(arguments[0]);
+if (!control) {
+    return 'not_found';
+}
+if (control.getAttribute('aria-expanded') === 'true') {
+    return 'expanded';
+}
+control.scrollIntoView({block: 'center', inline: 'nearest'});
+control.click();
+return 'clicked';
+"""
+)
+
+# Botón Cancelar del formulario de edición en línea, para descartar una
+# edición que quedó abierta tras un fallo (el guard de cambios sin guardar
+# bloquearía la navegación del siguiente Lead).
+CLICK_CANCEL_EDIT_ATOMIC_SCRIPT = (
+    CLOSURE_HELPERS_SCRIPT
+    + r"""
+function findCancelButton() {
+    const cancelLabels = ['cancelar', 'cancel'];
+    const candidates = elements.filter(element => isVisible(element)
+        && element.matches('button')
+        && cancelLabels.includes(normalize(element.textContent)));
+    const insideForm = element => {
+        let current = element;
+        for (let depth = 0; depth < 10 && current; depth++) {
+            const root = current.getRootNode ? current.getRootNode() : null;
+            current = current.parentElement || (root && root.host) || null;
+            if (current && current.matches && current.matches(
+                'footer, [class*="footer"], lightning-record-edit-form, records-record-edit-form'
+            )) {
+                return true;
+            }
+        }
+        return false;
+    };
+    const preferred = candidates.filter(insideForm);
+    return (preferred.length ? preferred : candidates)[0] || null;
+}
+const cancelButton = findCancelButton();
+if (!cancelButton) {
+    return 'not_found';
+}
+cancelButton.scrollIntoView({block: 'center', inline: 'nearest'});
+cancelButton.click();
+return 'clicked';
+"""
+)
+
 # Opción del desplegable abierto, elegida por etiqueta exacta; si no está a la
 # vista desplaza el listbox (la opción puede ser la última de una lista larga).
 # Acepta una lista ordenada de etiquetas equivalentes: elige la primera
@@ -449,7 +505,6 @@ import time  # noqa: E402
 import unicodedata  # noqa: E402
 
 from selenium.common.exceptions import TimeoutException, WebDriverException  # noqa: E402
-from selenium.webdriver.common.by import By  # noqa: E402
 from selenium.webdriver.support.ui import WebDriverWait  # noqa: E402
 
 import comment_reader  # noqa: E402
@@ -521,33 +576,13 @@ def set_comentario(driver, comentario: str, timeout_seconds: int) -> None:
     raise ValueError("El campo Comentario no quedó con el literal del motivo.")
 
 
-def _picklist_trigger(driver, labels: tuple[str, ...]):
-    driver.switch_to.default_content()
-    control = driver.execute_script(PICKLIST_TRIGGER_SCRIPT, list(labels))
-    if control:
-        return control
-    for frame in driver.find_elements(By.CSS_SELECTOR, "iframe, frame"):
-        if not frame.is_displayed():
-            continue
-        driver.switch_to.frame(frame)
-        try:
-            control = driver.execute_script(PICKLIST_TRIGGER_SCRIPT, list(labels))
-            if control:
-                return control
-        except WebDriverException:
-            driver.switch_to.default_content()
-            raise
-        driver.switch_to.default_content()
-    return None
-
-
 def _execute_picklist_script(driver, script: str, labels: tuple[str, ...], *args):
-    try:
-        if _picklist_trigger(driver, labels) is None:
-            return None
-        return driver.execute_script(script, *args, list(labels))
-    finally:
-        driver.switch_to.default_content()
+    """Ejecuta el script del picklist en el documento y frames accesibles.
+
+    Cada evaluación reubica el control dentro del contexto donde corre:
+    ningún WebElement cruza evaluaciones ni frames (ver ``CLICK_PICKLIST_TRIGGER_ATOMIC_SCRIPT``).
+    """
+    return execute_in_any_frame(driver, script, *args, list(labels))
 
 
 def _open_options_count(driver, labels: tuple[str, ...]) -> int:
@@ -581,13 +616,11 @@ def select_picklist_option(
     current_value = normalized_key(_picklist_current_value(driver, labels))
     if current_value == normalized_targets[0]:
         return candidates[0]
-    trigger = WebDriverWait(driver, timeout_seconds).until(lambda current: _picklist_trigger(current, labels))
-    if trigger.get_attribute("aria-expanded") != "true":
-        driver.execute_script(
-            "arguments[0].scrollIntoView({block:'center', inline:'nearest'}); arguments[0].click();",
-            trigger,
+    WebDriverWait(driver, timeout_seconds).until(
+        lambda current: (
+            execute_in_any_frame(current, CLICK_PICKLIST_TRIGGER_ATOMIC_SCRIPT, list(labels)) in ("clicked", "expanded")
         )
-    driver.switch_to.default_content()
+    )
     script_options = candidates[0] if len(candidates) == 1 else list(candidates)
     deadline = time.monotonic() + timeout_seconds
     empty_since = None
@@ -620,16 +653,32 @@ def select_picklist_option(
                 if empty_since is None:
                     empty_since = time.monotonic()
                 elif time.monotonic() - empty_since > 1.5 and reopened < 3:
-                    refreshed = _picklist_trigger(driver, labels)
-                    if refreshed and refreshed.get_attribute("aria-expanded") != "true":
-                        driver.execute_script("arguments[0].click();", refreshed)
+                    reopen_outcome = execute_in_any_frame(driver, CLICK_PICKLIST_TRIGGER_ATOMIC_SCRIPT, list(labels))
+                    if reopen_outcome == "clicked":
                         reopened += 1
                         empty_since = None
-                    driver.switch_to.default_content()
             else:
                 empty_since = None
         time.sleep(0.4)
     raise ValueError(f"No se pudo confirmar la opción exacta '{option_text}' en el desplegable del campo visible.")
+
+
+def discard_open_edit_form(driver, settle_seconds: float = 0.8) -> None:
+    """Best-effort: cierra con Cancelar un formulario de edición que quedó
+    abierto tras un fallo, para que el guard de cambios sin guardar no
+    bloquee la navegación del siguiente Lead. Nunca lanza."""
+    try:
+        if execute_in_any_frame(driver, CLICK_CANCEL_EDIT_ATOMIC_SCRIPT) == "clicked":
+            time.sleep(settle_seconds)
+    except WebDriverException:
+        pass
+    finally:
+        switch_to = getattr(driver, "switch_to", None)
+        if switch_to is not None:
+            try:
+                switch_to.default_content()
+            except WebDriverException:
+                pass
 
 
 def convert_lead(driver, timeout_seconds: int) -> None:

@@ -171,3 +171,54 @@ def load_distribucion_queue(queue_path: str, queue_directory: Path) -> dict[str,
         "run_id": str(payload.get("run_id") or "").strip(),
         "source_file": str(payload.get("source_file") or "").strip(),
     }
+
+
+def mezclar_apertura(
+    filas: list[dict],
+    disponibles: list[dict],
+    lead_ids: list[str],
+) -> tuple[list[dict], dict]:
+    """Mezcla filas de Distribuir con leads de apertura por ``lead_id``.
+
+    ``filas`` son las filas ya cargadas (del archivo); ``disponibles`` la
+    salida de ``apertura_store.disponibles``; ``lead_ids`` los seleccionados
+    a agregar. Reglas:
+
+    - ``lead_id`` ya presente en ``filas`` → queda la fila del archivo con
+      su destino (el archivo manda); se reporta en ``duplicados``.
+    - ``lead_id`` no disponible en el store → ``omitidos`` (nunca se
+      inventa una fila para un ID que el store no conoce).
+    - el resto → fila nueva con ``origen="apertura"``, persona vacía a
+      completar; no marca consumo (eso lo hace la corrida confirmada).
+
+    Devuelve ``(merged, {"agregados", "duplicados", "omitidos"})``.
+    """
+    por_id = {str(d.get("lead_id") or ""): d for d in disponibles or []}
+    existentes = {str(f.get("lead_id") or "") for f in filas or []}
+    merged = list(filas or [])
+    agregados = 0
+    duplicados: list[str] = []
+    omitidos: list[str] = []
+    for lead_id in [str(x or "").strip() for x in lead_ids or []]:
+        if not lead_id:
+            continue
+        if lead_id in existentes:
+            duplicados.append(lead_id)
+            continue
+        disp = por_id.get(lead_id)
+        if not disp:
+            omitidos.append(lead_id)
+            continue
+        merged.append(
+            {
+                "lead_id": lead_id,
+                "nombre": "",
+                "persona": "",
+                "origen": "apertura",
+                "bandeja": disp.get("bandeja") or "",
+                "lote_id": disp.get("lote_id") or "",
+            }
+        )
+        existentes.add(lead_id)
+        agregados += 1
+    return merged, {"agregados": agregados, "duplicados": duplicados, "omitidos": omitidos}

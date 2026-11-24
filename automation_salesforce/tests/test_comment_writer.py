@@ -194,7 +194,16 @@ class StaleMarshalDriver:
         self.editor_value = ""
         self.saved = False
         self.scripts = []
+        self.cdp_calls = []
         self._in_frame = False
+        self._focused = False
+
+    def execute_cdp_cmd(self, command, params):
+        """Teclado confiable: insertText reemplaza la selección del editor
+        enfocado; el Tab confirma el campo (el borrador lo toma)."""
+        self.cdp_calls.append((command, params))
+        if command == "Input.insertText" and self._focused:
+            self.editor_value = params["text"]
 
     def default_content(self):
         self._in_frame = False
@@ -220,6 +229,9 @@ class StaleMarshalDriver:
         if script is comment_writer.SET_EDITOR_VALUE_ATOMIC_SCRIPT:
             self.editor_value = args[1]
             return self.editor_value
+        if script is comment_writer.FOCUS_EDITOR_ATOMIC_SCRIPT:
+            self._focused = True
+            return "focused"
         if script is comment_writer.READ_EDITOR_VALUE_ATOMIC_SCRIPT:
             return self.editor_value
         return None
@@ -243,7 +255,7 @@ class AtomicEditorTests(unittest.TestCase):
 
         def fixed_value(script, *args):
             result = original(script, *args)
-            if script is comment_writer.SET_EDITOR_VALUE_ATOMIC_SCRIPT:
+            if script is comment_writer.READ_EDITOR_VALUE_ATOMIC_SCRIPT:
                 driver.editor_value = "valor fijo"
                 return "valor fijo"
             return result
@@ -252,8 +264,40 @@ class AtomicEditorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             prepare_other_information(driver, "1 INT prueba", 10)
 
-        attempts = [s for s, _a in driver.scripts if s is comment_writer.SET_EDITOR_VALUE_ATOMIC_SCRIPT]
+        attempts = [c for c, _p in driver.cdp_calls if c == "Input.insertText"]
         self.assertEqual(len(attempts), 2)
+
+    def test_prepare_types_with_trusted_keyboard_and_confirms_with_tab(self):
+        """Lightning solo toma en el borrador lo tipeado con eventos de
+        usuario confiables y confirmado con Tab: sin eso Guardar manda {Id}."""
+        driver = StaleMarshalDriver()
+
+        prepare_other_information(driver, "1 INT prueba", 10)
+
+        commands = [c for c, _p in driver.cdp_calls]
+        self.assertEqual(commands, ["Input.insertText", "Input.dispatchKeyEvent", "Input.dispatchKeyEvent"])
+        self.assertEqual(driver.cdp_calls[0][1], {"text": "1 INT prueba"})
+        self.assertEqual([p["type"] for _c, p in driver.cdp_calls[1:]], ["keyDown", "keyUp"])
+        self.assertTrue(all(p["key"] == "Tab" for _c, p in driver.cdp_calls[1:]))
+        # El foco se toma en la misma evaluación que ubica el editor (sin handles).
+        focus_index = next(
+            i for i, (s, _a) in enumerate(driver.scripts) if s is comment_writer.FOCUS_EDITOR_ATOMIC_SCRIPT
+        )
+        self.assertTrue(focus_index >= 0)
+        self.assertNotIn(comment_writer.SET_EDITOR_VALUE_ATOMIC_SCRIPT, [s for s, _a in driver.scripts])
+
+    def test_type_editor_value_reports_missing_editor_without_typing(self):
+        driver = StaleMarshalDriver()
+        original = driver.execute_script
+
+        def no_editor(script, *args):
+            if script is comment_writer.FOCUS_EDITOR_ATOMIC_SCRIPT:
+                return "not_found"
+            return original(script, *args)
+
+        driver.execute_script = no_editor
+        self.assertEqual(comment_writer.type_editor_value(driver, ("comentario",), "x"), "not_found")
+        self.assertEqual(driver.cdp_calls, [])
 
     def test_save_clicks_and_waits_atomically_without_handles(self):
         driver = StaleMarshalDriver()

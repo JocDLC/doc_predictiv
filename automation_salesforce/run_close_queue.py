@@ -27,7 +27,13 @@ from closure_store import (
     record_result,
     results_path_for,
 )
-from comment_reader import build_record_url, find_field_text, find_field_value, is_duplicate_lead
+from comment_reader import (
+    build_record_url,
+    field_result_if_found,
+    find_field_text,
+    find_field_value,
+    is_duplicate_lead,
+)
 from comment_writer import prepare_other_information, save_edit_form
 from country_fields import ARGENTINA, field_display, field_labels, final_owners, normalize_country
 from lead_closure import (
@@ -48,6 +54,7 @@ from lead_closure import (
     edit_form_matches,
     is_final_closed,
     motive_line_present,
+    normalized_key,
     normalized_value,
     open_qualification_edit,
     read_closure_state,
@@ -124,15 +131,72 @@ def wait_closure_state(
     max_polls = max(2, int(timeout_seconds))
     state = read_closure_state(driver, motive_labels)
     polls = 0
-    while (
-        polls < max_polls
-        and time.monotonic() < deadline
-        and (not normalized_value(state.get("estado")) or not normalized_value(state.get("propietario")))
-    ):
+    while polls < max_polls and time.monotonic() < deadline and not _record_ready(driver, state):
         polls += 1
         time.sleep(poll_seconds)
         state = read_closure_state(driver, motive_labels)
     return state
+
+
+def reload_record(driver, record_url: str, motive_labels: tuple[str, ...], timeout_seconds: int) -> None:
+    """Recarga la ficha y espera a que el registro (no solo el shell) renderice.
+
+    Tras ``driver.get`` + ``wait_for_lightning_ready`` la ficha tarda ~5 s en
+    mostrar los campos; leerlos antes daba "no persistido" en falso y el
+    cierre abortaba sin convertir un Lead que sí había guardado.
+    """
+    driver.get(record_url)
+    wait_for_lightning_ready(driver, timeout_seconds)
+    wait_closure_state(driver, motive_labels, timeout_seconds)
+
+
+def _record_ready(driver, state: dict[str, str]) -> bool:
+    """El registro terminó de renderizar lo que el cierre necesita.
+
+    El panel Estado/Propietario aparece antes que la sección Cualificación:
+    una lectura poblada sin el campo Comentario es DOM transitorio y la
+    edición fallaría al no encontrar el campo."""
+    if not normalized_value(state.get("estado")) or not normalized_value(state.get("propietario")):
+        return False
+    result = field_result_if_found(driver, COMMENT_FIELD_LABELS)
+    return bool(result and result.get("found"))
+
+
+EMPTY_FIELD_MARKERS = ("", "--ninguno--", "--none--", "-")
+
+
+def closure_targets_safe(
+    driver,
+    contract: dict[str, object],
+    motive_labels: tuple[str, ...],
+    motive_literal: str,
+    motive_text: str,
+    country: str,
+) -> bool:
+    """Los campos que el cierre va a sobrescribir deben estar vacíos o ya
+    tener el valor del contrato (reintento idempotente).
+
+    Un valor previo distinto — p. ej. Cualificación 'Contacto interesado'
+    de un lead calificado como HOT — significa que alguien ya trabajó el
+    lead: pisarlo perdería información, así que pasa a revisión.
+    Colombia/México anexa el motivo conservando el texto previo, por eso
+    el guard del campo de motivo solo aplica a Argentina."""
+
+    def is_empty(text: str) -> bool:
+        return normalized_key(text) in EMPTY_FIELD_MARKERS
+
+    qualification = normalized_key(find_field_text(driver, QUALIFICATION_FIELD_LABELS))
+    if not is_empty(qualification) and qualification != normalized_key(contract_text(contract, "cualificacion")):
+        return False
+    subqualification = normalized_key(find_field_text(driver, SUBQUALIFICATION_FIELD_LABELS))
+    if not is_empty(subqualification) and subqualification not in {
+        normalized_key(option) for option in subqualification_options(contract)
+    }:
+        return False
+    if country == ARGENTINA:
+        motive = normalized_key(motive_text)
+        return is_empty(motive) or motive == normalized_key(motive_literal)
+    return True
 
 
 def persist_and_verify(
@@ -164,16 +228,14 @@ def persist_and_verify(
         save_edit_form(driver, timeout_seconds)
     except (TimeoutException, WebDriverException):
         reloads += 1
-        driver.get(record_url)
-        wait_for_lightning_ready(driver, timeout_seconds)
+        reload_record(driver, record_url, motive_labels, timeout_seconds)
         if not fields_saved():
             raise
     for _ in range(2):
         if not fields_saved():
             reloads += 1
             time.sleep(2.0)
-            driver.get(record_url)
-            wait_for_lightning_ready(driver, timeout_seconds)
+            reload_record(driver, record_url, motive_labels, timeout_seconds)
             continue
         state = read_closure_state(driver, motive_labels or COMMENT_FIELD_LABELS)
         if normalized_value(state["estado"]) != CLOSED_STATE:
@@ -215,8 +277,7 @@ def append_closure_motive(
         save_edit_form(driver, timeout_seconds)
     except (TimeoutException, WebDriverException):
         # La persistencia pudo completar igual: se relee en vez de reintentar a ciegas.
-        driver.get(record_url)
-        wait_for_lightning_ready(driver, timeout_seconds)
+        reload_record(driver, record_url, motive_labels, timeout_seconds)
         persisted = find_field_text(driver, motive_labels)
         if normalized_value(persisted) != normalized_value(expected):
             raise
@@ -225,8 +286,7 @@ def append_closure_motive(
         if normalized_value(persisted) == normalized_value(expected):
             return expected
         time.sleep(2.0)
-        driver.get(record_url)
-        wait_for_lightning_ready(driver, timeout_seconds)
+        reload_record(driver, record_url, motive_labels, timeout_seconds)
     raise ValueError(f"El motivo no quedó persistido en {display_name}.")
 
 
@@ -322,9 +382,12 @@ def close_one_lead(
         return record(STATUS_ALREADY_CLOSED)
 
     # Si ya quedó Cerrado con el motivo pedido pero sin la conversión, retoma
-    # solo Convert Lead → Yes; con otro motivo o estado incompatible, revisión.
+    # solo Convert Lead → Yes. Cerrado con OTRO motivo escrito → revisión.
+    # Cerrado con el motivo vacío (cierre a medias: picklists guardados pero
+    # el comentario no viajó) sigue a la escritura, protegida por
+    # ``closure_targets_safe``.
     fields_saved = normalized_value(state["estado"]) == CLOSED_STATE and motive_satisfied(motive_text)
-    if normalized_value(state["estado"]) == CLOSED_STATE and not fields_saved:
+    if normalized_value(state["estado"]) == CLOSED_STATE and not fields_saved and normalized_value(motive_text):
         return record(STATUS_REVIEW)
     if fields_saved and not verify_persisted_fields(driver, contract, motive_labels, motive_satisfied):
         return record(STATUS_REVIEW)
@@ -332,6 +395,22 @@ def close_one_lead(
     # --- Escritura del motivo y guardado del formulario ---------------------
     preserved_hash = ""
     if not fields_saved:
+        # Antes de pisar campos: si el lead ya tiene una cualificación distinta
+        # (p. ej. quedó HOT por otra vía desde que se armó la cola), no se
+        # sobrescribe — va a revisión.
+        if not closure_targets_safe(
+            driver,
+            contract,
+            motive_labels,
+            motive_literal,
+            motive_text,
+            country,
+        ):
+            logger.info(
+                "Lead con valores previos distintos del motivo, cierre omitido: lead=%s",
+                mask_lead_id(lead_id),
+            )
+            return record(STATUS_REVIEW)
         # El campo de intentos no se toca: su hash antes/después lo garantiza.
         try:
             preserved_hash = content_hash(find_field_value(driver, timeout_seconds, attempts_labels))
@@ -393,8 +472,7 @@ def close_one_lead(
                 if form_field_ok():
                     break
                 if attempt == 0:
-                    driver.get(record_url)
-                    wait_for_lightning_ready(driver, timeout_seconds)
+                    reload_record(driver, record_url, motive_labels, timeout_seconds)
             if not form_field_ok():
                 raise ValueError("Los valores del motivo no quedaron en el formulario de edición.")
             stage_seconds["fields_edit"] = time.monotonic() - stage_started_at

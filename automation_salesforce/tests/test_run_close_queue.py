@@ -77,6 +77,9 @@ class CloseOneLeadTests(unittest.TestCase):
             "prepare_other_information": overrides.get("prepare_other_information", unittest.mock.Mock()),
             "capture_failure": unittest.mock.Mock(return_value=Path("cap.png")),
             "discard_open_edit_form": overrides.get("discard", unittest.mock.Mock()),
+            "field_result_if_found": overrides.get(
+                "field_result", unittest.mock.Mock(return_value={"found": True, "text": ""})
+            ),
         }
         with unittest.mock.patch.multiple(run_close_queue, **patches), patch("run_close_queue.time.sleep"):
             entry = close_one_lead(
@@ -126,6 +129,72 @@ class CloseOneLeadTests(unittest.TestCase):
         entry, patches = self.run_lead([EMPTY_STATE])
         self.assertEqual(entry["status"], "revision")
         patches["discard_open_edit_form"].assert_not_called()
+
+    def test_lead_with_existing_qualification_is_never_overwritten(self):
+        """Un lead que quedó calificado por otra vía (p. ej. 'Contacto
+        interesado') tras armarse la cola no se pisa: va a revisión."""
+
+        def field_text(_driver, labels):
+            if labels == run_close_queue.QUALIFICATION_FIELD_LABELS:
+                return "Contacto interesado"
+            return ""
+
+        entry, patches = self.run_lead(
+            [OPEN_STATE],
+            find_field_text=unittest.mock.Mock(side_effect=field_text),
+        )
+        self.assertEqual(entry["status"], "revision")
+        patches["open_qualification_edit"].assert_not_called()
+        patches["select_picklist_option"].assert_not_called()
+        patches["save_edit_form"].assert_not_called()
+        patches["convert_lead"].assert_not_called()
+
+    def test_empty_or_contract_qualification_allows_the_write(self):
+        for qualification in ("", "--Ninguno--", "Rechazo no argumentado"):
+            with self.subTest(qualification=qualification):
+
+                def field_text(_driver, labels, value=qualification):
+                    return value if labels == run_close_queue.QUALIFICATION_FIELD_LABELS else ""
+
+                entry, patches = self.run_lead(
+                    [OPEN_STATE, SAVED_STATE, FINAL_STATE],
+                    find_field_text=unittest.mock.Mock(side_effect=field_text),
+                )
+                self.assertEqual(entry["status"], "cerrado_verificado")
+                patches["open_qualification_edit"].assert_called()
+
+    def test_argentina_motive_field_with_other_text_goes_to_review(self):
+        """En Argentina el Comentario se reemplaza: un texto previo que no
+        sea el literal del motivo se perdería — va a revisión."""
+        state = {**OPEN_STATE, "comentario": "Nota del asesor", "motivo": "Nota del asesor"}
+        entry, patches = self.run_lead([state])
+        self.assertEqual(entry["status"], "revision")
+        patches["open_qualification_edit"].assert_not_called()
+        patches["convert_lead"].assert_not_called()
+
+    def test_mexico_motive_append_keeps_prior_text(self):
+        """Colombia/México anexa el motivo conservando el texto previo de
+        Otra información: texto existente no bloquea el cierre."""
+        state = {**OPEN_STATE, "comentario": "1 INT previo", "motivo": "Notas previas"}
+        entry, patches = self.run_lead([state, SAVED_STATE, FINAL_STATE], country="colombia_mexico")
+        self.assertNotEqual(entry["status"], "revision")
+
+    def test_closed_without_motive_resumes_the_write_and_converts(self):
+        """Cierre a medias (Estado Cerrado, picklists guardados, Comentario
+        vacío porque no viajó): se retoma la escritura y la conversión."""
+        half_closed = {**SAVED_STATE, "comentario": "", "motivo": ""}
+        entry, patches = self.run_lead([half_closed, SAVED_STATE, FINAL_STATE])
+        self.assertEqual(entry["status"], "cerrado_verificado")
+        patches["open_qualification_edit"].assert_called()
+        patches["set_comentario"].assert_called()
+        patches["convert_lead"].assert_called_once()
+
+    def test_closed_with_a_different_motive_still_goes_to_review(self):
+        state = {**SAVED_STATE, "comentario": "Otro motivo", "motivo": "Otro motivo"}
+        entry, patches = self.run_lead([state])
+        self.assertEqual(entry["status"], "revision")
+        patches["open_qualification_edit"].assert_not_called()
+        patches["convert_lead"].assert_not_called()
 
     def test_mexico_already_closed_never_opens_editor_or_converts(self):
         state = {
@@ -264,6 +333,7 @@ class CloseOneLeadTests(unittest.TestCase):
                 "find_field_value": unittest.mock.Mock(return_value="INT 1"),
                 "find_field_text": unittest.mock.Mock(return_value=""),
                 "capture_failure": unittest.mock.Mock(return_value=Path("cap.png")),
+                "field_result_if_found": unittest.mock.Mock(return_value={"found": True, "text": ""}),
             }
             with (
                 unittest.mock.patch.multiple(run_close_queue, **patches),
@@ -371,7 +441,9 @@ class CloseOneLeadTests(unittest.TestCase):
         def field_text(_driver, labels):
             if tuple(labels) == tuple(OTHER_INFORMATION_LABELS):
                 return "Ilocalizable"  # Otra información tras anexar el motivo
-            return "INT 1 previo"  # Comentario conserva los intentos
+            if tuple(labels) in (tuple(run_close_queue.COMMENT_FIELD_LABELS),):
+                return "INT 1 previo"  # Comentario conserva los intentos
+            return ""  # Cualificación/Sub-Cualificación vacías (lead sin trabajar)
 
         col_open = {
             "estado": "Nuevo",
@@ -421,7 +493,9 @@ class CloseOneLeadTests(unittest.TestCase):
         def field_text(_driver, labels):
             if tuple(labels) == tuple(OTHER_INFORMATION_LABELS):
                 return appended
-            return "INT 1 previo"
+            if tuple(labels) in (tuple(run_close_queue.COMMENT_FIELD_LABELS),):
+                return "INT 1 previo"
+            return ""  # Cualificación/Sub-Cualificación vacías
 
         col_open = {
             "estado": "Nuevo",
@@ -458,7 +532,9 @@ class CloseOneLeadTests(unittest.TestCase):
         def field_text(_driver, labels):
             if tuple(labels) == tuple(OTHER_INFORMATION_LABELS):
                 return "Ilocalizable"
-            return "INT 1 previo"
+            if tuple(labels) in (tuple(run_close_queue.COMMENT_FIELD_LABELS),):
+                return "INT 1 previo"
+            return ""  # Cualificación/Sub-Cualificación vacías
 
         col_open = {
             "estado": "Nuevo",
@@ -512,12 +588,51 @@ class PersistAndVerifyTests(unittest.TestCase):
         self.assertFalse(saved)
 
 
+class ReloadRecordTests(unittest.TestCase):
+    """Tras recargar, la verificación espera a que el registro renderice:
+    leer apenas carga el shell daba 'no persistido' en falso y el cierre
+    abortaba sin convertir un Lead que sí había guardado (OU9XUAW)."""
+
+    def test_reload_waits_for_record_fields_before_verifying(self):
+        driver = FakeDriver()
+        order = []
+        with (
+            patch("run_close_queue.wait_for_lightning_ready", side_effect=lambda *_a: order.append("shell")),
+            patch("run_close_queue.wait_closure_state", side_effect=lambda *_a, **_k: order.append("record")),
+        ):
+            run_close_queue.reload_record(driver, "https://sf/lead/1", run_close_queue.COMMENT_FIELD_LABELS, 5)
+        self.assertEqual(driver.urls, ["https://sf/lead/1"])
+        self.assertEqual(order, ["shell", "record"])
+
+    def test_persist_and_verify_reloads_through_record_wait(self):
+        driver = FakeDriver()
+        verifications = iter([False, True])
+        with (
+            patch("run_close_queue.save_edit_form"),
+            patch("run_close_queue.verify_persisted_fields", side_effect=lambda *_a: next(verifications)),
+            patch("run_close_queue.reload_record") as reload,
+            patch(
+                "run_close_queue.read_closure_state",
+                return_value={"estado": "Cerrado", "propietario": "Auxiliar X", "comentario": "Ilocalizable"},
+            ),
+            patch("run_close_queue.find_field_value", return_value="INT 1"),
+            patch("run_close_queue.time.sleep"),
+        ):
+            saved, reloads = persist_and_verify(
+                driver, "https://sf/lead/1", CONTRACT_ILOCALIZABLE, run_close_queue.content_hash("INT 1"), 5
+            )
+        self.assertTrue(saved)
+        self.assertEqual(reloads, 1)
+        reload.assert_called_once()
+
+
 class WaitClosureStateTests(unittest.TestCase):
     def test_returns_first_state_with_estado_and_propietario(self):
         driver = FakeDriver()
         states = [EMPTY_STATE, EMPTY_STATE, OPEN_STATE]
         with (
             patch("run_close_queue.read_closure_state", side_effect=states) as read,
+            patch("run_close_queue.field_result_if_found", return_value={"found": True, "text": ""}),
             patch("run_close_queue.time.sleep"),
         ):
             state = run_close_queue.wait_closure_state(driver, run_close_queue.COMMENT_FIELD_LABELS, 5)
@@ -538,12 +653,41 @@ class WaitClosureStateTests(unittest.TestCase):
         driver = FakeDriver()
         with (
             patch("run_close_queue.read_closure_state", return_value=OPEN_STATE) as read,
+            patch("run_close_queue.field_result_if_found", return_value={"found": True, "text": ""}),
             patch("run_close_queue.time.sleep") as sleep,
         ):
             state = run_close_queue.wait_closure_state(driver, run_close_queue.COMMENT_FIELD_LABELS, 5)
         self.assertEqual(state, OPEN_STATE)
         self.assertEqual(read.call_count, 1)
         sleep.assert_not_called()
+
+    def test_populated_state_without_comentario_field_keeps_polling(self):
+        # El panel Estado/Propietario renderiza antes que la sección
+        # Cualificación: sin el campo Comentario la lectura es transitoria.
+        driver = FakeDriver()
+        with (
+            patch("run_close_queue.read_closure_state", return_value=OPEN_STATE) as read,
+            patch("run_close_queue.field_result_if_found", return_value={"found": False, "text": ""}) as field,
+            patch("run_close_queue.time.sleep"),
+        ):
+            state = run_close_queue.wait_closure_state(driver, run_close_queue.COMMENT_FIELD_LABELS, 5)
+        self.assertEqual(state, OPEN_STATE)
+        self.assertEqual(read.call_count, 6)
+        self.assertEqual(field.call_count, 5)  # un chequeo por sondeo; el último sale por max_polls
+
+    def test_comentario_field_appearing_unlocks_the_wait(self):
+        driver = FakeDriver()
+        with (
+            patch("run_close_queue.read_closure_state", return_value=OPEN_STATE),
+            patch(
+                "run_close_queue.field_result_if_found",
+                side_effect=[{"found": False, "text": ""}, {"found": True, "text": ""}],
+            ) as field,
+            patch("run_close_queue.time.sleep"),
+        ):
+            state = run_close_queue.wait_closure_state(driver, run_close_queue.COMMENT_FIELD_LABELS, 5)
+        self.assertEqual(state, OPEN_STATE)
+        self.assertEqual(field.call_count, 2)
 
 
 if __name__ == "__main__":

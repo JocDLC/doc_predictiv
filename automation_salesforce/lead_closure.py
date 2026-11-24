@@ -512,7 +512,7 @@ from comment_reader import execute_in_any_frame  # noqa: E402,F401 — re-export
 from comment_writer import (  # noqa: E402
     EDITOR_PRESENT_ATOMIC_SCRIPT,
     READ_EDITOR_VALUE_ATOMIC_SCRIPT,
-    SET_EDITOR_VALUE_ATOMIC_SCRIPT,
+    type_editor_value,
 )
 
 
@@ -541,12 +541,19 @@ def read_closure_state(driver, motive_labels: tuple[str, ...] = COMMENT_FIELD_LA
 
 def open_qualification_edit(driver, timeout_seconds: int) -> None:
     """Doble clic en Comentario (sección Cualificación) para entrar en edición."""
-    outcome = execute_in_any_frame(
-        driver,
-        DBLCLICK_FIELD_SCRIPT,
-        list(COMMENT_FIELD_LABELS),
-        list(QUALIFICATION_SECTION_LABELS),
-    )
+    # La sección Cualificación renderiza después del panel de estado: el campo
+    # puede tardar en existir, así que el doble clic sondea hasta el timeout.
+    deadline = time.monotonic() + timeout_seconds
+    outcome = "not_found"
+    while time.monotonic() < deadline and outcome == "not_found":
+        outcome = execute_in_any_frame(
+            driver,
+            DBLCLICK_FIELD_SCRIPT,
+            list(COMMENT_FIELD_LABELS),
+            list(QUALIFICATION_SECTION_LABELS),
+        )
+        if outcome == "not_found":
+            time.sleep(0.6)
     if outcome == "ambiguous":
         raise ValueError("El campo Comentario es ambiguo para entrar en edición.")
     if outcome != "clicked":
@@ -560,12 +567,21 @@ def open_qualification_edit(driver, timeout_seconds: int) -> None:
     )
 
 
-def set_comentario(driver, comentario: str, timeout_seconds: int) -> None:
-    """Escribe el literal exacto del motivo en el input Comentario."""
+# Tras abrir la edición, el formulario recarga el registro y reinicializa su
+# borrador: lo tipeado antes de eso queda en pantalla pero fuera del borrador
+# (verificado en red: updateRecord viajaba solo con {Id}).
+EDIT_FORM_SETTLE_SECONDS = 3.0
+
+
+def set_comentario(
+    driver, comentario: str, timeout_seconds: int, settle_seconds: float = EDIT_FORM_SETTLE_SECONDS
+) -> None:
+    """Escribe el literal exacto del motivo en Comentario con teclado confiable."""
+    time.sleep(settle_seconds)
     editor_seen = False
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
-        actual = execute_in_any_frame(driver, SET_EDITOR_VALUE_ATOMIC_SCRIPT, list(COMMENT_FIELD_LABELS), comentario)
+        actual = type_editor_value(driver, COMMENT_FIELD_LABELS, comentario)
         if actual != "not_found":
             editor_seen = True
             if str(actual or "").strip() == comentario:

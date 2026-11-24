@@ -125,6 +125,82 @@ queda como regla permanente (no se borra ni se debilita sin autorización).
   DiscardEditFormTests`, `tests.test_run_close_queue.WaitClosureStateTests`,
   `test_state_arriving_after_first_read_still_closes`,
   `test_edit_failure_discards_the_open_form`.
+- **El cierre leía DOM transitorio del registro**: el panel
+  Estado/Propietario renderiza antes que la sección Cualificación, así
+  que una lectura "poblada" podía no tener todavía el campo Comentario
+  (fallaba `open_qualification_edit`) o validar sobre marcado que se
+  descartaba al terminar de cargar (valores que "no quedaban"). Ahora
+  `wait_closure_state` además exige el campo Comentario presente
+  (`field_result_if_found`) y el doble clic de `open_qualification_edit`
+  sondea hasta el timeout en vez de fallar al primer intento. Verificado
+  in situ: el registro lento tarda ~5 s en ofrecer el campo.
+  Tests-regla: `tests.test_lead_closure.OpenQualificationEditTests.*`,
+  `tests.test_run_close_queue.WaitClosureStateTests.
+  test_populated_state_without_comentario_field_keeps_polling`,
+  `test_comentario_field_appearing_unlocks_the_wait`.
+- **El valor escrito en campos dentro de componentes LWC se perdía en
+  silencio**: `SET_EDITOR_VALUE_ATOMIC_SCRIPT` solo asignaba `.value`
+  del textarea/input interno, pero Lightning re-sincroniza el nodo desde
+  la propiedad `value` del host (`lightning-textarea`) — el set parecía
+  funcionar y al releer venía vacío ("los valores del motivo no
+  quedaron"). Ahora el script además asigna `host.value` cuando el
+  editor vive dentro de un componente Lightning. Verificado in situ en
+  el lead que fallaba: el valor persiste tras el commit del componente.
+  Tests-regla: `tests.test_lead_closure.EditorDomTests`.
+- **El write al editor no llegaba al modelo del formulario**: los eventos
+  `input`/`change` se despachaban sin `composed`, así que no cruzaban el
+  shadow boundary hacia el formulario LWC; el siguiente commit de otro
+  campo (picklist, blur) re-sincronizaba el editor a vacío aunque el
+  `host.value` ya estuviera escrito. Ahora los eventos van con
+  `composed: true` y además se despacha `change` sobre el host
+  Lightning. Verificado in situ: `edit_form_matches` confirma el valor
+  tras seleccionar los picklists (antes volvía `''`).
+- **El cierre podía pisar valores previos de un lead ya trabajado**: la
+  cola se arma desde un CSV que puede quedar viejo; si entre la
+  generación y el run el lead quedó calificado por otra vía (p. ej.
+  Cualificación 'Contacto interesado'), el cierre sobrescribía esos
+  valores. Nuevo `closure_targets_safe`: los campos que el cierre va a
+  escribir deben estar vacíos (`--Ninguno--` incluido) o ya tener el
+  valor del contrato (reintento idempotente); cualquier otro valor manda
+  el lead a `revision` sin tocar el formulario. En Argentina aplica
+  también al Comentario (el motivo lo reemplaza); en Colombia/México el
+  motivo se anexa conservando texto previo, así que el guard del motivo
+  no aplica ahí. Tests-regla:
+  `tests.test_run_close_queue.test_lead_with_existing_qualification_is_never_overwritten`,
+  `test_empty_or_contract_qualification_allows_the_write`,
+  `test_argentina_motive_field_with_other_text_goes_to_review`,
+  `test_mexico_motive_append_keeps_prior_text`.
+- **Lo escrito en los campos no viajaba al guardar (causa raíz de "no se
+  escribió el comentario" en cierre, Monitor y documentación)**: con el
+  interceptor de red sobre el `updateRecord` de Lightning se comprobó que,
+  escribiendo `.value` + eventos sintéticos (`input`/`change`/`blur`), la
+  petición de guardado viaja solo con `{Id}`: el DOM muestra el texto pero
+  el borrador del formulario nunca lo recibió. Matriz verificada en vivo
+  sobre el mismo lead: JS+blur sintético ✗, JS+Tab real ✗, tipeo real sin
+  Tab ✗, **tipeo real (CDP `Input.insertText`) + Tab real ✓**. Nueva
+  primitiva `comment_writer.type_editor_value` (foco+selección atómicos,
+  insertText, Tab) usada por `prepare_other_information` (Monitor,
+  distribución, documentación, laboratorio, cierre CO/MX) y por
+  `lead_closure.set_comentario` (cierre AR), que además espera
+  `EDIT_FORM_SETTLE_SECONDS` a que el formulario reinicialice su borrador
+  tras abrir la edición. Verificado con el runner real: `updateRecord`
+  lleva `Commentaire__c` y el lead queda cerrado, verificado y convertido.
+  Tests-regla: `tests.test_comment_writer.AtomicEditorTests.
+  test_prepare_types_with_trusted_keyboard_and_confirms_with_tab`,
+  `test_type_editor_value_reports_missing_editor_without_typing`,
+  `tests.test_lead_closure.SetComentarioTests`.
+- **Verificación post-guardado leía antes de que la ficha renderizara**:
+  las recargas de `persist_and_verify`/`append_closure_motive` leían tras
+  el shell y daban "no persistido" en falso → el cierre abortaba sin
+  convertir un lead que sí había guardado. Nuevo `reload_record` espera el
+  registro (`wait_closure_state`) tras cada recarga. Tests-regla:
+  `tests.test_run_close_queue.ReloadRecordTests`.
+- **Cierre a medias se retoma**: Estado `Cerrado` con picklists guardados
+  pero Comentario vacío (el caso dejado por el bug anterior) ya no va a
+  `revision`: se escribe el motivo, se verifica y se convierte. Cerrado
+  con OTRO motivo escrito sigue yendo a revisión. Tests-regla:
+  `test_closed_without_motive_resumes_the_write_and_converts`,
+  `test_closed_with_a_different_motive_still_goes_to_review`.
 - **La etiqueta del lápiz ("Modificar <label>") podía persistirse dentro
   del campo al documentar o cerrar**: el strip que el Monitor aplicaba a
   la marca de toma vivía solo en `lead_monitor`. Se mudó a

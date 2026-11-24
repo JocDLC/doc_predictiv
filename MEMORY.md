@@ -748,3 +748,29 @@ detrás de otras sí rinde por las flags anti-occlusion.
   ejecutable termina en .cmd/.bat.
 - Comparación real: leads distintos por motor (el modo `comparacion`
   con ambos motores sobre el mismo lead es solo para `prueba`).
+
+## Escritura en campos: solo eventos de usuario confiables (2026-11-24)
+
+- **Regla vigente**: Lightning solo incorpora al borrador del formulario lo
+  que llega por eventos de usuario confiables (trusted). Escribir `.value`
+  con eventos sintéticos (`input`/`change`/`blur` por JS) muestra el texto
+  en pantalla pero el `updateRecord` de Guardar viaja solo con `{Id}` —
+  el campo queda vacío en el servidor aunque todo "parezca" bien.
+- **Primitiva única**: `comment_writer.type_editor_value` (foco+selección
+  atómicos → `Input.insertText` por CDP → Tab real). Toda escritura en
+  campo del registro debe pasar por ella: cierre AR (`set_comentario`),
+  CO/MX / Monitor / distribución / documentación / laboratorio / agente
+  asistido / correcciones (`prepare_other_information` ya la usa).
+- **AVISO para cambios futuros**: `type_editor_value` depende de
+  `driver.execute_cdp_cmd` — solo Chromium (Edge/Chrome). Si el bot corre
+  en un navegador no-Chromium, agregar un fallback con `ActionChains`
+  (send_keys también es entrada confiable) en `type_editor_value`.
+- `set_comentario` además espera `EDIT_FORM_SETTLE_SECONDS` (~3 s) tras
+  abrir la edición: el formulario reinicializa su borrador asíncrono y lo
+  tipeado antes de eso se pierde igual.
+- `SET_EDITOR_VALUE_ATOMIC_SCRIPT`/`replace_editor_value` quedaron sin
+  llamadores productivos (solo tests de contrato): no reintroducirlos
+  para campos del registro.
+- Tras cualquier `driver.get` a la ficha, leer campos exige
+  `reload_record`/`wait_closure_state` (el shell carga ~5 s antes que el
+  registro; leer antes da "no persistido" en falso).

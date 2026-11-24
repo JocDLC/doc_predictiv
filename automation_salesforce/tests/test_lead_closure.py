@@ -1,3 +1,4 @@
+import inspect
 import itertools
 import json
 import subprocess
@@ -7,6 +8,7 @@ from unittest.mock import Mock, patch
 from selenium.common.exceptions import WebDriverException
 
 import comment_reader
+import comment_writer
 import lead_closure as closure
 from tests.test_ui_closure import node_executable
 
@@ -72,7 +74,20 @@ class Element {
     }
     scrollIntoView() {}
     click() { this.clicks++; if (this.onClick) this.onClick(); }
+    focus() {}
+    blur() {}
+    dispatchEvent(event) { (this.events = this.events || []).push(event.type); return true; }
+    closest(selector) {
+        let current = this;
+        while (current) {
+            if (current.matches && current.matches(selector)) return current;
+            const root = current.getRootNode ? current.getRootNode() : null;
+            current = current.parentElement || (root && root.host) || null;
+        }
+        return null;
+    }
 }
+globalThis.FocusEvent = globalThis.FocusEvent || class FocusEvent extends Event {};
 global.document = new Element('document');
 global.window = {getComputedStyle: element => ({
     display: element.visible ? 'block' : 'none', visibility: 'visible',
@@ -154,6 +169,64 @@ class FieldTextDomTests(unittest.TestCase):
             owner.value = '005XXXXXXXXXXXXXXX';
             owner.attachShadow().append(new Element('span', {class: 'owner-name'}, 'AR_LEAD_COLD'));
             assert.equal(call('field', ['propietario del candidato']).text, 'AR_LEAD_COLD');
+        """)
+
+
+@unittest.skipUnless(node_executable(), "Node requerido para scripts DOM")
+class EditorDomTests(unittest.TestCase):
+    """El textarea del comentario vive dentro de un lightning-textarea (LWC):
+    el framework re-sincroniza el nodo interno desde la propiedad `value`
+    del componente. Escribir solo el textarea interno deja el formulario
+    vacío — el bug de "los valores no quedaron" del run eca47b."""
+
+    def run_dom(self, scenario):
+        result = subprocess.run(
+            [node_executable(), "-e", DOM_HARNESS],
+            input=json.dumps(
+                {
+                    "scripts": {
+                        "set": comment_writer.SET_EDITOR_VALUE_ATOMIC_SCRIPT,
+                        "read": comment_writer.READ_EDITOR_VALUE_ATOMIC_SCRIPT,
+                    },
+                    "scenario": scenario,
+                }
+            ),
+            text=True,
+            capture_output=True,
+            timeout=15,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_lwc_host_overwrites_inner_textarea_value(self):
+        self.run_dom("""
+            const item = document.append(new Element('records-record-layout-item'));
+            const host = item.append(new Element('lightning-textarea', {label: 'Comentario'}));
+            const root = host.attachShadow();
+            const textarea = root.append(new Element('textarea'));
+            // Lightning re-sincroniza el textarea desde host.value en cada
+            // commit del componente: lo leído en el editor es el modelo.
+            Object.defineProperty(textarea, 'value', {
+                get() { return host.value; },
+                set(v) { this._shadow = v; },
+            });
+            // Sin write al host: el textarea queda vacío pese al set.
+            const result = call('set', ['comentario'], 'Ilocalizable');
+            assert.equal(host.value, 'Ilocalizable');
+            assert.equal(call('read', ['comentario']), 'Ilocalizable');
+            // El change también se despacha en el host para que el
+            // formulario actualice su modelo (un commit posterior del
+            // picklist borraba el valor si no llegaba).
+            assert.ok((host.events || []).includes('change'));
+        """)
+
+    def test_plain_textarea_still_receives_the_value(self):
+        self.run_dom("""
+            const item = document.append(new Element('records-record-layout-item'));
+            const textarea = item.append(new Element('textarea', {'aria-label': 'Comentario'}));
+            const result = call('set', ['comentario'], 'Ilocalizable');
+            assert.equal(result, 'Ilocalizable');
+            assert.equal(textarea.value, 'Ilocalizable');
+            assert.equal(call('read', ['comentario']), 'Ilocalizable');
         """)
 
 
@@ -532,6 +605,78 @@ class PicklistFrameTests(unittest.TestCase):
         run.assert_called_once_with(
             driver, closure.PICK_OPTION_SCRIPT, "Rechazo argumentado", list(closure.QUALIFICATION_FIELD_LABELS)
         )
+
+
+class SetComentarioTests(unittest.TestCase):
+    """El Comentario se escribe con teclado confiable tras dejar que el
+    formulario termine de inicializar: lo tipeado antes queda en pantalla
+    pero fuera del borrador y Guardar no lo manda (verificado en red)."""
+
+    def test_waits_for_form_settle_then_types_with_trusted_keyboard(self):
+        driver = Mock()
+        sleeps = []
+        with (
+            patch.object(closure, "type_editor_value", return_value="Ilocalizable") as typed,
+            patch.object(closure.time, "sleep", side_effect=sleeps.append),
+        ):
+            closure.set_comentario(driver, "Ilocalizable", 10, settle_seconds=3.0)
+        typed.assert_called_once_with(driver, closure.COMMENT_FIELD_LABELS, "Ilocalizable")
+        self.assertEqual(sleeps[0], 3.0)
+
+    def test_retries_typing_until_the_editor_shows_the_literal(self):
+        driver = Mock()
+        outcomes = iter(["", "Iloca", "Ilocalizable"])
+        clock = itertools.count(step=0.1)
+        with (
+            patch.object(closure, "type_editor_value", side_effect=lambda *_a: next(outcomes)) as typed,
+            patch.object(closure.time, "monotonic", side_effect=lambda: next(clock)),
+            patch.object(closure.time, "sleep"),
+        ):
+            closure.set_comentario(driver, "Ilocalizable", 10, settle_seconds=0)
+        self.assertEqual(typed.call_count, 3)
+
+    def test_missing_editor_raises_specific_error(self):
+        driver = Mock()
+        clock = itertools.count(step=1.0)
+        with (
+            patch.object(closure, "type_editor_value", return_value="not_found"),
+            patch.object(closure.time, "monotonic", side_effect=lambda: next(clock)),
+            patch.object(closure.time, "sleep"),
+            self.assertRaisesRegex(ValueError, "No se encontró el editor"),
+        ):
+            closure.set_comentario(driver, "Ilocalizable", 3, settle_seconds=0)
+
+    def test_never_uses_the_synthetic_setter(self):
+        self.assertNotIn("SET_EDITOR_VALUE_ATOMIC_SCRIPT", inspect.getsource(closure.set_comentario))
+
+
+class OpenQualificationEditTests(unittest.TestCase):
+    """La sección Cualificación renderiza después del panel de estado: el
+    doble clic sondea hasta el timeout en vez de fallar al primer intento."""
+
+    def run_open(self, outcomes, timeout=8):
+        driver = Mock()
+        clock = itertools.count(step=0.25)
+        with (
+            patch.object(closure, "execute_in_any_frame", side_effect=lambda *args: next(outcomes)),
+            patch.object(closure.time, "monotonic", side_effect=lambda: next(clock)),
+            patch.object(closure.time, "sleep"),
+        ):
+            return closure.open_qualification_edit(driver, timeout)
+
+    def test_retries_dblclick_until_the_field_renders(self):
+        outcomes = iter(["not_found", "not_found", "clicked", "found"])
+        self.run_open(outcomes)  # el último 'found' cierra la espera del editor
+
+    def test_gives_up_when_the_field_never_appears(self):
+        outcomes = itertools.repeat("not_found")
+        with self.assertRaisesRegex(ValueError, "No se encontró el campo Comentario"):
+            self.run_open(outcomes, timeout=8)
+
+    def test_ambiguous_still_raises_immediately(self):
+        outcomes = iter(["ambiguous"])
+        with self.assertRaisesRegex(ValueError, "ambiguo"):
+            self.run_open(outcomes)
 
 
 class DiscardEditFormTests(unittest.TestCase):

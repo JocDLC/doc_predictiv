@@ -325,9 +325,23 @@ if (!editor) {
 }
 editor.scrollIntoView({block: 'center', inline: 'nearest'});
 editor.focus();
+// El editor puede vivir dentro de un LWC (lightning-textarea/input): el
+// framework re-sincroniza el nodo interno desde la propiedad `value` del
+// host, así que un write solo en el textarea se pierde en silencio.
+const host = editor.closest('lightning-textarea, lightning-input, lightning-combobox')
+    || (editor.getRootNode && editor.getRootNode() && editor.getRootNode().host) || null;
+if (host && host !== editor && 'value' in host) {
+    try { host.value = arguments[1]; } catch (err) { /* propiedad de solo lectura */ }
+}
 editor.value = arguments[1];
-editor.dispatchEvent(new Event('input', {bubbles: true}));
-editor.dispatchEvent(new Event('change', {bubbles: true}));
+// Los eventos deben cruzar el shadow boundary (composed) para que el
+// formulario actualice su modelo; sin eso un commit posterior (picklist,
+// blur de otro campo) re-sincroniza el editor vacío.
+editor.dispatchEvent(new Event('input', {bubbles: true, composed: true}));
+editor.dispatchEvent(new Event('change', {bubbles: true, composed: true}));
+if (host && host !== editor) {
+    host.dispatchEvent(new Event('change', {bubbles: true, composed: true}));
+}
 // Lightning confirma el valor del campo al perder el foco (blur/focusout);
 // el clic JS sobre Guardar no lo genera y sin esto el formulario persiste
 // el valor anterior en silencio (bug verificado en leads reales).
@@ -342,6 +356,24 @@ READ_EDITOR_VALUE_ATOMIC_SCRIPT = (
     + """
 const editor = findEditor();
 return editor ? editor.value : 'not_found';
+"""
+)
+# Deja el editor enfocado con todo su contenido seleccionado: el tipeo
+# confiable que sigue (CDP Input.insertText) reemplaza la selección.
+FOCUS_EDITOR_ATOMIC_SCRIPT = (
+    EDITOR_CONTROL_FINDER_SCRIPT
+    + """
+const editor = findEditor();
+if (!editor) {
+    return 'not_found';
+}
+editor.scrollIntoView({block: 'center', inline: 'nearest'});
+editor.focus();
+if (editor.select) {
+    editor.select();
+}
+const root = editor.getRootNode ? editor.getRootNode() : document;
+return (document.activeElement === editor || (root && root.activeElement === editor)) ? 'focused' : 'focus_lost';
 """
 )
 EDITOR_DIAGNOSTIC_SCRIPT = (
@@ -575,6 +607,30 @@ def verify_editor_value(editor, expected: str) -> bool:
 
 EDITOR_READY_SECONDS = 2.0
 EDITOR_STABILITY_SECONDS = 0.8
+# Teclado real (CDP): Lightning solo incorpora al borrador del formulario lo
+# que llega por eventos de usuario confiables. Verificado en red: con
+# `.value` + eventos sintéticos la petición de guardado viaja solo con {Id};
+# con Input.insertText + Tab real el campo viaja y persiste.
+TAB_KEY_EVENT = {"key": "Tab", "code": "Tab", "windowsVirtualKeyCode": 9}
+
+
+def type_editor_value(driver, labels: tuple, text: str) -> str:
+    """Escribe ``text`` en el editor del campo con teclado confiable.
+
+    Enfoca y selecciona el editor en una evaluación atómica, inserta el texto
+    con CDP (``Input.insertText``, reemplaza la selección) y confirma el campo
+    con un Tab real (el ``blur()`` sintético no hace commit del borrador).
+    Devuelve el valor leído del editor o ``"not_found"`` si no hay editor.
+    """
+    focus = execute_in_any_frame(driver, FOCUS_EDITOR_ATOMIC_SCRIPT, list(labels))
+    if focus == "not_found":
+        return "not_found"
+    driver.execute_cdp_cmd("Input.insertText", {"text": text})
+    for event_type in ("keyDown", "keyUp"):
+        driver.execute_cdp_cmd("Input.dispatchKeyEvent", {"type": event_type, **TAB_KEY_EVENT})
+    driver.switch_to.default_content()
+    actual = execute_in_any_frame(driver, READ_EDITOR_VALUE_ATOMIC_SCRIPT, list(labels))
+    return "not_found" if actual in (None, "not_found") else str(actual)
 
 
 def _click_edit_control_atomic(driver, labels: tuple) -> bool:
@@ -606,7 +662,7 @@ def prepare_other_information(
         # editor; escribir antes de eso deja que el framework pise el valor.
         time.sleep(EDITOR_READY_SECONDS)
         for attempt in range(2):
-            actual = execute_in_any_frame(driver, SET_EDITOR_VALUE_ATOMIC_SCRIPT, list(labels), prepared_comment)
+            actual = type_editor_value(driver, labels, prepared_comment)
             if actual == prepared_comment:
                 # Una segunda lectura confirma que el valor quedó estable y el
                 # framework no lo restauró con el dato anterior del registro.
